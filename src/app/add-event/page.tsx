@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
@@ -9,15 +9,29 @@ interface Category {
   name: string
 }
 
-export default function AddEventPage() {
+function AddEventForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const returnView = searchParams.get('return') || 'annual'
-  const defaultMonth = searchParams.get('month')
-  const defaultYear = searchParams.get('year')
-
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(false)
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null)
+
+  // Safely get search params
+  let returnView = 'annual'
+  let defaultMonth: string | null = null
+  let defaultYear: string | null = null
+
+  try {
+    const params = useSearchParams()
+    if (params) {
+      returnView = params.get('return') || 'annual'
+      defaultMonth = params.get('month')
+      defaultYear = params.get('year')
+    }
+  } catch (error) {
+    // Fallback for server-side rendering
+    console.log('Search params not available during SSR')
+  }
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -351,5 +365,25 @@ export default function AddEventPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    </div>
+  )
+}
+
+// Main component wrapped in Suspense
+export default function AddEventPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <AddEventForm />
+    </Suspense>
   )
 }
