@@ -284,7 +284,7 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -294,8 +294,7 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
               </svg>
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-white">Timeline View</h2>
-              <p className="text-indigo-100">Focus on {monthNames[viewMonth - 1]} {viewYear}</p>
+              <h2 className="text-2xl font-bold text-white">{monthNames[viewMonth - 1]} {viewYear}</h2>
             </div>
           </div>
 
@@ -312,10 +311,6 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
                 </svg>
                 Previous
               </button>
-              <div className="text-center min-w-[160px] px-4 py-2 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30">
-                <div className="text-lg font-bold text-white">{monthNames[viewMonth - 1]} {viewYear}</div>
-                <div className="text-xs text-indigo-100">Timeline Focus</div>
-              </div>
               <button
                 onClick={navigateNextMonth}
                 className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-sm font-medium text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"

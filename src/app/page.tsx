@@ -1,53 +1,81 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import MVPAnnualPlanner from '@/components/MVPAnnualPlanner'
 import TimelineView from '@/components/TimelineView'
 
 function HomeContent() {
+  const router = useRouter()
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
   const [currentView, setCurrentView] = useState<'annual' | 'timeline'>('annual')
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
   const [refreshKey, setRefreshKey] = useState(0)
 
+  // Get search params safely
+  let searchParams: URLSearchParams | null = null
+  try {
+    searchParams = useSearchParams()
+  } catch (error) {
+    console.log('Search params not available during SSR')
+  }
+
+  // This effect should run whenever searchParams changes
   useEffect(() => {
-    // Safely handle search params
-    try {
-      const searchParams = useSearchParams()
-      if (searchParams) {
-        const view = searchParams.get('view')
-        const month = searchParams.get('month')
-        const year = searchParams.get('year')
+    if (searchParams) {
+      const view = searchParams.get('view')
+      const month = searchParams.get('month')
+      const year = searchParams.get('year')
 
-        if (view === 'timeline' || view === 'annual') {
-          setCurrentView(view)
-        }
+      // Update view
+      if (view === 'timeline' || view === 'annual') {
+        setCurrentView(view)
+      }
 
-        if (month) {
-          const monthNum = parseInt(month)
-          if (monthNum >= 1 && monthNum <= 12) {
-            setSelectedMonth(monthNum)
-          }
-        }
-
-        if (year) {
-          const yearNum = parseInt(year)
-          if (yearNum >= 2020 && yearNum <= 2030) {
-            setSelectedYear(yearNum)
-            setCurrentYear(yearNum)
-          }
+      // Update month
+      if (month) {
+        const monthNum = parseInt(month)
+        if (monthNum >= 1 && monthNum <= 12) {
+          setSelectedMonth(monthNum)
         }
       }
-    } catch (error) {
-      // Fallback for server-side rendering - use defaults
-      console.log('Search params not available during SSR, using defaults')
+
+      // Update year
+      if (year) {
+        const yearNum = parseInt(year)
+        if (yearNum >= 2020 && yearNum <= 2030) {
+          setSelectedYear(yearNum)
+          setCurrentYear(yearNum)
+        }
+      }
     }
-  }, [])
+  }, [searchParams?.toString()])
 
   const handleYearChange = (year: number) => {
     setCurrentYear(year)
+    // Update URL to maintain state
+    const params = new URLSearchParams()
+    params.set('view', currentView)
+    params.set('year', year.toString())
+    if (currentView === 'timeline') {
+      params.set('month', selectedMonth.toString())
+    }
+    router.push(`/?${params.toString()}`)
+  }
+
+  const handleViewChange = (view: 'annual' | 'timeline') => {
+    setCurrentView(view)
+    // Update URL to maintain state
+    const params = new URLSearchParams()
+    params.set('view', view)
+    if (view === 'timeline') {
+      params.set('month', selectedMonth.toString())
+      params.set('year', selectedYear.toString())
+    } else {
+      params.set('year', currentYear.toString())
+    }
+    router.push(`/?${params.toString()}`)
   }
 
   const handleEventAdded = () => {
@@ -61,30 +89,21 @@ function HomeContent() {
     window.location.href = url
   }
 
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Header */}
         <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
+          <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
 
               {/* Title Section */}
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-600 rounded-lg shadow-md">
-                  <div className="w-8 h-8 text-white flex items-center justify-center text-xl font-bold">
-                    📅
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                    Clinic Outreach Planner
-                  </h1>
-                  <p className="mt-2 text-lg text-gray-600">
-                    Plan and manage your clinic's community outreach activities
-                  </p>
-                </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
+                  Clinic Outreach Planner
+                </h1>
               </div>
 
               {/* Controls Section */}
@@ -93,7 +112,7 @@ function HomeContent() {
                 {/* View Toggle */}
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
-                    onClick={() => setCurrentView('annual')}
+                    onClick={() => handleViewChange('annual')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       currentView === 'annual'
                         ? 'bg-white text-blue-600 shadow-sm'
@@ -103,14 +122,14 @@ function HomeContent() {
                     Annual View
                   </button>
                   <button
-                    onClick={() => setCurrentView('timeline')}
+                    onClick={() => handleViewChange('timeline')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                       currentView === 'timeline'
                         ? 'bg-white text-blue-600 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Timeline
+                    Month View
                   </button>
                 </div>
 
@@ -139,7 +158,7 @@ function HomeContent() {
           ) : (
             <div className="space-y-8">
               <TimelineView
-                key={`timeline-${refreshKey}`}
+                key={`timeline-${refreshKey}-${selectedMonth}-${selectedYear}`}
                 currentYear={currentYear}
                 selectedMonth={selectedMonth}
                 selectedYear={selectedYear}
