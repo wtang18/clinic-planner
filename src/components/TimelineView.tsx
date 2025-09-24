@@ -311,6 +311,21 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
                 </svg>
                 Previous
               </button>
+
+              {/* This Month Button - Always visible, disabled when current */}
+              <button
+                onClick={navigateToCurrentMonth}
+                disabled={isViewingCurrentMonth}
+                className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  isViewingCurrentMonth
+                    ? 'bg-white/10 text-white/50 cursor-not-allowed'
+                    : 'bg-yellow-400 text-yellow-900 shadow-lg hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-300'
+                }`}
+                type="button"
+              >
+                This Month
+              </button>
+
               <button
                 onClick={navigateNextMonth}
                 className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-sm font-medium text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all duration-200"
@@ -323,30 +338,31 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
               </button>
             </div>
 
-            {/* Go to Current Month Button */}
-            {!isViewingCurrentMonth && (
-              <button
-                onClick={navigateToCurrentMonth}
-                className="inline-flex items-center px-4 py-2 bg-yellow-400 text-yellow-900 rounded-xl shadow-lg hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-300 transition-all duration-200 font-medium"
-                type="button"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Today
-              </button>
-            )}
-
           </div>
         </div>
       </div>
 
       <div className="p-6">
-        <div className="space-y-8">
+        <div
+          className="flex flex-wrap"
+          style={{ gap: '1.5rem' }}
+        >
           {timelinePeriods.map((period, index) => {
             const styles = getPeriodStyles(period.type)
             return (
-              <div key={index} className={`rounded-2xl border-2 p-8 ${styles.container} shadow-lg hover:shadow-xl transition-all duration-300`}>
+              <div
+                key={index}
+                className={`rounded-2xl border-2 p-6 md:p-8 ${styles.container} shadow-lg hover:shadow-xl transition-all duration-300`}
+                style={{
+                  // Responsive flex-basis for timeline periods
+                  flexBasis: 'calc(100% - 0px)',        // Mobile: 1 column (stacked)
+                  flexGrow: 1,                           // Fill available space
+                  minWidth: '320px',                     // Minimum width to prevent too narrow cards
+                  ...(index === 0 && {                   // "This Month" gets priority on medium screens
+                    flexBasis: 'calc(100% - 0px)'
+                  })
+                }}
+              >
                 <div className="flex items-start space-x-6">
                   <div className={`p-4 rounded-2xl text-white text-2xl ${styles.iconBg} flex-shrink-0 shadow-lg`}>
                     {styles.icon}
@@ -440,6 +456,23 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
           })}
         </div>
       </div>
+
+      {/* Responsive CSS for Timeline Periods */}
+      <style jsx>{`
+        @media (min-width: 768px) {
+          .flex-wrap > div:first-child {
+            flex-basis: calc(100% - 0px) !important;
+          }
+          .flex-wrap > div:not(:first-child) {
+            flex-basis: calc(50% - 0.75rem) !important;
+          }
+        }
+        @media (min-width: 1200px) {
+          .flex-wrap > div {
+            flex-basis: calc(33.333% - 1rem) !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

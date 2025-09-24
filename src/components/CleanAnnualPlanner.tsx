@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
-interface MVPAnnualPlannerProps {
+interface CleanAnnualPlannerProps {
   currentYear: number
   onYearChange: (year: number) => void
   onMonthClick?: (month: number, year: number) => void
@@ -18,7 +18,7 @@ interface Event {
   is_recurring?: boolean
 }
 
-export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthClick }: MVPAnnualPlannerProps) {
+export default function CleanAnnualPlanner({ currentYear, onYearChange, onMonthClick }: CleanAnnualPlannerProps) {
   const router = useRouter()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,9 +92,14 @@ export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthCli
         </div>
       </div>
 
-      {/* Month Grid */}
+      {/* Month Cards - Flexbox Layout */}
       <div className="p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <div
+          className="flex flex-wrap"
+          style={{
+            gap: '1rem'
+          }}
+        >
           {monthNames.map((monthName, index) => {
             const monthNumber = index + 1
             const monthEvents = getEventsForMonth(monthNumber)
@@ -104,19 +109,27 @@ export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthCli
             return (
               <div
                 key={monthName}
-                className={`relative rounded-xl p-4 md:p-6 min-h-[200px] md:min-h-[240px] cursor-pointer transition-all duration-200 hover:shadow-xl hover:-translate-y-1 ${
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg rounded-lg p-4 ${
                   isCurrentMonth
-                    ? 'bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 shadow-lg'
-                    : 'bg-white border border-gray-200 shadow-md hover:border-gray-300'
+                    ? 'bg-blue-50 border-2 border-blue-300 shadow-md'
+                    : 'bg-white border border-gray-200 shadow-sm hover:border-gray-300'
                 }`}
+                style={{
+                  // Responsive flex-basis for breakpoints
+                  flexBasis: 'calc(100% - 0px)',        // Mobile: 1 column
+                  flexGrow: 1,                           // Fill available space
+                  minWidth: '280px',
+                  minHeight: '200px'
+                }}
                 onClick={() => onMonthClick ? onMonthClick(monthNumber, currentYear) : router.push(`/?view=timeline&month=${monthNumber}&year=${currentYear}`)}
               >
-                <div className="flex items-center justify-between mb-4 md:mb-6">
-                  <div className="flex items-center space-x-2 md:space-x-3">
-                    <div className={`w-2 h-2 md:w-3 md:h-3 rounded-full ${
+                {/* Month Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-3 h-3 rounded-full ${
                       isCurrentMonth ? 'bg-blue-500' : 'bg-gray-400'
                     }`}></div>
-                    <h3 className={`text-lg md:text-xl font-bold ${
+                    <h3 className={`text-lg font-bold ${
                       isCurrentMonth ? 'text-blue-900' : 'text-gray-900'
                     }`}>
                       {monthName}
@@ -127,7 +140,7 @@ export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthCli
                       e.stopPropagation()
                       router.push(`/add-event?return=annual&month=${monthNumber}`)
                     }}
-                    className="inline-flex items-center px-2 py-1 md:px-3 md:py-2 text-xs md:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-md hover:shadow-lg"
+                    className="px-3 py-1 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
                     type="button"
                   >
                     + Add
@@ -135,17 +148,17 @@ export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthCli
                 </div>
 
                 {/* Events List */}
-                <div className="space-y-2 md:space-y-3">
+                <div className="space-y-2">
                   {monthEvents.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-4 md:py-8 text-gray-400">
-                      <div className="text-2xl md:text-4xl mb-2 md:mb-3">📅</div>
-                      <span className="text-xs md:text-sm font-medium">No events planned</span>
+                    <div className="flex flex-col items-center justify-center py-6 text-gray-400">
+                      <div className="text-3xl mb-2">📅</div>
+                      <span className="text-sm font-medium">No events planned</span>
                     </div>
                   ) : (
                     monthEvents.map(event => (
                       <div
                         key={event.id}
-                        className="group relative p-3 md:p-4 bg-gradient-to-r from-white to-gray-50 rounded-lg border border-gray-200 cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200"
+                        className="p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500 cursor-pointer hover:bg-blue-50 transition-colors"
                         onClick={(e) => {
                           e.stopPropagation()
                           router.push(`/edit-event/${event.id}?return=annual&month=${monthNumber}&year=${currentYear}`)
@@ -153,21 +166,20 @@ export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthCli
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <div className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                            <div className="font-semibold text-gray-900 text-sm">
                               {event.title}
                             </div>
                             {event.is_recurring && (
-                              <div className="inline-flex items-center mt-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                              <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
                                 <span className="mr-1">🔄</span>
-                                Annual Event
+                                Annual
                               </div>
                             )}
                           </div>
-                          <div className="ml-3 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400">
+                          <div className="ml-2 text-gray-400 text-sm">
                             →
                           </div>
                         </div>
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-lg"></div>
                       </div>
                     ))
                   )}
@@ -177,6 +189,25 @@ export default function MVPAnnualPlanner({ currentYear, onYearChange, onMonthCli
           })}
         </div>
       </div>
+
+      {/* Responsive CSS in style tag */}
+      <style jsx>{`
+        @media (min-width: 640px) {
+          .flex-wrap > div {
+            flex-basis: calc(50% - 0.5rem) !important;
+          }
+        }
+        @media (min-width: 900px) {
+          .flex-wrap > div {
+            flex-basis: calc(33.333% - 0.67rem) !important;
+          }
+        }
+        @media (min-width: 1400px) {
+          .flex-wrap > div {
+            flex-basis: calc(25% - 0.75rem) !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }

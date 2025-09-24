@@ -2,8 +2,8 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import MVPAnnualPlanner from '@/components/MVPAnnualPlanner'
-import TimelineView from '@/components/TimelineView'
+import CleanAnnualPlanner from '@/components/CleanAnnualPlanner'
+import CleanTimelineView from '@/components/CleanTimelineView'
 
 function HomeContent() {
   const router = useRouter()
@@ -148,22 +148,20 @@ function HomeContent() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 gap-8">
+        <div>
           {currentView === 'annual' ? (
-            <MVPAnnualPlanner
+            <CleanAnnualPlanner
               key={`annual-${refreshKey}`}
               currentYear={currentYear}
               onYearChange={handleYearChange}
             />
           ) : (
-            <div className="space-y-8">
-              <TimelineView
-                key={`timeline-${refreshKey}-${selectedMonth}-${selectedYear}`}
-                currentYear={currentYear}
-                selectedMonth={selectedMonth}
-                selectedYear={selectedYear}
-              />
-            </div>
+            <CleanTimelineView
+              key={`timeline-${refreshKey}-${selectedMonth}-${selectedYear}`}
+              currentYear={currentYear}
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+            />
           )}
         </div>
 
