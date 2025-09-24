@@ -242,10 +242,6 @@ export default function EditEventPage() {
                 </svg>
               </button>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
-              Return to: {returnView === 'annual' ? 'Annual View' : 'Timeline View'}
-              {returnView === 'timeline' && returnMonth && returnYear && ` - ${monthNames[parseInt(returnMonth) - 1]} ${returnYear}`}
-            </p>
           </div>
 
           {/* Form */}

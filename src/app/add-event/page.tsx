@@ -147,9 +147,6 @@ function AddEventForm() {
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
             <h1 className="text-2xl font-bold text-gray-900">Add New Event</h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Return to: {returnView === 'annual' ? 'Annual View' : 'Timeline View'}
-            </p>
           </div>
 
           {/* Form */}
