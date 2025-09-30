@@ -50,9 +50,10 @@ export default function MaterialsList({ materials, loading, onEdit, onDelete, on
     return (
       <div className="p-6">
         <div
-          className="grid gap-6"
+          className="grid"
           style={{
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))'
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '1rem'
           }}
         >
           {[1, 2, 3, 4, 5, 6].map(i => (
@@ -78,9 +79,10 @@ export default function MaterialsList({ materials, loading, onEdit, onDelete, on
   return (
     <div className="p-6">
       <div
-        className="grid gap-6"
+        className="grid"
         style={{
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))'
+          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+          gap: '1rem'
         }}
       >
         {materials.map((material) => (

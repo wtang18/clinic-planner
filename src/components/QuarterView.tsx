@@ -260,9 +260,9 @@ export default function QuarterView({ currentYear, selectedQuarter, selectedYear
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
+    <div>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="mb-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">{quarter.title}</h2>
 
@@ -298,25 +298,24 @@ export default function QuarterView({ currentYear, selectedQuarter, selectedYear
       </div>
 
       {/* Quarter Grid */}
-      <div className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3" style={{ gap: '1rem' }}>
           {quarter.months.map((monthData, index) => (
-            <div key={`${monthData.month}-${monthData.year}`} className="bg-gray-50 rounded-lg p-6 min-h-[400px]">
+            <div key={`${monthData.month}-${monthData.year}`} className="bg-white rounded-lg shadow-md border border-gray-200 p-6 min-h-[400px] hover:shadow-lg transition-shadow">
               {/* Month Header */}
-              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-transparent -m-6 p-6 rounded-t-lg">
+                <h3 className="text-xl font-bold text-blue-900">
                   {monthData.name} {monthData.year}
                 </h3>
                 <button
                   onClick={() => handleAddEvent(monthData.month)}
-                  className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                  className="px-3 py-1 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded transition-colors"
                 >
                   + Add Event
                 </button>
               </div>
 
               {/* Events */}
-              <div className="space-y-3 min-h-[200px]">
+              <div className="space-y-3 min-h-[200px] mt-6">
                 {monthData.events.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-gray-400">
                     <div className="text-3xl mb-2">📅</div>
@@ -390,7 +389,6 @@ export default function QuarterView({ currentYear, selectedQuarter, selectedYear
               </div>
             </div>
           ))}
-        </div>
       </div>
     </div>
   )
