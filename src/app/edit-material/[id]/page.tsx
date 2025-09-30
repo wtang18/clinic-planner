@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
-import { EventIdea, MarketingMaterial, supabase } from '@/lib/supabase'
+import { MarketingMaterial, supabase } from '@/lib/supabase'
+
+type EventOption = {
+  id: number
+  title: string
+}
 
 export default function EditMaterialPage() {
   const router = useRouter()
@@ -13,7 +18,7 @@ export default function EditMaterialPage() {
   const returnTo = searchParams.get('return') || 'materials'
 
   const [material, setMaterial] = useState<MarketingMaterial | null>(null)
-  const [events, setEvents] = useState<EventIdea[]>([])
+  const [events, setEvents] = useState<EventOption[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
