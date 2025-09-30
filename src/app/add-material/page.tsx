@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
-import { EventIdea, supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
+
+type EventOption = {
+  id: number
+  title: string
+}
 
 export default function AddMaterialPage() {
   const router = useRouter()
@@ -11,7 +16,7 @@ export default function AddMaterialPage() {
   const returnTo = searchParams.get('return') || 'materials'
   const preselectedEventId = searchParams.get('eventId')
 
-  const [events, setEvents] = useState<EventIdea[]>([])
+  const [events, setEvents] = useState<EventOption[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
