@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, EventIdea, Category } from '@/lib/supabase'
+import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase'
+import { MarketingMaterialsService } from '@/lib/marketingMaterials'
+import EventCard from '@/components/EventCard'
 
 interface CleanTimelineViewProps {
   currentYear: number
@@ -22,7 +24,8 @@ interface TimelinePeriod {
 export default function CleanTimelineView({ currentYear, selectedMonth, selectedYear }: CleanTimelineViewProps) {
   const router = useRouter()
   const [timelinePeriods, setTimelinePeriods] = useState<TimelinePeriod[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
+  const [eventMaterials, setEventMaterials] = useState<{[eventId: number]: MarketingMaterial[]}>({})
   const [loading, setLoading] = useState(true)
 
   const viewMonth = selectedMonth || new Date().getMonth() + 1
@@ -75,23 +78,39 @@ export default function CleanTimelineView({ currentYear, selectedMonth, selected
           .from('events_ideas')
           .select(`
             *,
-            category:categories(*)
+            category:outreach_angles(*)
           `)
-          .gte('year', currentYear - 1)
-          .lte('year', currentYear + 1)
+          .or(`year.lte.${viewYear + 1},start_year.lte.${viewYear + 1},is_recurring.eq.true`)
           .order('year', { ascending: true })
           .order('month', { ascending: true }),
-        supabase.from('categories').select('*')
+        supabase.from('outreach_angles').select('*')
       ])
 
       if (eventsResponse.error) throw eventsResponse.error
       if (categoriesResponse.error) throw categoriesResponse.error
 
       const events = eventsResponse.data || []
-      setCategories(categoriesResponse.data || [])
+      setOutreachAngles(categoriesResponse.data || [])
 
       const periods = calculateTimelinePeriods(events, viewMonth, viewYear)
       setTimelinePeriods(periods)
+
+      // Fetch materials for all events
+      const allEventIds = events.map(event => event.id)
+      if (allEventIds.length > 0) {
+        try {
+          const materialsData: {[eventId: number]: MarketingMaterial[]} = {}
+          await Promise.all(allEventIds.map(async (eventId) => {
+            const materials = await MarketingMaterialsService.getEventMaterials(eventId)
+            if (materials.length > 0) {
+              materialsData[eventId] = materials
+            }
+          }))
+          setEventMaterials(materialsData)
+        } catch (error) {
+          console.error('Error fetching event materials:', error)
+        }
+      }
     } catch (error) {
       console.error('Error fetching timeline data:', error)
     } finally {
@@ -104,14 +123,48 @@ export default function CleanTimelineView({ currentYear, selectedMonth, selected
 
     // Current month events (actual events happening this month)
     const currentMonthEvents = events.filter(event => {
+      const eventStartMonth = event.start_month || event.month
+      const eventStartYear = event.start_year || event.year
+
       // Include events happening this month
-      if (event.month === currentMonth && event.year === todayYear) {
+      if (eventStartMonth === currentMonth && eventStartYear === todayYear) {
         return true
       }
 
-      // Include recurring events happening this month (any year)
-      if (event.is_recurring && event.month === currentMonth) {
-        return true
+      // Check if it's a multi-month event spanning this month
+      if (event.end_month && event.end_year) {
+        const startDate = new Date(eventStartYear, eventStartMonth - 1)
+        const endDate = new Date(event.end_year, event.end_month - 1)
+        const checkDate = new Date(todayYear, currentMonth - 1)
+        if (checkDate >= startDate && checkDate <= endDate) {
+          return true
+        }
+      }
+
+      // Include recurring events happening this month
+      if (event.is_recurring) {
+        // Only show recurring events in years >= their start year
+        if (todayYear < eventStartYear) {
+          return false
+        }
+
+        // For multi-month recurring events
+        if (event.end_month && event.end_year) {
+          const startMonth = eventStartMonth
+          const endMonth = event.end_month
+
+          // Handle year-wrapping events (e.g., Nov-Feb)
+          if (endMonth < startMonth) {
+            // Event wraps across year boundary
+            return currentMonth >= startMonth || currentMonth <= endMonth
+          } else {
+            // Event within same year
+            return currentMonth >= startMonth && currentMonth <= endMonth
+          }
+        } else {
+          // Single month recurring event
+          return eventStartMonth === currentMonth
+        }
       }
 
       return false
@@ -203,7 +256,7 @@ export default function CleanTimelineView({ currentYear, selectedMonth, selected
 
     if (isEventMonth || isRecurringEvent) {
       return {
-        label: isRecurringEvent ? 'Annual Event' : 'Happening Now',
+        label: isRecurringEvent ? 'Yearly Event' : 'Happening Now',
         type: 'event' as const
       }
     }
@@ -332,54 +385,24 @@ export default function CleanTimelineView({ currentYear, selectedMonth, selected
                     </span>
                   </div>
                 ) : (
-                  period.events.map(event => (
-                    <div
-                      key={event.id}
-                      className="p-3 bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        router.push(`/edit-event/${event.id}?return=timeline&month=${viewMonth}&year=${viewYear}`)
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="font-semibold text-gray-900 text-sm">
-                            {event.title}
-                          </div>
-                          {event.description && (
-                            <div className="text-xs text-gray-600 mt-1">
-                              {event.description}
-                            </div>
-                          )}
-                          <div className="flex items-center space-x-2 mt-2">
-                            {(() => {
-                              const status = getEventStatus(event, period.type, viewMonth, viewYear)
-                              const statusStyles = {
-                                event: 'bg-blue-100 text-blue-700',
-                                prep: 'bg-orange-100 text-orange-700',
-                                upcoming: 'bg-yellow-100 text-yellow-700',
-                                future: 'bg-green-100 text-green-700'
-                              }
-                              return (
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyles[status.type]}`}>
-                                  {status.label}
-                                </span>
-                              )
-                            })()}
-                            {event.is_recurring && (
-                              <div className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                <span className="mr-1">🔄</span>
-                                Annual
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="ml-2 text-gray-400 text-sm">
-                          →
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  period.events.map(event => {
+                    const status = getEventStatus(event, period.type, viewMonth, viewYear)
+                    return (
+                      <EventCard
+                        key={event.id}
+                        event={event}
+                        outreachAngles={outreachAngles}
+                        materials={eventMaterials[event.id] || []}
+                        onClick={(eventId) => {
+                          router.push(`/event/${eventId}?return=timeline&month=${viewMonth}&year=${viewYear}`)
+                        }}
+                        variant="timeline"
+                        statusLabel={status.label}
+                        statusType={status.type}
+                        viewingYear={viewYear}
+                      />
+                    )
+                  })
                 )}
               </div>
             </div>

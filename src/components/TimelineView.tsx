@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, EventIdea, Category } from '@/lib/supabase'
+import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase'
 
 interface TimelineViewProps {
   currentYear: number
@@ -22,7 +22,7 @@ interface TimelinePeriod {
 export default function TimelineView({ currentYear, selectedMonth, selectedYear }: TimelineViewProps) {
   const router = useRouter()
   const [timelinePeriods, setTimelinePeriods] = useState<TimelinePeriod[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
   const [loading, setLoading] = useState(true)
 
   const viewMonth = selectedMonth || new Date().getMonth() + 1
@@ -75,20 +75,20 @@ export default function TimelineView({ currentYear, selectedMonth, selectedYear 
           .from('events_ideas')
           .select(`
             *,
-            category:categories(*)
+            category:outreach_angles(*)
           `)
           .gte('year', currentYear - 1)
           .lte('year', currentYear + 1)
           .order('year', { ascending: true })
           .order('month', { ascending: true }),
-        supabase.from('categories').select('*')
+        supabase.from('outreach_angles').select('*')
       ])
 
       if (eventsResponse.error) throw eventsResponse.error
       if (categoriesResponse.error) throw categoriesResponse.error
 
       const events = eventsResponse.data || []
-      setCategories(categoriesResponse.data || [])
+      setOutreachAngles(categoriesResponse.data || [])
 
       const periods = calculateTimelinePeriods(events, viewMonth, viewYear)
       setTimelinePeriods(periods)

@@ -2,24 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, OutreachAngle, EventIdea, OutreachAngleSelection } from '@/lib/supabase'
+import { initializeFormFromEvent, eventDataProcessor } from '@/lib/eventHelpers'
 
-interface Category {
-  id: number
-  name: string
-}
-
-interface EventData {
-  id: number
-  title: string
-  description: string | null
-  month: number
-  year: number
-  category_id: number
-  created_by: string
-  prep_months_needed: number | null
-  prep_start_date: string | null
-}
 
 export default function EditEventPage() {
   const router = useRouter()
@@ -31,34 +16,42 @@ export default function EditEventPage() {
   const returnMonth = searchParams.get('month')
   const returnYear = searchParams.get('year')
 
-  const [categories, setCategories] = useState<Category[]>([])
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
+  const [currentEvent, setCurrentEvent] = useState<EventIdea | null>(null)
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    month: new Date().getMonth() + 1,
-    year: new Date().getFullYear(),
-    category_id: '',
-    created_by: 'clinic_admin',
+    start_month: new Date().getMonth() + 1,
+    start_year: new Date().getFullYear(),
+    end_month: new Date().getMonth() + 1,
+    end_year: new Date().getFullYear(),
+    is_multi_month: false,
+    selected_angles: {} as Record<string, boolean>,
+    angle_notes: {} as Record<string, string>,
     prep_months_needed: 0,
     prep_start_date: '',
-    is_recurring: false
+    is_recurring: false,
+    created_by: 'clinic_admin'
   })
 
   const [prepType, setPrepType] = useState<'months' | 'date' | 'none'>('none')
 
   useEffect(() => {
     loadEventData()
-    loadCategories()
+    loadOutreachAngles()
   }, [eventId])
 
   const loadEventData = async () => {
     try {
       const { data, error } = await supabase
         .from('events_ideas')
-        .select('*')
+        .select(`
+          *,
+          category:outreach_angles(id, name, color, description)
+        `)
         .eq('id', eventId)
         .single()
 
@@ -70,17 +63,13 @@ export default function EditEventPage() {
       }
 
       if (data) {
-        setFormData({
-          title: data.title || '',
-          description: data.description || '',
-          month: data.month || new Date().getMonth() + 1,
-          year: data.year || new Date().getFullYear(),
-          category_id: data.category_id?.toString() || '',
-          created_by: data.created_by || 'clinic_admin',
-          prep_months_needed: data.prep_months_needed || 0,
-          prep_start_date: data.prep_start_date || '',
-          is_recurring: data.is_recurring || false
-        })
+        setCurrentEvent(data as EventIdea)
+
+        // Use the helper function to initialize form data with backward compatibility
+        const initialFormData = initializeFormFromEvent(data as EventIdea)
+        if (initialFormData) {
+          setFormData(initialFormData)
+        }
 
         // Set prep type based on existing data
         if (data.prep_start_date) {
@@ -100,17 +89,17 @@ export default function EditEventPage() {
     }
   }
 
-  const loadCategories = async () => {
+  const loadOutreachAngles = async () => {
     try {
       const { data, error } = await supabase
-        .from('categories')
-        .select('id, name')
+        .from('outreach_angles')
+        .select('*')
         .order('name')
 
       if (error) {
-        console.error('Error loading categories:', error)
+        console.error('Error loading outreach angles:', error)
       } else {
-        setCategories(data || [])
+        setOutreachAngles(data || [])
       }
     } catch (error) {
       console.error('Error:', error)
@@ -119,23 +108,54 @@ export default function EditEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim() || !formData.category_id) {
-      alert('Please fill in title and category')
+
+    // Validate required fields
+    const selectedAngles = Object.entries(formData.selected_angles)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([angle]) => angle)
+
+    if (!formData.title.trim()) {
+      alert('Please fill in the event title')
+      return
+    }
+
+    if (selectedAngles.length === 0) {
+      alert('Please select at least one outreach angle')
       return
     }
 
     setLoading(true)
     try {
+      // Build outreach_angles array
+      const outreach_angles: OutreachAngleSelection[] = selectedAngles.map(angle => ({
+        angle,
+        notes: formData.angle_notes[angle] || ''
+      }))
+
+      // Calculate end_year with proper year-wrapping logic
+      let calculatedEndYear = formData.is_recurring ? formData.start_year : formData.end_year;
+
+      // Handle year wrapping (e.g., Dec to Feb)
+      if (formData.is_multi_month && formData.end_month < formData.start_month) {
+        calculatedEndYear = formData.start_year + 1;
+      }
+
       const updateData: any = {
         title: formData.title.trim(),
         description: formData.description.trim() || null,
-        month: formData.month,
-        year: formData.year,
-        category_id: parseInt(formData.category_id),
+        start_month: formData.start_month,
+        start_year: formData.start_year,
+        end_month: formData.is_multi_month ? formData.end_month : null,
+        end_year: formData.is_multi_month ? calculatedEndYear : null,
+        outreach_angles,
         created_by: formData.created_by,
         is_recurring: formData.is_recurring,
         prep_months_needed: null,
-        prep_start_date: null
+        prep_start_date: null,
+        // Update legacy fields for backward compatibility
+        month: formData.start_month,
+        year: formData.start_year,
+        category_id: 1 // Default for legacy compatibility
       }
 
       // Add prep data based on selected type
@@ -155,6 +175,7 @@ export default function EditEventPage() {
         alert('Error updating event. Please try again.')
         setLoading(false)
       } else {
+
         handleReturnNavigation()
       }
     } catch (error) {
@@ -202,7 +223,36 @@ export default function EditEventPage() {
     const { name, value, type, checked } = e.target as HTMLInputElement
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : (name === 'month' || name === 'year' || name === 'prep_months_needed' ? parseInt(value) || 0 : value)
+      [name]: type === 'checkbox' ? checked : (name === 'start_month' || name === 'start_year' || name === 'end_month' || name === 'end_year' || name === 'prep_months_needed' ? parseInt(value) || 0 : value)
+    }))
+  }
+
+  const handleAngleToggle = (angle: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selected_angles: {
+        ...prev.selected_angles,
+        [angle]: !prev.selected_angles[angle]
+      }
+    }))
+  }
+
+  const handleAngleNotesChange = (angle: string, notes: string) => {
+    setFormData(prev => ({
+      ...prev,
+      angle_notes: {
+        ...prev.angle_notes,
+        [angle]: notes
+      }
+    }))
+  }
+
+  const handleMultiMonthToggle = () => {
+    setFormData(prev => ({
+      ...prev,
+      is_multi_month: !prev.is_multi_month,
+      end_month: !prev.is_multi_month ? prev.start_month : prev.end_month,
+      end_year: !prev.is_multi_month ? prev.start_year : prev.end_year
     }))
   }
 
@@ -276,79 +326,170 @@ export default function EditEventPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Month *
-                  </label>
-                  <select
-                    name="month"
-                    value={formData.month}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {monthNames.map((month, index) => (
-                      <option key={month} value={index + 1}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Year *
-                  </label>
-                  <select
-                    name="year"
-                    value={formData.year}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
+              {/* Date Range Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category *
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Event Date Range *
                 </label>
-                <select
-                  name="category_id"
-                  value={formData.category_id}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select a category</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                    </option>
-                  ))}
-                </select>
+
+                <div className="space-y-4">
+                  {/* Start Date */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-2">
+                      Start Date
+                    </label>
+                    <div className={`grid gap-3 ${formData.is_recurring ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                      <select
+                        name="start_month"
+                        value={formData.start_month}
+                        onChange={handleInputChange}
+                        required
+                        className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {monthNames.map((month, index) => (
+                          <option key={month} value={index + 1}>
+                            {month}
+                          </option>
+                        ))}
+                      </select>
+                      {!formData.is_recurring && (
+                        <select
+                          name="start_year"
+                          value={formData.start_year}
+                          onChange={handleInputChange}
+                          required
+                          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {years.map(year => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Multi-month toggle */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_multi_month"
+                      checked={formData.is_multi_month}
+                      onChange={handleMultiMonthToggle}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                    />
+                    <label htmlFor="is_multi_month" className="text-sm font-medium text-gray-700">
+                      Multi-month event
+                    </label>
+                  </div>
+
+                  {/* Annual recurring toggle */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_recurring_edit"
+                      name="is_recurring"
+                      checked={formData.is_recurring}
+                      onChange={handleInputChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-2"
+                    />
+                    <label htmlFor="is_recurring_edit" className="text-sm font-medium text-gray-700">
+                      Annual recurring event (appears every year)
+                    </label>
+                  </div>
+
+                  {/* End Date (conditional) */}
+                  {formData.is_multi_month && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">
+                        End Date
+                      </label>
+                      <div className={`grid gap-3 ${formData.is_recurring ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+                        <select
+                          name="end_month"
+                          value={formData.end_month}
+                          onChange={handleInputChange}
+                          className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {monthNames.map((month, index) => (
+                            <option key={month} value={index + 1}>
+                              {month}
+                            </option>
+                          ))}
+                        </select>
+                        {!formData.is_recurring && (
+                          <select
+                            name="end_year"
+                            value={formData.end_year}
+                            onChange={handleInputChange}
+                            className="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {years.map(year => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Recurring Event */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="is_recurring"
-                  checked={formData.is_recurring}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 text-sm font-medium text-gray-700">
-                  Annual recurring event (appears every year)
+              {/* Outreach Angles Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Outreach Angles *
                 </label>
+                <p className="text-xs text-gray-500 mb-4">
+                  Select one or more outreach angles and add notes for each selected angle.
+                </p>
+
+                <div className="space-y-4">
+                  {outreachAngles.map(angle => (
+                    <div key={angle.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center mb-3">
+                        <input
+                          type="checkbox"
+                          id={`angle_${angle.name}`}
+                          checked={formData.selected_angles[angle.name] || false}
+                          onChange={() => handleAngleToggle(angle.name)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
+                        />
+                        <label
+                          htmlFor={`angle_${angle.name}`}
+                          className="flex items-center font-medium text-sm text-gray-700 cursor-pointer"
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: angle.color }}
+                          ></span>
+                          {angle.name} - {angle.description}
+                        </label>
+                      </div>
+
+                      {formData.selected_angles[angle.name] && (
+                        <div className="ml-7">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Notes for {angle.name}
+                          </label>
+                          <textarea
+                            value={formData.angle_notes[angle.name] || ''}
+                            onChange={(e) => handleAngleNotesChange(angle.name, e.target.value)}
+                            rows={3}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder={`Add specific notes for ${angle.name} angle...`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
+
+
 
               {/* Preparation Planning */}
               <div>

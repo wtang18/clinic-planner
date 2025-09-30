@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, EventIdea, Category } from '@/lib/supabase'
+import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase'
 
 interface AnnualPlannerProps {
   currentYear: number
@@ -11,7 +11,7 @@ interface AnnualPlannerProps {
 
 export default function AnnualPlanner({ currentYear, onYearChange, onAddEvent }: AnnualPlannerProps) {
   const [events, setEvents] = useState<EventIdea[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
   const [loading, setLoading] = useState(true)
 
   const monthNames = [
@@ -31,18 +31,18 @@ export default function AnnualPlanner({ currentYear, onYearChange, onAddEvent }:
           .from('events_ideas')
           .select(`
             *,
-            category:categories(*)
+            category:outreach_angles(*)
           `)
           .eq('year', currentYear)
           .order('month', { ascending: true }),
-        supabase.from('categories').select('*')
+        supabase.from('outreach_angles').select('*')
       ])
 
       if (eventsResponse.error) throw eventsResponse.error
       if (categoriesResponse.error) throw categoriesResponse.error
 
       setEvents(eventsResponse.data || [])
-      setCategories(categoriesResponse.data || [])
+      setOutreachAngles(categoriesResponse.data || [])
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -250,11 +250,11 @@ export default function AnnualPlanner({ currentYear, onYearChange, onAddEvent }:
         </div>
       </div>
 
-      {categories.length > 0 && (
+      {outreachAngles.length > 0 && (
         <div className="p-6 border-t bg-gray-50">
           <h3 className="text-sm font-medium text-gray-900 mb-3">Categories</h3>
           <div className="flex flex-wrap gap-3">
-            {categories.map(category => (
+            {outreachAngles.map(category => (
               <div key={category.id} className="flex items-center space-x-2">
                 <div
                   className="w-4 h-4 rounded-full"

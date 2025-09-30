@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase'
+import EventCard from '@/components/EventCard'
 
 interface CleanAnnualPlannerProps {
   currentYear: number
@@ -10,17 +11,10 @@ interface CleanAnnualPlannerProps {
   onMonthClick?: (month: number, year: number) => void
 }
 
-interface Event {
-  id: number
-  title: string
-  month: number
-  year: number
-  is_recurring?: boolean
-}
-
 export default function CleanAnnualPlanner({ currentYear, onYearChange, onMonthClick }: CleanAnnualPlannerProps) {
   const router = useRouter()
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<EventIdea[]>([])
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
   const [loading, setLoading] = useState(true)
 
   const monthNames = [
@@ -35,28 +29,78 @@ export default function CleanAnnualPlanner({ currentYear, onYearChange, onMonthC
   const loadEvents = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('events_ideas')
-        .select('id, title, month, year, is_recurring')
-        .or(`year.eq.${currentYear},is_recurring.eq.true`)
-        .order('month')
+      const [eventsResponse, anglesResponse] = await Promise.all([
+        supabase
+          .from('events_ideas')
+          .select('*')
+          .or(`start_year.eq.${currentYear},year.eq.${currentYear},is_recurring.eq.true`)
+          .order('start_year', { ascending: true })
+          .order('start_month', { ascending: true }),
+        supabase.from('outreach_angles').select('*')
+      ])
 
-      if (error) {
-        console.error('Error loading events:', error)
-        setEvents([])
-      } else {
-        setEvents(data || [])
-      }
+      if (eventsResponse.error) throw eventsResponse.error
+      if (anglesResponse.error) throw anglesResponse.error
+
+      setEvents(eventsResponse.data || [])
+      setOutreachAngles(anglesResponse.data || [])
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Error loading events:', error)
       setEvents([])
+      setOutreachAngles([])
     } finally {
       setLoading(false)
     }
   }
 
   const getEventsForMonth = (month: number) => {
-    return events.filter(event => event.month === month)
+    return events.filter(event => {
+      const eventStartMonth = event.start_month || event.month
+      const eventStartYear = event.start_year || event.year
+
+      // Handle recurring events
+      if (event.is_recurring) {
+        // Only show recurring events in years >= their start year
+        if (currentYear < eventStartYear) {
+          return false
+        }
+
+        // For recurring events, check if this month falls within the event span
+        if (event.end_month && event.end_year) {
+          // Multi-month recurring event
+          let startMonth = eventStartMonth
+          let endMonth = event.end_month
+
+          // Handle year wrapping (e.g. Nov-Feb)
+          if (endMonth < startMonth) {
+            // Event wraps across year boundary
+            return month >= startMonth || month <= endMonth
+          } else {
+            // Event within same year
+            return month >= startMonth && month <= endMonth
+          }
+        } else {
+          // Single month recurring event
+          return eventStartMonth === month
+        }
+      }
+
+      // Handle non-recurring events
+      // Multi-month event spanning this month
+      if (event.end_month && event.end_year) {
+        const startDate = new Date(eventStartYear, eventStartMonth - 1)
+        const endDate = new Date(event.end_year, event.end_month - 1)
+        const checkDate = new Date(currentYear, month - 1)
+        return checkDate >= startDate && checkDate <= endDate
+      }
+
+      // Direct match for single month events
+      if (eventStartYear === currentYear && eventStartMonth === month) {
+        return true
+      }
+
+      return false
+    })
   }
 
   if (loading) {
@@ -72,7 +116,7 @@ export default function CleanAnnualPlanner({ currentYear, onYearChange, onMonthC
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b">
         <h2 className="text-2xl font-bold text-gray-900">
-          {currentYear} Annual Planner
+          {currentYear}
         </h2>
         <div className="flex space-x-3">
           <button
@@ -156,31 +200,16 @@ export default function CleanAnnualPlanner({ currentYear, onYearChange, onMonthC
                     </div>
                   ) : (
                     monthEvents.map(event => (
-                      <div
+                      <EventCard
                         key={event.id}
-                        className="p-3 bg-gray-50 rounded-lg border-l-4 border-blue-500 cursor-pointer hover:bg-blue-50 transition-colors"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          router.push(`/edit-event/${event.id}?return=annual&month=${monthNumber}&year=${currentYear}`)
+                        event={event}
+                        outreachAngles={outreachAngles}
+                        onClick={(eventId) => {
+                          router.push(`/event/${eventId}?return=annual&month=${monthNumber}&year=${currentYear}`)
                         }}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="font-semibold text-gray-900 text-sm">
-                              {event.title}
-                            </div>
-                            {event.is_recurring && (
-                              <div className="inline-flex items-center mt-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                                <span className="mr-1">🔄</span>
-                                Annual
-                              </div>
-                            )}
-                          </div>
-                          <div className="ml-2 text-gray-400 text-sm">
-                            →
-                          </div>
-                        </div>
-                      </div>
+                        variant="annual"
+                        viewingYear={currentYear}
+                      />
                     ))
                   )}
                 </div>

@@ -4,13 +4,15 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import CleanAnnualPlanner from '@/components/CleanAnnualPlanner'
 import CleanTimelineView from '@/components/CleanTimelineView'
+import QuarterView from '@/components/QuarterView'
 
 function HomeContent() {
   const router = useRouter()
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
-  const [currentView, setCurrentView] = useState<'annual' | 'timeline'>('annual')
+  const [currentView, setCurrentView] = useState<'annual' | 'quarter' | 'timeline'>('annual')
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1)
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+  const [selectedQuarter, setSelectedQuarter] = useState<number>(Math.ceil((new Date().getMonth() + 1) / 3))
   const [refreshKey, setRefreshKey] = useState(0)
 
   // Get search params safely
@@ -29,7 +31,7 @@ function HomeContent() {
       const year = searchParams.get('year')
 
       // Update view
-      if (view === 'timeline' || view === 'annual') {
+      if (view === 'timeline' || view === 'annual' || view === 'quarter') {
         setCurrentView(view)
       }
 
@@ -49,6 +51,15 @@ function HomeContent() {
           setCurrentYear(yearNum)
         }
       }
+
+      // Update quarter
+      const quarter = searchParams.get('quarter')
+      if (quarter) {
+        const quarterNum = parseInt(quarter)
+        if (quarterNum >= 1 && quarterNum <= 4) {
+          setSelectedQuarter(quarterNum)
+        }
+      }
     }
   }, [searchParams?.toString()])
 
@@ -60,17 +71,22 @@ function HomeContent() {
     params.set('year', year.toString())
     if (currentView === 'timeline') {
       params.set('month', selectedMonth.toString())
+    } else if (currentView === 'quarter') {
+      params.set('quarter', selectedQuarter.toString())
     }
     router.push(`/?${params.toString()}`)
   }
 
-  const handleViewChange = (view: 'annual' | 'timeline') => {
+  const handleViewChange = (view: 'annual' | 'quarter' | 'timeline') => {
     setCurrentView(view)
     // Update URL to maintain state
     const params = new URLSearchParams()
     params.set('view', view)
     if (view === 'timeline') {
       params.set('month', selectedMonth.toString())
+      params.set('year', selectedYear.toString())
+    } else if (view === 'quarter') {
+      params.set('quarter', selectedQuarter.toString())
       params.set('year', selectedYear.toString())
     } else {
       params.set('year', currentYear.toString())
@@ -83,9 +99,14 @@ function HomeContent() {
   }
 
   const navigateToAddEvent = () => {
-    const url = currentView === 'timeline'
-      ? `/add-event?return=timeline&month=${selectedMonth}&year=${selectedYear}`
-      : '/add-event?return=annual'
+    let url = '/add-event?'
+    if (currentView === 'timeline') {
+      url += `return=timeline&month=${selectedMonth}&year=${selectedYear}`
+    } else if (currentView === 'quarter') {
+      url += `return=quarter&quarter=${selectedQuarter}&year=${selectedYear}`
+    } else {
+      url += 'return=annual'
+    }
     window.location.href = url
   }
 
@@ -99,15 +120,8 @@ function HomeContent() {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
 
-              {/* Title Section */}
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-                  Clinic Outreach Planner
-                </h1>
-              </div>
-
               {/* Controls Section */}
-              <div className="flex items-center space-x-4 mt-6 sm:mt-0">
+              <div className="flex items-center space-x-4">
 
                 {/* View Toggle */}
                 <div className="flex bg-gray-100 rounded-lg p-1">
@@ -119,7 +133,17 @@ function HomeContent() {
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Annual View
+                    Year
+                  </button>
+                  <button
+                    onClick={() => handleViewChange('quarter')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      currentView === 'quarter'
+                        ? 'bg-white text-blue-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Quarter
                   </button>
                   <button
                     onClick={() => handleViewChange('timeline')}
@@ -129,9 +153,17 @@ function HomeContent() {
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
-                    Month View
+                    Month
                   </button>
                 </div>
+
+                {/* Materials Link */}
+                <button
+                  onClick={() => router.push('/materials')}
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  📁 Materials
+                </button>
 
                 {/* Add Event Button */}
                 <button
@@ -154,6 +186,13 @@ function HomeContent() {
               key={`annual-${refreshKey}`}
               currentYear={currentYear}
               onYearChange={handleYearChange}
+            />
+          ) : currentView === 'quarter' ? (
+            <QuarterView
+              key={`quarter-${refreshKey}-${selectedQuarter}-${selectedYear}`}
+              currentYear={currentYear}
+              selectedQuarter={selectedQuarter}
+              selectedYear={selectedYear}
             />
           ) : (
             <CleanTimelineView

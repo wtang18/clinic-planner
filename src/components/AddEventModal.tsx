@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase, Category, NewEventIdea } from '@/lib/supabase'
+import { supabase, OutreachAngle, NewEventIdea, OutreachAngleSelection } from '@/lib/supabase'
 
 interface AddEventModalProps {
   isOpen: boolean
@@ -19,14 +19,18 @@ export default function AddEventModal({
   defaultYear
 }: AddEventModalProps) {
   console.log('AddEventModal rendering, isOpen:', isOpen)
-  const [categories, setCategories] = useState<Category[]>([])
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    month: defaultMonth || new Date().getMonth() + 1,
-    year: defaultYear || new Date().getFullYear(),
-    category_id: '',
+    start_month: defaultMonth || new Date().getMonth() + 1,
+    start_year: defaultYear || new Date().getFullYear(),
+    end_month: defaultMonth || new Date().getMonth() + 1,
+    end_year: defaultYear || new Date().getFullYear(),
+    is_multi_month: false,
+    selected_angles: {} as Record<string, boolean>,
+    angle_notes: {} as Record<string, string>,
     prep_months_needed: 0,
     prep_start_date: '',
     prep_type: 'months', // 'months' or 'date'
@@ -35,11 +39,15 @@ export default function AddEventModal({
 
   useEffect(() => {
     if (isOpen) {
-      fetchCategories()
+      fetchOutreachAngles()
+      const currentMonth = defaultMonth || new Date().getMonth() + 1
+      const currentYear = defaultYear || new Date().getFullYear()
       setFormData(prev => ({
         ...prev,
-        month: defaultMonth || new Date().getMonth() + 1,
-        year: defaultYear || new Date().getFullYear()
+        start_month: currentMonth,
+        start_year: currentYear,
+        end_month: currentMonth,
+        end_year: currentYear
       }))
     }
   }, [isOpen, defaultMonth, defaultYear])
@@ -76,17 +84,17 @@ export default function AddEventModal({
     }
   }, [isOpen])
 
-  const fetchCategories = async () => {
+  const fetchOutreachAngles = async () => {
     try {
       const { data, error } = await supabase
-        .from('categories')
+        .from('outreach_angles')
         .select('*')
         .order('name')
 
       if (error) throw error
-      setCategories(data || [])
+      setOutreachAngles(data || [])
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      console.error('Error fetching outreach angles:', error)
     }
   }
 
@@ -95,15 +103,39 @@ export default function AddEventModal({
     setLoading(true)
 
     try {
+      // Validate at least one outreach angle is selected
+      const selectedAngles = Object.entries(formData.selected_angles)
+        .filter(([_, isSelected]) => isSelected)
+        .map(([angle]) => angle)
+
+      if (selectedAngles.length === 0) {
+        alert('Please select at least one outreach angle.')
+        setLoading(false)
+        return
+      }
+
+      // Build outreach_angles array
+      const outreach_angles: OutreachAngleSelection[] = selectedAngles.map(angle => ({
+        angle,
+        notes: formData.angle_notes[angle] || ''
+      }))
+
       const eventData: NewEventIdea = {
         title: formData.title,
         description: formData.description || undefined,
-        month: formData.month,
-        year: formData.year,
-        category_id: parseInt(formData.category_id),
+        start_month: formData.start_month,
+        start_year: formData.start_year,
+        end_month: formData.is_multi_month ? formData.end_month : undefined,
+        end_year: formData.is_multi_month ? formData.end_year : undefined,
+        outreach_angles,
         prep_months_needed: formData.prep_type === 'months' ? formData.prep_months_needed : 0,
         prep_start_date: formData.prep_type === 'date' ? formData.prep_start_date || undefined : undefined,
-        created_by: formData.created_by
+        is_recurring: false,
+        created_by: formData.created_by,
+        // Legacy fields for backward compatibility
+        month: formData.start_month,
+        year: formData.start_year,
+        category_id: 1 // Default to first angle for legacy compatibility
       }
 
       const { error } = await supabase
@@ -112,12 +144,19 @@ export default function AddEventModal({
 
       if (error) throw error
 
+      // Reset form
+      const currentMonth = defaultMonth || new Date().getMonth() + 1
+      const currentYear = defaultYear || new Date().getFullYear()
       setFormData({
         title: '',
         description: '',
-        month: defaultMonth || new Date().getMonth() + 1,
-        year: defaultYear || new Date().getFullYear(),
-        category_id: '',
+        start_month: currentMonth,
+        start_year: currentYear,
+        end_month: currentMonth,
+        end_year: currentYear,
+        is_multi_month: false,
+        selected_angles: {},
+        angle_notes: {},
         prep_months_needed: 0,
         prep_start_date: '',
         prep_type: 'months',
@@ -138,9 +177,38 @@ export default function AddEventModal({
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'month' || name === 'year' || name === 'prep_months_needed'
+      [name]: name === 'start_month' || name === 'start_year' || name === 'end_month' || name === 'end_year' || name === 'prep_months_needed'
         ? parseInt(value) || 0
         : value
+    }))
+  }
+
+  const handleAngleToggle = (angle: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selected_angles: {
+        ...prev.selected_angles,
+        [angle]: !prev.selected_angles[angle]
+      }
+    }))
+  }
+
+  const handleAngleNotesChange = (angle: string, notes: string) => {
+    setFormData(prev => ({
+      ...prev,
+      angle_notes: {
+        ...prev.angle_notes,
+        [angle]: notes
+      }
+    }))
+  }
+
+  const handleMultiMonthToggle = () => {
+    setFormData(prev => ({
+      ...prev,
+      is_multi_month: !prev.is_multi_month,
+      end_month: !prev.is_multi_month ? prev.start_month : prev.end_month,
+      end_year: !prev.is_multi_month ? prev.start_year : prev.end_year
     }))
   }
 
@@ -227,67 +295,148 @@ export default function AddEventModal({
               />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="month" className="block text-sm font-medium text-gray-700 mb-1">
-                    Month *
-                  </label>
-                <select
-                  id="month"
-                  name="month"
-                  value={formData.month}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {monthNames.map((month, index) => (
-                    <option key={month} value={index + 1}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-                </div>
+              {/* Date Range Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Event Date Range *
+                </label>
 
-                <div>
-                  <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
-                    Year *
-                  </label>
-                <select
-                  id="year"
-                  name="year"
-                  value={formData.year}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {years.map(year => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-4">
+                  {/* Start Date */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Start Date
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        name="start_month"
+                        value={formData.start_month}
+                        onChange={handleInputChange}
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {monthNames.map((month, index) => (
+                          <option key={month} value={index + 1}>
+                            {month}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        name="start_year"
+                        value={formData.start_year}
+                        onChange={handleInputChange}
+                        required
+                        className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {years.map(year => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Multi-month toggle */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_multi_month"
+                      checked={formData.is_multi_month}
+                      onChange={handleMultiMonthToggle}
+                      className="mr-2 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="is_multi_month" className="text-sm text-gray-700">
+                      Multi-month event
+                    </label>
+                  </div>
+
+                  {/* End Date (conditional) */}
+                  {formData.is_multi_month && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        End Date
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <select
+                          name="end_month"
+                          value={formData.end_month}
+                          onChange={handleInputChange}
+                          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {monthNames.map((month, index) => (
+                            <option key={month} value={index + 1}>
+                              {month}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          name="end_year"
+                          value={formData.end_year}
+                          onChange={handleInputChange}
+                          className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {years.map(year => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
+              {/* Outreach Angles Section */}
               <div>
-                <label htmlFor="category_id" className="block text-sm font-medium text-gray-700 mb-1">
-                  Category *
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Outreach Angles *
                 </label>
-              <select
-                id="category_id"
-                name="category_id"
-                value={formData.category_id}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Select a category</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.id}>
-                    {category.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </option>
-                ))}
-              </select>
+                <p className="text-xs text-gray-500 mb-4">
+                  Select one or more outreach angles and add notes for each selected angle.
+                </p>
+
+                <div className="space-y-3">
+                  {outreachAngles.map(angle => (
+                    <div key={angle.id} className="border border-gray-200 rounded-md p-3">
+                      <div className="flex items-center mb-2">
+                        <input
+                          type="checkbox"
+                          id={`angle_${angle.name}`}
+                          checked={formData.selected_angles[angle.name] || false}
+                          onChange={() => handleAngleToggle(angle.name)}
+                          className="mr-2 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label
+                          htmlFor={`angle_${angle.name}`}
+                          className="flex items-center font-medium text-sm text-gray-700 cursor-pointer"
+                        >
+                          <span
+                            className="w-3 h-3 rounded-full mr-2"
+                            style={{ backgroundColor: angle.color }}
+                          ></span>
+                          {angle.name} - {angle.description}
+                        </label>
+                      </div>
+
+                      {formData.selected_angles[angle.name] && (
+                        <div className="ml-5">
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Notes for {angle.name}
+                          </label>
+                          <textarea
+                            value={formData.angle_notes[angle.name] || ''}
+                            onChange={(e) => handleAngleNotesChange(angle.name, e.target.value)}
+                            rows={2}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder={`Add specific notes for ${angle.name} angle...`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div>
