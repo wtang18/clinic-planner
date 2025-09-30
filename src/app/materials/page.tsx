@@ -3,13 +3,18 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
-import { MarketingMaterial, EventIdea, supabase } from '@/lib/supabase'
+import { MarketingMaterial, supabase } from '@/lib/supabase'
 import MaterialsList from '@/components/MaterialsList'
+
+type EventOption = {
+  id: number
+  title: string
+}
 
 export default function MaterialsPage() {
   const router = useRouter()
   const [materials, setMaterials] = useState<MarketingMaterial[]>([])
-  const [events, setEvents] = useState<EventIdea[]>([])
+  const [events, setEvents] = useState<EventOption[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterAnyTime, setFilterAnyTime] = useState<boolean | null>(null)

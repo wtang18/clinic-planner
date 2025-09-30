@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
 import MaterialCard from '@/components/MaterialCard'
 
-export default function EventDetailsPage() {
+function EventDetailsContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -379,5 +379,22 @@ export default function EventDetailsPage() {
         </div>
       </div>
     </main>
+  )
+}
+function LoadingFallback() {
+  return (
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    </main>
+  )
+}
+
+export default function EventDetailsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <EventDetailsContent />
+    </Suspense>
   )
 }

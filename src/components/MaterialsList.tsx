@@ -1,8 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MarketingMaterial, EventIdea, supabase } from '@/lib/supabase'
+import { MarketingMaterial, supabase } from '@/lib/supabase'
 import MaterialCard from '@/components/MaterialCard'
+
+type EventOption = {
+  id: number
+  title: string
+}
 
 interface MaterialsListProps {
   materials: MarketingMaterial[]
@@ -13,7 +18,7 @@ interface MaterialsListProps {
 }
 
 export default function MaterialsList({ materials, loading, onEdit, onDelete, onUpdated }: MaterialsListProps) {
-  const [events, setEvents] = useState<EventIdea[]>([])
+  const [events, setEvents] = useState<EventOption[]>([])
   const [eventsLoading, setEventsLoading] = useState(true)
 
   useEffect(() => {

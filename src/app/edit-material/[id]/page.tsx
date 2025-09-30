@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
 import { MarketingMaterial, supabase } from '@/lib/supabase'
@@ -10,7 +10,7 @@ type EventOption = {
   title: string
 }
 
-export default function EditMaterialPage() {
+function EditMaterialContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -310,5 +310,23 @@ export default function EditMaterialPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-lg text-gray-600">Loading...</div>
+      </div>
+    </main>
+  )
+}
+
+export default function EditMaterialPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <EditMaterialContent />
+    </Suspense>
   )
 }
