@@ -1,0 +1,9 @@
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M10 6H11.25V8H10V6Z" fill="currentColor"/>
+<path d="M11.25 9H10V11H11.25V9Z" fill="currentColor"/>
+<path d="M10 12H11.25V14H10V12Z" fill="currentColor"/>
+<path d="M14 6H12.75V8H14V6Z" fill="currentColor"/>
+<path d="M12.75 9H14V11H12.75V9Z" fill="currentColor"/>
+<path d="M14 12H12.75V14H14V12Z" fill="currentColor"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M8 3.25C7.58579 3.25 7.25 3.58579 7.25 4V9.25H4C3.58579 9.25 3.25 9.58579 3.25 10V20C3.25 20.4142 3.58579 20.75 4 20.75H20C20.4142 20.75 20.75 20.4142 20.75 20V13C20.75 12.5858 20.4142 12.25 20 12.25H16.75V4C16.75 3.58579 16.4142 3.25 16 3.25H8ZM8.75 19.25V4.75H15.25V19.25H13.5V16H10.5V19.25H8.75ZM4.75 10.75H7.25V19.25H4.75V10.75ZM16.75 13.75V19.25H19.25V13.75H16.75Z" fill="currentColor"/>
+</svg>

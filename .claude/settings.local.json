@@ -14,7 +14,12 @@
       "mcp__supabase__list_tables",
       "mcp__supabase__execute_sql",
       "mcp__supabase__list_migrations",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(node:*)",
+      "Bash(cat:*)",
+      "Bash(xargs:*)",
+      "Bash(test:*)",
+      "Bash(src/design-system/components/Pill.tsx)"
     ],
     "deny": [],
     "ask": []

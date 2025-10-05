@@ -1,0 +1,6 @@
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11 6H9V7H11V6Z" fill="currentColor"/>
+<path d="M9 8H11V9H9V8Z" fill="currentColor"/>
+<path d="M11 10H9V11H11V10Z" fill="currentColor"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M6.25 4C6.25 3.58579 6.58579 3.25 7 3.25H13C13.4142 3.25 13.75 3.58579 13.75 4V9.25H16C16.4142 9.25 16.75 9.58579 16.75 10V16C16.75 16.4142 16.4142 16.75 16 16.75H4C3.58579 16.75 3.25 16.4142 3.25 16V7C3.25 6.58579 3.58579 6.25 4 6.25H6.25V4ZM7.75 15.25H9V12.5H11V15.25H12.25V4.75H7.75V15.25ZM6.25 7.75H4.75V15.25H6.25V7.75ZM13.75 15.25V10.75H15.25V15.25H13.75Z" fill="currentColor"/>
+</svg>

@@ -1,0 +1,874 @@
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+import { Icon, type IconName } from "@/design-system/icons";
+
+export interface PillProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * The visual style variant of the pill
+   * - "outlined": Border with transparent background
+   * - "subtle-outlined": Lighter border with transparent background
+   * - "filled": Solid background color
+   * - "transparent": Semi-transparent gray background
+   * - "no-fill": No background or border (text only)
+   */
+  variant?: "outlined" | "subtle-outlined" | "filled" | "transparent" | "no-fill";
+
+  /**
+   * The semantic type/color of the pill
+   * - "neutral": Default gray styling
+   * - "positive": Green for success states
+   * - "alert": Red for errors/alerts
+   * - "high-alert": Darker red for critical alerts
+   * - "attention": Yellow for warnings
+   * - "info": Blue for information
+   * - "important-info": Darker blue for important information
+   * - "accent": Purple for accent/special states
+   * - "carby": Brand green color
+   */
+  type?:
+    | "neutral"
+    | "positive"
+    | "alert"
+    | "high-alert"
+    | "attention"
+    | "info"
+    | "important-info"
+    | "accent"
+    | "carby";
+
+  /**
+   * Size variant
+   * - "xs": Extra small (20px height, 12px text, no icons)
+   * - "sm": Small (24px height, 12px text, supports icons)
+   * - "md": Medium (32px height, 14px text, supports icons)
+   */
+  size?: "xs" | "sm" | "md";
+
+  /**
+   * Whether the pill is interactive (clickable)
+   */
+  interactive?: boolean;
+
+  /**
+   * Whether the pill is disabled
+   */
+  disabled?: boolean;
+
+  /**
+   * Main label text
+   * Required unless iconL/leftIcon is provided for icon-only pills (sm/md only)
+   */
+  label?: string;
+
+  /**
+   * Left icon name from Icon system
+   * Only supported for sm/md sizes
+   * Can be used alone for icon-only pills
+   */
+  iconL?: IconName;
+
+  /**
+   * Custom left icon (React element or component)
+   * Only supported for sm/md sizes
+   * Can be used alone for icon-only pills
+   * Alternative to iconL
+   */
+  leftIcon?: React.ReactNode;
+
+  /**
+   * Right icon name from Icon system
+   * Only supported for sm/md sizes
+   * Must be used with label
+   */
+  iconR?: IconName;
+
+  /**
+   * Custom right icon (React element or component)
+   * Only supported for sm/md sizes
+   * Must be used with label
+   * Alternative to iconR
+   */
+  rightIcon?: React.ReactNode;
+
+  /**
+   * Left subtext (smaller text before label)
+   * Supported for all sizes
+   */
+  leftSubtext?: string;
+
+  /**
+   * Right subtext (smaller text after label)
+   * Supported for all sizes
+   */
+  rightSubtext?: string;
+
+  /**
+   * Click handler (only applies if interactive)
+   */
+  onClick?: () => void;
+}
+
+// Pill variant styles using cva - following Button component pattern
+const pillVariants = cva(
+  // Base styles - common to all variants
+  [
+    "inline-flex items-center gap-1 font-medium whitespace-nowrap",
+    "transition-all duration-200",
+    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+  ],
+  {
+    variants: {
+      // Type variants - semantic colors
+      type: {
+        neutral: "",
+        positive: "",
+        alert: "",
+        "high-alert": "",
+        attention: "",
+        info: "",
+        "important-info": "",
+        accent: "",
+        carby: "",
+      },
+      // Visual variants
+      variant: {
+        filled: "",
+        outlined: "border",
+        "subtle-outlined": "border",
+        transparent: "bg-[rgba(0,0,0,0.12)]",
+        "no-fill": "",
+      },
+      // Size variants
+      size: {
+        xs: "h-5 px-1.5 py-0 text-xs leading-5 rounded", // 20px height, 6px h-padding, 0 v-padding, 4px radius
+        sm: "h-6 px-1.5 py-0.5 text-xs leading-5 rounded-lg", // 24px height, 6px h-padding, 2px v-padding, 8px radius
+        md: "h-8 px-2 py-1.5 text-sm leading-5 rounded-lg", // 32px height, 8px h-padding, 6px v-padding, 8px radius
+      },
+      // Interactive state
+      interactive: {
+        true: "cursor-pointer",
+        false: "",
+      },
+      // Disabled state
+      disabled: {
+        true: "cursor-not-allowed !bg-[rgba(0,0,0,0.06)] !text-fg-neutral-disabled",
+        false: "",
+      },
+    },
+    // Compound variants for type + variant combinations
+    compoundVariants: [
+      // NEUTRAL variants
+      {
+        type: "neutral",
+        variant: "filled",
+        disabled: false,
+        className: "bg-gray-200 text-fg-neutral-primary",
+      },
+      {
+        type: "neutral",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-gray-300",
+      },
+      {
+        type: "neutral",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-fg-neutral-primary",
+      },
+      {
+        type: "neutral",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "neutral",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+      },
+      {
+        type: "neutral",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "neutral",
+        variant: "transparent",
+        disabled: false,
+        className: "text-fg-neutral-primary",
+      },
+      {
+        type: "neutral",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-fg-neutral-primary",
+      },
+      {
+        type: "neutral",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // POSITIVE variants
+      {
+        type: "positive",
+        variant: "filled",
+        disabled: false,
+        className: "bg-[#cbedda] text-[#174b34]",
+      },
+      {
+        type: "positive",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[#a9e2b3]",
+      },
+      {
+        type: "positive",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-[#174b34]",
+      },
+      {
+        type: "positive",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-[#181818] hover:text-[#181818]",
+      },
+      {
+        type: "positive",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-[#424242]",
+      },
+      {
+        type: "positive",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-[#181818] hover:text-[#181818]",
+      },
+      {
+        type: "positive",
+        variant: "transparent",
+        disabled: false,
+        className: "text-[#174b34]",
+      },
+      {
+        type: "positive",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-[#174b34]",
+      },
+      {
+        type: "positive",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // ALERT variants
+      {
+        type: "alert",
+        variant: "filled",
+        disabled: false,
+        className: "bg-[#f8dad6] text-[#712c28]",
+      },
+      {
+        type: "alert",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[#f5cbc5]",
+      },
+      {
+        type: "alert",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-[#712c28]",
+      },
+      {
+        type: "alert",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-[#181818] hover:text-[#181818]",
+      },
+      {
+        type: "alert",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-[#424242]",
+      },
+      {
+        type: "alert",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-[#181818] hover:text-[#181818]",
+      },
+      {
+        type: "alert",
+        variant: "transparent",
+        disabled: false,
+        className: "text-[#712c28]",
+      },
+      {
+        type: "alert",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-[#712c28]",
+      },
+      {
+        type: "alert",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // HIGH-ALERT variants
+      {
+        type: "high-alert",
+        variant: "filled",
+        disabled: false,
+        className: "bg-[#b33f3b] text-white",
+      },
+      {
+        type: "high-alert",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[#712c28]",
+      },
+      {
+        type: "high-alert",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-white",
+      },
+      {
+        type: "high-alert",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "high-alert",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-white",
+      },
+      {
+        type: "high-alert",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "high-alert",
+        variant: "transparent",
+        disabled: false,
+        className: "text-white",
+      },
+      {
+        type: "high-alert",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-white",
+      },
+      {
+        type: "high-alert",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // ATTENTION variants
+      {
+        type: "attention",
+        variant: "filled",
+        disabled: false,
+        className: "bg-attention-low text-fg-attention-primary",
+      },
+      {
+        type: "attention",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-attention-low-accented",
+      },
+      {
+        type: "attention",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-fg-attention-primary",
+      },
+      {
+        type: "attention",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "attention",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+      },
+      {
+        type: "attention",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "attention",
+        variant: "transparent",
+        disabled: false,
+        className: "text-fg-attention-primary",
+      },
+      {
+        type: "attention",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-fg-attention-primary",
+      },
+      {
+        type: "attention",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // INFO variants
+      {
+        type: "info",
+        variant: "filled",
+        disabled: false,
+        className: "bg-information-low text-fg-information-primary",
+      },
+      {
+        type: "info",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-information-low-accented",
+      },
+      {
+        type: "info",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-fg-information-primary",
+      },
+      {
+        type: "info",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "info",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+      },
+      {
+        type: "info",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "info",
+        variant: "transparent",
+        disabled: false,
+        className: "text-fg-information-primary",
+      },
+      {
+        type: "info",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-fg-information-primary",
+      },
+      {
+        type: "info",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // IMPORTANT-INFO variants
+      {
+        type: "important-info",
+        variant: "filled",
+        disabled: false,
+        className: "bg-information-high text-white",
+      },
+      {
+        type: "important-info",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-information-high-accented",
+      },
+      {
+        type: "important-info",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-white",
+      },
+      {
+        type: "important-info",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "important-info",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-white",
+      },
+      {
+        type: "important-info",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "important-info",
+        variant: "transparent",
+        disabled: false,
+        className: "text-white",
+      },
+      {
+        type: "important-info",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-white",
+      },
+      {
+        type: "important-info",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // ACCENT variants
+      {
+        type: "accent",
+        variant: "filled",
+        disabled: false,
+        className: "bg-accent-low text-fg-accent-primary",
+      },
+      {
+        type: "accent",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-accent-low-accented",
+      },
+      {
+        type: "accent",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-fg-accent-primary",
+      },
+      {
+        type: "accent",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "accent",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+      },
+      {
+        type: "accent",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "accent",
+        variant: "transparent",
+        disabled: false,
+        className: "text-fg-accent-primary",
+      },
+      {
+        type: "accent",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-fg-accent-primary",
+      },
+      {
+        type: "accent",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+
+      // CARBY variants
+      {
+        type: "carby",
+        variant: "filled",
+        disabled: false,
+        className: "bg-utility-carby-green text-fg-positive-primary",
+      },
+      {
+        type: "carby",
+        variant: "filled",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-green-400",
+      },
+      {
+        type: "carby",
+        variant: "outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.24)] text-fg-positive-primary",
+      },
+      {
+        type: "carby",
+        variant: "outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "carby",
+        variant: "subtle-outlined",
+        disabled: false,
+        className: "border-[rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+      },
+      {
+        type: "carby",
+        variant: "subtle-outlined",
+        interactive: true,
+        disabled: false,
+        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+      },
+      {
+        type: "carby",
+        variant: "transparent",
+        disabled: false,
+        className: "text-fg-positive-primary",
+      },
+      {
+        type: "carby",
+        variant: "no-fill",
+        disabled: false,
+        className: "text-fg-positive-primary",
+      },
+      {
+        type: "carby",
+        variant: "no-fill",
+        interactive: true,
+        disabled: false,
+        className: "hover:bg-[rgba(0,0,0,0.06)]",
+      },
+    ],
+    defaultVariants: {
+      type: "neutral",
+      variant: "filled",
+      size: "md",
+      interactive: false,
+      disabled: false,
+    },
+  }
+);
+
+/**
+ * Pill/Badge component based on Figma design system
+ *
+ * FIGMA SPECIFICATIONS:
+ * - Border Radius: 8px (sm/md), 4px (xs)
+ * - Icon Size: 20px (sm/md only - xs does not support icons)
+ * - Gap between elements: 4px
+ *
+ * SIZE SPECIFICATIONS:
+ * - XS: Height 20px, Padding 0px 6px, Text 12px, Border radius 4px, NO ICONS
+ *   - Structure: [leftSubtext] label [rightSubtext]
+ * - SM: Height 24px, Padding 2px 6px, Text 12px, Border radius 8px
+ *   - Structure: [leftIcon] [leftSubtext] label [rightSubtext] [rightIcon]
+ * - MD: Height 32px, Padding 6px 8px, Text 14px, Border radius 8px
+ *   - Structure: [leftIcon] [leftSubtext] label [rightSubtext] [rightIcon]
+ *
+ * VALIDATION:
+ * - Must have label OR leftIcon (for icon-only pills on sm/md)
+ * - rightIcon requires label
+ *
+ * @example
+ * // Basic pill with label
+ * <Pill type="positive" variant="filled" size="md" label="Success" />
+ *
+ * @example
+ * // With icon from Icon system
+ * <Pill type="info" variant="filled" size="sm" iconL="info" label="Information" />
+ *
+ * @example
+ * // With custom React icon component
+ * <Pill type="info" variant="filled" size="sm" leftIcon={<InfoIcon />} label="Information" />
+ *
+ * @example
+ * // Icon-only pill (sm/md only)
+ * <Pill type="neutral" variant="outlined" size="md" iconL="star" />
+ *
+ * @example
+ * // With both left and right icons
+ * <Pill type="positive" size="md" iconL="check" label="Completed" iconR="arrow-right" />
+ *
+ * @example
+ * // With subtexts
+ * <Pill type="attention" size="md" label="Alert" leftSubtext="!" rightSubtext="2" />
+ *
+ * @example
+ * // Interactive pill
+ * <Pill type="neutral" variant="outlined" interactive onClick={() => console.log('clicked')} label="Clickable" />
+ */
+export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
+  (
+    {
+      variant = "filled",
+      type = "neutral",
+      size = "md",
+      interactive = false,
+      disabled = false,
+      label,
+      iconL,
+      leftIcon,
+      iconR,
+      rightIcon,
+      leftSubtext,
+      rightSubtext,
+      onClick,
+      className,
+      ...props
+    },
+    ref
+  ) => {
+    // Validation: Must have label or icon
+    const hasLeftIcon = iconL || leftIcon;
+    const hasRightIcon = iconR || rightIcon;
+
+    if (!label && !hasLeftIcon) {
+      console.warn("Pill component requires either 'label' or 'iconL/leftIcon' prop");
+    }
+
+    // Validation: rightIcon requires label
+    if (hasRightIcon && !label) {
+      console.warn("Pill component: 'iconR/rightIcon' requires 'label' prop");
+    }
+
+    // Validation: Icons only supported for sm/md sizes
+    if (size === "xs" && (hasLeftIcon || hasRightIcon)) {
+      console.warn("Pill component: Icons are not supported for 'xs' size");
+    }
+
+    // Icon size is always small (20px) for pills
+    const iconSize = "small" as const;
+
+    // Render icons with correct size
+    const renderedLeftIcon = iconL ? <Icon name={iconL} size={iconSize} /> : leftIcon;
+    const renderedRightIcon = iconR ? <Icon name={iconR} size={iconSize} /> : rightIcon;
+
+    const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (disabled) {
+        e.preventDefault();
+        return;
+      }
+      if (interactive && onClick) {
+        onClick();
+      }
+      props.onClick?.(e);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) {
+        e.preventDefault();
+        return;
+      }
+
+      // Handle Enter and Space for interactive pills
+      if (interactive && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        onClick?.();
+      }
+
+      props.onKeyDown?.(e);
+    };
+
+    return (
+      <div
+        ref={ref}
+        role={interactive ? "button" : undefined}
+        tabIndex={interactive && !disabled ? 0 : undefined}
+        aria-disabled={disabled ? true : undefined}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          pillVariants({
+            type,
+            variant,
+            size,
+            interactive,
+            disabled,
+          }),
+          className
+        )}
+        {...props}
+      >
+        {/* Left icon - only for sm/md sizes */}
+        {(iconL || leftIcon) && size !== "xs" && renderedLeftIcon}
+
+        {/* Left subtext */}
+        {leftSubtext && (
+          <span className="opacity-70 text-[0.85em]">{leftSubtext}</span>
+        )}
+
+        {/* Main label */}
+        {label && <span>{label}</span>}
+
+        {/* Right subtext */}
+        {rightSubtext && (
+          <span className="opacity-70 text-[0.85em]">{rightSubtext}</span>
+        )}
+
+        {/* Right icon - only for sm/md sizes and requires label */}
+        {(iconR || rightIcon) && size !== "xs" && label && renderedRightIcon}
+      </div>
+    );
+  }
+);
+
+Pill.displayName = "Pill";
