@@ -1,6 +1,8 @@
+'use client';
 import React from 'react';
 import { cn } from '@/lib/utils';
 import type { IconName } from './icon-names';
+import { smallIconMap, mediumIconMap } from './icon-map';
 
 export type IconSize = 'small' | 'medium';
 
@@ -17,98 +19,34 @@ export interface IconProps {
   'aria-hidden'?: boolean;
 }
 
-// Eager-load all icons using dynamic imports
-// Use ?raw query to get actual SVG strings
-const smallIcons = import.meta.glob<string>('./small/*.svg', {
-  query: '?raw',
-  eager: true,
-  import: 'default',
-});
-
-const mediumIcons = import.meta.glob<string>('./medium/*.svg', {
-  query: '?raw',
-  eager: true,
-  import: 'default',
-});
-
-/**
- * Decode data URL to get SVG string
- */
-function decodeDataUrl(dataUrl: string): string | null {
-  try {
-    // Data URL format: data:image/svg+xml,<svg...> or data:image/svg+xml;base64,<base64>
-    if (dataUrl.startsWith('data:image/svg+xml,')) {
-      // URL-encoded SVG
-      const encoded = dataUrl.substring('data:image/svg+xml,'.length);
-      return decodeURIComponent(encoded);
-    } else if (dataUrl.startsWith('data:image/svg+xml;base64,')) {
-      // Base64-encoded SVG
-      const base64 = dataUrl.substring('data:image/svg+xml;base64,'.length);
-      return atob(base64);
-    }
-  } catch (error) {
-    console.error('Failed to decode data URL:', error);
-  }
-  return null;
-}
-
 /**
  * Get SVG string for an icon
  */
 function getIconSvg(name: IconName, size: IconSize): string | null {
   const fileName = size === 'small' ? `${name}-small.svg` : `${name}.svg`;
-  const path = size === 'small' ? `./small/${fileName}` : `./medium/${fileName}`;
+  const key = `./${fileName}`;
 
   // Try to get from appropriate size
-  const icons = size === 'small' ? smallIcons : mediumIcons;
-  let svgData: any = icons[path];
+  const icons = size === 'small' ? smallIconMap : mediumIconMap;
+  let svgContent = icons[key];
 
-  // Handle different formats
-  let svg: string | null = null;
-
-  if (svgData) {
-    if (typeof svgData === 'string') {
-      // Already a string (raw SVG)
-      svg = svgData;
-    } else if (typeof svgData === 'object') {
-      // Object format with src property (data URL)
-      if (svgData.src && typeof svgData.src === 'string') {
-        svg = decodeDataUrl(svgData.src);
-      } else if (svgData.default && typeof svgData.default === 'string') {
-        svg = svgData.default;
-      }
-    }
-  }
-
-  if (!svg) {
+  if (!svgContent) {
     // Try fallback to other size
     const fallbackSize = size === 'small' ? 'medium' : 'small';
     const fallbackFileName = fallbackSize === 'small' ? `${name}-small.svg` : `${name}.svg`;
-    const fallbackPath = fallbackSize === 'small' ? `./small/${fallbackFileName}` : `./medium/${fallbackFileName}`;
-    const fallbackIcons = fallbackSize === 'small' ? smallIcons : mediumIcons;
+    const fallbackKey = `./${fallbackFileName}`;
+    const fallbackIcons = fallbackSize === 'small' ? smallIconMap : mediumIconMap;
 
-    let fallbackData: any = fallbackIcons[fallbackPath];
+    svgContent = fallbackIcons[fallbackKey];
 
-    if (fallbackData) {
-      if (typeof fallbackData === 'string') {
-        svg = fallbackData;
-      } else if (typeof fallbackData === 'object') {
-        if (fallbackData.src && typeof fallbackData.src === 'string') {
-          svg = decodeDataUrl(fallbackData.src);
-        } else if (fallbackData.default && typeof fallbackData.default === 'string') {
-          svg = fallbackData.default;
-        }
-      }
-
-      if (svg) {
-        console.warn(
-          `Icon "${name}" not found in ${size} size, using ${fallbackSize} size as fallback`
-        );
-      }
+    if (svgContent) {
+      console.warn(
+        `Icon "${name}" not found in ${size} size, using ${fallbackSize} size as fallback`
+      );
     }
   }
 
-  return svg;
+  return svgContent || null;
 }
 
 /**
@@ -172,34 +110,6 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
     }
 
     // Parse SVG and inject classes/attributes
-    // Use DOMParser to parse SVG string
-    if (typeof window !== 'undefined') {
-      const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
-      const svgElement = svgDoc.documentElement;
-
-      // Apply classes and attributes
-      const existingClasses = svgElement.getAttribute('class') || '';
-      svgElement.setAttribute('class', cn(sizeClasses, 'shrink-0', existingClasses, className));
-
-      if (ariaLabel) {
-        svgElement.setAttribute('aria-label', ariaLabel);
-        svgElement.setAttribute('role', 'img');
-      }
-      if (ariaHidden !== undefined) {
-        svgElement.setAttribute('aria-hidden', String(ariaHidden));
-      }
-
-      return (
-        <span
-          ref={ref}
-          dangerouslySetInnerHTML={{ __html: svgElement.outerHTML }}
-          className="inline-flex items-center justify-center"
-        />
-      );
-    }
-
-    // SSR fallback: inject classes via string manipulation
     let modifiedSvg = svgContent;
     const svgMatch = modifiedSvg.match(/<svg([^>]*)>/);
 

@@ -1,3 +1,4 @@
+'use client';
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
@@ -5,7 +6,7 @@ import { cn } from "@/lib/utils";
 // Segment variant styles using cva
 const segmentVariants = cva(
   [
-    "box-border flex flex-col items-center justify-center px-2 py-1.5",
+    "box-border flex flex-col items-center justify-center px-3 py-1.5",
     "rounded-full transition-all duration-200",
     "cursor-pointer select-none",
     "flex-1 min-w-0", // Allow segments to grow equally and prevent overflow

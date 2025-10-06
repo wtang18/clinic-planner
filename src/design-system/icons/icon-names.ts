@@ -2,9 +2,9 @@
  * Auto-generated icon name types
  * DO NOT EDIT MANUALLY - Run 'node generate-icon-types.js' to regenerate
  *
- * Generated on: 2025-10-03T04:31:40.874Z
+ * Generated on: 2025-10-06T06:57:01.854Z
  * Total icons: 386
- * Small icons: 207
+ * Small icons: 212
  * Medium icons: 321
  */
 
@@ -528,10 +528,15 @@ export const SMALL_ICON_NAMES: readonly IconName[] = [
   "more-horizontal",
   "more-vertical",
   "nasal-cannula",
+  "navigation-menu",
   "no",
   "note-cross",
   "notepad-pen",
   "o2-tank-mask",
+  "panel-left-closed",
+  "panel-left-open",
+  "panel-right-closed",
+  "panel-right-open",
   "panels",
   "paperclip",
   "pause",
