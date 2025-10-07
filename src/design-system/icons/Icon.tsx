@@ -77,8 +77,8 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
     // Compute size classes
     const sizeClasses = size === 'small' ? 'w-5 h-5' : 'w-6 h-6';
 
-    // Get SVG string
-    const svgContent = getIconSvg(name, size);
+    // Get SVG string - use let so we can reassign if needed
+    let svgContent = getIconSvg(name, size);
 
     // Show fallback if not found
     if (!svgContent) {
@@ -107,6 +107,74 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
           />
         </svg>
       );
+    }
+
+    // Ensure svgContent is a string
+    if (typeof svgContent !== 'string') {
+      console.error(`Icon "${name}" returned non-string content:`, typeof svgContent);
+      console.error('Content keys:', svgContent ? Object.keys(svgContent) : 'null');
+      console.error('Content value:', svgContent);
+
+      // Check if it's a module with a default export (Vite might be doing this)
+      if (svgContent && typeof svgContent === 'object') {
+        // Handle Next.js/Storybook image imports with data URLs
+        if ((svgContent as any).src && typeof (svgContent as any).src === 'string') {
+          const srcValue = (svgContent as any).src;
+
+          // Check if it's a data URL
+          if (srcValue.startsWith('data:image/svg+xml,')) {
+            // Decode the data URL to get the actual SVG content
+            const encodedSvg = srcValue.replace('data:image/svg+xml,', '');
+            const decodedSvg = decodeURIComponent(encodedSvg);
+            console.warn(`Icon "${name}" decoded from data URL`);
+            svgContent = decodedSvg;
+          } else {
+            console.warn(`Icon "${name}" got URL/path instead of SVG content:`, srcValue);
+          }
+        } else {
+          // Try other common module export patterns
+          const possibleExports = [
+            (svgContent as any).default,
+            (svgContent as any).href,
+          ];
+
+          for (const exportValue of possibleExports) {
+            if (typeof exportValue === 'string' && exportValue.trim().startsWith('<svg')) {
+              console.warn(`Icon "${name}" found SVG string in module export`);
+              svgContent = exportValue;
+              break;
+            }
+          }
+        }
+      }
+
+      // If still not a string, show fallback
+      if (typeof svgContent !== 'string') {
+        return (
+          <svg
+            className={cn(sizeClasses, 'shrink-0', className)}
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden={ariaHidden}
+            aria-label={ariaLabel}
+            role={ariaLabel ? 'img' : undefined}
+          >
+            {/* Fallback: question mark icon */}
+            <path
+              d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M10 14V14.5M10 11C10 10.5 10 10 10.5 9.5C11 9 12 8.5 12 7.5C12 6.5 11.5 6 10 6C8.5 6 8 6.5 8 7.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+        );
+      }
     }
 
     // Parse SVG and inject classes/attributes

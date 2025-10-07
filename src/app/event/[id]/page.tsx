@@ -1,400 +1,477 @@
-'use client'
+'use client';
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams, useParams } from 'next/navigation'
-import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase'
-import { MarketingMaterialsService } from '@/lib/marketingMaterials'
-import MaterialCard from '@/components/MaterialCard'
+import React, { useState, useEffect, Suspense, use } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/design-system/components/Button';
+import { Card } from '@/design-system/components/Card';
+import { Container } from '@/design-system/components/Container';
+import { Pill } from '@/design-system/components/Pill';
+import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase';
+import { MarketingMaterialsService } from '@/lib/marketingMaterials';
+import { eventDataProcessor } from '@/lib/eventHelpers';
 
-function EventDetailsContent() {
-  const router = useRouter()
-  const params = useParams()
-  const searchParams = useSearchParams()
+interface EventDetailPageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
 
-  const eventId = params.id as string
-  const returnView = searchParams.get('return') || 'annual'
-  const returnMonth = searchParams.get('month')
-  const returnYear = searchParams.get('year')
-  const returnQuarter = searchParams.get('quarter')
+function EventDetailContent({ params }: EventDetailPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { id: eventId } = use(params);
 
-  const [event, setEvent] = useState<EventIdea | null>(null)
-  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([])
-  const [materials, setMaterials] = useState<MarketingMaterial[]>([])
-  const [loading, setLoading] = useState(true)
+  // Get return navigation parameters
+  const returnView = searchParams.get('return') || 'annual';
+  const returnMonth = searchParams.get('month');
+  const returnYear = searchParams.get('year');
+  const returnQuarter = searchParams.get('quarter');
+
+  // State
+  const [event, setEvent] = useState<EventIdea | null>(null);
+  const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([]);
+  const [materials, setMaterials] = useState<MarketingMaterial[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Get current year for display (from return params or current year)
+  const displayYear = returnYear ? parseInt(returnYear) : new Date().getFullYear();
 
   useEffect(() => {
-    loadEventDetails()
-    loadOutreachAngles()
-    loadEventMaterials()
-  }, [eventId])
+    loadEventDetails();
+    loadOutreachAngles();
+    loadEventMaterials();
+  }, [eventId]);
 
   const loadEventDetails = async () => {
     try {
+      console.log('Loading event with ID:', eventId);
       const { data, error } = await supabase
         .from('events_ideas')
         .select('*')
         .eq('id', eventId)
-        .single()
+        .single();
 
-      if (error) throw error
-      setEvent(data)
-    } catch (error) {
-      console.error('Error loading event:', error)
+      if (error) {
+        console.error('Supabase error:', error);
+        setError(error.message || 'Failed to load event');
+        throw error;
+      }
+      console.log('Event loaded:', data);
+      setEvent(data);
+    } catch (error: any) {
+      console.error('Error loading event:', error);
+      setError(error?.message || 'Failed to load event');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadOutreachAngles = async () => {
     try {
       const { data, error } = await supabase
         .from('outreach_angles')
         .select('*')
-        .order('name')
+        .order('name');
 
-      if (error) throw error
-      setOutreachAngles(data || [])
+      if (error) throw error;
+      setOutreachAngles(data || []);
     } catch (error) {
-      console.error('Error loading outreach angles:', error)
+      console.error('Error loading outreach angles:', error);
     }
-  }
+  };
 
   const loadEventMaterials = async () => {
     try {
-      const materials = await MarketingMaterialsService.getEventMaterials(parseInt(eventId))
-      setMaterials(materials)
+      const materials = await MarketingMaterialsService.getEventMaterials(parseInt(eventId));
+      setMaterials(materials);
     } catch (error) {
-      console.error('Error loading materials:', error)
+      console.error('Error loading materials:', error);
     }
-  }
-
-  const handleDeleteMaterial = async (materialId: number) => {
-    if (!window.confirm('Are you sure you want to delete this material?')) {
-      return
-    }
-
-    try {
-      const success = await MarketingMaterialsService.deleteMaterial(materialId)
-      if (success) {
-        setMaterials(prev => prev.filter(m => m.id !== materialId))
-      } else {
-        alert('Error deleting material. Please try again.')
-      }
-    } catch (error) {
-      console.error('Error deleting material:', error)
-      alert('Error deleting material. Please try again.')
-    }
-  }
-
-  const handleAddMaterial = () => {
-    // Navigate to Add Material page with event pre-selected
-    const params = new URLSearchParams()
-    if (returnView === 'timeline' && returnMonth && returnYear) {
-      params.set('return', `event/${eventId}?return=timeline&month=${returnMonth}&year=${returnYear}`)
-    } else if (returnView === 'quarter' && returnQuarter && returnYear) {
-      params.set('return', `event/${eventId}?return=quarter&quarter=${returnQuarter}&year=${returnYear}`)
-    } else if (returnView === 'materials') {
-      params.set('return', `event/${eventId}?return=materials`)
-    } else {
-      params.set('return', `event/${eventId}?return=${returnView}`)
-    }
-    params.set('eventId', eventId)
-    router.push(`/add-material?${params.toString()}`)
-  }
-
-  const handleEdit = () => {
-    const params = new URLSearchParams({
-      return: returnView
-    })
-    if (returnMonth) params.set('month', returnMonth)
-    if (returnYear) params.set('year', returnYear)
-    if (returnQuarter) params.set('quarter', returnQuarter)
-    router.push(`/edit-event/${eventId}?${params.toString()}`)
-  }
+  };
 
   const handleBack = () => {
     if (returnView === 'materials') {
-      router.push('/materials')
+      router.push('/materials');
     } else if (returnView === 'timeline' && returnMonth && returnYear) {
-      router.push(`/?view=timeline&month=${returnMonth}&year=${returnYear}`)
+      router.push(`/?view=timeline&month=${returnMonth}&year=${returnYear}`);
     } else if (returnView === 'quarter' && returnQuarter && returnYear) {
-      router.push(`/?view=quarter&quarter=${returnQuarter}&year=${returnYear}`)
+      router.push(`/?view=quarter&quarter=${returnQuarter}&year=${returnYear}`);
     } else {
-      router.push(`/?view=${returnView}`)
+      router.push(`/annual`);
     }
-  }
+  };
 
-  const formatDateRange = () => {
-    if (!event) return ''
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const handleEdit = () => {
+    const params = new URLSearchParams({
+      return: returnView,
+      fromDetail: 'true'
+    });
+    if (returnMonth) params.set('month', returnMonth);
+    if (returnYear) params.set('year', returnYear);
+    if (returnQuarter) params.set('quarter', returnQuarter);
+    router.push(`/edit-event/${eventId}?${params.toString()}`);
+  };
 
-    // Get the start month/year (using fallback for legacy data)
-    const startMonth = event.start_month || event.month
-    const startYear = event.start_year || event.year
+  const handleAddMaterial = () => {
+    const params = new URLSearchParams();
+    params.set('return', `event/${eventId}?return=${returnView}`);
+    if (returnMonth) params.set('month', returnMonth);
+    if (returnYear) params.set('year', returnYear);
+    if (returnQuarter) params.set('quarter', returnQuarter);
+    params.set('eventId', eventId);
+    router.push(`/add-material?${params.toString()}`);
+  };
 
-    // For recurring events, use the current viewing year if available
-    const displayYear = event.is_recurring && returnYear ? parseInt(returnYear) : startYear
+  const handleDeleteMaterial = async (materialId: number) => {
+    if (!window.confirm('Are you sure you want to delete this material?')) {
+      return;
+    }
 
-    // Handle multi-month events
-    if (event.end_month && event.end_year) {
-      const startMonthName = months[startMonth - 1]
-      const endMonthName = months[event.end_month - 1]
-
-      // For recurring events, calculate the end year properly
-      let displayEndYear
-      if (event.is_recurring && returnYear) {
-        const viewingYear = parseInt(returnYear)
-        // If it's a year-wrapping event (e.g., Nov-Feb), end year should be next year
-        displayEndYear = event.end_month < startMonth ? viewingYear + 1 : viewingYear
+    try {
+      const success = await MarketingMaterialsService.deleteMaterial(materialId);
+      if (success) {
+        setMaterials(prev => prev.filter(m => m.id !== materialId));
       } else {
-        displayEndYear = event.end_year
+        alert('Error deleting material. Please try again.');
       }
-
-      // Same month (shouldn't happen but handle gracefully)
-      if (startMonth === event.end_month && displayYear === displayEndYear) {
-        return `${startMonthName} ${displayYear}`
-      }
-
-      // Different months, same year
-      if (displayYear === displayEndYear) {
-        return `${startMonthName} - ${endMonthName} ${displayYear}`
-      }
-
-      // Different years (e.g., Nov 2024 - Feb 2025)
-      return `${startMonthName} ${displayYear} - ${endMonthName} ${displayEndYear}`
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      alert('Error deleting material. Please try again.');
     }
+  };
 
-    // Single month event
-    const monthName = months[startMonth - 1]
-    return `${monthName} ${displayYear}`
-  }
-
-  const formatPrepInfo = () => {
-    if (!event) return null
-    if (event.prep_start_date) {
-      const date = new Date(event.prep_start_date)
-      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-      return `Start preparation: ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`
-    }
-    if (event.prep_months_needed && event.prep_months_needed > 0) {
-      return `Requires ${event.prep_months_needed} month${event.prep_months_needed > 1 ? 's' : ''} of preparation`
-    }
-    return null
-  }
-
-  const getAngleDetails = (angleName: string) => {
-    const angle = outreachAngles.find(a => a.name === angleName)
-
-    // Parse the angle details if it's a JSON string
-    if (typeof angleName === 'string' && angleName.startsWith('{')) {
-      try {
-        const parsed = JSON.parse(angleName)
-        return {
-          angle: outreachAngles.find(a => a.name === parsed.angle),
-          notes: parsed.notes
-        }
-      } catch {
-        // If parsing fails, treat as regular string
-      }
-    }
-
-    return { angle, notes: null }
-  }
-
-  // Build return URL for nested navigation
-  const buildReturnUrl = () => {
-    let url = `event/${eventId}?return=${returnView}`
-    if (returnMonth) url += `&month=${returnMonth}`
-    if (returnYear) url += `&year=${returnYear}`
-    if (returnQuarter) url += `&quarter=${returnQuarter}`
-    return url
-  }
-
-  if (loading || !event) {
+  if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-              <div className="h-4 bg-gray-100 rounded w-1/4 mb-6"></div>
-              <div className="space-y-4">
-                <div className="h-20 bg-gray-100 rounded"></div>
-                <div className="h-20 bg-gray-100 rounded"></div>
-              </div>
-            </div>
-          </div>
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+        }}
+      >
+        <div className="text-center">
+          <div className="text-lg font-medium text-[#181818]">Loading event...</div>
         </div>
-      </main>
-    )
+      </div>
+    );
   }
+
+  if (error || !event) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+        }}
+      >
+        <div className="text-center max-w-md">
+          <div className="text-lg font-medium text-[#181818] mb-4">
+            {error || 'Event not found'}
+          </div>
+          <Button
+            type="primary"
+            size="medium"
+            label="Back to Calendar"
+            onClick={handleBack}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Format event data for display
+  const formattedEvent = eventDataProcessor.formatEventForDisplay(event, outreachAngles, displayYear);
+
+  // Format dates for display
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  };
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background:
+          'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+      }}
+    >
+      <div className="flex flex-col gap-6 p-6 flex-1">
+        {/* Navbar */}
+        <div className="flex items-center justify-between w-full">
+          {/* Left - Back Button */}
+          <div className="flex-1 flex gap-4 items-center">
+            <Button
+              type="transparent"
+              size="medium"
+              iconOnly
+              iconL="arrow-left"
+              aria-label="Back to calendar"
+              onClick={handleBack}
+            />
+          </div>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900">{event.title}</h1>
-                <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
-                  <span className="font-medium">{formatDateRange()}</span>
-                  {event.is_recurring && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      🔄 Yearly Recurring
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleBack}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  ← Back
-                </button>
-                <button
-                  onClick={handleEdit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Edit Event
-                </button>
-              </div>
-            </div>
+          {/* Center - Empty */}
+          <div className="w-auto" />
+
+          {/* Right - Edit Event Button */}
+          <div className="flex-1 flex gap-2 items-center justify-end">
+            <Button
+              type="transparent"
+              size="medium"
+              iconL="pencil"
+              label="Edit Event"
+              onClick={handleEdit}
+            />
           </div>
         </div>
 
-        {/* Event Details */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="space-y-6">
-            {/* Description */}
-            {event.description && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">Description</h2>
-                <p className="text-gray-700 whitespace-pre-wrap">{event.description}</p>
-              </section>
-            )}
+        {/* Event Details Content - Centered */}
+        <div className="flex justify-center w-full">
+          <div className="flex flex-col gap-6 w-full max-w-[800px]">
+            {/* Header Section */}
+            <div className="flex flex-col gap-2">
+              {/* Event Title */}
+              <h1 className="text-[32px] font-semibold leading-[40px] text-[#181818]">
+                {event.title}
+              </h1>
 
-            {/* Outreach Angles */}
-            {event.outreach_angles && event.outreach_angles.length > 0 && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Outreach Angles</h2>
-                <div className="space-y-3">
-                  {event.outreach_angles.map((selection, index) => {
-                    const { angle, notes } = getAngleDetails(selection.angle)
+              {/* Date and Recurring Badge */}
+              <div className="flex items-center gap-2">
+                <p className="text-base font-medium leading-6 text-[#424242]">
+                  {formattedEvent.displayDate.start}
+                  {formattedEvent.displayDate.end && ` – ${formattedEvent.displayDate.end}`}
+                </p>
+                {event.is_recurring && (
+                  <Pill type="transparent" size="small" label="Yearly" />
+                )}
+              </div>
+            </div>
+
+            {/* Details Sections */}
+            <div className="flex flex-col gap-3">
+              {/* Event Details Container */}
+              <Container className="flex flex-col gap-4">
+                {/* Container Header */}
+                <div className="flex items-center justify-between w-full">
+                  <h2 className="text-base font-semibold leading-6 text-[#181818]">
+                    Event Details
+                  </h2>
+                </div>
+
+                {/* Cards List */}
+                <div className="flex flex-col gap-2 w-full">
+                  {/* Description Card */}
+                  {event.description && (
+                    <Card size="small" className="w-full">
+                      <p className="text-sm font-medium leading-5 text-[#424242]">
+                        Description
+                      </p>
+                      <p className="text-base font-normal leading-6 text-[#181818] whitespace-pre-wrap">
+                        {event.description}
+                      </p>
+                    </Card>
+                  )}
+
+                  {/* Preparation Schedule Card */}
+                  {event.prep_months_needed > 0 && (
+                    <Card size="small" className="w-full">
+                      <p className="text-sm font-medium leading-5 text-[#424242]">
+                        Preparation Schedule
+                      </p>
+                      <p className="text-base font-normal leading-6 text-[#181818] whitespace-pre-wrap">
+                        {event.prep_months_needed} {event.prep_months_needed === 1 ? 'month' : 'months'} of preparation needed
+                        {event.prep_start_date && ` (Start: ${formatDate(event.prep_start_date)})`}
+                      </p>
+                    </Card>
+                  )}
+
+                  {/* Outreach Angle Cards */}
+                  {formattedEvent.processedOutreachAngles.map((angleSelection, idx) => {
+                    // Map angle names to display headers
+                    const angleHeaders: Record<string, string> = {
+                      'Urgent Care': 'Urgent Care Perspective',
+                      'Primary Care': 'Primary Care Perspective',
+                      'Research': 'Research Perspective',
+                      'Workplace Health': 'Workplace Health Perspective',
+                    };
+
+                    const displayHeader = angleHeaders[angleSelection.angle] || `${angleSelection.angle} Perspective`;
+
                     return (
-                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-start gap-3">
-                          {angle && (
+                      <Card key={idx} size="small" className="w-full">
+                        <div className="flex items-start gap-3 w-full">
+                          {/* Color indicator */}
+                          {angleSelection.color && (
                             <span
-                              className="w-4 h-4 rounded-full mt-0.5 flex-shrink-0"
-                              style={{ backgroundColor: angle.color }}
+                              className="w-4 h-4 rounded-full mt-0.5 shrink-0"
+                              style={{ backgroundColor: angleSelection.color }}
                             />
                           )}
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900">
-                              {selection.angle}
-                              {angle?.description && (
-                                <span className="text-gray-500 font-normal ml-2">
-                                  - {angle.description}
-                                </span>
-                              )}
-                            </div>
-                            {notes && (
-                              <p className="mt-1 text-sm text-gray-700 whitespace-pre-wrap">{notes}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium leading-5 text-[#424242]">
+                              {displayHeader}
+                            </p>
+                            {angleSelection.description && (
+                              <p className="text-base font-normal leading-6 text-[#181818] mt-1">
+                                {angleSelection.description}
+                              </p>
+                            )}
+                            {angleSelection.notes && (
+                              <p className="text-base font-normal leading-6 text-[#181818] mt-2 whitespace-pre-wrap">
+                                {angleSelection.notes}
+                              </p>
                             )}
                           </div>
                         </div>
-                      </div>
-                    )
+                      </Card>
+                    );
                   })}
                 </div>
-              </section>
-            )}
+              </Container>
 
-            {/* Preparation Timeline */}
-            {formatPrepInfo() && (
-              <section>
-                <h2 className="text-lg font-semibold text-gray-900 mb-2">⏰ Preparation Schedule</h2>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">⏱️</span>
-                    <span className="text-amber-900">{formatPrepInfo()}</span>
-                  </div>
-                </div>
-              </section>
-            )}
-          </div>
-        </div>
-
-        {/* Marketing Materials Section */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">📄 Marketing Materials</h2>
-              <button
-                onClick={handleAddMaterial}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <span className="mr-1">+</span>
-                Add Material
-              </button>
-            </div>
-          </div>
-
-          {/* Materials Grid */}
-          {materials.length > 0 ? (
-            <div className="p-6">
-              <div
-                className="grid gap-6"
-                style={{
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))'
-                }}
-              >
-                {materials.map((material) => (
-                  <MaterialCard
-                    key={material.id}
-                    material={material}
-                    showEvent={false}  // Don't show event name since we're already in event context
-                    onDelete={() => handleDeleteMaterial(material.id)}
-                    returnPath={buildReturnUrl()}
+              {/* Marketing Materials Container */}
+              <Container className="flex flex-col gap-4">
+                {/* Container Header */}
+                <div className="flex items-center justify-between w-full">
+                  <h2 className="text-base font-semibold leading-6 text-[#181818]">
+                    Marketing Materials
+                  </h2>
+                  <Button
+                    type="no-fill"
+                    size="x-small"
+                    iconL="plus"
+                    label="Add Material"
+                    onClick={handleAddMaterial}
                   />
-                ))}
-              </div>
+                </div>
+
+                {/* Materials List or Empty State */}
+                <div className={cn(
+                  "grid gap-3 w-full",
+                  materials.length === 0 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+                )}>
+                  {materials.length === 0 ? (
+                    <p className="text-sm font-normal leading-5 text-[#424242]">
+                      No materials added
+                    </p>
+                  ) : (
+                    materials.map((material) => (
+                      <div
+                        key={material.id}
+                        className="bg-white rounded-lg shadow-[0px_1.5px_6px_0px_rgba(0,0,0,0.12)] p-4 flex flex-col gap-3 w-full min-w-0"
+                      >
+                        {/* Card Header: Title + Action Buttons */}
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <h3 className="text-base font-medium leading-6 text-[#181818] flex-1 min-w-0 truncate">
+                            {material.label || 'Untitled Material'}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="no-fill"
+                              size="x-small"
+                              iconOnly
+                              iconL="pencil"
+                              aria-label="Edit material"
+                              onClick={() => {
+                                const params = new URLSearchParams();
+                                params.set('return', `event/${eventId}?return=${returnView}`);
+                                if (returnMonth) params.set('month', returnMonth);
+                                if (returnYear) params.set('year', returnYear);
+                                if (returnQuarter) params.set('quarter', returnQuarter);
+                                router.push(`/edit-material/${material.id}?${params.toString()}`);
+                              }}
+                            />
+                            <Button
+                              type="no-fill"
+                              size="x-small"
+                              iconOnly
+                              iconL="trash"
+                              aria-label="Delete material"
+                              onClick={() => handleDeleteMaterial(material.id)}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Pills Row: Event + URL */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {material.event_name && material.event_name !== 'Any Time' && (
+                            <Pill
+                              type="transparent"
+                              size="small"
+                              label={material.event_name}
+                            />
+                          )}
+                          {material.event_name === 'Any Time' && (
+                            <Pill
+                              type="transparent"
+                              size="small"
+                              label="Any Time"
+                            />
+                          )}
+                          {material.url && (
+                            <Pill
+                              type="transparent"
+                              size="small"
+                              subtextL="URL"
+                              label={material.url}
+                              truncate
+                              interactive
+                              onClick={() => window.open(material.url, '_blank')}
+                              className="max-w-[200px]"
+                            />
+                          )}
+                        </div>
+
+                        {/* Notes */}
+                        {material.notes && (
+                          <p className="text-sm font-normal leading-5 text-[#424242] whitespace-pre-wrap">
+                            {material.notes}
+                          </p>
+                        )}
+
+                        {/* Footer: Created + Updated Dates */}
+                        <div className="flex items-center justify-between w-full gap-4 text-xs font-normal leading-4 text-[#a4a4a4]">
+                          <span>Created {formatDate(material.created_at)}</span>
+                          <span>Updated {formatDate(material.updated_at)}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </Container>
             </div>
-          ) : (
-            <div className="p-12 text-center">
-              <div className="text-5xl mb-3">📁</div>
-              <p className="text-gray-600">No materials added yet</p>
-              <button
-                onClick={handleAddMaterial}
-                className="mt-4 text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Add your first material
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
-    </main>
-  )
+    </div>
+  );
 }
+
 function LoadingFallback() {
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{
+        background:
+          'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+      }}
+    >
       <div className="text-center">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-lg font-medium text-[#181818]">Loading...</div>
       </div>
-    </main>
-  )
+    </div>
+  );
 }
 
-export default function EventDetailsPage() {
+export default function EventDetailPage({ params }: EventDetailPageProps) {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <EventDetailsContent />
+      <EventDetailContent params={params} />
     </Suspense>
-  )
+  );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
 import { Card } from '@/design-system/components/Card';
@@ -10,26 +11,8 @@ import { SegmentedControl } from '@/design-system/components/SegmentedControl';
 import { Sidebar } from '@/design-system/components/Sidebar';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { Icon } from '@/design-system/icons';
-
-// Mock event data
-const mockEvents = {
-  january: [],
-  february: [{ id: 1, title: 'Flu Shot Campaign', type: 'Annual' }],
-  march: [{ id: 2, title: 'Flu Shot Campaign', type: 'Annual' }],
-  april: [{ id: 3, title: 'Flu Shot Campaign', type: 'Annual' }],
-  may: [{ id: 4, title: 'Flu Shot Campaign', type: 'Annual' }],
-  june: [{ id: 5, title: 'Flu Shot Campaign', type: 'Annual' }],
-  july: [{ id: 6, title: 'Flu Shot Campaign', type: 'Annual' }],
-  august: [{ id: 7, title: 'Flu Shot Campaign', type: 'Annual' }],
-  september: [{ id: 8, title: 'Flu Shot Campaign', type: 'Annual' }],
-  october: [
-    { id: 9, title: 'Flu Shot Campaign', type: 'Annual' },
-    { id: 10, title: 'Seasonal Fall Event', type: 'Aug 2-25 – Nov 2025', type2: 'Annual' },
-    { id: 11, title: 'Halloween', type: 'Annual' },
-  ],
-  november: [{ id: 12, title: 'Flu Shot Campaign', type: 'Annual' }],
-  december: [{ id: 13, title: 'Flu Shot Campaign', type: 'Annual' }],
-};
+import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase';
+import { eventDataProcessor } from '@/lib/eventHelpers';
 
 const months = [
   { name: 'January', key: 'january' },
@@ -55,9 +38,130 @@ const menuItems = [
 ];
 
 function AnnualViewContent() {
+  const router = useRouter();
   const { isOpen, toggle } = useSidebar();
   const [view, setView] = React.useState('year');
-  const currentMonth = 'september'; // September is current month (has purple border)
+  const [events, setEvents] = React.useState<EventIdea[]>([]);
+  const [outreachAngles, setOutreachAngles] = React.useState<OutreachAngle[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1; // 1-12
+
+  React.useEffect(() => {
+    loadEvents();
+  }, [currentYear]);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const [eventsResponse, anglesResponse] = await Promise.all([
+        supabase
+          .from('events_ideas')
+          .select('*')
+          .or(`start_year.eq.${currentYear},year.eq.${currentYear},is_recurring.eq.true`)
+          .order('start_year', { ascending: true })
+          .order('start_month', { ascending: true }),
+        supabase.from('outreach_angles').select('*')
+      ]);
+
+      if (eventsResponse.error) throw eventsResponse.error;
+      if (anglesResponse.error) throw anglesResponse.error;
+
+      setEvents(eventsResponse.data || []);
+      setOutreachAngles(anglesResponse.data || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setEvents([]);
+      setOutreachAngles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddEvent = () => {
+    const params = new URLSearchParams({
+      return: 'annual',
+      year: currentYear.toString(),
+    });
+    router.push(`/add-event?${params.toString()}`);
+  };
+
+  const handleAddEventForMonth = (monthNumber: number) => {
+    const params = new URLSearchParams({
+      return: 'annual',
+      year: currentYear.toString(),
+      month: monthNumber.toString(),
+    });
+    router.push(`/add-event?${params.toString()}`);
+  };
+
+  const getEventsForMonth = (month: number) => {
+    return events.filter(event => {
+      const eventStartMonth = event.start_month || event.month;
+      const eventStartYear = event.start_year || event.year;
+
+      // Handle recurring events
+      if (event.is_recurring) {
+        // Only show recurring events in years >= their start year
+        if (currentYear < eventStartYear) {
+          return false;
+        }
+
+        // For recurring events, check if this month falls within the event span
+        if (event.end_month && event.end_year) {
+          // Multi-month recurring event
+          let startMonth = eventStartMonth;
+          let endMonth = event.end_month;
+
+          // Handle year wrapping (e.g. Nov-Feb)
+          if (endMonth < startMonth) {
+            // Event wraps across year boundary
+            return month >= startMonth || month <= endMonth;
+          } else {
+            // Event within same year
+            return month >= startMonth && month <= endMonth;
+          }
+        } else {
+          // Single month recurring event
+          return eventStartMonth === month;
+        }
+      }
+
+      // Handle non-recurring events
+      // Multi-month event spanning this month
+      if (event.end_month && event.end_year) {
+        const startDate = new Date(eventStartYear, eventStartMonth - 1);
+        const endDate = new Date(event.end_year, event.end_month - 1);
+        const checkDate = new Date(currentYear, month - 1);
+        return checkDate >= startDate && checkDate <= endDate;
+      }
+
+      // Direct match for single month events
+      if (eventStartYear === currentYear && eventStartMonth === month) {
+        return true;
+      }
+
+      return false;
+    });
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+        }}
+      >
+        <div className="text-center">
+          <div className="text-lg font-medium text-[#181818]">Loading events...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -172,7 +276,7 @@ function AnnualViewContent() {
 
           {/* Center - Page Title (Mobile) or Segmented Control (Desktop) */}
           <div className="w-auto sm:w-auto lg:w-[320px] order-2 sm:order-2">
-            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818]">2025</h1>
+            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818]">{currentYear}</h1>
             <div className="hidden sm:block">
               <SegmentedControl
                 options={[
@@ -218,6 +322,7 @@ function AnnualViewContent() {
               iconL="plus"
               aria-label="Add Event"
               className="lg:hidden"
+              onClick={handleAddEvent}
             />
             <Button
               type="primary"
@@ -225,6 +330,7 @@ function AnnualViewContent() {
               iconL="plus"
               label="Add Event"
               className="hidden lg:flex"
+              onClick={handleAddEvent}
             />
           </div>
 
@@ -245,14 +351,15 @@ function AnnualViewContent() {
 
         {/* Year Header - Desktop only */}
         <div className="hidden sm:flex gap-2 items-start">
-          <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">2025</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{currentYear}</h1>
         </div>
 
         {/* Calendar Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-3">
-          {months.map((month) => {
-            const isCurrentMonth = month.key === currentMonth;
-            const events = mockEvents[month.key as keyof typeof mockEvents] || [];
+          {months.map((month, index) => {
+            const monthNumber = index + 1;
+            const isCurrentMonth = monthNumber === currentMonth;
+            const monthEvents = getEventsForMonth(monthNumber);
 
             return (
               <Container
@@ -278,29 +385,70 @@ function AnnualViewContent() {
                     iconOnly
                     iconL="plus"
                     aria-label={`Add event to ${month.name}`}
+                    onClick={() => handleAddEventForMonth(monthNumber)}
                   />
                 </div>
 
                 {/* Events List */}
                 <div className="flex flex-col gap-2 w-full flex-1 overflow-y-auto">
-                  {events.length === 0 ? (
+                  {monthEvents.length === 0 ? (
                     <p className="text-sm font-normal leading-5 text-[#424242]">
                       No Events Planned
                     </p>
                   ) : (
-                    events.map((event: any) => (
-                      <Card key={event.id} variant="interactive">
-                        <h3 className="text-sm font-medium leading-5 text-[#181818]">
-                          {event.title}
-                        </h3>
-                        <div className="flex flex-wrap gap-1.5">
-                          <Pill type="transparent" size="sm" label={event.type} />
-                          {event.type2 && (
-                            <Pill type="transparent" size="sm" label={event.type2} />
+                    monthEvents.map((event) => {
+                      const processedEvent = eventDataProcessor.formatEventForDisplay(
+                        event,
+                        outreachAngles,
+                        currentYear
+                      );
+
+                      return (
+                        <Card
+                          key={event.id}
+                          size="small"
+                          variant="interactive"
+                          onClick={() => {
+                            const params = new URLSearchParams({
+                              return: 'annual',
+                              year: currentYear.toString(),
+                            });
+                            router.push(`/event/${event.id}?${params.toString()}`);
+                          }}
+                        >
+                          <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                            {event.title}
+                          </h3>
+
+                          {/* Display date for multi-month events */}
+                          {processedEvent.displayDate.isMultiMonth && (
+                            <p className="text-xs font-normal leading-4 text-[#424242] mt-0.5">
+                              {processedEvent.displayDate.start}
+                              {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
+                            </p>
                           )}
-                        </div>
-                      </Card>
-                    ))
+
+                          {/* Pills: Outreach Angles + Yearly indicator */}
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {processedEvent.processedOutreachAngles.map((angleSelection, idx) => (
+                              <Pill
+                                key={idx}
+                                type="transparent"
+                                size="small"
+                                label={angleSelection.angle}
+                              />
+                            ))}
+                            {event.is_recurring && (
+                              <Pill
+                                type="transparent"
+                                size="small"
+                                label="Yearly"
+                              />
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })
                   )}
                 </div>
               </Container>

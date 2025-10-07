@@ -1,4 +1,5 @@
 import React from 'react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 /**
@@ -6,19 +7,63 @@ import { cn } from '@/lib/utils';
  *
  * FIGMA SPECIFICATIONS:
  * - Background: #ffffff (white)
- * - Border Radius: 8px
- * - Padding: 12px (all sides)
  * - Default Shadow: 0px 1.5px 6px 0px rgba(0,0,0,0.12)
  * - Hover Shadow: 0px 0.5px 2px 0px rgba(0,0,0,0.16)
  * - Non-interactive: No shadow
  * - Disabled: 50% opacity, no shadow
+ *
+ * SIZE SPECIFICATIONS:
+ * - Small: Border radius 8px, Padding 12px, Gap 8px
+ * - Medium: Border radius 16px, Padding 16px, Gap 16px
  */
 
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+const cardVariants = cva(
+  // Base styles
+  "bg-white flex flex-col items-start justify-center transition-shadow",
+  {
+    variants: {
+      size: {
+        small: "rounded-lg p-3 gap-2", // 8px radius, 12px padding, 8px gap
+        medium: "rounded-2xl p-4 gap-4", // 16px radius, 16px padding, 16px gap
+      },
+      variant: {
+        interactive: "",
+        "non-interactive": "",
+      },
+      disabled: {
+        true: "opacity-50 cursor-not-allowed",
+        false: "",
+      },
+    },
+    compoundVariants: [
+      {
+        variant: "interactive",
+        disabled: false,
+        className: "shadow-sm hover:shadow-[0px_0.5px_2px_0px_rgba(0,0,0,0.16)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+      },
+    ],
+    defaultVariants: {
+      size: "medium",
+      variant: "non-interactive",
+      disabled: false,
+    },
+  }
+);
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {
   /**
    * Card content
    */
   children: React.ReactNode;
+
+  /**
+   * Size of the card
+   * - "small": 8px radius, 12px padding
+   * - "medium": 16px radius, 16px padding (default)
+   */
+  size?: "small" | "medium";
 
   /**
    * Whether card is interactive (clickable/hoverable)
@@ -53,14 +98,14 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
  * Card component with Figma design system integration
  *
  * @example
- * // Non-interactive card (static container)
- * <Card variant="non-interactive">
+ * // Small non-interactive card (static container)
+ * <Card size="small" variant="non-interactive">
  *   <h2>Card Title</h2>
  *   <p>Card content goes here</p>
  * </Card>
  *
  * @example
- * // Interactive card (clickable/hoverable)
+ * // Medium interactive card (clickable/hoverable) - default size
  * <Card variant="interactive" onClick={() => console.log('clicked')}>
  *   <h2>Clickable Card</h2>
  *   <p>Click me!</p>
@@ -77,6 +122,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   (
     {
       children,
+      size = "medium",
       variant = "non-interactive",
       onClick,
       disabled = false,
@@ -89,21 +135,6 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ) => {
     const isInteractive = variant === "interactive";
     const isDisabled = isInteractive && disabled;
-
-    // Base styles - Figma specs: white bg, 8px radius, 12px padding, 8px gap
-    const baseStyles = "bg-white rounded-lg p-3 flex flex-col gap-2 items-start justify-center";
-
-    // Variant-specific styles based on Figma
-    const variantStyles = isInteractive
-      ? isDisabled
-        ? "opacity-50 cursor-not-allowed" // Disabled: 50% opacity, no shadow
-        : "shadow-sm hover:shadow-[0px_0.5px_2px_0px_rgba(0,0,0,0.16)] cursor-pointer transition-shadow" // Interactive: default shadow + hover shadow
-      : ""; // Non-interactive: no shadow
-
-    // Focus styles for accessibility
-    const focusStyles = isInteractive && !isDisabled
-      ? "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-      : "";
 
     // Handle keyboard interaction for interactive cards
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -131,9 +162,11 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       <Component
         ref={ref}
         className={cn(
-          baseStyles,
-          variantStyles,
-          focusStyles,
+          cardVariants({
+            size,
+            variant,
+            disabled: isDisabled,
+          }),
           className
         )}
         onClick={handleClick}
@@ -151,3 +184,5 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 );
 
 Card.displayName = "Card";
+
+export { cardVariants };

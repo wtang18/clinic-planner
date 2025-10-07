@@ -14,12 +14,16 @@ const meta: Meta<typeof Pill> = {
     },
     size: {
       control: 'select',
-      options: ['xs', 'sm', 'md'],
+      options: ['x-small', 'small', 'medium'],
       description: 'The size of the pill',
     },
     iconOnly: {
       control: 'boolean',
       description: 'Whether to show only an icon (no text)',
+    },
+    truncate: {
+      control: 'boolean',
+      description: 'Truncate text with ellipsis when it overflows (use with max-width constraints)',
     },
 
     // Content props
@@ -127,7 +131,14 @@ The \`subtextL\` and \`subtextR\` props add small text before/after the label:
 - Use \`showSubtextL={false}\` or \`showSubtextR={false}\` to hide them
 - Hidden automatically when \`iconOnly={true}\`
 
-See the IconVariations and WithSubtexts stories for examples.
+## Truncation
+The \`truncate\` prop enables text truncation with ellipsis:
+- Set \`truncate={true}\` on the Pill component
+- Apply a max-width constraint via \`className\` (e.g., \`className="max-w-[200px]"\`)
+- Text will automatically truncate with \`...\` when it exceeds the max-width
+- Subtexts are preserved and won't truncate (useful for labels like "URL")
+
+See the TextTruncation story for examples.
         `.trim(),
       },
     },
@@ -142,11 +153,19 @@ export const Playground: Story = {
     type: 'transparent',
     size: 'md',
     iconOnly: false,
+    truncate: false,
     label: 'Pill Label',
     showSubtextL: false,
     showSubtextR: false,
     interactive: false,
     state: 'default',
+  },
+  argTypes: {
+    className: {
+      control: 'text',
+      description: 'Additional CSS classes (e.g., "max-w-[200px]" for truncation)',
+      if: { arg: 'truncate', truthy: true },
+    },
   },
 };
 
@@ -180,18 +199,18 @@ export const WithSubtexts: Story = {
       <div>
         <h3 className="text-sm font-semibold mb-2">Subtexts (shown by default when provided)</h3>
         <div className="flex flex-wrap gap-2">
-          <Pill size="md" label="Tasks" subtextL="3" subtextR="pending" />
-          <Pill size="sm" label="Completed" subtextL="✓" />
-          <Pill size="xs" label="2024" subtextL="Q1" subtextR="Jan" />
+          <Pill size="medium" label="Tasks" subtextL="3" subtextR="pending" />
+          <Pill size="small" label="Completed" subtextL="✓" />
+          <Pill size="x-small" label="2024" subtextL="Q1" subtextR="Jan" />
         </div>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold mb-2">Subtexts explicitly hidden with showSubtext=false</h3>
         <div className="flex flex-wrap gap-2">
-          <Pill size="md" label="Tasks" subtextL="3" subtextR="pending" showSubtextL={false} />
-          <Pill size="md" label="Tasks" subtextL="3" subtextR="pending" showSubtextR={false} />
-          <Pill size="md" label="Tasks" subtextL="3" subtextR="pending" showSubtextL={false} showSubtextR={false} />
+          <Pill size="medium" label="Tasks" subtextL="3" subtextR="pending" showSubtextL={false} />
+          <Pill size="medium" label="Tasks" subtextL="3" subtextR="pending" showSubtextR={false} />
+          <Pill size="medium" label="Tasks" subtextL="3" subtextR="pending" showSubtextL={false} showSubtextR={false} />
         </div>
       </div>
     </div>
@@ -244,11 +263,11 @@ export const IconVariations: Story = {
       <div>
         <h3 className="text-lg font-bold mb-4">Icon-Only Pills (sm/md only)</h3>
         <div className="flex flex-wrap gap-2">
-          <Pill size="md" iconOnly iconL="gear" aria-label="Settings" />
-          <Pill size="sm" iconOnly iconL="star" aria-label="Favorite" />
-          <Pill size="md" iconOnly iconL="checkmark" type="positive" aria-label="Success" />
-          <Pill size="md" iconOnly iconL="close" type="alert" aria-label="Close" />
-          <Pill size="sm" iconOnly iconL="info" type="info" aria-label="Info" />
+          <Pill size="medium" iconOnly iconL="gear" aria-label="Settings" />
+          <Pill size="small" iconOnly iconL="star" aria-label="Favorite" />
+          <Pill size="medium" iconOnly iconL="checkmark" type="positive" aria-label="Success" />
+          <Pill size="medium" iconOnly iconL="close" type="alert" aria-label="Close" />
+          <Pill size="small" iconOnly iconL="info" type="info" aria-label="Info" />
         </div>
       </div>
 
@@ -270,27 +289,27 @@ export const AllSizes: Story = {
       <div>
         <h3 className="text-sm font-semibold mb-2">Extra Small (xs) - 20px height, no icons</h3>
         <div className="flex flex-wrap gap-2 items-center">
-          <Pill size="xs" label="Extra Small" />
-          <Pill size="xs" type="positive" label="Success" />
-          <Pill size="xs" subtextL="Q1" label="2024" subtextR="Jan" />
+          <Pill size="x-small" label="Extra Small" />
+          <Pill size="x-small" type="positive" label="Success" />
+          <Pill size="x-small" subtextL="Q1" label="2024" subtextR="Jan" />
         </div>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold mb-2">Small (sm) - 24px height, icons supported</h3>
         <div className="flex flex-wrap gap-2 items-center">
-          <Pill size="sm" label="Small" />
-          <Pill size="sm" type="positive" label="Success" />
-          <Pill size="sm" iconL="checkmark" label="With Icon" />
+          <Pill size="small" label="Small" />
+          <Pill size="small" type="positive" label="Success" />
+          <Pill size="small" iconL="checkmark" label="With Icon" />
         </div>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold mb-2">Medium (md) - 32px height, icons supported</h3>
         <div className="flex flex-wrap gap-2 items-center">
-          <Pill size="md" label="Medium" />
-          <Pill size="md" type="positive" label="Success" />
-          <Pill size="md" iconL="checkmark" label="With Icon" />
+          <Pill size="medium" label="Medium" />
+          <Pill size="medium" type="positive" label="Success" />
+          <Pill size="medium" iconL="checkmark" label="With Icon" />
         </div>
       </div>
     </div>
@@ -336,19 +355,134 @@ export const IconOnlyCentering: Story = {
       <div>
         <h3 className="text-sm font-semibold mb-2">Icon-Only Pills - Properly Centered</h3>
         <div className="flex flex-wrap gap-2 items-center">
-          <Pill size="md" iconOnly iconL="gear" aria-label="Settings" />
-          <Pill size="sm" iconOnly iconL="star" aria-label="Favorite" />
-          <Pill size="md" iconOnly iconL="checkmark" type="positive" aria-label="Success" />
-          <Pill size="md" iconOnly iconL="close" type="alert" aria-label="Close" />
-          <Pill size="sm" iconOnly iconL="info" type="info" aria-label="Info" />
+          <Pill size="medium" iconOnly iconL="gear" aria-label="Settings" />
+          <Pill size="small" iconOnly iconL="star" aria-label="Favorite" />
+          <Pill size="medium" iconOnly iconL="checkmark" type="positive" aria-label="Success" />
+          <Pill size="medium" iconOnly iconL="close" type="alert" aria-label="Close" />
+          <Pill size="small" iconOnly iconL="info" type="info" aria-label="Info" />
         </div>
       </div>
 
       <div>
         <h3 className="text-sm font-semibold mb-2">Comparison: Icon-Only vs Regular Pills (Same Size)</h3>
         <div className="flex flex-wrap gap-2 items-center">
-          <Pill size="md" iconOnly iconL="star" aria-label="Favorite" type="accent" />
-          <Pill size="md" iconL="star" label="Favorite" type="accent" />
+          <Pill size="medium" iconOnly iconL="star" aria-label="Favorite" type="accent" />
+          <Pill size="medium" iconL="star" label="Favorite" type="accent" />
+        </div>
+      </div>
+    </div>
+  ),
+};
+
+export const TextTruncation: Story = {
+  render: () => (
+    <div className="p-8 space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Text Truncation with Max-Width Constraints</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          When <code>truncate={'{true}'}</code>, text will truncate with ellipsis at the max-width boundary.
+        </p>
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">max-w-[150px]</p>
+            <Pill
+              type="transparent"
+              size="small"
+              label="This is a very long text that will be truncated"
+              truncate
+              className="max-w-[150px]"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">max-w-[200px]</p>
+            <Pill
+              type="transparent"
+              size="small"
+              label="This is a very long text that will be truncated"
+              truncate
+              className="max-w-[200px]"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">max-w-[300px]</p>
+            <Pill
+              type="transparent"
+              size="small"
+              label="This is a very long text that will be truncated"
+              truncate
+              className="max-w-[300px]"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Truncation with Subtexts (Subtexts Preserved)</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Subtexts have <code>shrink-0</code> and won't truncate, ensuring labels like "URL" remain visible.
+        </p>
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">URL Pill - max-w-[200px]</p>
+            <Pill
+              type="transparent"
+              size="small"
+              subtextL="URL"
+              label="https://www.example.com/very-long-path/to/resource/page.html"
+              truncate
+              className="max-w-[200px]"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">File Path - max-w-[250px]</p>
+            <Pill
+              type="transparent"
+              size="small"
+              subtextL="Path"
+              label="/Users/username/Documents/Projects/my-project/src/components/design-system/Pill.tsx"
+              truncate
+              className="max-w-[250px]"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">Email - max-w-[180px]</p>
+            <Pill
+              type="transparent"
+              size="small"
+              subtextL="To"
+              label="very.long.email.address@example-domain.com"
+              truncate
+              className="max-w-[180px]"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Without Truncation (Comparison)</h3>
+        <p className="text-sm text-gray-600 mb-4">
+          Without <code>truncate</code> prop, text overflows the container.
+        </p>
+        <div className="flex flex-col gap-3">
+          <div>
+            <p className="text-xs text-gray-500 mb-1">No truncate - max-w-[200px] (text overflows)</p>
+            <Pill
+              type="transparent"
+              size="small"
+              label="This is a very long text that will overflow the container"
+              className="max-w-[200px]"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 mb-1">With truncate - max-w-[200px] (text truncates with ellipsis)</p>
+            <Pill
+              type="transparent"
+              size="small"
+              label="This is a very long text that will overflow the container"
+              truncate
+              className="max-w-[200px]"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -363,7 +497,7 @@ export const AdvancedExamples: Story = {
         <div className="flex flex-wrap gap-2">
           <Pill
             type="attention"
-            size="md"
+            size="medium"
             label="Alert"
             iconL="alert"
             subtextR="2"
@@ -372,7 +506,7 @@ export const AdvancedExamples: Story = {
           />
           <Pill
             type="positive"
-            size="md"
+            size="medium"
             label="Download"
             iconR="arrow-down"
             interactive
@@ -380,7 +514,7 @@ export const AdvancedExamples: Story = {
           />
           <Pill
             type="info"
-            size="sm"
+            size="small"
             iconL="info"
             subtextL="i"
             label="Information"
@@ -392,9 +526,9 @@ export const AdvancedExamples: Story = {
       <div>
         <h3 className="text-sm font-semibold mb-2">Accessibility: Icon-only with aria-label</h3>
         <div className="flex flex-wrap gap-2">
-          <Pill size="md" iconOnly iconL="close" type="alert" aria-label="Close notification" interactive />
-          <Pill size="md" iconOnly iconL="heart" type="positive" aria-label="Like this item" interactive />
-          <Pill size="sm" iconOnly iconL="share" type="info" aria-label="Share content" interactive />
+          <Pill size="medium" iconOnly iconL="close" type="alert" aria-label="Close notification" interactive />
+          <Pill size="medium" iconOnly iconL="heart" type="positive" aria-label="Like this item" interactive />
+          <Pill size="small" iconOnly iconL="share" type="info" aria-label="Share content" interactive />
         </div>
       </div>
     </div>

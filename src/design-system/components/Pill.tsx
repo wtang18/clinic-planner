@@ -17,8 +17,8 @@ const pillVariants = cva(
       // 12 pill types
       type: {
         transparent: "bg-[rgba(0,0,0,0.12)] text-fg-neutral-primary",
-        outlined: "border border-[rgba(0,0,0,0.24)] text-fg-neutral-primary",
-        "subtle-outlined": "border border-[rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+        outlined: "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.24)] text-fg-neutral-primary",
+        "subtle-outlined": "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)] text-fg-neutral-secondary",
         positive: "bg-bg-positive-low text-fg-positive-primary",
         attention: "bg-bg-attention-low text-fg-attention-primary",
         alert: "bg-bg-alert-low text-fg-alert-primary",
@@ -31,13 +31,18 @@ const pillVariants = cva(
       },
       // Size variants
       size: {
-        xs: "h-5 px-1.5 py-0 text-xs leading-5 rounded", // 20px height, 6px h-padding, 0 v-padding, 4px radius
-        sm: "h-6 px-1.5 py-0.5 text-xs leading-5 rounded-lg", // 24px height, 6px h-padding, 2px v-padding, 8px radius
-        md: "h-8 px-2 py-1.5 text-sm leading-5 rounded-lg", // 32px height, 8px h-padding, 6px v-padding, 8px radius
+        "x-small": "h-5 px-1.5 py-0 text-xs leading-5 rounded", // 20px height, 6px h-padding, 0 v-padding, 4px radius
+        small: "h-6 px-1.5 py-0.5 text-xs leading-5 rounded-lg", // 24px height, 6px h-padding, 2px v-padding, 8px radius
+        medium: "h-8 px-2 py-1.5 text-sm leading-5 rounded-lg", // 32px height, 8px h-padding, 6px v-padding, 8px radius
       },
       // Icon-only variant
       iconOnly: {
         true: "aspect-square px-0 justify-center",
+        false: "",
+      },
+      // Truncate variant
+      truncate: {
+        true: "overflow-hidden",
         false: "",
       },
       // Interactive state
@@ -49,7 +54,7 @@ const pillVariants = cva(
       state: {
         default: "",
         hover: "",
-        disabled: "cursor-not-allowed pointer-events-none !bg-bg-neutral-low !text-fg-neutral-disabled !border-transparent",
+        disabled: "cursor-not-allowed pointer-events-none !bg-bg-neutral-low !text-fg-neutral-disabled !shadow-none",
       },
     },
     // Compound variants for hover states
@@ -65,13 +70,13 @@ const pillVariants = cva(
         type: "outlined",
         interactive: true,
         state: "default",
-        className: "hover:border-fg-neutral-primary",
+        className: "hover:shadow-[inset_0_0_0_1px_#181818]",
       },
       {
         type: "subtle-outlined",
         interactive: true,
         state: "default",
-        className: "hover:border-fg-neutral-primary hover:text-fg-neutral-primary",
+        className: "hover:shadow-[inset_0_0_0_1px_#181818] hover:text-fg-neutral-primary",
       },
       {
         type: "positive",
@@ -132,6 +137,7 @@ const pillVariants = cva(
       type: "transparent",
       size: "md",
       iconOnly: false,
+      truncate: false,
       interactive: false,
       state: "default",
     },
@@ -173,17 +179,24 @@ export interface PillProps
 
   /**
    * Size variant
-   * - "xs": Extra small (20px height, 12px text, no icons)
-   * - "sm": Small (24px height, 12px text, supports icons)
-   * - "md": Medium (32px height, 14px text, supports icons)
+   * - "x-small": Extra small (20px height, 12px text, no icons)
+   * - "small": Small (24px height, 12px text, supports icons)
+   * - "medium": Medium (32px height, 14px text, supports icons)
    */
-  size?: "xs" | "sm" | "md";
+  size?: "x-small" | "small" | "medium";
 
   /**
    * Icon-only mode - shows only left icon, hides all text and right icon
-   * Only supported for sm/md sizes
+   * Only supported for small/medium sizes
    */
   iconOnly?: boolean;
+
+  /**
+   * Truncate text with ellipsis when it overflows
+   * Use with max-width constraints (e.g., className="max-w-[200px]")
+   * @default false
+   */
+  truncate?: boolean;
 
   // Content props
   /**
@@ -281,9 +294,9 @@ export interface PillProps
  * - Gap between elements: 4px
  *
  * SIZE SPECIFICATIONS:
- * - XS: Height 20px, Padding 0px 6px, Text 12px, Border radius 4px, NO ICONS
- * - SM: Height 24px, Padding 2px 6px, Text 12px, Border radius 8px
- * - MD: Height 32px, Padding 6px 8px, Text 14px, Border radius 8px
+ * - X-SMALL: Height 20px, Padding 0px 6px, Text 12px, Border radius 4px, NO ICONS
+ * - SMALL: Height 24px, Padding 2px 6px, Text 12px, Border radius 8px
+ * - MEDIUM: Height 32px, Padding 6px 8px, Text 14px, Border radius 8px
  *
  * VISIBILITY HIERARCHY:
  * Content is shown/hidden based on a clear hierarchy of rules:
@@ -305,15 +318,15 @@ export interface PillProps
  *
  * @example
  * // Basic pill with label
- * <Pill type="positive" size="md" label="Success" />
+ * <Pill type="positive" size="medium" label="Success" />
  *
  * @example
- * // Icon-only pill (sm/md only)
- * <Pill type="outlined" size="md" iconOnly iconL="star" aria-label="Favorite" />
+ * // Icon-only pill (small/medium only)
+ * <Pill type="outlined" size="medium" iconOnly iconL="star" aria-label="Favorite" />
  *
  * @example
  * // Icons and subtexts shown by default when provided
- * <Pill type="attention" size="md" label="Alert" iconL="alert" subtextR="2" />
+ * <Pill type="attention" size="medium" label="Alert" iconL="alert" subtextR="2" />
  *
  * @example
  * // Explicitly hide icons/subtexts with show flags
@@ -329,8 +342,9 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
     {
       // Core variant props
       type = "transparent",
-      size = "md",
+      size = "medium",
       iconOnly = false,
+      truncate = false,
       interactive = false,
       state = "default",
       disabled,
@@ -372,9 +386,9 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
       console.warn("Pill: iconOnly pills require an 'aria-label' or 'label' prop for accessibility");
     }
 
-    // Validation: Icons only supported for sm/md sizes
-    if (size === "xs" && iconOnly) {
-      console.warn("Pill: iconOnly is not supported for 'xs' size");
+    // Validation: Icons only supported for small/medium sizes
+    if (size === "x-small" && iconOnly) {
+      console.warn("Pill: iconOnly is not supported for 'x-small' size");
     }
 
     // Icon size is always small (20px) for pills
@@ -391,9 +405,9 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
     const hasLeftIcon = !!(iconL || leftIcon);
     const hasRightIcon = !!(iconR || rightIcon);
 
-    const shouldShowLeftIcon = hasLeftIcon && size !== "xs";
+    const shouldShowLeftIcon = hasLeftIcon && size !== "x-small";
 
-    const shouldShowRightIcon = hasRightIcon && size !== "xs" && !iconOnly;
+    const shouldShowRightIcon = hasRightIcon && size !== "x-small" && !iconOnly;
 
     // Subtext visibility logic with proper hierarchy:
     // 1. Must have subtext content (subtextL or subtextR)
@@ -482,6 +496,7 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
             type,
             size,
             iconOnly,
+            truncate,
             interactive,
             state: isDisabled ? "disabled" : state,
           }),
@@ -497,17 +512,21 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
           <>
             {/* Left subtext - shown based on shouldShowSubtextL logic */}
             {shouldShowSubtextL && (
-              <span className={cn("font-normal", subtextColorClass, isDisabled && "opacity-50")}>
+              <span className={cn("font-normal shrink-0", subtextColorClass, isDisabled && "opacity-50")}>
                 {subtextL}
               </span>
             )}
 
             {/* Main label */}
-            {label && <span>{label}</span>}
+            {label && (
+              <span className={cn(truncate && "truncate min-w-0")}>
+                {label}
+              </span>
+            )}
 
             {/* Right subtext - shown based on shouldShowSubtextR logic */}
             {shouldShowSubtextR && (
-              <span className={cn("font-normal", subtextColorClass, isDisabled && "opacity-50")}>
+              <span className={cn("font-normal shrink-0", subtextColorClass, isDisabled && "opacity-50")}>
                 {subtextR}
               </span>
             )}
