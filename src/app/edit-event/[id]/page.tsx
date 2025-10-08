@@ -23,6 +23,7 @@ function EditEventForm({ params }: EditEventPageProps) {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [event, setEvent] = useState<EventIdea | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Get search params
   const searchParams = useSearchParams();
@@ -240,6 +241,7 @@ function EditEventForm({ params }: EditEventPageProps) {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -254,6 +256,7 @@ function EditEventForm({ params }: EditEventPageProps) {
   };
 
   const handleAngleToggle = (angle: string) => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       selected_angles: {
@@ -264,6 +267,7 @@ function EditEventForm({ params }: EditEventPageProps) {
   };
 
   const handleAngleNotesChange = (angle: string, notes: string) => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       angle_notes: {
@@ -274,6 +278,7 @@ function EditEventForm({ params }: EditEventPageProps) {
   };
 
   const handleMultiMonthToggle = () => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       is_multi_month: !prev.is_multi_month,
@@ -283,6 +288,7 @@ function EditEventForm({ params }: EditEventPageProps) {
   };
 
   const handleRecurringToggle = () => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       is_recurring: !prev.is_recurring,
@@ -290,6 +296,12 @@ function EditEventForm({ params }: EditEventPageProps) {
   };
 
   const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      if (!window.confirm('Discard changes? Your edits will be lost.')) {
+        return;
+      }
+    }
+
     // Navigate based on where user came from
     if (fromDetail) {
       // Go back to detail page with return params
@@ -313,6 +325,18 @@ function EditEventForm({ params }: EditEventPageProps) {
       }
     }
   };
+
+  // Browser navigation protection
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const monthNames = [
     'January',
@@ -368,7 +392,7 @@ function EditEventForm({ params }: EditEventPageProps) {
               type="high-impact"
               size="medium"
               iconL="trash"
-              label="Delete Event"
+              label="Delete"
               onClick={handleDelete}
               disabled={loading}
             />
@@ -654,7 +678,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                 <Button
                   type="transparent"
                   size="large"
-                  label="Discard Changes"
+                  label="Cancel"
                   onClick={handleCancel}
                   className="flex-1"
                 />

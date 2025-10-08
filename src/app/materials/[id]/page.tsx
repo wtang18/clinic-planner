@@ -1,0 +1,352 @@
+'use client';
+
+import React, { useState, useEffect, Suspense, use } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/design-system/components/Button';
+import { Card } from '@/design-system/components/Card';
+import { Container } from '@/design-system/components/Container';
+import { supabase, MarketingMaterial, EventIdea } from '@/lib/supabase';
+import { MarketingMaterialsService } from '@/lib/marketingMaterials';
+
+interface MaterialDetailPageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+function MaterialDetailContent({ params }: MaterialDetailPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { id: materialId } = use(params);
+
+  // Get return navigation parameters
+  const returnUrl = searchParams.get('returnUrl') || '/materials';
+
+  // State
+  const [material, setMaterial] = useState<MarketingMaterial | null>(null);
+  const [event, setEvent] = useState<EventIdea | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadMaterialDetails();
+  }, [materialId]);
+
+  const loadMaterialDetails = async () => {
+    try {
+      console.log('Loading material with ID:', materialId);
+      const { data, error } = await supabase
+        .from('marketing_materials')
+        .select('*')
+        .eq('id', materialId)
+        .single();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        setError(error.message || 'Failed to load material');
+        throw error;
+      }
+      console.log('Material loaded:', data);
+      setMaterial(data);
+
+      // Load associated event if exists
+      if (data.event_id) {
+        loadEventDetails(data.event_id);
+      }
+    } catch (error: any) {
+      console.error('Error loading material:', error);
+      setError(error?.message || 'Failed to load material');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadEventDetails = async (eventId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('events_ideas')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      if (error) throw error;
+      setEvent(data);
+    } catch (error) {
+      console.error('Error loading event:', error);
+    }
+  };
+
+  const handleBack = () => {
+    router.push(returnUrl);
+  };
+
+  const handleEdit = () => {
+    // Return to this material detail page after editing
+    const detailPageUrl = `/materials/${materialId}?returnUrl=${encodeURIComponent(returnUrl)}`;
+    router.push(`/materials/edit/${materialId}?returnUrl=${encodeURIComponent(detailPageUrl)}`);
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this material?')) {
+      return;
+    }
+
+    try {
+      const success = await MarketingMaterialsService.deleteMaterial(parseInt(materialId));
+      if (success) {
+        router.push(returnUrl);
+      } else {
+        alert('Error deleting material. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      alert('Error deleting material. Please try again.');
+    }
+  };
+
+  const handleCopyUrl = async () => {
+    if (!material?.url) return;
+
+    try {
+      await navigator.clipboard.writeText(material.url);
+      // TODO: Show toast notification
+      console.log('URL copied to clipboard');
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+    }
+  };
+
+  const handleUrlClick = () => {
+    if (material?.url) {
+      window.open(material.url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleGoToEvent = () => {
+    if (event) {
+      router.push(`/event/${event.id}?returnUrl=${encodeURIComponent(`/materials/${materialId}`)}`);
+    }
+  };
+
+  // Format dates for display
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  };
+
+  // Format event display with date
+  const getEventDisplay = () => {
+    if (!event) return 'Any Time';
+
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const startMonth = months[event.start_month - 1];
+    const endMonth = event.end_month ? months[event.end_month - 1] : null;
+
+    if (endMonth && endMonth !== startMonth) {
+      return `${event.title}, ${startMonth} – ${endMonth} ${event.start_year}`;
+    } else {
+      return `${event.title}, ${startMonth} ${event.start_year}`;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+        }}
+      >
+        <div className="text-center">
+          <div className="text-lg font-medium text-[#181818]">Loading material...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !material) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+        }}
+      >
+        <div className="text-center max-w-md">
+          <div className="text-lg font-medium text-[#181818] mb-4">
+            {error || 'Material not found'}
+          </div>
+          <Button
+            type="primary"
+            size="medium"
+            label="Back to Materials"
+            onClick={handleBack}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background:
+          'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+      }}
+    >
+      <div className="flex flex-col gap-6 p-6 flex-1">
+        {/* Navbar */}
+        <div className="flex items-center justify-between w-full">
+          {/* Left - Back Button */}
+          <div className="flex-1 flex gap-4 items-center">
+            <Button
+              type="transparent"
+              size="medium"
+              iconOnly
+              iconL="arrow-left"
+              aria-label="Back"
+              onClick={handleBack}
+            />
+          </div>
+
+          {/* Center - Empty */}
+          <div className="w-auto" />
+
+          {/* Right - Edit Material Button */}
+          <div className="flex-1 flex gap-2 items-center justify-end">
+            <Button
+              type="transparent"
+              size="medium"
+              iconL="pencil"
+              label="Edit Material"
+              onClick={handleEdit}
+            />
+          </div>
+        </div>
+
+        {/* Material Details Content - Centered */}
+        <div className="flex justify-center w-full">
+          <div className="flex flex-col gap-6 w-full max-w-[800px]">
+            {/* Header Section */}
+            <div className="flex flex-col gap-2">
+              {/* Material Title */}
+              <h1 className="text-[32px] font-semibold leading-[40px] text-[#181818]">
+                {material.label}
+              </h1>
+
+              {/* URL and Copy Button */}
+              <div className="flex items-start gap-2 w-full">
+                <p
+                  className="text-base font-medium leading-6 text-[#424242] cursor-pointer hover:underline break-words flex-1 min-w-0"
+                  onClick={handleUrlClick}
+                >
+                  {material.url}
+                </p>
+                <Button
+                  type="transparent"
+                  size="x-small"
+                  label="Copy URL"
+                  onClick={handleCopyUrl}
+                  className="shrink-0 whitespace-nowrap"
+                />
+              </div>
+            </div>
+
+            {/* Details Section */}
+            <div className="flex flex-col gap-3">
+              {/* Details Container */}
+              <Container className="flex flex-col gap-4">
+                {/* Container Header */}
+                <div className="flex items-center justify-between w-full">
+                  <h2 className="text-base font-semibold leading-6 text-[#181818]">
+                    Details
+                  </h2>
+                </div>
+
+                {/* Cards List */}
+                <div className="flex flex-col gap-2 w-full">
+                  {/* Notes Card */}
+                  {material.notes && (
+                    <Card size="small" className="w-full">
+                      <p className="text-sm font-medium leading-5 text-[#424242]">
+                        Notes
+                      </p>
+                      <p className="text-base font-normal leading-6 text-[#181818] whitespace-pre-wrap">
+                        {material.notes}
+                      </p>
+                    </Card>
+                  )}
+
+                  {/* Associated Event Card */}
+                  <Card size="small" className="w-full">
+                    <p className="text-sm font-medium leading-5 text-[#424242]">
+                      Associated Event
+                    </p>
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <p className="flex-1 text-base font-normal leading-6 text-[#181818]">
+                        {getEventDisplay()}
+                      </p>
+                      {event && (
+                        <Button
+                          type="transparent"
+                          size="x-small"
+                          label="Go to Event"
+                          onClick={handleGoToEvent}
+                        />
+                      )}
+                    </div>
+                  </Card>
+                </div>
+
+                {/* Created and Updated Dates */}
+                <div className="flex items-center justify-between w-full gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm font-normal leading-5 text-[#424242]">
+                      Created {formatDate(material.created_at)}
+                    </p>
+                  </div>
+                  {material.created_at !== material.updated_at && (
+                    <div className="flex-1">
+                      <p className="text-sm font-normal leading-5 text-[#424242] text-right">
+                        Updated {formatDate(material.updated_at)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{
+        background:
+          'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+      }}
+    >
+      <div className="text-center">
+        <div className="text-lg font-medium text-[#181818]">Loading...</div>
+      </div>
+    </div>
+  );
+}
+
+export default function MaterialDetailPage({ params }: MaterialDetailPageProps) {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <MaterialDetailContent params={params} />
+    </Suspense>
+  );
+}

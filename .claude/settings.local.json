@@ -21,7 +21,9 @@
       "Bash(test:*)",
       "Bash(src/design-system/components/Pill.tsx)",
       "Bash(npm run generate-icon-map:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "WebSearch",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

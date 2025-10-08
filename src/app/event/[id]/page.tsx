@@ -17,12 +17,93 @@ interface EventDetailPageProps {
   }>;
 }
 
+interface MaterialCardProps {
+  material: MarketingMaterial;
+  eventName: string;
+  onCardClick: () => void;
+  onEventClick: (eventId: number) => void;
+  enableEventPillNavigation?: boolean;
+}
+
+/**
+ * MaterialCard component matching Figma design
+ * Same component used in Marketing Materials page
+ */
+function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEventPillNavigation = true }: MaterialCardProps) {
+  const isAnyTime = material.event_id === null;
+
+  return (
+    <Card
+      size="small"
+      variant="interactive"
+      className="w-full"
+      onClick={onCardClick}
+    >
+      <div className="flex flex-col gap-3 w-full">
+        {/* Header Row - Title and URL */}
+        <div className="flex flex-col gap-0 w-full">
+          <p className="font-medium text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+            {material.label}
+          </p>
+          <p className="font-normal text-[12px] leading-[20px] text-[#424242] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+            {material.url}
+          </p>
+        </div>
+
+        {/* Notes */}
+        <div className="flex gap-2 items-start w-full h-[20px]">
+          <p className="font-normal text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap flex-1">
+            {material.notes || ''}
+          </p>
+        </div>
+
+        {/* Footer Row - Event Pill and Go to URL Button */}
+        <div className="flex items-start justify-between w-full">
+          {isAnyTime ? (
+            <Pill
+              type="transparent"
+              size="small"
+              label={eventName}
+            />
+          ) : (
+            <Pill
+              type="transparent"
+              size="small"
+              label={eventName}
+              interactive={enableEventPillNavigation}
+              onClick={enableEventPillNavigation ? (e) => {
+                e?.stopPropagation();
+                if (material.event_id) {
+                  onEventClick(material.event_id);
+                }
+              } : undefined}
+            />
+          )}
+          <div className="flex gap-2 items-center">
+            <Button
+              type="no-fill"
+              size="x-small"
+              label="Go to URL"
+              iconR="arrow-right"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(material.url, '_blank', 'noopener,noreferrer');
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function EventDetailContent({ params }: EventDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id: eventId } = use(params);
 
   // Get return navigation parameters
+  const returnUrl = searchParams.get('returnUrl');
   const returnView = searchParams.get('return') || 'annual';
   const returnMonth = searchParams.get('month');
   const returnYear = searchParams.get('year');
@@ -92,6 +173,13 @@ function EventDetailContent({ params }: EventDetailPageProps) {
   };
 
   const handleBack = () => {
+    // If returnUrl is provided (e.g., from material detail), use it
+    if (returnUrl) {
+      router.push(returnUrl);
+      return;
+    }
+
+    // Otherwise, use the old return logic for calendar views
     if (returnView === 'materials') {
       router.push('/materials');
     } else if (returnView === 'timeline' && returnMonth && returnYear) {
@@ -119,13 +207,19 @@ function EventDetailContent({ params }: EventDetailPageProps) {
   };
 
   const handleAddMaterial = () => {
-    const params = new URLSearchParams();
-    params.set('return', `event/${eventId}?return=${returnView}`);
-    if (returnMonth) params.set('month', returnMonth);
-    if (returnYear) params.set('year', returnYear);
-    if (returnQuarter) params.set('quarter', returnQuarter);
-    params.set('eventId', eventId);
-    router.push(`/add-material?${params.toString()}`);
+    // Build the return URL to come back to this event detail page
+    const eventDetailParams = new URLSearchParams({ return: returnView });
+    if (returnMonth) eventDetailParams.set('month', returnMonth);
+    if (returnYear) eventDetailParams.set('year', returnYear);
+    if (returnQuarter) eventDetailParams.set('quarter', returnQuarter);
+    const eventDetailUrl = `/event/${eventId}?${eventDetailParams.toString()}`;
+
+    // Build the add material URL with returnUrl and eventId
+    const addMaterialParams = new URLSearchParams();
+    addMaterialParams.set('returnUrl', eventDetailUrl);
+    addMaterialParams.set('eventId', eventId);
+
+    router.push(`/materials/add?${addMaterialParams.toString()}`);
   };
 
   const handleDeleteMaterial = async (materialId: number) => {
@@ -144,6 +238,21 @@ function EventDetailContent({ params }: EventDetailPageProps) {
       console.error('Error deleting material:', error);
       alert('Error deleting material. Please try again.');
     }
+  };
+
+  const handleMaterialCardClick = (materialId: number) => {
+    router.push(`/materials/${materialId}?returnUrl=${encodeURIComponent(`/event/${eventId}?return=${returnView}`)}`);
+  };
+
+  const handleEventPillClick = (eventId: number) => {
+    router.push(`/event/${eventId}?return=${returnView}`);
+  };
+
+  // Get event name by ID (for material cards)
+  const getEventName = (eventId: number | null): string => {
+    if (eventId === null) return 'Any Time';
+    if (event && event.id === eventId) return event.title;
+    return 'Unknown Event';
   };
 
   if (loading) {
@@ -373,85 +482,14 @@ function EventDetailContent({ params }: EventDetailPageProps) {
                     </p>
                   ) : (
                     materials.map((material) => (
-                      <div
+                      <MaterialCard
                         key={material.id}
-                        className="bg-white rounded-lg shadow-[0px_1.5px_6px_0px_rgba(0,0,0,0.12)] p-4 flex flex-col gap-3 w-full min-w-0"
-                      >
-                        {/* Card Header: Title + Action Buttons */}
-                        <div className="flex items-center justify-between w-full gap-2">
-                          <h3 className="text-base font-medium leading-6 text-[#181818] flex-1 min-w-0 truncate">
-                            {material.label || 'Untitled Material'}
-                          </h3>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              type="no-fill"
-                              size="x-small"
-                              iconOnly
-                              iconL="pencil"
-                              aria-label="Edit material"
-                              onClick={() => {
-                                const params = new URLSearchParams();
-                                params.set('return', `event/${eventId}?return=${returnView}`);
-                                if (returnMonth) params.set('month', returnMonth);
-                                if (returnYear) params.set('year', returnYear);
-                                if (returnQuarter) params.set('quarter', returnQuarter);
-                                router.push(`/edit-material/${material.id}?${params.toString()}`);
-                              }}
-                            />
-                            <Button
-                              type="no-fill"
-                              size="x-small"
-                              iconOnly
-                              iconL="trash"
-                              aria-label="Delete material"
-                              onClick={() => handleDeleteMaterial(material.id)}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Pills Row: Event + URL */}
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {material.event_name && material.event_name !== 'Any Time' && (
-                            <Pill
-                              type="transparent"
-                              size="small"
-                              label={material.event_name}
-                            />
-                          )}
-                          {material.event_name === 'Any Time' && (
-                            <Pill
-                              type="transparent"
-                              size="small"
-                              label="Any Time"
-                            />
-                          )}
-                          {material.url && (
-                            <Pill
-                              type="transparent"
-                              size="small"
-                              subtextL="URL"
-                              label={material.url}
-                              truncate
-                              interactive
-                              onClick={() => window.open(material.url, '_blank')}
-                              className="max-w-[200px]"
-                            />
-                          )}
-                        </div>
-
-                        {/* Notes */}
-                        {material.notes && (
-                          <p className="text-sm font-normal leading-5 text-[#424242] whitespace-pre-wrap">
-                            {material.notes}
-                          </p>
-                        )}
-
-                        {/* Footer: Created + Updated Dates */}
-                        <div className="flex items-center justify-between w-full gap-4 text-xs font-normal leading-4 text-[#a4a4a4]">
-                          <span>Created {formatDate(material.created_at)}</span>
-                          <span>Updated {formatDate(material.updated_at)}</span>
-                        </div>
-                      </div>
+                        material={material}
+                        eventName={getEventName(material.event_id)}
+                        onCardClick={() => handleMaterialCardClick(material.id)}
+                        onEventClick={handleEventPillClick}
+                        enableEventPillNavigation={false}
+                      />
                     ))
                   )}
                 </div>

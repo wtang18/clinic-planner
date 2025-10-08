@@ -13,6 +13,7 @@ function AddEventForm() {
   const router = useRouter();
   const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Get search params
   const searchParams = useSearchParams();
@@ -141,6 +142,7 @@ function AddEventForm() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -155,6 +157,7 @@ function AddEventForm() {
   };
 
   const handleAngleToggle = (angle: string) => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       selected_angles: {
@@ -165,6 +168,7 @@ function AddEventForm() {
   };
 
   const handleAngleNotesChange = (angle: string, notes: string) => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       angle_notes: {
@@ -175,6 +179,7 @@ function AddEventForm() {
   };
 
   const handleMultiMonthToggle = () => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       is_multi_month: !prev.is_multi_month,
@@ -184,6 +189,7 @@ function AddEventForm() {
   };
 
   const handleRecurringToggle = () => {
+    setHasUnsavedChanges(true);
     setFormData((prev) => ({
       ...prev,
       is_recurring: !prev.is_recurring,
@@ -191,6 +197,12 @@ function AddEventForm() {
   };
 
   const handleCancel = () => {
+    if (hasUnsavedChanges) {
+      if (!window.confirm('Discard changes? Your edits will be lost.')) {
+        return;
+      }
+    }
+
     if (returnView === 'timeline' && defaultMonth && defaultYear) {
       router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
     } else if (returnView === 'quarter') {
@@ -203,6 +215,18 @@ function AddEventForm() {
       router.push(`/?view=${returnView}`);
     }
   };
+
+  // Browser navigation protection
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const monthNames = [
     'January',
@@ -531,14 +555,14 @@ function AddEventForm() {
                 <Button
                   type="transparent"
                   size="large"
-                  label="Discard"
+                  label="Cancel"
                   onClick={handleCancel}
                   className="flex-1"
                 />
                 <Button
                   type="primary"
                   size="large"
-                  label="Save Event"
+                  label="Create Event"
                   className="flex-1"
                   disabled={loading}
                   onClick={handleSubmit}

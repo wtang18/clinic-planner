@@ -381,19 +381,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
-    // Generate unique IDs for accessibility
-    const inputId = React.useMemo(
-      () => providedId || generateId("input"),
-      [providedId]
-    );
-    const helperTextId = React.useMemo(
-      () => generateId("input-helper"),
-      []
-    );
-    const errorTextId = React.useMemo(
-      () => generateId("input-error"),
-      []
-    );
+    // Generate unique IDs for accessibility using React.useId for SSR compatibility
+    const reactId = React.useId();
+    const inputId = providedId || `input-${reactId}`;
+    const helperTextId = `input-helper-${reactId}`;
+    const errorTextId = `input-error-${reactId}`;
 
     // State management
     const [isFocused, setIsFocused] = React.useState(false);

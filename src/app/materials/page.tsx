@@ -1,254 +1,624 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { MarketingMaterialsService } from '@/lib/marketingMaterials'
-import { MarketingMaterial, supabase } from '@/lib/supabase'
-import MaterialsList from '@/components/MaterialsList'
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { Button } from '@/design-system/components/Button';
+import { Card } from '@/design-system/components/Card';
+import { SearchInput } from '@/design-system/components/SearchInput';
+import { Pill } from '@/design-system/components/Pill';
+import { Sidebar } from '@/design-system/components/Sidebar';
+import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
+import { Icon } from '@/design-system/icons';
+import { MarketingMaterialsService } from '@/lib/marketingMaterials';
+import { MarketingMaterial, EventIdea, supabase } from '@/lib/supabase';
 
-type EventOption = {
-  id: number
-  title: string
+// Menu items for sidebar
+const menuItems = [
+  { id: 'calendar', label: 'Calendar', icon: 'calendar' },
+  { id: 'materials', label: 'Marketing Materials', icon: 'file-stack', active: true },
+  // { id: 'settings', label: 'Settings', icon: 'gear' },
+  // { id: 'account', label: 'Account', icon: 'person-upper-body' },
+];
+
+type SortBy = 'name' | 'event' | 'created' | 'updated';
+
+interface MaterialCardProps {
+  material: MarketingMaterial;
+  eventName: string;
+  onCardClick: () => void;
+  onEventClick: (eventId: number) => void;
+  enableEventPillNavigation?: boolean;
 }
 
-export default function MaterialsPage() {
-  const router = useRouter()
-  const [materials, setMaterials] = useState<MarketingMaterial[]>([])
-  const [events, setEvents] = useState<EventOption[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [filterAnyTime, setFilterAnyTime] = useState<boolean | null>(null)
-  const [sortBy, setSortBy] = useState<'name' | 'event' | 'created' | 'updated'>('created')
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      // Load both materials and events in parallel
-      const [materialsData, eventsData] = await Promise.all([
-        MarketingMaterialsService.getAllMaterials(),
-        supabase.from('events_ideas').select('id, title').order('title')
-      ])
-
-      setMaterials(materialsData)
-      if (eventsData.error) throw eventsData.error
-      setEvents(eventsData.data || [])
-    } catch (error) {
-      console.error('Error loading data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadMaterials = async () => {
-    try {
-      const allMaterials = await MarketingMaterialsService.getAllMaterials()
-      setMaterials(allMaterials)
-    } catch (error) {
-      console.error('Error loading materials:', error)
-    }
-  }
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      loadMaterials()
-      return
-    }
-
-    setLoading(true)
-    try {
-      const searchResults = await MarketingMaterialsService.searchMaterials(searchQuery)
-      setMaterials(searchResults)
-    } catch (error) {
-      console.error('Error searching materials:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getEventName = (eventId: number | null) => {
-    if (eventId === null) return 'Any Time'
-    const event = events.find(e => e.id === eventId)
-    return event?.title || `Event #${eventId}`
-  }
-
-  const sortMaterials = (materials: MarketingMaterial[]): MarketingMaterial[] => {
-    return [...materials].sort((a, b) => {
-      switch (sortBy) {
-        case 'name':
-          return a.label.toLowerCase().localeCompare(b.label.toLowerCase())
-
-        case 'event':
-          const eventA = getEventName(a.event_id)
-          const eventB = getEventName(b.event_id)
-          return eventA.toLowerCase().localeCompare(eventB.toLowerCase())
-
-        case 'created':
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime() // Newest first
-
-        case 'updated':
-          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime() // Newest first
-
-        default:
-          return 0
-      }
-    })
-  }
-
-  const filteredMaterials = materials.filter(material => {
-    if (filterAnyTime === null) return true
-    return filterAnyTime ? material.event_id === null : material.event_id !== null
-  })
-
-  const sortedMaterials = sortMaterials(filteredMaterials)
-
-
-  const handleDeleteMaterial = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this material? This will remove all associations with events.')) {
-      const success = await MarketingMaterialsService.deleteMaterial(id)
-      if (success) {
-        loadMaterials()
-      } else {
-        alert('Error deleting material. Please try again.')
-      }
-    }
-  }
-
-  const handleEditMaterial = (material: MarketingMaterial) => {
-    router.push(`/edit-material/${material.id}?return=materials`)
-  }
-
-  if (loading && materials.length === 0) {
-    return (
-      <main className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="h-16 bg-gray-100 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    )
-  }
+/**
+ * MaterialCard component matching Figma design
+ * Displays individual marketing material with label, URL, event association, and notes
+ */
+function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEventPillNavigation = true }: MaterialCardProps) {
+  const isAnyTime = material.event_id === null;
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Card
+      size="small"
+      variant="interactive"
+      className="w-full"
+      onClick={onCardClick}
+    >
+      <div className="flex flex-col gap-3 w-full">
+        {/* Header Row - Title and URL */}
+        <div className="flex flex-col gap-0 w-full">
+          <p className="font-medium text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+            {material.label}
+          </p>
+          <p className="font-normal text-[12px] leading-[20px] text-[#424242] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+            {material.url}
+          </p>
+        </div>
 
-        {/* Header */}
-        <div className="mb-8">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Marketing Materials ({sortedMaterials.length})
-              </h2>
+        {/* Notes */}
+        <div className="flex gap-2 items-start w-full h-[20px]">
+          <p className="font-normal text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap flex-1">
+            {material.notes || ''}
+          </p>
+        </div>
 
-              <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-                <button
-                  onClick={() => router.push('/')}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  ← Back to Planner
-                </button>
-                <button
-                  onClick={() => router.push('/add-material?return=materials')}
-                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                  type="button"
-                >
-                  <span className="mr-2">+</span>
-                  Add Material
-                </button>
-              </div>
+        {/* Footer Row - Event Pill and Go to URL Button */}
+        <div className="flex items-start justify-between w-full">
+          {isAnyTime ? (
+            <Pill
+              type="transparent"
+              size="small"
+              label={eventName}
+            />
+          ) : (
+            <Pill
+              type="transparent"
+              size="small"
+              label={eventName}
+              interactive={enableEventPillNavigation}
+              onClick={enableEventPillNavigation ? (e) => {
+                e?.stopPropagation();
+                if (material.event_id) {
+                  onEventClick(material.event_id);
+                }
+              } : undefined}
+            />
+          )}
+          <div className="flex gap-2 items-center">
+            <Button
+              type="no-fill"
+              size="x-small"
+              label="Go to URL"
+              iconR="arrow-right"
+              onClick={(e) => {
+                e.stopPropagation();
+                window.open(material.url, '_blank', 'noopener,noreferrer');
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function MarketingMaterialsContent() {
+  const router = useRouter();
+  const { isOpen, toggle } = useSidebar();
+
+  // State management
+  const [materials, setMaterials] = React.useState<MarketingMaterial[]>([]);
+  const [events, setEvents] = React.useState<EventIdea[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [filterAnyTime, setFilterAnyTime] = React.useState<boolean | null>(null); // null = all, true = any time only, false = event-specific only
+  const [sortBy, setSortBy] = React.useState<SortBy>('name');
+  const [showFilterDropdown, setShowFilterDropdown] = React.useState(false);
+  const [showSortDropdown, setShowSortDropdown] = React.useState(false);
+
+  // Load data on mount
+  React.useEffect(() => {
+    loadData();
+  }, []);
+
+  // Load materials and events
+  const loadData = async () => {
+    setLoading(true);
+    await Promise.all([loadMaterials(), loadEvents()]);
+    setLoading(false);
+  };
+
+  // Load materials
+  const loadMaterials = async () => {
+    const data = await MarketingMaterialsService.getAllMaterials();
+    setMaterials(data);
+  };
+
+  // Load events for event name lookup
+  const loadEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events_ideas')
+        .select('*')
+        .order('title');
+
+      if (error) {
+        console.error('Error loading events:', error);
+        return;
+      }
+
+      setEvents(data || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    }
+  };
+
+  // Get event name by ID
+  const getEventName = (eventId: number | null): string => {
+    if (eventId === null) return 'Any Time';
+    const event = events.find(e => e.id === eventId);
+    return event?.title || 'Unknown Event';
+  };
+
+  // Search handler
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      const results = await MarketingMaterialsService.searchMaterials(query);
+      setMaterials(results);
+    } else {
+      loadMaterials();
+    }
+  };
+
+  // Sort materials
+  const sortMaterials = (materialsToSort: MarketingMaterial[]): MarketingMaterial[] => {
+    const sorted = [...materialsToSort];
+
+    switch (sortBy) {
+      case 'name':
+        return sorted.sort((a, b) => a.label.localeCompare(b.label));
+      case 'event':
+        return sorted.sort((a, b) => {
+          const eventA = getEventName(a.event_id);
+          const eventB = getEventName(b.event_id);
+          return eventA.localeCompare(eventB);
+        });
+      case 'created':
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      case 'updated':
+        return sorted.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+      default:
+        return sorted;
+    }
+  };
+
+  // Apply filters and search
+  const filteredMaterials = React.useMemo(() => {
+    let filtered = materials;
+
+    // Apply event filter
+    if (filterAnyTime === true) {
+      filtered = filtered.filter(m => m.event_id === null);
+    } else if (filterAnyTime === false) {
+      filtered = filtered.filter(m => m.event_id !== null);
+    }
+
+    // Sort
+    return sortMaterials(filtered);
+  }, [materials, filterAnyTime, sortBy, events]);
+
+  // Handlers
+  const handleMenuItemClick = (id: string) => {
+    if (id === 'calendar') {
+      router.push('/annual');
+    } else if (id === 'materials') {
+      // Already on materials page
+    }
+  };
+
+  const handleMaterialCardClick = (materialId: number) => {
+    router.push(`/materials/${materialId}?returnUrl=/materials`);
+  };
+
+  const handleEventPillClick = (eventId: number) => {
+    router.push(`/event/${eventId}?returnUrl=/materials`);
+  };
+
+  const handleAddMaterial = () => {
+    router.push('/materials/add?returnUrl=/materials');
+  };
+
+  const handleFilterSelect = (filter: boolean | null) => {
+    setFilterAnyTime(filter);
+    setFilterChanged(true);
+    setShowFilterDropdown(false);
+  };
+
+  const handleSortSelect = (sort: SortBy) => {
+    setSortBy(sort);
+    setSortChanged(true);
+    setShowSortDropdown(false);
+  };
+
+  // Track if filter/sort have been changed
+  const [filterChanged, setFilterChanged] = React.useState(false);
+  const [sortChanged, setSortChanged] = React.useState(false);
+
+  // Get filter button label
+  const getFilterLabel = () => {
+    if (!filterChanged) return 'Filter';
+    if (filterAnyTime === null) return 'All Materials';
+    if (filterAnyTime === true) return 'Any Time';
+    return 'Event-Specific';
+  };
+
+  // Get sort button label (concise)
+  const getSortLabel = () => {
+    if (!sortChanged) return 'Sort';
+    switch (sortBy) {
+      case 'name': return 'Name';
+      case 'event': return 'Event';
+      case 'created': return 'Created';
+      case 'updated': return 'Updated';
+      default: return 'Name';
+    }
+  };
+
+  // Update menu items with click handlers
+  const menuItemsWithHandlers = menuItems.map(item => ({
+    ...item,
+    onClick: () => handleMenuItemClick(item.id),
+  }));
+
+  return (
+    <div
+      className="min-h-screen w-full flex items-start"
+      style={{
+        background: 'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+      }}
+    >
+      {/* Desktop Sidebar - Hidden on mobile (<768px), visible on desktop (>=768px) */}
+      <div
+        className={cn(
+          'hidden md:block overflow-hidden h-screen sticky top-0 flex-shrink-0 py-2 transition-[width] duration-200',
+          isOpen ? 'w-[296px] px-2' : 'w-0 px-0'
+        )}
+      >
+        <div
+          className={cn(
+            'transition-transform duration-200 w-[280px] h-full',
+            isOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          <Sidebar isOpen={isOpen} menuItems={menuItemsWithHandlers} />
+        </div>
+      </div>
+
+      {/* Mobile Menu Modal - Mobile only (<768px) */}
+      {isOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-50"
+          style={{
+            background:
+              'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+          }}
+        >
+          <div className="flex flex-col h-full p-6">
+            {/* Close button */}
+            <div className="flex items-center justify-start mb-6">
+              <Button
+                type="transparent"
+                size="medium"
+                iconOnly
+                iconL="x"
+                aria-label="Close menu"
+                onClick={toggle}
+              />
+            </div>
+
+            {/* Menu items - 24px gap from close button */}
+            <div className="flex flex-col gap-3">
+              {menuItemsWithHandlers.map((item) => {
+                const isActive = item.active;
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      item.onClick?.();
+                      toggle(); // Close menu after selection
+                    }}
+                    className={cn(
+                      'flex items-center gap-3 h-10 px-3 py-2 rounded-full',
+                      'transition-colors duration-200',
+                      'cursor-pointer select-none',
+                      'w-full',
+                      isActive && 'bg-[rgba(0,0,0,0.12)]',
+                      !isActive && 'hover:bg-[rgba(0,0,0,0.06)]'
+                    )}
+                  >
+                    {/* Icon */}
+                    <div className="flex items-center justify-center shrink-0">
+                      <Icon name={item.icon as any} size="medium" className="text-[#181818]" />
+                    </div>
+
+                    {/* Label */}
+                    <span className="flex-1 text-left font-medium text-[16px] leading-[24px] text-[#181818]">
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
+      )}
 
-        {/* Search and Filter */}
-        <div className="mb-6">
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search materials..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </button>
-                </div>
+      {/* Content Frame */}
+      <div className="flex flex-col gap-6 p-6 flex-1 min-w-0">
+        {/* Navbar */}
+        <div className="flex items-center w-full flex-wrap gap-6 sm:gap-2 sm:flex-nowrap">
+          {/* Left - Sidebar Toggle */}
+          <div className="flex flex-1 sm:flex-1 gap-4 items-center min-w-0">
+            <Button
+              type="transparent"
+              size="medium"
+              iconOnly
+              iconL={isOpen ? "x" : "navigation-menu"}
+              aria-label="Toggle menu"
+              onClick={toggle}
+              className="md:hidden"
+            />
+            <Button
+              type="transparent"
+              size="medium"
+              iconOnly
+              iconL={isOpen ? "panel-left-open" : "panel-left-closed"}
+              aria-label="Toggle menu"
+              onClick={toggle}
+              className="hidden md:flex"
+            />
+            {/* Page Title - Mobile only, next to menu button */}
+            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818] truncate">Materials</h1>
+          </div>
+
+          {/* Center - Search (Tablet+ centered, Mobile full-width second row) */}
+          <div className="w-full sm:w-[240px] lg:w-[320px] order-last sm:order-2">
+            <SearchInput
+              value={searchQuery}
+              onChange={handleSearch}
+              placeholder="Search"
+              size="medium"
+            />
+          </div>
+
+          {/* Right - Filter, Sort, and Add Material */}
+          <div className="flex flex-none sm:flex-1 gap-2 items-center justify-end order-3 sm:order-3 min-w-0">
+            {/* Filter & Sort - icon-only on mobile/tablet, with label on desktop */}
+            <div className="flex gap-2 items-center">
+              {/* Filter Dropdown */}
+              <div className="relative">
+                <Button
+                  type="transparent"
+                  size="medium"
+                  iconOnly
+                  iconL="filter"
+                  aria-label="Filter materials"
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="lg:hidden"
+                />
+                <Button
+                  type="transparent"
+                  size="medium"
+                  iconL="filter"
+                  label={getFilterLabel()}
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="hidden lg:flex"
+                />
+                {showFilterDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowFilterDropdown(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 py-1 backdrop-blur-xl border border-[rgba(0,0,0,0.08)]">
+                      <button
+                        onClick={() => handleFilterSelect(null)}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          filterAnyTime === null && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        All Materials
+                      </button>
+                      <button
+                        onClick={() => handleFilterSelect(false)}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          filterAnyTime === false && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        Event-Specific
+                      </button>
+                      <button
+                        onClick={() => handleFilterSelect(true)}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          filterAnyTime === true && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        Any Time
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="flex items-center space-x-4">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'name' | 'event' | 'created' | 'updated')}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="created">Sort by Created (Newest)</option>
-                  <option value="updated">Sort by Updated (Newest)</option>
-                  <option value="name">Sort by Material Name</option>
-                  <option value="event">Sort by Event Name</option>
-                </select>
-
-                <select
-                  value={filterAnyTime === null ? 'all' : filterAnyTime.toString()}
-                  onChange={(e) => {
-                    const value = e.target.value
-                    setFilterAnyTime(value === 'all' ? null : value === 'true')
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">All Materials</option>
-                  <option value="true">Any Time Materials</option>
-                  <option value="false">Event Specific</option>
-                </select>
-
-                {searchQuery && (
-                  <button
-                    onClick={() => {
-                      setSearchQuery('')
-                      loadMaterials()
-                    }}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                  >
-                    Clear Search
-                  </button>
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <Button
+                  type="transparent"
+                  size="medium"
+                  iconOnly
+                  iconL="arrows-up-down"
+                  aria-label="Sort materials"
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="lg:hidden"
+                />
+                <Button
+                  type="transparent"
+                  size="medium"
+                  iconL="arrows-up-down"
+                  label={getSortLabel()}
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="hidden lg:flex"
+                />
+                {showSortDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowSortDropdown(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 py-1 backdrop-blur-xl border border-[rgba(0,0,0,0.08)]">
+                      <button
+                        onClick={() => handleSortSelect('name')}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          sortBy === 'name' && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        Name
+                      </button>
+                      <button
+                        onClick={() => handleSortSelect('event')}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          sortBy === 'event' && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        Event
+                      </button>
+                      <button
+                        onClick={() => handleSortSelect('created')}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          sortBy === 'created' && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        Created
+                      </button>
+                      <button
+                        onClick={() => handleSortSelect('updated')}
+                        className={cn(
+                          'w-full text-left px-4 py-2 text-[14px] hover:bg-[rgba(0,0,0,0.06)] transition-colors',
+                          sortBy === 'updated' && 'bg-[rgba(0,0,0,0.08)] font-medium'
+                        )}
+                      >
+                        Updated
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
+            {/* Add Material - icon-only on mobile/tablet, with label on desktop */}
+            <Button
+              type="primary"
+              size="medium"
+              iconL="plus"
+              label="Add Material"
+              onClick={handleAddMaterial}
+              className="hidden lg:flex"
+            />
+            <Button
+              type="primary"
+              size="medium"
+              iconOnly
+              iconL="plus"
+              aria-label="Add material"
+              onClick={handleAddMaterial}
+              className="lg:hidden"
+            />
           </div>
         </div>
 
-        {/* Materials List */}
-        <div className="bg-white rounded-lg shadow">
-          <MaterialsList
-            materials={sortedMaterials}
-            loading={loading}
-            onEdit={handleEditMaterial}
-            onDelete={handleDeleteMaterial}
-            onUpdated={loadMaterials}
-          />
+        {/* Details Frame */}
+        <div className="flex flex-col gap-6 items-start w-full">
+          {/* Header Section - Hidden on mobile, title is in navbar */}
+          <div className="hidden sm:flex flex-col gap-2 items-start w-full">
+            <h1 className="font-semibold text-[32px] leading-[40px] text-[#181818]">
+              Marketing Materials
+            </h1>
+          </div>
+
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center w-full py-12">
+              <p className="text-[16px] text-[#424242]">Loading materials...</p>
+            </div>
+          )}
+
+          {/* Empty State - No materials at all */}
+          {!loading && materials.length === 0 && (
+            <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
+              <Icon name="file-stack" size="large" className="text-[#424242] opacity-50" />
+              <p className="text-[16px] text-[#424242]">No materials yet</p>
+              <Button
+                type="primary"
+                size="medium"
+                iconL="plus"
+                label="Add your first material"
+                onClick={handleAddMaterial}
+              />
+            </div>
+          )}
+
+          {/* Empty State - No search/filter results */}
+          {!loading && materials.length > 0 && filteredMaterials.length === 0 && (
+            <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
+              <Icon name="magnifying-glass" size="large" className="text-[#424242] opacity-50" />
+              <p className="text-[16px] text-[#424242]">
+                {searchQuery ? 'No materials match your search' : 'No materials match your filter'}
+              </p>
+              <Button
+                type="transparent"
+                size="medium"
+                label="Clear filters"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilterAnyTime(null);
+                  loadMaterials();
+                }}
+              />
+            </div>
+          )}
+
+          {/* Materials Grid - Responsive: 4 cols desktop, 2 cols tablet, 1 col mobile */}
+          {!loading && filteredMaterials.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+              {filteredMaterials.map((material) => (
+                <MaterialCard
+                  key={material.id}
+                  material={material}
+                  eventName={getEventName(material.event_id)}
+                  onCardClick={() => handleMaterialCardClick(material.id)}
+                  onEventClick={handleEventPillClick}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
-    </main>
-  )
+    </div>
+  );
+}
+
+export default function MarketingMaterialsPage() {
+  return (
+    <SidebarProvider>
+      <MarketingMaterialsContent />
+    </SidebarProvider>
+  );
 }

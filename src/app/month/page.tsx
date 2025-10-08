@@ -19,12 +19,12 @@ const monthNames = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-// Menu items for sidebar
-const menuItems = [
+// Menu items for sidebar - will add onClick handlers in component
+const baseMenuItems = [
   { id: 'calendar', label: 'Calendar', icon: 'calendar', active: true },
   { id: 'materials', label: 'Marketing Materials', icon: 'file-stack' },
-  { id: 'settings', label: 'Settings', icon: 'gear' },
-  { id: 'account', label: 'Account', icon: 'person-upper-body' },
+  // { id: 'settings', label: 'Settings', icon: 'gear' },
+  // { id: 'account', label: 'Account', icon: 'person-upper-body' },
 ];
 
 function MonthViewContent() {
@@ -108,6 +108,20 @@ function MonthViewContent() {
     });
     router.push(`/add-event?${params.toString()}`);
   };
+
+  const handleMenuItemClick = (id: string) => {
+    if (id === 'materials') {
+      router.push('/materials');
+    } else if (id === 'calendar') {
+      // Already on calendar
+    }
+  };
+
+  // Add onClick handlers to menu items
+  const menuItems = baseMenuItems.map(item => ({
+    ...item,
+    onClick: () => handleMenuItemClick(item.id),
+  }));
 
   const getEventsForMonthRange = (startMonth: number, startYear: number, endMonth: number, endYear: number) => {
     return events.filter(event => {
@@ -334,8 +348,8 @@ function MonthViewContent() {
       {/* Sidebar - Desktop only (≥768px) */}
       <div
         className={cn(
-          'hidden md:block transition-all duration-200 overflow-hidden h-screen sticky top-0',
-          isOpen ? 'w-[296px] p-2' : 'w-0 p-0'
+          'hidden md:block overflow-hidden h-screen sticky top-0 flex-shrink-0 py-2 transition-[width] duration-200',
+          isOpen ? 'w-[296px] px-2' : 'w-0 px-0'
         )}
       >
         <div
@@ -413,7 +427,7 @@ function MonthViewContent() {
         {/* Navbar */}
         <div className="flex items-center w-full flex-wrap gap-6 sm:gap-2 sm:flex-nowrap">
           {/* Left */}
-          <div className="flex-1 flex gap-2 sm:gap-4 items-center min-w-0">
+          <div className="flex flex-1 sm:flex-1 gap-4 items-center min-w-0">
             <Button
               type="transparent"
               size="medium"
@@ -432,28 +446,27 @@ function MonthViewContent() {
               onClick={toggle}
               className="hidden md:flex"
             />
+            {/* Page Title - Mobile only, next to menu button */}
+            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818] truncate">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
           </div>
 
-          {/* Center - Page Title (Mobile) or Segmented Control (Desktop) */}
-          <div className="w-auto sm:w-auto lg:w-[320px] order-2 sm:order-2">
-            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818]">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
-            <div className="hidden sm:block">
-              <SegmentedControl
-                options={[
-                  { value: 'month', label: 'Month' },
-                  { value: 'quarter', label: 'Quarter' },
-                  { value: 'year', label: 'Year' },
-                ]}
-                value={view}
-                onChange={handleViewChange}
-                aria-label="Select view"
-              />
-            </div>
+          {/* Center - Segmented Control (Tablet+) */}
+          <div className="hidden sm:block sm:w-[240px] lg:w-[320px] order-2 sm:order-2">
+            <SegmentedControl
+              options={[
+                { value: 'month', label: 'Month' },
+                { value: 'quarter', label: 'Quarter' },
+                { value: 'year', label: 'Year' },
+              ]}
+              value={view}
+              onChange={handleViewChange}
+              aria-label="Select view"
+            />
           </div>
 
           {/* Right */}
-          <div className="flex-1 flex gap-2 items-center justify-end order-3 sm:order-3 min-w-0">
-            <div className="hidden sm:flex gap-2 items-center">
+          <div className="flex flex-none sm:flex-1 gap-2 items-center justify-end order-3 sm:order-3 min-w-0">
+            <div className="flex gap-2 items-center">
               <Button
                 type="transparent"
                 size="medium"
