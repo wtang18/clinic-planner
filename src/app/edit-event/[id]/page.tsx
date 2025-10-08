@@ -181,8 +181,12 @@ function EditEventForm({ params }: EditEventPageProps) {
           // Go back to calendar view
           if (returnView === 'timeline' && defaultMonth && defaultYear) {
             router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
-          } else if (returnView === 'quarter' && defaultQuarter && defaultYear) {
-            router.push(`/?view=quarter&quarter=${defaultQuarter}&year=${defaultYear}`);
+          } else if (returnView === 'quarter') {
+            router.push(`/quarter`);
+          } else if (returnView === 'month') {
+            router.push(`/month`);
+          } else if (returnView === 'annual') {
+            router.push(`/annual`);
           } else {
             router.push(`/?view=${returnView}`);
           }
@@ -212,11 +216,15 @@ function EditEventForm({ params }: EditEventPageProps) {
         alert('Error deleting event. Please try again.');
         setLoading(false);
       } else {
-        // Navigate back to annual view after delete
+        // Navigate back to calendar view after delete
         if (returnView === 'timeline' && defaultMonth && defaultYear) {
           router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
-        } else if (returnView === 'quarter' && defaultQuarter && defaultYear) {
-          router.push(`/?view=quarter&quarter=${defaultQuarter}&year=${defaultYear}`);
+        } else if (returnView === 'quarter') {
+          router.push(`/quarter`);
+        } else if (returnView === 'month') {
+          router.push(`/month`);
+        } else if (returnView === 'annual') {
+          router.push(`/annual`);
         } else {
           router.push(`/?view=${returnView}`);
         }
@@ -294,8 +302,12 @@ function EditEventForm({ params }: EditEventPageProps) {
       // Go back to calendar view
       if (returnView === 'timeline' && defaultMonth && defaultYear) {
         router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
-      } else if (returnView === 'quarter' && defaultQuarter && defaultYear) {
-        router.push(`/?view=quarter&quarter=${defaultQuarter}&year=${defaultYear}`);
+      } else if (returnView === 'quarter') {
+        router.push(`/quarter`);
+      } else if (returnView === 'month') {
+        router.push(`/month`);
+      } else if (returnView === 'annual') {
+        router.push(`/annual`);
       } else {
         router.push(`/?view=${returnView}`);
       }

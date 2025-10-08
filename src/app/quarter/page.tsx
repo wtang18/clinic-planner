@@ -11,22 +11,14 @@ import { SegmentedControl } from '@/design-system/components/SegmentedControl';
 import { Sidebar } from '@/design-system/components/Sidebar';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { Icon } from '@/design-system/icons';
-import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase';
+import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase';
 import { eventDataProcessor } from '@/lib/eventHelpers';
 
-const months = [
-  { name: 'January', key: 'january' },
-  { name: 'February', key: 'february' },
-  { name: 'March', key: 'march' },
-  { name: 'April', key: 'april' },
-  { name: 'May', key: 'may' },
-  { name: 'June', key: 'june' },
-  { name: 'July', key: 'july' },
-  { name: 'August', key: 'august' },
-  { name: 'September', key: 'september' },
-  { name: 'October', key: 'october' },
-  { name: 'November', key: 'november' },
-  { name: 'December', key: 'december' },
+const quarters = [
+  { id: 1, name: 'Q1', months: [1, 2, 3], monthNames: ['January', 'February', 'March'] },
+  { id: 2, name: 'Q2', months: [4, 5, 6], monthNames: ['April', 'May', 'June'] },
+  { id: 3, name: 'Q3', months: [7, 8, 9], monthNames: ['July', 'August', 'September'] },
+  { id: 4, name: 'Q4', months: [10, 11, 12], monthNames: ['October', 'November', 'December'] },
 ];
 
 // Menu items for sidebar
@@ -37,17 +29,20 @@ const menuItems = [
   { id: 'account', label: 'Account', icon: 'person-upper-body' },
 ];
 
-function AnnualViewContent() {
+function QuarterViewContent() {
   const router = useRouter();
   const { isOpen, toggle } = useSidebar();
-  const [view, setView] = React.useState('year');
+  const [view, setView] = React.useState('quarter');
   const [events, setEvents] = React.useState<EventIdea[]>([]);
   const [outreachAngles, setOutreachAngles] = React.useState<OutreachAngle[]>([]);
+  const [materialsCounts, setMaterialsCounts] = React.useState<Record<number, number>>({});
   const [loading, setLoading] = React.useState(true);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // 1-12
+  const currentQuarter = Math.ceil(currentMonth / 3);
+  const [selectedQuarter, setSelectedQuarter] = React.useState(currentQuarter);
   const [selectedYear, setSelectedYear] = React.useState(currentYear);
 
   React.useEffect(() => {
@@ -72,6 +67,12 @@ function AnnualViewContent() {
 
       setEvents(eventsResponse.data || []);
       setOutreachAngles(anglesResponse.data || []);
+
+      // Load materials counts for all events
+      const eventIds = eventsResponse.data?.map(e => e.id) || [];
+      if (eventIds.length > 0) {
+        await loadMaterialsCounts(eventIds);
+      }
     } catch (error) {
       console.error('Error loading events:', error);
       setEvents([]);
@@ -81,43 +82,44 @@ function AnnualViewContent() {
     }
   };
 
-  const handleViewChange = (newView: string) => {
-    setView(newView);
-    if (newView === 'month') {
-      router.push('/month');
-    } else if (newView === 'quarter') {
-      router.push('/quarter');
+  const loadMaterialsCounts = async (eventIds: number[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('marketing_materials')
+        .select('event_id')
+        .in('event_id', eventIds);
+
+      if (error) throw error;
+
+      // Count materials per event
+      const counts: Record<number, number> = {};
+      data?.forEach(material => {
+        counts[material.event_id] = (counts[material.event_id] || 0) + 1;
+      });
+
+      setMaterialsCounts(counts);
+    } catch (error) {
+      console.error('Error loading materials counts:', error);
     }
-    // Stay on annual for 'year'
   };
 
   const handleAddEvent = () => {
     const params = new URLSearchParams({
-      return: 'annual',
+      return: 'quarter',
       year: selectedYear.toString(),
+      quarter: selectedQuarter.toString(),
     });
     router.push(`/add-event?${params.toString()}`);
   };
 
   const handleAddEventForMonth = (monthNumber: number) => {
     const params = new URLSearchParams({
-      return: 'annual',
+      return: 'quarter',
       year: selectedYear.toString(),
       month: monthNumber.toString(),
+      quarter: selectedQuarter.toString(),
     });
     router.push(`/add-event?${params.toString()}`);
-  };
-
-  const handlePreviousYear = () => {
-    setSelectedYear(prev => prev - 1);
-  };
-
-  const handleNextYear = () => {
-    setSelectedYear(prev => prev + 1);
-  };
-
-  const handleToday = () => {
-    setSelectedYear(currentYear);
   };
 
   const getEventsForMonth = (month: number) => {
@@ -170,6 +172,111 @@ function AnnualViewContent() {
     });
   };
 
+  // Get events whose preparation window falls in this month
+  const getPrepEventsForMonth = (month: number) => {
+    return events.filter(event => {
+      const eventStartMonth = event.start_month || event.month;
+      const eventStartYear = event.start_year || event.year;
+
+      // Only consider events with preparation requirements
+      if (!event.prep_months_needed && !event.prep_start_date) {
+        return false;
+      }
+
+      // Skip recurring events for prep calculation
+      if (event.is_recurring) {
+        return false;
+      }
+
+      // Don't show events in prep section if they're actually occurring this month
+      // (they'll show in the main section)
+      const eventDate = new Date(eventStartYear, eventStartMonth - 1);
+      const checkDate = new Date(selectedYear, month - 1);
+
+      // For multi-month events, check if this month is within the event span
+      if (event.end_month && event.end_year) {
+        const endDate = new Date(event.end_year, event.end_month - 1);
+        if (checkDate >= eventDate && checkDate <= endDate) {
+          return false; // Event is occurring, don't show in prep section
+        }
+      } else {
+        // Single month event
+        if (eventStartYear === selectedYear && eventStartMonth === month) {
+          return false; // Event is occurring, don't show in prep section
+        }
+      }
+
+      // For events with specific prep start date
+      if (event.prep_start_date) {
+        const prepDate = new Date(event.prep_start_date);
+        const prepStartMonth = prepDate.getMonth() + 1; // 1-12
+        const prepStartYear = prepDate.getFullYear();
+
+        // Check if this month falls within prep window (from prep start to event start)
+        const prepStartDate = new Date(prepStartYear, prepStartMonth - 1);
+
+        // Check if current month is between prep start and event start (exclusive of event month)
+        return checkDate >= prepStartDate && checkDate < eventDate;
+      }
+
+      // For events with prep months needed
+      if (event.prep_months_needed > 0) {
+        // Calculate prep start month by subtracting prep months from event start
+        const prepStartDate = new Date(eventDate);
+        prepStartDate.setMonth(prepStartDate.getMonth() - event.prep_months_needed);
+
+        // Check if current month falls within prep window (from prep start to event start)
+        return checkDate >= prepStartDate && checkDate < eventDate;
+      }
+
+      return false;
+    });
+  };
+
+  const formatPrepPill = (event: EventIdea): string => {
+    if (event.prep_start_date) {
+      const date = new Date(event.prep_start_date);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    } else if (event.prep_months_needed > 0) {
+      return `${event.prep_months_needed}mo`;
+    }
+    return '';
+  };
+
+  const handleViewChange = (newView: string) => {
+    setView(newView);
+    if (newView === 'month') {
+      router.push('/month');
+    } else if (newView === 'year') {
+      router.push('/annual');
+    }
+    // Stay on quarter for 'quarter'
+  };
+
+  const handlePreviousQuarter = () => {
+    if (selectedQuarter === 1) {
+      setSelectedQuarter(4);
+      setSelectedYear(prev => prev - 1);
+    } else {
+      setSelectedQuarter(prev => prev - 1);
+    }
+  };
+
+  const handleNextQuarter = () => {
+    if (selectedQuarter === 4) {
+      setSelectedQuarter(1);
+      setSelectedYear(prev => prev + 1);
+    } else {
+      setSelectedQuarter(prev => prev + 1);
+    }
+  };
+
+  const handleToday = () => {
+    setSelectedQuarter(currentQuarter);
+    setSelectedYear(currentYear);
+  };
+
   if (loading) {
     return (
       <div
@@ -185,6 +292,8 @@ function AnnualViewContent() {
       </div>
     );
   }
+
+  const quarter = quarters[selectedQuarter - 1];
 
   return (
     <div
@@ -299,7 +408,7 @@ function AnnualViewContent() {
 
           {/* Center - Page Title (Mobile) or Segmented Control (Desktop) */}
           <div className="w-auto sm:w-auto lg:w-[320px] order-2 sm:order-2">
-            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818]">{selectedYear}</h1>
+            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818]">{quarter.name} {selectedYear}</h1>
             <div className="hidden sm:block">
               <SegmentedControl
                 options={[
@@ -322,16 +431,16 @@ function AnnualViewContent() {
                 size="medium"
                 iconOnly
                 iconL="arrow-left"
-                aria-label="Previous year"
-                onClick={handlePreviousYear}
+                aria-label="Previous quarter"
+                onClick={handlePreviousQuarter}
               />
               <Button
                 type="transparent"
                 size="medium"
                 iconOnly
                 iconL="arrow-right"
-                aria-label="Next year"
-                onClick={handleNextYear}
+                aria-label="Next quarter"
+                onClick={handleNextQuarter}
               />
               <Button
                 type="transparent"
@@ -375,24 +484,24 @@ function AnnualViewContent() {
           </div>
         </div>
 
-        {/* Year Header - Desktop only */}
+        {/* Quarter Header - Desktop only */}
         <div className="hidden sm:flex gap-2 items-start">
-          <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{selectedYear}</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{quarter.name} {selectedYear}</h1>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-3">
-          {months.map((month, index) => {
-            const monthNumber = index + 1;
+        {/* Quarter Grid - 3 columns for the 3 months in this quarter */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {quarter.months.map((monthNumber, index) => {
+            const monthName = quarter.monthNames[index];
             const isCurrentMonth = monthNumber === currentMonth && selectedYear === currentYear;
             const monthEvents = getEventsForMonth(monthNumber);
+            const prepEvents = getPrepEventsForMonth(monthNumber);
 
             return (
               <Container
-                key={month.key}
-                variant="interactive"
+                key={monthNumber}
                 className={cn(
-                  'flex flex-col h-full w-full',
+                  'flex flex-col gap-4 h-full w-full',
                   isCurrentMonth && 'shadow-[inset_0_0_0_2px_#765c8b]'
                 )}
               >
@@ -403,31 +512,28 @@ function AnnualViewContent() {
                       isCurrentMonth ? 'text-[#4c3c5a]' : 'text-[#181818]'
                     }`}
                   >
-                    {month.name}
+                    {monthName}
                   </h2>
                   <Button
                     type="no-fill"
                     size="x-small"
                     iconOnly
                     iconL="plus"
-                    aria-label={`Add event to ${month.name}`}
+                    aria-label={`Add event to ${monthName}`}
                     onClick={() => handleAddEventForMonth(monthNumber)}
                   />
                 </div>
 
-                {/* Events List */}
-                <div className="flex flex-col gap-2 w-full flex-1 overflow-y-auto">
-                  {monthEvents.length === 0 ? (
-                    <p className="text-sm font-normal leading-5 text-[#424242]">
-                      No Events Planned
-                    </p>
-                  ) : (
-                    monthEvents.map((event) => {
+                {/* Events Occurring This Month */}
+                {monthEvents.length > 0 && (
+                  <div className="flex flex-col gap-2 w-full">
+                    {monthEvents.map((event) => {
                       const processedEvent = eventDataProcessor.formatEventForDisplay(
                         event,
                         outreachAngles,
                         selectedYear
                       );
+                      const materialsCount = materialsCounts[event.id] || 0;
 
                       return (
                         <Card
@@ -436,18 +542,18 @@ function AnnualViewContent() {
                           variant="interactive"
                           onClick={() => {
                             const params = new URLSearchParams({
-                              return: 'annual',
+                              return: 'quarter',
                               year: selectedYear.toString(),
+                              quarter: selectedQuarter.toString(),
                             });
                             router.push(`/event/${event.id}?${params.toString()}`);
                           }}
                         >
-                          {/* Header Block - title and date with no gap */}
+                          {/* Header Block */}
                           <div className="flex flex-col w-full">
                             <h3 className="text-sm font-medium leading-5 text-[#181818]">
                               {event.title}
                             </h3>
-                            {/* Display date for multi-month events */}
                             {processedEvent.displayDate.isMultiMonth && (
                               <p className="text-xs font-normal leading-5 text-[#424242]">
                                 {processedEvent.displayDate.start}
@@ -456,16 +562,31 @@ function AnnualViewContent() {
                             )}
                           </div>
 
-                          {/* Pills: Outreach Angles + Yearly indicator */}
+                          {/* Description */}
+                          {event.description && (
+                            <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                              {event.description}
+                            </p>
+                          )}
+
+                          {/* Outreach Angle Perspectives */}
+                          {processedEvent.processedOutreachAngles.map((angleSelection, idx) => {
+                            if (!angleSelection.notes) return null;
+
+                            return (
+                              <div key={idx} className="flex flex-col w-full">
+                                <p className="text-xs font-medium leading-5 text-[#424242]">
+                                  {angleSelection.angle} Perspective
+                                </p>
+                                <p className="text-sm font-normal leading-5 text-[#181818]">
+                                  {angleSelection.notes}
+                                </p>
+                              </div>
+                            );
+                          })}
+
+                          {/* Pills Row */}
                           <div className="flex flex-wrap gap-1.5 w-full">
-                            {processedEvent.processedOutreachAngles.map((angleSelection, idx) => (
-                              <Pill
-                                key={idx}
-                                type="transparent"
-                                size="small"
-                                label={angleSelection.angle}
-                              />
-                            ))}
                             {event.is_recurring && (
                               <Pill
                                 type="transparent"
@@ -473,12 +594,124 @@ function AnnualViewContent() {
                                 label="Yearly"
                               />
                             )}
+                            {materialsCount > 0 && (
+                              <Pill
+                                type="transparent"
+                                size="small"
+                                label="Materials"
+                                subtextR={materialsCount.toString()}
+                              />
+                            )}
                           </div>
                         </Card>
                       );
-                    })
-                  )}
-                </div>
+                    })}
+                  </div>
+                )}
+
+                {/* Preparation Needed Section - Future events with prep starting this month */}
+                {prepEvents.length > 0 && (
+                  <div className="flex flex-col gap-2 w-full">
+                    <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                      Preparation Needed
+                    </h3>
+                    {prepEvents.map((event) => {
+                      const processedEvent = eventDataProcessor.formatEventForDisplay(
+                        event,
+                        outreachAngles,
+                        selectedYear
+                      );
+                      const materialsCount = materialsCounts[event.id] || 0;
+                      const prepLabel = formatPrepPill(event);
+
+                      return (
+                        <Card
+                          key={event.id}
+                          size="small"
+                          variant="interactive"
+                          onClick={() => {
+                            const params = new URLSearchParams({
+                              return: 'quarter',
+                              year: selectedYear.toString(),
+                              quarter: selectedQuarter.toString(),
+                            });
+                            router.push(`/event/${event.id}?${params.toString()}`);
+                          }}
+                        >
+                          {/* Header Block */}
+                          <div className="flex flex-col w-full">
+                            <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                              {event.title}
+                            </h3>
+                            {processedEvent.displayDate.isMultiMonth && (
+                              <p className="text-xs font-normal leading-5 text-[#424242]">
+                                {processedEvent.displayDate.start}
+                                {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          {event.description && (
+                            <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                              {event.description}
+                            </p>
+                          )}
+
+                          {/* Outreach Angle Perspectives */}
+                          {processedEvent.processedOutreachAngles.map((angleSelection, idx) => {
+                            if (!angleSelection.notes) return null;
+
+                            return (
+                              <div key={idx} className="flex flex-col w-full">
+                                <p className="text-xs font-medium leading-5 text-[#424242]">
+                                  {angleSelection.angle} Perspective
+                                </p>
+                                <p className="text-sm font-normal leading-5 text-[#181818]">
+                                  {angleSelection.notes}
+                                </p>
+                              </div>
+                            );
+                          })}
+
+                          {/* Pills Row */}
+                          <div className="flex flex-wrap gap-1.5 w-full">
+                            {event.is_recurring && (
+                              <Pill
+                                type="transparent"
+                                size="small"
+                                label="Yearly"
+                              />
+                            )}
+                            {prepLabel && (
+                              <Pill
+                                type="transparent"
+                                size="small"
+                                label="Prep"
+                                subtextR={prepLabel}
+                              />
+                            )}
+                            {materialsCount > 0 && (
+                              <Pill
+                                type="transparent"
+                                size="small"
+                                label="Materials"
+                                subtextR={materialsCount.toString()}
+                              />
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {monthEvents.length === 0 && prepEvents.length === 0 && (
+                  <p className="text-sm font-normal leading-5 text-[#424242]">
+                    No Events Planned
+                  </p>
+                )}
               </Container>
             );
           })}
@@ -488,10 +721,10 @@ function AnnualViewContent() {
   );
 }
 
-export default function AnnualViewPage() {
+export default function QuarterViewPage() {
   return (
     <SidebarProvider>
-      <AnnualViewContent />
+      <QuarterViewContent />
     </SidebarProvider>
   );
 }

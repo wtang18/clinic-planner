@@ -96,8 +96,12 @@ function EventDetailContent({ params }: EventDetailPageProps) {
       router.push('/materials');
     } else if (returnView === 'timeline' && returnMonth && returnYear) {
       router.push(`/?view=timeline&month=${returnMonth}&year=${returnYear}`);
-    } else if (returnView === 'quarter' && returnQuarter && returnYear) {
-      router.push(`/?view=quarter&quarter=${returnQuarter}&year=${returnYear}`);
+    } else if (returnView === 'quarter') {
+      router.push(`/quarter`);
+    } else if (returnView === 'month') {
+      router.push(`/month`);
+    } else if (returnView === 'annual') {
+      router.push(`/annual`);
     } else {
       router.push(`/annual`);
     }
@@ -277,16 +281,24 @@ function EventDetailContent({ params }: EventDetailPageProps) {
                     </Card>
                   )}
 
-                  {/* Preparation Schedule Card */}
-                  {event.prep_months_needed > 0 && (
+                  {/* Preparation Planning Card */}
+                  {(event.prep_months_needed > 0 || event.prep_start_date) && (
                     <Card size="small" className="w-full">
                       <p className="text-sm font-medium leading-5 text-[#424242]">
-                        Preparation Schedule
+                        Preparation Planning
                       </p>
-                      <p className="text-base font-normal leading-6 text-[#181818] whitespace-pre-wrap">
-                        {event.prep_months_needed} {event.prep_months_needed === 1 ? 'month' : 'months'} of preparation needed
-                        {event.prep_start_date && ` (Start: ${formatDate(event.prep_start_date)})`}
-                      </p>
+                      <div className="flex flex-col gap-1">
+                        {event.prep_start_date && (
+                          <p className="text-base font-normal leading-6 text-[#181818]">
+                            Start preparation: {formatDate(event.prep_start_date)}
+                          </p>
+                        )}
+                        {event.prep_months_needed > 0 && (
+                          <p className="text-base font-normal leading-6 text-[#181818]">
+                            {event.prep_months_needed} {event.prep_months_needed === 1 ? 'month' : 'months'} of preparation needed
+                          </p>
+                        )}
+                      </div>
                     </Card>
                   )}
 
