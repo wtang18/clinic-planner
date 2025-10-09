@@ -598,9 +598,13 @@ function QuarterViewContent() {
                 </div>
 
                 {/* Events Occurring This Month */}
-                {monthEvents.length > 0 && (
-                  <div className="flex flex-col gap-2 w-full">
-                    {monthEvents.map((event) => {
+                <div className="flex flex-col gap-2 w-full">
+                  {monthEvents.length === 0 ? (
+                    <p className="text-sm font-normal leading-5 text-[#424242]">
+                      No Events Planned
+                    </p>
+                  ) : (
+                    monthEvents.map((event) => {
                       const processedEvent = eventDataProcessor.formatEventForDisplay(
                         event,
                         outreachAngles,
@@ -687,9 +691,9 @@ function QuarterViewContent() {
                           </div>
                         </Card>
                       );
-                    })}
-                  </div>
-                )}
+                    })
+                  )}
+                </div>
 
                 {/* Preparation Needed Section - Future events with prep starting this month */}
                 {prepEvents.length > 0 && (
@@ -786,13 +790,6 @@ function QuarterViewContent() {
                       );
                     })}
                   </div>
-                )}
-
-                {/* Empty State */}
-                {monthEvents.length === 0 && prepEvents.length === 0 && (
-                  <p className="text-sm font-normal leading-5 text-[#424242]">
-                    No Events Planned
-                  </p>
                 )}
               </Container>
             );
