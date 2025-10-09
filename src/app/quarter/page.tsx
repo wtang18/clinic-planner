@@ -199,19 +199,6 @@ function QuarterViewContent() {
     return events.filter(event => {
       const eventStartMonth = event.start_month || event.month;
       const eventStartYear = event.start_year || event.year;
-
-      // Only consider events with preparation requirements
-      if (!event.prep_months_needed && !event.prep_start_date) {
-        return false;
-      }
-
-      // Skip recurring events for prep calculation
-      if (event.is_recurring) {
-        return false;
-      }
-
-      // Don't show events in prep section if they're actually occurring this month
-      // (they'll show in the main section)
       const eventDate = new Date(eventStartYear, eventStartMonth - 1);
       const checkDate = new Date(selectedYear, month - 1);
 
