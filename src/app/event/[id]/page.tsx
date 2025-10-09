@@ -72,8 +72,7 @@ function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEv
               size="small"
               label={eventName}
               interactive={enableEventPillNavigation}
-              onClick={enableEventPillNavigation ? (e) => {
-                e?.stopPropagation();
+              onClick={enableEventPillNavigation ? () => {
                 if (material.event_id) {
                   onEventClick(material.event_id);
                 }
