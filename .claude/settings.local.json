@@ -3,7 +3,9 @@
     "allow": [
       "Bash(done)",
       "Bash(npm run lint:*)",
-      "Read(//Users/william.tang/Projects/**)"
+      "Read(//Users/william.tang/Projects/**)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
