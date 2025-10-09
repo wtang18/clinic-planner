@@ -365,12 +365,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(true);
-      onMouseEnter?.(e);
     };
 
     const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(false);
-      onMouseLeave?.(e);
     };
 
     // Determine helper/error text to display

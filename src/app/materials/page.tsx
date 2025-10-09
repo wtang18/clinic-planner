@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
@@ -79,8 +79,7 @@ function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEv
               size="small"
               label={eventName}
               interactive={enableEventPillNavigation}
-              onClick={enableEventPillNavigation ? (e) => {
-                e?.stopPropagation();
+              onClick={enableEventPillNavigation ? () => {
                 if (material.event_id) {
                   onEventClick(material.event_id);
                 }
@@ -608,7 +607,7 @@ function MarketingMaterialsContent() {
           {/* Empty State - No materials at all */}
           {!loading && !error && materials.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
-              <Icon name="file-stack" size="large" className="text-[#424242] opacity-50" />
+              <Icon name="file-stack" size="medium" className="text-[#424242] opacity-50" />
               <p className="text-[16px] text-[#424242]">No materials yet</p>
               <Button
                 type="primary"
@@ -623,7 +622,7 @@ function MarketingMaterialsContent() {
           {/* Empty State - No search/filter results */}
           {!loading && !error && materials.length > 0 && filteredMaterials.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
-              <Icon name="magnifying-glass" size="large" className="text-[#424242] opacity-50" />
+              <Icon name="magnifying-glass" size="medium" className="text-[#424242] opacity-50" />
               <p className="text-[16px] text-[#424242]">
                 {searchQuery ? 'No materials match your search' : 'No materials match your filter'}
               </p>
@@ -663,7 +662,9 @@ function MarketingMaterialsContent() {
 export default function MarketingMaterialsPage() {
   return (
     <SidebarProvider>
-      <MarketingMaterialsContent />
+      <Suspense fallback={<div>Loading...</div>}>
+        <MarketingMaterialsContent />
+      </Suspense>
     </SidebarProvider>
   );
 }

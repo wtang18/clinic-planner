@@ -127,30 +127,30 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         return null;
       }
 
-      if (type === 'icon' && customIcon) {
-        return (
-          <div className="flex items-end shrink-0">
-            {/* Regular Icon scaled to 32x32px to match BicolorIcon dimensions */}
-            <div className="w-8 h-8 flex items-center justify-center">
-              <Icon name={customIcon} size="medium" className="!w-8 !h-8 text-[#181818]" />
+      if (type === 'icon') {
+        if (customIcon) {
+          return (
+            <div className="flex items-end shrink-0">
+              {/* Regular Icon scaled to 32x32px to match BicolorIcon dimensions */}
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Icon name={customIcon} size="medium" className="!w-8 !h-8 text-[#181818]" />
+              </div>
             </div>
-          </div>
-        );
+          );
+        }
+        return null;
       }
 
-      if (type !== 'icon' && type !== 'no-icon') {
-        const iconName = typeToIconMap[type];
-        return (
-          <div className="flex items-end shrink-0">
-            {/* BicolorIcon: 32x32px as per Figma */}
-            <div className="w-8 h-8">
-              <BicolorIcon name={iconName} size="medium" className="!w-8 !h-8" />
-            </div>
+      // For 'positive' | 'alert' | 'attention' | 'info' types
+      const iconName = typeToIconMap[type];
+      return (
+        <div className="flex items-end shrink-0">
+          {/* BicolorIcon: 32x32px as per Figma */}
+          <div className="w-8 h-8">
+            <BicolorIcon name={iconName} size="medium" className="!w-8 !h-8" />
           </div>
-        );
-      }
-
-      return null;
+        </div>
+      );
     };
 
     return (

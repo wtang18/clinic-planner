@@ -37,7 +37,7 @@ export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
    * Click handler (only applies to interactive variant)
    */
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 
   /**
    * Whether the container is disabled (interactive variant only)
@@ -154,7 +154,8 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
       if (isInteractive && !isDisabled && onClick) {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick();
+          // Cast keyboard event to mouse event for onClick handler
+          onClick(e as unknown as React.MouseEvent<HTMLDivElement>);
         }
       }
       props.onKeyDown?.(e);
@@ -166,9 +167,8 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
         return;
       }
       if (isInteractive && onClick) {
-        onClick();
+        onClick(e);
       }
-      props.onClick?.(e);
     };
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {

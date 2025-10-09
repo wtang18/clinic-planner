@@ -26,7 +26,6 @@ const searchInputVariants = cva(
         default: 'bg-[rgba(0,0,0,0.12)]',
         hover: 'bg-[rgba(0,0,0,0.20)]',
         focused: 'bg-[rgba(0,0,0,0.12)]',
-        'focused-hover': 'bg-[rgba(0,0,0,0.20)]',
         disabled: 'bg-[rgba(0,0,0,0.12)] opacity-50 cursor-not-allowed',
       },
     },
@@ -161,7 +160,6 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     // Determine current state
     const currentState = React.useMemo(() => {
       if (disabled) return 'disabled';
-      if (isFocused && isHovered) return 'focused-hover';
       if (isFocused) return 'focused';
       if (isHovered) return 'hover';
       return 'default';

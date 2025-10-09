@@ -413,12 +413,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(true);
-      onMouseEnter?.(e);
     };
 
     const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(false);
-      onMouseLeave?.(e);
     };
 
     // Icon size based on input size:

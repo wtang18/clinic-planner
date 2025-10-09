@@ -135,7 +135,7 @@ const pillVariants = cva(
     ],
     defaultVariants: {
       type: "transparent",
-      size: "md",
+      size: "medium",
       iconOnly: false,
       truncate: false,
       interactive: false,
@@ -271,7 +271,7 @@ export interface PillProps
   /**
    * Click handler (only applies if interactive)
    */
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent<HTMLDivElement>) => void;
 
   // Accessibility props
   /**
@@ -432,9 +432,8 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
         return;
       }
       if (interactive && onClick) {
-        onClick();
+        onClick(e);
       }
-      props.onClick?.(e);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -446,7 +445,8 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
       // Handle Enter and Space for interactive pills
       if (interactive && (e.key === "Enter" || e.key === " ")) {
         e.preventDefault();
-        onClick?.();
+        // Cast keyboard event to mouse event for onClick handler
+        onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>);
       }
 
       props.onKeyDown?.(e);
