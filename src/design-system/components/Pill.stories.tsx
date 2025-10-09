@@ -151,7 +151,7 @@ type Story = StoryObj<typeof Pill>;
 export const Playground: Story = {
   args: {
     type: 'transparent',
-    size: 'md',
+    size: 'medium',
     iconOnly: false,
     truncate: false,
     label: 'Pill Label',
