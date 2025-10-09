@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
 import { Card } from '@/design-system/components/Card';
+import { Container } from '@/design-system/components/Container';
 import { SearchInput } from '@/design-system/components/SearchInput';
 import { Pill } from '@/design-system/components/Pill';
 import { Sidebar } from '@/design-system/components/Sidebar';
@@ -12,6 +13,7 @@ import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { Icon } from '@/design-system/icons';
 import { MarketingMaterialsService } from '@/lib/marketingMaterials';
 import { MarketingMaterial, EventIdea, supabase } from '@/lib/supabase';
+import { useToast } from '@/contexts/ToastContext';
 
 // Menu items for sidebar
 const menuItems = [
@@ -105,17 +107,44 @@ function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEv
 
 function MarketingMaterialsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
   const { isOpen, toggle } = useSidebar();
+  const successHandledRef = React.useRef<string | null>(null);
 
   // State management
   const [materials, setMaterials] = React.useState<MarketingMaterial[]>([]);
   const [events, setEvents] = React.useState<EventIdea[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [filterAnyTime, setFilterAnyTime] = React.useState<boolean | null>(null); // null = all, true = any time only, false = event-specific only
   const [sortBy, setSortBy] = React.useState<SortBy>('name');
   const [showFilterDropdown, setShowFilterDropdown] = React.useState(false);
   const [showSortDropdown, setShowSortDropdown] = React.useState(false);
+
+  // Check for success message in URL params and show toast
+  React.useEffect(() => {
+    const success = searchParams?.get('success');
+
+    if (success && success !== successHandledRef.current) {
+      successHandledRef.current = success;
+
+      if (success === 'material-created') {
+        toast.positive('Material created successfully');
+      } else if (success === 'material-deleted') {
+        toast.positive('Material deleted successfully');
+      }
+
+      // Clean up URL by removing the success param after toast is shown
+      setTimeout(() => {
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+        successHandledRef.current = null; // Reset for next time
+      }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams?.get('success')]);
 
   // Load data on mount
   React.useEffect(() => {
@@ -124,33 +153,28 @@ function MarketingMaterialsContent() {
 
   // Load materials and events
   const loadData = async () => {
-    setLoading(true);
-    await Promise.all([loadMaterials(), loadEvents()]);
-    setLoading(false);
-  };
-
-  // Load materials
-  const loadMaterials = async () => {
-    const data = await MarketingMaterialsService.getAllMaterials();
-    setMaterials(data);
-  };
-
-  // Load events for event name lookup
-  const loadEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events_ideas')
-        .select('*')
-        .order('title');
+      setLoading(true);
+      setError(null);
 
-      if (error) {
-        console.error('Error loading events:', error);
-        return;
+      const [materialsData, eventsResponse] = await Promise.all([
+        MarketingMaterialsService.getAllMaterials(),
+        supabase.from('events_ideas').select('*').order('title')
+      ]);
+
+      if (eventsResponse.error) {
+        throw eventsResponse.error;
       }
 
-      setEvents(data || []);
+      setMaterials(materialsData);
+      setEvents(eventsResponse.data || []);
     } catch (error) {
-      console.error('Error loading events:', error);
+      console.error('Error loading data:', error);
+      setError('Unable to load materials. Please check your connection and try again.');
+      setMaterials([]);
+      setEvents([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,12 +188,24 @@ function MarketingMaterialsContent() {
   // Search handler
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    if (query.trim()) {
-      const results = await MarketingMaterialsService.searchMaterials(query);
-      setMaterials(results);
-    } else {
-      loadMaterials();
+    try {
+      if (query.trim()) {
+        const results = await MarketingMaterialsService.searchMaterials(query);
+        setMaterials(results);
+        setError(null);
+      } else {
+        loadData();
+      }
+    } catch (error) {
+      console.error('Error searching:', error);
+      setError('Search failed. Please try again.');
     }
+  };
+
+  // Retry handler
+  const handleRetry = () => {
+    setError(null);
+    loadData();
   };
 
   // Sort materials
@@ -553,6 +589,15 @@ function MarketingMaterialsContent() {
             </h1>
           </div>
 
+          {/* Error State */}
+          {error && !loading && (
+            <Container className="flex flex-col items-center justify-center p-12 w-full">
+              <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+              <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+              <Button type="primary" size="medium" label="Try Again" onClick={handleRetry} />
+            </Container>
+          )}
+
           {/* Loading State */}
           {loading && (
             <div className="flex items-center justify-center w-full py-12">
@@ -561,7 +606,7 @@ function MarketingMaterialsContent() {
           )}
 
           {/* Empty State - No materials at all */}
-          {!loading && materials.length === 0 && (
+          {!loading && !error && materials.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
               <Icon name="file-stack" size="large" className="text-[#424242] opacity-50" />
               <p className="text-[16px] text-[#424242]">No materials yet</p>
@@ -576,7 +621,7 @@ function MarketingMaterialsContent() {
           )}
 
           {/* Empty State - No search/filter results */}
-          {!loading && materials.length > 0 && filteredMaterials.length === 0 && (
+          {!loading && !error && materials.length > 0 && filteredMaterials.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
               <Icon name="magnifying-glass" size="large" className="text-[#424242] opacity-50" />
               <p className="text-[16px] text-[#424242]">
@@ -589,14 +634,14 @@ function MarketingMaterialsContent() {
                 onClick={() => {
                   setSearchQuery('');
                   setFilterAnyTime(null);
-                  loadMaterials();
+                  loadData();
                 }}
               />
             </div>
           )}
 
           {/* Materials Grid - Responsive: 4 cols desktop, 2 cols tablet, 1 col mobile */}
-          {!loading && filteredMaterials.length > 0 && (
+          {!loading && !error && filteredMaterials.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
               {filteredMaterials.map((material) => (
                 <MaterialCard

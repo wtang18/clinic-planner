@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, use } from 'react';
+import React, { useState, useEffect, useRef, Suspense, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
@@ -10,6 +10,7 @@ import { Pill } from '@/design-system/components/Pill';
 import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase';
 import { MarketingMaterialsService } from '@/lib/marketingMaterials';
 import { eventDataProcessor } from '@/lib/eventHelpers';
+import { useToast } from '@/contexts/ToastContext';
 
 interface EventDetailPageProps {
   params: Promise<{
@@ -101,6 +102,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id: eventId } = use(params);
+  const { toast } = useToast();
 
   // Get return navigation parameters
   const returnUrl = searchParams.get('returnUrl');
@@ -108,6 +110,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
   const returnMonth = searchParams.get('month');
   const returnYear = searchParams.get('year');
   const returnQuarter = searchParams.get('quarter');
+  const successHandledRef = useRef<string | null>(null);
 
   // State
   const [event, setEvent] = useState<EventIdea | null>(null);
@@ -115,9 +118,36 @@ function EventDetailContent({ params }: EventDetailPageProps) {
   const [materials, setMaterials] = useState<MarketingMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
 
   // Get current year for display (from return params or current year)
   const displayYear = returnYear ? parseInt(returnYear) : new Date().getFullYear();
+
+  // Check for success message in URL params and show toast
+  useEffect(() => {
+    const success = searchParams?.get('success');
+
+    if (success && success !== successHandledRef.current) {
+      successHandledRef.current = success;
+
+      if (success === 'material-created') {
+        toast.positive('Material created successfully');
+      } else if (success === 'material-deleted') {
+        toast.positive('Material deleted successfully');
+      } else if (success === 'event-saved') {
+        toast.positive('Event saved successfully');
+      }
+
+      // Clean up URL by removing the success param after toast is shown
+      setTimeout(() => {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('success');
+        window.history.replaceState({}, '', currentUrl.toString());
+        successHandledRef.current = null; // Reset for next time
+      }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams?.get('success')]);
 
   useEffect(() => {
     loadEventDetails();
@@ -127,6 +157,10 @@ function EventDetailContent({ params }: EventDetailPageProps) {
 
   const loadEventDetails = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      setNotFound(false);
+
       console.log('Loading event with ID:', eventId);
       const { data, error } = await supabase
         .from('events_ideas')
@@ -136,14 +170,18 @@ function EventDetailContent({ params }: EventDetailPageProps) {
 
       if (error) {
         console.error('Supabase error:', error);
-        setError(error.message || 'Failed to load event');
-        throw error;
+        if (error.code === 'PGRST116') {
+          setNotFound(true);
+        } else {
+          throw error;
+        }
+      } else {
+        console.log('Event loaded:', data);
+        setEvent(data);
       }
-      console.log('Event loaded:', data);
-      setEvent(data);
     } catch (error: any) {
       console.error('Error loading event:', error);
-      setError(error?.message || 'Failed to load event');
+      setError('Unable to load event details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -231,12 +269,13 @@ function EventDetailContent({ params }: EventDetailPageProps) {
       const success = await MarketingMaterialsService.deleteMaterial(materialId);
       if (success) {
         setMaterials(prev => prev.filter(m => m.id !== materialId));
+        toast.positive('Material deleted successfully');
       } else {
-        alert('Error deleting material. Please try again.');
+        toast.alert('Failed to delete material', { showSubtext: true, subtext: 'Please try again' });
       }
     } catch (error) {
       console.error('Error deleting material:', error);
-      alert('Error deleting material. Please try again.');
+      toast.alert('Failed to delete material', { showSubtext: true, subtext: 'Please try again' });
     }
   };
 
@@ -271,7 +310,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
     );
   }
 
-  if (error || !event) {
+  if (notFound) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -280,10 +319,55 @@ function EventDetailContent({ params }: EventDetailPageProps) {
             'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
         }}
       >
-        <div className="text-center max-w-md">
-          <div className="text-lg font-medium text-[#181818] mb-4">
-            {error || 'Event not found'}
-          </div>
+        <div className="flex flex-col items-center justify-center p-12">
+          <p className="text-lg font-semibold text-gray-900 mb-2">Event Not Found</p>
+          <p className="text-sm text-gray-600 mb-6">This event may have been deleted.</p>
+          <Button
+            type="primary"
+            size="medium"
+            label="Back to Calendar"
+            onClick={handleBack}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+        }}
+      >
+        <div className="flex flex-col items-center justify-center p-12">
+          <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+          <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+          <Button
+            type="primary"
+            size="medium"
+            label="Try Again"
+            onClick={loadEventDetails}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+        }}
+      >
+        <div className="flex flex-col items-center justify-center p-12">
+          <p className="text-lg font-semibold text-gray-900 mb-2">Event Not Found</p>
+          <p className="text-sm text-gray-600 mb-6">This event may have been deleted.</p>
           <Button
             type="primary"
             size="medium"

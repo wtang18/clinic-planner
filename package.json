@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "generate-icon-map": "node src/design-system/icons/generate-icon-map.js"
+    "generate-icon-map": "node src/design-system/icons/generate-icon-map.js",
+    "generate-bicolor-icon-map": "node src/design-system/icons/generate-bicolor-icon-map.js"
   },
   "keywords": [],
   "author": "",

@@ -35,6 +35,7 @@ function MonthViewContent() {
   const [outreachAngles, setOutreachAngles] = React.useState<OutreachAngle[]>([]);
   const [materialsCounts, setMaterialsCounts] = React.useState<Record<number, number>>({});
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -49,6 +50,8 @@ function MonthViewContent() {
   const loadEvents = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
+
       const [eventsResponse, anglesResponse] = await Promise.all([
         supabase
           .from('events_ideas')
@@ -72,11 +75,16 @@ function MonthViewContent() {
       }
     } catch (error) {
       console.error('Error loading events:', error);
-      setEvents([]);
+      setError('Unable to load events. Please check your connection and try again.');
+      setEvents([]); // Clear stale data
       setOutreachAngles([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    loadEvents();
   };
 
   const loadMaterialsCounts = async (eventIds: number[]) => {
@@ -530,8 +538,16 @@ function MonthViewContent() {
           <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
         </div>
 
-        {/* Month Planning Grid - 3 columns */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {/* Error State or Month Planning Grid */}
+        {error ? (
+          <Container className="flex flex-col items-center justify-center p-12">
+            <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+            <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+            <Button type="primary" size="medium" label="Try Again" onClick={handleRetry} />
+          </Container>
+        ) : (
+          /* Month Planning Grid - 3 columns */
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Column 1: This Month */}
           <Container className={cn(
             "flex flex-col gap-4 h-full w-full",
@@ -838,6 +854,7 @@ function MonthViewContent() {
             </div>
           </Container>
         </div>
+        )}
       </div>
     </div>
   );

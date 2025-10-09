@@ -10,8 +10,14 @@
  * Usage:
  * import { Icon } from '@/design-system/icons';
  * <Icon name="star" size="small" />
+ *
+ * Bicolor Icons:
+ * import { BicolorIcon } from '@/design-system/icons';
+ * <BicolorIcon name="success" size="medium" />
  */
 
 export { Icon, type IconProps, type IconSize } from './Icon';
 export type { IconName } from './icon-names';
 export { ALL_ICON_NAMES, SMALL_ICON_NAMES, MEDIUM_ICON_NAMES } from './icon-names';
+
+export { BicolorIcon, type BicolorIconProps, type BicolorIconSize, type BicolorIconName } from './BicolorIcon';

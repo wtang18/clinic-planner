@@ -8,9 +8,11 @@ import { Input } from '@/design-system/components/Input';
 import { Textarea } from '@/design-system/components/Textarea';
 import { Toggle } from '@/design-system/components/Toggle';
 import { TogglePill } from '@/design-system/components/TogglePill';
+import { useToast } from '@/contexts/ToastContext';
 
 function AddEventForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -69,12 +71,12 @@ function AddEventForm() {
       .map(([angle]) => angle);
 
     if (!formData.title.trim()) {
-      alert('Please fill in the event title');
+      toast.attention('Please fill in the event title');
       return;
     }
 
     if (selectedAngles.length === 0) {
-      alert('Please select at least one outreach angle');
+      toast.attention('Please select at least one outreach angle');
       return;
     }
 
@@ -116,24 +118,27 @@ function AddEventForm() {
 
       if (error) {
         console.error('Error adding event:', error);
-        alert('Error adding event. Please try again.');
+        toast.alert('Failed to create event', { showSubtext: true, subtext: 'Please try again' });
         setLoading(false);
       } else {
+        // Navigate with success message in URL params
+        let targetUrl = '';
         if (returnView === 'timeline' && defaultMonth && defaultYear) {
-          router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
+          targetUrl = `/?view=timeline&month=${defaultMonth}&year=${defaultYear}&success=event-created`;
         } else if (returnView === 'quarter') {
-          router.push(`/quarter`);
+          targetUrl = `/quarter?success=event-created`;
         } else if (returnView === 'month') {
-          router.push(`/month`);
+          targetUrl = `/month?success=event-created`;
         } else if (returnView === 'annual') {
-          router.push(`/annual`);
+          targetUrl = `/annual?success=event-created`;
         } else {
-          router.push(`/?view=${returnView}`);
+          targetUrl = `/?view=${returnView}&success=event-created`;
         }
+        router.push(targetUrl);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error adding event. Please try again.');
+      toast.alert('Failed to create event', { showSubtext: true, subtext: 'Please try again' });
       setLoading(false);
     }
   };

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
 import { Card } from '@/design-system/components/Card';
@@ -13,6 +13,7 @@ import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { Icon } from '@/design-system/icons';
 import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase';
 import { eventDataProcessor } from '@/lib/eventHelpers';
+import { useToast } from '@/contexts/ToastContext';
 
 const months = [
   { name: 'January', key: 'january' },
@@ -39,16 +40,45 @@ const baseMenuItems = [
 
 function AnnualViewContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
   const { isOpen, toggle } = useSidebar();
+  const successHandledRef = React.useRef<string | null>(null);
   const [view, setView] = React.useState('year');
   const [events, setEvents] = React.useState<EventIdea[]>([]);
   const [outreachAngles, setOutreachAngles] = React.useState<OutreachAngle[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // 1-12
   const [selectedYear, setSelectedYear] = React.useState(currentYear);
+
+  // Check for success message in URL params and show toast
+  React.useEffect(() => {
+    const success = searchParams?.get('success');
+
+    if (success && success !== successHandledRef.current) {
+      successHandledRef.current = success;
+
+      if (success === 'event-created') {
+        toast.positive('Event created successfully');
+      } else if (success === 'event-saved') {
+        toast.positive('Event saved successfully');
+      } else if (success === 'event-deleted') {
+        toast.positive('Event deleted successfully');
+      }
+
+      // Clean up URL after toast is shown
+      setTimeout(() => {
+        const newUrl = window.location.pathname + window.location.search.replace(/[?&]success=[^&]+/, '').replace(/^\?$/, '').replace(/^&/, '?');
+        window.history.replaceState({}, '', newUrl || window.location.pathname);
+        successHandledRef.current = null; // Reset for next time
+      }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams?.get('success')]);
 
   React.useEffect(() => {
     loadEvents();
@@ -57,6 +87,8 @@ function AnnualViewContent() {
   const loadEvents = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
+
       const [eventsResponse, anglesResponse] = await Promise.all([
         supabase
           .from('events_ideas')
@@ -74,11 +106,16 @@ function AnnualViewContent() {
       setOutreachAngles(anglesResponse.data || []);
     } catch (error) {
       console.error('Error loading events:', error);
-      setEvents([]);
+      setError('Unable to load events. Please check your connection and try again.');
+      setEvents([]); // Clear stale data
       setOutreachAngles([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    loadEvents();
   };
 
   const handleViewChange = (newView: string) => {
@@ -393,9 +430,22 @@ function AnnualViewContent() {
           <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{selectedYear}</h1>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-3">
-          {months.map((month, index) => {
+        {/* Error State */}
+        {error ? (
+          <Container className="flex flex-col items-center justify-center p-12">
+            <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+            <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+            <Button
+              type="primary"
+              size="medium"
+              label="Try Again"
+              onClick={handleRetry}
+            />
+          </Container>
+        ) : (
+          /* Calendar Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-3">
+            {months.map((month, index) => {
             const monthNumber = index + 1;
             const isCurrentMonth = monthNumber === currentMonth && selectedYear === currentYear;
             const monthEvents = getEventsForMonth(monthNumber);
@@ -495,7 +545,8 @@ function AnnualViewContent() {
               </Container>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

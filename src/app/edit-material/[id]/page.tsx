@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
 import { MarketingMaterial, supabase } from '@/lib/supabase'
+import { useToast } from '@/contexts/ToastContext'
 
 type EventOption = {
   id: number
@@ -14,6 +15,7 @@ function EditMaterialContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
   const materialId = Number(params.id)
   const returnTo = searchParams.get('return') || 'materials'
 
@@ -59,12 +61,12 @@ function EditMaterialContent() {
           notes: foundMaterial.notes || ''
         })
       } else {
-        alert('Material not found')
+        // Error state UI handles this
         handleCancel()
       }
     } catch (error) {
       console.error('Error loading data:', error)
-      alert('Error loading data. Please try again.')
+      // Error state UI handles this
       handleCancel()
     } finally {
       setLoading(false)
@@ -104,6 +106,7 @@ function EditMaterialContent() {
       })
 
       if (success) {
+        toast.positive('Material saved successfully')
         // Navigate back to originating view
         if (returnTo === 'materials') {
           router.push('/materials')
@@ -113,11 +116,11 @@ function EditMaterialContent() {
           router.push('/')
         }
       } else {
-        alert('Error updating material. Please try again.')
+        toast.alert('Failed to update material', { showSubtext: true, subtext: 'Please try again' })
       }
     } catch (error) {
       console.error('Error updating material:', error)
-      alert('Error updating material. Please try again.')
+      toast.alert('Failed to update material', { showSubtext: true, subtext: 'Please try again' })
     } finally {
       setSaving(false)
     }
@@ -132,6 +135,7 @@ function EditMaterialContent() {
     try {
       const success = await MarketingMaterialsService.deleteMaterial(materialId)
       if (success) {
+        toast.positive('Material deleted successfully')
         // Navigate back to originating view
         if (returnTo === 'materials') {
           router.push('/materials')
@@ -141,11 +145,11 @@ function EditMaterialContent() {
           router.push('/')
         }
       } else {
-        alert('Error deleting material. Please try again.')
+        toast.alert('Failed to delete material', { showSubtext: true, subtext: 'Please try again' })
       }
     } catch (error) {
       console.error('Error deleting material:', error)
-      alert('Error deleting material. Please try again.')
+      toast.alert('Failed to delete material', { showSubtext: true, subtext: 'Please try again' })
     } finally {
       setSaving(false)
     }

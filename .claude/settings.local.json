@@ -1,29 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run type-check:*)",
-      "Bash(npm run build:*)",
-      "Bash(npm install:*)",
-      "Bash(npm run dev:*)",
-      "mcp__supabase__apply_migration",
-      "mcp__figma-dev-mode-mcp-server__get_metadata",
-      "mcp__figma-dev-mode-mcp-server__get_variable_defs",
-      "mcp__figma-dev-mode-mcp-server__get_code_connect_map",
-      "mcp__figma-dev-mode-mcp-server__get_code",
-      "mcp__figma-dev-mode-mcp-server__get_screenshot",
-      "mcp__supabase__list_tables",
-      "mcp__supabase__execute_sql",
-      "mcp__supabase__list_migrations",
-      "Bash(npx tsc:*)",
-      "Bash(node:*)",
-      "Bash(cat:*)",
-      "Bash(xargs:*)",
-      "Bash(test:*)",
-      "Bash(src/design-system/components/Pill.tsx)",
-      "Bash(npm run generate-icon-map:*)",
-      "Bash(lsof:*)",
-      "WebSearch",
-      "Bash(git add:*)"
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

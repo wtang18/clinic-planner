@@ -4,7 +4,11 @@
  * This script reads all SVG files from small/ and medium/ directories
  * and generates a TypeScript file with static imports.
  *
- * Run: node src/design-system/icons/generate-icon-map.js
+ * Run: npm run generate-icon-map
+ * Or:  node src/design-system/icons/generate-icon-map.js
+ *
+ * Documentation: See src/design-system/icons/README.md
+ * Quick Ref:     See ICON_WORKFLOW.md in project root
  */
 
 const fs = require('fs');

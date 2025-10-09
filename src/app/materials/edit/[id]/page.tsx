@@ -7,6 +7,7 @@ import { MarketingMaterialsService } from '@/lib/marketingMaterials';
 import { Button } from '@/design-system/components/Button';
 import { Input } from '@/design-system/components/Input';
 import { Textarea } from '@/design-system/components/Textarea';
+import { useToast } from '@/contexts/ToastContext';
 
 interface EditMaterialPageProps {
   params: Promise<{
@@ -17,6 +18,7 @@ interface EditMaterialPageProps {
 function EditMaterialForm({ params }: EditMaterialPageProps) {
   const router = useRouter();
   const { id: materialId } = use(params);
+  const { toast } = useToast();
   const [events, setEvents] = useState<EventIdea[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -75,7 +77,7 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
 
       if (materialResponse.error) {
         console.error('Error loading material:', materialResponse.error);
-        alert('Error loading material. Please try again.');
+        // Error state UI handles this
         handleCancel();
       } else {
         setMaterial(materialResponse.data);
@@ -90,7 +92,7 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error loading material. Please try again.');
+      // Error state UI handles this
       handleCancel();
     } finally {
       setInitialLoading(false);
@@ -143,15 +145,15 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
       );
 
       if (result) {
-        // Navigate back to material detail page
-        router.push(`/materials/${materialId}?returnUrl=${encodeURIComponent(returnUrl)}`);
+        // Navigate back to material detail page with success message
+        router.push(`/materials/${materialId}?returnUrl=${encodeURIComponent(returnUrl)}&success=material-saved`);
       } else {
-        alert('Error updating material. Please try again.');
+        toast.alert('Failed to update material', { showSubtext: true, subtext: 'Please try again' });
         setLoading(false);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error updating material. Please try again.');
+      toast.alert('Failed to update material', { showSubtext: true, subtext: 'Please try again' });
       setLoading(false);
     }
   };
@@ -166,15 +168,32 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
       const success = await MarketingMaterialsService.deleteMaterial(parseInt(materialId));
 
       if (success) {
-        // Navigate back to original return URL (bypassing detail page since material is deleted)
-        router.push(returnUrl);
+        // Parse returnUrl to avoid navigating to the deleted material's detail page
+        let targetUrl = returnUrl;
+
+        if (returnUrl.includes('/materials/')) {
+          const urlParams = new URLSearchParams(returnUrl.split('?')[1] || '');
+          const nestedReturnUrl = urlParams.get('returnUrl');
+
+          if (nestedReturnUrl) {
+            // Use the nested returnUrl (e.g., event detail or materials list)
+            targetUrl = decodeURIComponent(nestedReturnUrl);
+          } else {
+            // No nested returnUrl, go to materials list
+            targetUrl = '/materials';
+          }
+        }
+
+        // Navigate with success message in URL params
+        const separator = targetUrl.includes('?') ? '&' : '?';
+        router.push(`${targetUrl}${separator}success=material-deleted`);
       } else {
-        alert('Error deleting material. Please try again.');
+        toast.alert('Failed to delete material', { showSubtext: true, subtext: 'Please try again' });
         setLoading(false);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error deleting material. Please try again.');
+      toast.alert('Failed to delete material', { showSubtext: true, subtext: 'Please try again' });
       setLoading(false);
     }
   };

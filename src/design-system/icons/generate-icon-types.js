@@ -2,7 +2,11 @@
 
 /**
  * Script to generate TypeScript icon name types from SVG files
- * Run: node generate-icon-types.js
+ *
+ * Run: node src/design-system/icons/generate-icon-types.js
+ *
+ * Documentation: See src/design-system/icons/README.md
+ * Quick Ref:     See ICON_WORKFLOW.md in project root
  */
 
 const fs = require('fs');

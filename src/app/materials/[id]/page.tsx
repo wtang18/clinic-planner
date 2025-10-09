@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, use } from 'react';
+import React, { useState, useEffect, useRef, Suspense, use } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
@@ -8,6 +8,7 @@ import { Card } from '@/design-system/components/Card';
 import { Container } from '@/design-system/components/Container';
 import { supabase, MarketingMaterial, EventIdea } from '@/lib/supabase';
 import { MarketingMaterialsService } from '@/lib/marketingMaterials';
+import { useToast } from '@/contexts/ToastContext';
 
 interface MaterialDetailPageProps {
   params: Promise<{
@@ -19,15 +20,40 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { id: materialId } = use(params);
+  const { toast } = useToast();
 
   // Get return navigation parameters
   const returnUrl = searchParams.get('returnUrl') || '/materials';
+  const successHandledRef = useRef<string | null>(null);
 
   // State
   const [material, setMaterial] = useState<MarketingMaterial | null>(null);
   const [event, setEvent] = useState<EventIdea | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  // Check for success message in URL params and show toast
+  useEffect(() => {
+    const success = searchParams?.get('success');
+
+    if (success && success !== successHandledRef.current) {
+      successHandledRef.current = success;
+
+      if (success === 'material-saved') {
+        toast.positive('Material saved successfully');
+      }
+
+      // Clean up URL by removing the success param after toast is shown
+      setTimeout(() => {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete('success');
+        window.history.replaceState({}, '', currentUrl.toString());
+        successHandledRef.current = null; // Reset for next time
+      }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams?.get('success')]);
 
   useEffect(() => {
     loadMaterialDetails();
@@ -35,6 +61,10 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
 
   const loadMaterialDetails = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      setNotFound(false);
+
       console.log('Loading material with ID:', materialId);
       const { data, error } = await supabase
         .from('marketing_materials')
@@ -44,19 +74,23 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
 
       if (error) {
         console.error('Supabase error:', error);
-        setError(error.message || 'Failed to load material');
-        throw error;
-      }
-      console.log('Material loaded:', data);
-      setMaterial(data);
+        if (error.code === 'PGRST116') {
+          setNotFound(true);
+        } else {
+          throw error;
+        }
+      } else {
+        console.log('Material loaded:', data);
+        setMaterial(data);
 
-      // Load associated event if exists
-      if (data.event_id) {
-        loadEventDetails(data.event_id);
+        // Load associated event if exists
+        if (data.event_id) {
+          loadEventDetails(data.event_id);
+        }
       }
     } catch (error: any) {
       console.error('Error loading material:', error);
-      setError(error?.message || 'Failed to load material');
+      setError('Unable to load material details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -87,23 +121,6 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
     router.push(`/materials/edit/${materialId}?returnUrl=${encodeURIComponent(detailPageUrl)}`);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm('Are you sure you want to delete this material?')) {
-      return;
-    }
-
-    try {
-      const success = await MarketingMaterialsService.deleteMaterial(parseInt(materialId));
-      if (success) {
-        router.push(returnUrl);
-      } else {
-        alert('Error deleting material. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error deleting material:', error);
-      alert('Error deleting material. Please try again.');
-    }
-  };
 
   const handleCopyUrl = async () => {
     if (!material?.url) return;
@@ -167,7 +184,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
     );
   }
 
-  if (error || !material) {
+  if (notFound) {
     return (
       <div
         className="min-h-screen flex items-center justify-center"
@@ -176,10 +193,55 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
             'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
         }}
       >
-        <div className="text-center max-w-md">
-          <div className="text-lg font-medium text-[#181818] mb-4">
-            {error || 'Material not found'}
-          </div>
+        <div className="flex flex-col items-center justify-center p-12">
+          <p className="text-lg font-semibold text-gray-900 mb-2">Material Not Found</p>
+          <p className="text-sm text-gray-600 mb-6">This material may have been deleted.</p>
+          <Button
+            type="primary"
+            size="medium"
+            label="Back to Materials"
+            onClick={handleBack}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+        }}
+      >
+        <div className="flex flex-col items-center justify-center p-12">
+          <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+          <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+          <Button
+            type="primary"
+            size="medium"
+            label="Try Again"
+            onClick={loadMaterialDetails}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!material) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background:
+            'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(201, 230, 240) 84.149%)',
+        }}
+      >
+        <div className="flex flex-col items-center justify-center p-12">
+          <p className="text-lg font-semibold text-gray-900 mb-2">Material Not Found</p>
+          <p className="text-sm text-gray-600 mb-6">This material may have been deleted.</p>
           <Button
             type="primary"
             size="medium"

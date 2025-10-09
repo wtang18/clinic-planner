@@ -9,6 +9,7 @@ import { Input } from '@/design-system/components/Input';
 import { Textarea } from '@/design-system/components/Textarea';
 import { Toggle } from '@/design-system/components/Toggle';
 import { TogglePill } from '@/design-system/components/TogglePill';
+import { useToast } from '@/contexts/ToastContext';
 
 interface EditEventPageProps {
   params: Promise<{
@@ -19,6 +20,7 @@ interface EditEventPageProps {
 function EditEventForm({ params }: EditEventPageProps) {
   const router = useRouter();
   const { id: eventId } = use(params);
+  const { toast } = useToast();
   const [outreachAngles, setOutreachAngles] = useState<OutreachAngle[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -82,7 +84,7 @@ function EditEventForm({ params }: EditEventPageProps) {
 
       if (eventResponse.error) {
         console.error('Error loading event:', eventResponse.error);
-        alert('Error loading event. Please try again.');
+        // Error state UI handles this
         handleCancel();
       } else {
         setEvent(eventResponse.data);
@@ -102,7 +104,7 @@ function EditEventForm({ params }: EditEventPageProps) {
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error loading event. Please try again.');
+      // Error state UI handles this
       handleCancel();
     } finally {
       setInitialLoading(false);
@@ -117,12 +119,12 @@ function EditEventForm({ params }: EditEventPageProps) {
       .map(([angle]) => angle);
 
     if (!formData.title.trim()) {
-      alert('Please fill in the event title');
+      toast.attention('Please fill in the event title');
       return;
     }
 
     if (selectedAngles.length === 0) {
-      alert('Please select at least one outreach angle');
+      toast.attention('Please select at least one outreach angle');
       return;
     }
 
@@ -167,35 +169,37 @@ function EditEventForm({ params }: EditEventPageProps) {
 
       if (error) {
         console.error('Error updating event:', error);
-        alert('Error updating event. Please try again.');
+        toast.alert('Failed to update event', { showSubtext: true, subtext: 'Please try again' });
         setLoading(false);
       } else {
-        // Navigate based on where user came from
+        // Navigate with success message in URL params
         if (fromDetail) {
           // Go back to detail page with return params
-          const params = new URLSearchParams({ return: returnView });
+          const params = new URLSearchParams({ return: returnView, success: 'event-saved' });
           if (defaultMonth) params.set('month', defaultMonth);
           if (defaultYear) params.set('year', defaultYear);
           if (defaultQuarter) params.set('quarter', defaultQuarter);
           router.push(`/event/${eventId}?${params.toString()}`);
         } else {
           // Go back to calendar view
+          let targetUrl = '';
           if (returnView === 'timeline' && defaultMonth && defaultYear) {
-            router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
+            targetUrl = `/?view=timeline&month=${defaultMonth}&year=${defaultYear}&success=event-saved`;
           } else if (returnView === 'quarter') {
-            router.push(`/quarter`);
+            targetUrl = `/quarter?success=event-saved`;
           } else if (returnView === 'month') {
-            router.push(`/month`);
+            targetUrl = `/month?success=event-saved`;
           } else if (returnView === 'annual') {
-            router.push(`/annual`);
+            targetUrl = `/annual?success=event-saved`;
           } else {
-            router.push(`/?view=${returnView}`);
+            targetUrl = `/?view=${returnView}&success=event-saved`;
           }
+          router.push(targetUrl);
         }
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error updating event. Please try again.');
+      toast.alert('Failed to update event', { showSubtext: true, subtext: 'Please try again' });
       setLoading(false);
     }
   };
@@ -214,25 +218,27 @@ function EditEventForm({ params }: EditEventPageProps) {
 
       if (error) {
         console.error('Error deleting event:', error);
-        alert('Error deleting event. Please try again.');
+        toast.alert('Failed to delete event', { showSubtext: true, subtext: 'Please try again' });
         setLoading(false);
       } else {
-        // Navigate back to calendar view after delete
+        // Navigate with success message in URL params
+        let targetUrl = '';
         if (returnView === 'timeline' && defaultMonth && defaultYear) {
-          router.push(`/?view=timeline&month=${defaultMonth}&year=${defaultYear}`);
+          targetUrl = `/?view=timeline&month=${defaultMonth}&year=${defaultYear}&success=event-deleted`;
         } else if (returnView === 'quarter') {
-          router.push(`/quarter`);
+          targetUrl = `/quarter?success=event-deleted`;
         } else if (returnView === 'month') {
-          router.push(`/month`);
+          targetUrl = `/month?success=event-deleted`;
         } else if (returnView === 'annual') {
-          router.push(`/annual`);
+          targetUrl = `/annual?success=event-deleted`;
         } else {
-          router.push(`/?view=${returnView}`);
+          targetUrl = `/?view=${returnView}&success=event-deleted`;
         }
+        router.push(targetUrl);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error deleting event. Please try again.');
+      toast.alert('Failed to delete event', { showSubtext: true, subtext: 'Please try again' });
       setLoading(false);
     }
   };

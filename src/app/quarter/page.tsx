@@ -37,6 +37,7 @@ function QuarterViewContent() {
   const [outreachAngles, setOutreachAngles] = React.useState<OutreachAngle[]>([]);
   const [materialsCounts, setMaterialsCounts] = React.useState<Record<number, number>>({});
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -52,6 +53,8 @@ function QuarterViewContent() {
   const loadEvents = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
+
       const [eventsResponse, anglesResponse] = await Promise.all([
         supabase
           .from('events_ideas')
@@ -75,11 +78,16 @@ function QuarterViewContent() {
       }
     } catch (error) {
       console.error('Error loading events:', error);
-      setEvents([]);
+      setError('Unable to load events. Please check your connection and try again.');
+      setEvents([]); // Clear stale data
       setOutreachAngles([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = () => {
+    loadEvents();
   };
 
   const loadMaterialsCounts = async (eventIds: number[]) => {
@@ -502,9 +510,22 @@ function QuarterViewContent() {
           <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{quarter.name} {selectedYear}</h1>
         </div>
 
-        {/* Quarter Grid - 3 columns for the 3 months in this quarter */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {quarter.months.map((monthNumber, index) => {
+        {/* Error State */}
+        {error ? (
+          <Container className="flex flex-col items-center justify-center p-12">
+            <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+            <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+            <Button
+              type="primary"
+              size="medium"
+              label="Try Again"
+              onClick={handleRetry}
+            />
+          </Container>
+        ) : (
+          /* Quarter Grid - 3 columns for the 3 months in this quarter */
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {quarter.months.map((monthNumber, index) => {
             const monthName = quarter.monthNames[index];
             const isCurrentMonth = monthNumber === currentMonth && selectedYear === currentYear;
             const monthEvents = getEventsForMonth(monthNumber);
@@ -728,7 +749,8 @@ function QuarterViewContent() {
               </Container>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

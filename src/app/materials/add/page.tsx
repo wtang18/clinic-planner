@@ -7,9 +7,11 @@ import { MarketingMaterialsService } from '@/lib/marketingMaterials';
 import { Button } from '@/design-system/components/Button';
 import { Input } from '@/design-system/components/Input';
 import { Textarea } from '@/design-system/components/Textarea';
+import { useToast } from '@/contexts/ToastContext';
 
 function AddMaterialForm() {
   const router = useRouter();
+  const { toast } = useToast();
   const [events, setEvents] = useState<EventIdea[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -97,13 +99,15 @@ function AddMaterialForm() {
       const result = await MarketingMaterialsService.createMaterial(materialData);
 
       if (result) {
-        router.push(returnUrl);
+        // Navigate with success message in URL params
+        const separator = returnUrl.includes('?') ? '&' : '?';
+        router.push(`${returnUrl}${separator}success=material-created`);
       } else {
-        alert('Error creating material. Please try again.');
+        toast.alert('Failed to create material', { showSubtext: true, subtext: 'Please try again' });
       }
     } catch (error) {
       console.error('Error creating material:', error);
-      alert('Error creating material. Please try again.');
+      toast.alert('Failed to create material', { showSubtext: true, subtext: 'Please try again' });
     } finally {
       setLoading(false);
     }

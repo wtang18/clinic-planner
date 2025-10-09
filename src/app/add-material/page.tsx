@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { MarketingMaterialsService } from '@/lib/marketingMaterials'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/contexts/ToastContext'
 
 type EventOption = {
   id: number
@@ -13,6 +14,7 @@ type EventOption = {
 function AddMaterialContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { toast } = useToast()
   const returnTo = searchParams.get('return') || 'materials'
   const preselectedEventId = searchParams.get('eventId')
 
@@ -83,6 +85,7 @@ function AddMaterialContent() {
       })
 
       if (created) {
+        toast.positive('Material created successfully')
         // Navigate back to originating view
         if (returnTo === 'materials') {
           router.push('/materials')
@@ -92,11 +95,11 @@ function AddMaterialContent() {
           router.push('/')
         }
       } else {
-        alert('Error creating material. Please try again.')
+        toast.alert('Failed to create material', { showSubtext: true, subtext: 'Please try again' })
       }
     } catch (error) {
       console.error('Error creating material:', error)
-      alert('Error creating material. Please try again.')
+      toast.alert('Failed to create material', { showSubtext: true, subtext: 'Please try again' })
     } finally {
       setSaving(false)
     }
