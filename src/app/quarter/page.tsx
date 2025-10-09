@@ -289,6 +289,28 @@ function QuarterViewContent() {
     return false;
   };
 
+  // Format date for month container events - hide single-month dates (implied from container header)
+  const formatMonthContainerEventDate = (event: EventIdea): string | null => {
+    const eventStartMonth = event.start_month || event.month;
+    const eventStartYear = event.start_year || event.year;
+
+    // Only show date for multi-month events
+    if (event.end_month && event.end_year) {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const startMonthName = months[eventStartMonth - 1];
+      const endMonthName = months[event.end_month - 1];
+
+      if (eventStartYear === event.end_year) {
+        return `${startMonthName} – ${endMonthName} ${eventStartYear}`;
+      } else {
+        return `${startMonthName} ${eventStartYear} – ${endMonthName} ${event.end_year}`;
+      }
+    }
+
+    // Return null for single-month events (date is implied from container header)
+    return null;
+  };
+
   const handleViewChange = (newView: string) => {
     setView(newView);
     if (newView === 'month') {
@@ -620,10 +642,9 @@ function QuarterViewContent() {
                             <h3 className="text-sm font-medium leading-5 text-[#181818]">
                               {event.title}
                             </h3>
-                            {processedEvent.displayDate.isMultiMonth && (
+                            {formatMonthContainerEventDate(event) && (
                               <p className="text-xs font-normal leading-5 text-[#424242]">
-                                {processedEvent.displayDate.start}
-                                {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
+                                {formatMonthContainerEventDate(event)}
                               </p>
                             )}
                           </div>
@@ -719,12 +740,10 @@ function QuarterViewContent() {
                             <h3 className="text-sm font-medium leading-5 text-[#181818]">
                               {event.title}
                             </h3>
-                            {processedEvent.displayDate.isMultiMonth && (
-                              <p className="text-xs font-normal leading-5 text-[#424242]">
-                                {processedEvent.displayDate.start}
-                                {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
-                              </p>
-                            )}
+                            <p className="text-xs font-normal leading-5 text-[#424242]">
+                              {processedEvent.displayDate.start}
+                              {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
+                            </p>
                           </div>
 
                           {/* Description */}
