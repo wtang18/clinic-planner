@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
 import { Card } from '@/design-system/components/Card';
@@ -29,6 +29,7 @@ const baseMenuItems = [
 
 function MonthViewContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isOpen, toggle } = useSidebar();
   const [view, setView] = React.useState('month');
   const [events, setEvents] = React.useState<EventIdea[]>([]);
@@ -40,8 +41,16 @@ function MonthViewContent() {
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // 1-12
-  const [selectedMonth, setSelectedMonth] = React.useState(currentMonth);
-  const [selectedYear, setSelectedYear] = React.useState(currentYear);
+
+  // Read month and year from URL params, fallback to current date
+  const urlMonth = searchParams?.get('month');
+  const urlYear = searchParams?.get('year');
+  const [selectedMonth, setSelectedMonth] = React.useState(
+    urlMonth ? parseInt(urlMonth) : currentMonth
+  );
+  const [selectedYear, setSelectedYear] = React.useState(
+    urlYear ? parseInt(urlYear) : currentYear
+  );
 
   React.useEffect(() => {
     loadEvents();

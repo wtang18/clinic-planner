@@ -455,9 +455,12 @@ function AnnualViewContent() {
                 key={month.key}
                 variant="interactive"
                 className={cn(
-                  'flex flex-col h-full w-full',
+                  'flex flex-col h-full w-full cursor-pointer',
                   isCurrentMonth && 'shadow-[inset_0_0_0_2px_#765c8b]'
                 )}
+                onClick={() => {
+                  router.push(`/month?month=${monthNumber}&year=${selectedYear}`);
+                }}
               >
                 {/* Month Header */}
                 <div className="flex items-center justify-between w-full">
@@ -474,7 +477,10 @@ function AnnualViewContent() {
                     iconOnly
                     iconL="plus"
                     aria-label={`Add event to ${month.name}`}
-                    onClick={() => handleAddEventForMonth(monthNumber)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddEventForMonth(monthNumber);
+                    }}
                   />
                 </div>
 
@@ -497,7 +503,8 @@ function AnnualViewContent() {
                           key={event.id}
                           size="small"
                           variant="interactive"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const params = new URLSearchParams({
                               return: 'annual',
                               year: selectedYear.toString(),
