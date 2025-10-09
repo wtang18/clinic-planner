@@ -15,6 +15,8 @@ export interface OutreachAngle {
 export interface OutreachAngleSelection {
   angle: string
   notes: string
+  color?: string
+  description?: string
 }
 
 export interface MarketingMaterial {
