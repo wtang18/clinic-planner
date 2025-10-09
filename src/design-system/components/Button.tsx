@@ -113,7 +113,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'type'>,
     VariantProps<typeof buttonVariants> {
   // Content props
   label?: string;
@@ -131,6 +131,9 @@ export interface ButtonProps
   // Accessibility
   'aria-label'?: string;
   'aria-describedby'?: string;
+
+  // HTML button type (optional override)
+  htmlType?: 'button' | 'submit' | 'reset';
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -162,6 +165,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       disabled,
       state = "default",
 
+      // HTML type
+      htmlType = "button",
+
       // Other props
       className,
       children,
@@ -190,6 +196,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button
+        type={htmlType}
         className={cn(
           buttonVariants({
             type,

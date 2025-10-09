@@ -75,7 +75,7 @@ export interface CardProps
   /**
    * Click handler (only applies to interactive variant)
    */
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 
   /**
    * Whether the card is disabled (interactive variant only)

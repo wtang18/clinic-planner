@@ -91,7 +91,9 @@ function EditEventForm({ params }: EditEventPageProps) {
 
         // Initialize form from event
         const initializedForm = initializeFormFromEvent(eventResponse.data);
-        setFormData(initializedForm);
+        if (initializedForm) {
+          setFormData(initializedForm);
+        }
 
         // Set prep type based on event data
         if (eventResponse.data.prep_start_date) {
