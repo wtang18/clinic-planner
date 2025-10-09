@@ -243,10 +243,11 @@ function MonthViewContent() {
     return '';
   };
 
-  const formatEventDate = (event: EventIdea): string => {
+  const formatEventDate = (event: EventIdea): string | null => {
     const eventStartMonth = event.start_month || event.month;
     const eventStartYear = event.start_year || event.year;
 
+    // Only show date for multi-month events
     if (event.end_month && event.end_year) {
       const startMonthName = monthNames[eventStartMonth - 1];
       const endMonthName = monthNames[event.end_month - 1];
@@ -256,9 +257,10 @@ function MonthViewContent() {
       } else {
         return `${startMonthName} ${eventStartYear} – ${endMonthName} ${event.end_year}`;
       }
-    } else {
-      return `${monthNames[eventStartMonth - 1]} ${eventStartYear}`;
     }
+
+    // Return null for single-month events (date is implied from page header)
+    return null;
   };
 
   const handlePreviousMonth = () => {
@@ -652,11 +654,11 @@ function MonthViewContent() {
             </div>
 
             <div className="flex flex-col gap-2 w-full">
-              {thisMonthEvents.length === 0 && prepEvents.length === 0 ? (
+              {thisMonthEvents.length === 0 ? (
                 <p className="text-sm font-normal leading-5 text-[#424242]">
                   No Events Planned
                 </p>
-              ) : thisMonthEvents.length > 0 ? (
+              ) : (
                 thisMonthEvents.map((event) => {
                   const processedEvent = eventDataProcessor.formatEventForDisplay(
                     event,
@@ -685,9 +687,11 @@ function MonthViewContent() {
                         <h3 className="text-sm font-medium leading-5 text-[#181818]">
                           {event.title}
                         </h3>
-                        <p className="text-xs font-normal leading-5 text-[#424242]">
-                          {formatEventDate(event)}
-                        </p>
+                        {formatEventDate(event) && (
+                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                            {formatEventDate(event)}
+                          </p>
+                        )}
                       </div>
 
                       {/* Description */}
@@ -742,7 +746,7 @@ function MonthViewContent() {
                     </Card>
                   );
                 })
-              ) : null}
+              )}
             </div>
 
             {/* Preparation Needed Section - Future events with prep starting this month */}
@@ -780,9 +784,11 @@ function MonthViewContent() {
                         <h3 className="text-sm font-medium leading-5 text-[#181818]">
                           {event.title}
                         </h3>
-                        <p className="text-xs font-normal leading-5 text-[#424242]">
-                          {formatEventDate(event)}
-                        </p>
+                        {formatEventDate(event) && (
+                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                            {formatEventDate(event)}
+                          </p>
+                        )}
                       </div>
 
                       {/* Description */}
@@ -883,9 +889,11 @@ function MonthViewContent() {
                         <h3 className="text-sm font-medium leading-5 text-[#181818]">
                           {event.title}
                         </h3>
-                        <p className="text-xs font-normal leading-5 text-[#424242]">
-                          {formatEventDate(event)}
-                        </p>
+                        {formatEventDate(event) && (
+                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                            {formatEventDate(event)}
+                          </p>
+                        )}
                       </div>
 
                       {/* Description */}
@@ -986,9 +994,11 @@ function MonthViewContent() {
                         <h3 className="text-sm font-medium leading-5 text-[#181818]">
                           {event.title}
                         </h3>
-                        <p className="text-xs font-normal leading-5 text-[#424242]">
-                          {formatEventDate(event)}
-                        </p>
+                        {formatEventDate(event) && (
+                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                            {formatEventDate(event)}
+                          </p>
+                        )}
                       </div>
 
                       {/* Description */}
