@@ -190,7 +190,8 @@ function AddMaterialForm() {
                 placeholder="e.g., Spring Newsletter, FAQ Sheet, Holiday Flyer"
                 type="filled"
                 required
-                error={errors.label}
+                error={!!errors.label}
+                errorMessage={errors.label}
               />
 
               {/* URL */}
@@ -204,7 +205,8 @@ function AddMaterialForm() {
                 placeholder="https://..."
                 type="filled"
                 required
-                error={errors.url}
+                error={!!errors.url}
+                errorMessage={errors.url}
               />
 
               {/* Event Association */}
