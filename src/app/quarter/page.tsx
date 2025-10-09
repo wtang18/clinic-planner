@@ -562,7 +562,7 @@ function QuarterViewContent() {
                   'flex flex-col gap-4 h-full w-full cursor-pointer',
                   isCurrentMonth && 'shadow-[inset_0_0_0_2px_#765c8b]'
                 )}
-                onClick={(e) => {
+                onClick={() => {
                   router.push(`/month?month=${monthNumber}&year=${selectedYear}`);
                 }}
               >
