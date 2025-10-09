@@ -59,7 +59,7 @@ function QuarterViewContent() {
         supabase
           .from('events_ideas')
           .select('*')
-          .or(`start_year.eq.${selectedYear},year.eq.${selectedYear},is_recurring.eq.true`)
+          .or(`start_year.eq.${selectedYear},year.eq.${selectedYear},start_year.eq.${selectedYear + 1},year.eq.${selectedYear + 1},is_recurring.eq.true`)
           .order('start_year', { ascending: true })
           .order('start_month', { ascending: true }),
         supabase.from('outreach_angles').select('*')
