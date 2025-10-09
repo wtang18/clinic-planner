@@ -243,7 +243,26 @@ function MonthViewContent() {
     return '';
   };
 
-  const formatEventDate = (event: EventIdea): string | null => {
+  const formatEventDate = (event: EventIdea): string => {
+    const eventStartMonth = event.start_month || event.month;
+    const eventStartYear = event.start_year || event.year;
+
+    if (event.end_month && event.end_year) {
+      const startMonthName = monthNames[eventStartMonth - 1];
+      const endMonthName = monthNames[event.end_month - 1];
+
+      if (eventStartYear === event.end_year) {
+        return `${startMonthName} – ${endMonthName} ${eventStartYear}`;
+      } else {
+        return `${startMonthName} ${eventStartYear} – ${endMonthName} ${event.end_year}`;
+      }
+    } else {
+      return `${monthNames[eventStartMonth - 1]} ${eventStartYear}`;
+    }
+  };
+
+  // Format date for "This Month" events - hide single-month dates (implied from page header)
+  const formatThisMonthEventDate = (event: EventIdea): string | null => {
     const eventStartMonth = event.start_month || event.month;
     const eventStartYear = event.start_year || event.year;
 
@@ -687,9 +706,9 @@ function MonthViewContent() {
                         <h3 className="text-sm font-medium leading-5 text-[#181818]">
                           {event.title}
                         </h3>
-                        {formatEventDate(event) && (
+                        {formatThisMonthEventDate(event) && (
                           <p className="text-xs font-normal leading-5 text-[#424242]">
-                            {formatEventDate(event)}
+                            {formatThisMonthEventDate(event)}
                           </p>
                         )}
                       </div>
