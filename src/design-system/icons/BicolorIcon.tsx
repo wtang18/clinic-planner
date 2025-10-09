@@ -268,39 +268,15 @@ export const BicolorIcon = React.forwardRef<HTMLSpanElement, BicolorIconProps>(
     const finalContainerColor = containerColor || colors.container;
 
     // Get SVG string
-    let svgContent = getBicolorIconSvg(name, size);
+    let rawSvgContent = getBicolorIconSvg(name, size);
+    let svgContent = rawSvgContent;
 
-    // Show fallback if not found
+    // Normalize SVG content
     if (!svgContent) {
       console.error(`BicolorIcon "${name}" not found in any size`);
-      return (
-        <svg
-          className={cn(sizeClasses, 'shrink-0', className)}
-          viewBox="0 0 20 20"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden={ariaHidden}
-          aria-label={ariaLabel}
-          role={ariaLabel ? 'img' : undefined}
-        >
-          {/* Fallback: question mark icon */}
-          <path
-            d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
-            stroke="currentColor"
-            strokeWidth="1.5"
-          />
-          <path
-            d="M10 14V14.5M10 11C10 10.5 10 10 10.5 9.5C11 9 12 8.5 12 7.5C12 6.5 11.5 6 10 6C8.5 6 8 6.5 8 7.5"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-          />
-        </svg>
-      );
-    }
-
-    // Handle module exports (similar to Icon component)
-    if (typeof svgContent !== 'string') {
+      svgContent = '';
+    } else if (typeof svgContent !== 'string') {
+      // Handle module exports (similar to Icon component)
       if (svgContent && typeof svgContent === 'object') {
         // Try default export first (most common with ?raw in Vite)
         if ((svgContent as any).default && typeof (svgContent as any).default === 'string') {
@@ -323,35 +299,20 @@ export const BicolorIcon = React.forwardRef<HTMLSpanElement, BicolorIconProps>(
 
       if (typeof svgContent !== 'string') {
         console.error(`BicolorIcon "${name}" returned non-string content:`, typeof svgContent);
-        return (
-          <svg
-            className={cn(sizeClasses, 'shrink-0', className)}
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden={ariaHidden}
-            aria-label={ariaLabel}
-            role={ariaLabel ? 'img' : undefined}
-          >
-            {/* Fallback */}
-            <path
-              d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            />
-            <path
-              d="M10 14V14.5M10 11C10 10.5 10 10 10.5 9.5C11 9 12 8.5 12 7.5C12 6.5 11.5 6 10 6C8.5 6 8 6.5 8 7.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        );
+        svgContent = '';
       }
     }
 
     // Replace colors in SVG - use useMemo to ensure re-computation when colors change
     const finalHtml = React.useMemo(() => {
+      // Fallback if no valid SVG content
+      if (!svgContent || typeof svgContent !== 'string') {
+        return `<svg class="${cn(sizeClasses, 'shrink-0', className)}" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="${ariaHidden}" aria-label="${ariaLabel || ''}" role="${ariaLabel ? 'img' : ''}">
+          <path d="M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18Z" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M10 14V14.5M10 11C10 10.5 10 10 10.5 9.5C11 9 12 8.5 12 7.5C12 6.5 11.5 6 10 6C8.5 6 8 6.5 8 7.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>`;
+      }
+
       let modifiedSvg = replaceColors(svgContent, finalContainerColor, finalSignifierColor);
 
       // Parse SVG and inject classes/attributes
@@ -388,7 +349,7 @@ export const BicolorIcon = React.forwardRef<HTMLSpanElement, BicolorIconProps>(
       }
 
       return modifiedSvg;
-    }, [name, size, svgContent, finalContainerColor, finalSignifierColor, className, ariaLabel, ariaHidden]);
+    }, [name, size, svgContent, finalContainerColor, finalSignifierColor, className, ariaLabel, ariaHidden, sizeClasses]);
 
     return (
       <span

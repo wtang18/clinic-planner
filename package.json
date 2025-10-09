@@ -49,6 +49,7 @@
     "eslint": "^9.35.0",
     "eslint-config-next": "^15.5.3",
     "eslint-plugin-storybook": "^9.1.9",
+    "ignore-loader": "^0.1.2",
     "playwright": "^1.55.1",
     "postcss": "^8.5.6",
     "raw-loader": "^4.0.2",

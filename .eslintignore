@@ -1,0 +1,8 @@
+node_modules
+.next
+out
+public
+*.stories.tsx
+*.stories.ts
+storybook-static
+.storybook
