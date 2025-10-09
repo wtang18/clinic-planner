@@ -148,14 +148,14 @@ function EditEventForm({ params }: EditEventPageProps) {
         description: formData.description.trim() || undefined,
         start_month: formData.start_month,
         start_year: formData.start_year,
-        end_month: formData.is_multi_month ? formData.end_month : null,
-        end_year: formData.is_multi_month ? calculatedEndYear : null,
+        end_month: formData.is_multi_month ? formData.end_month : undefined,
+        end_year: formData.is_multi_month ? calculatedEndYear : undefined,
         outreach_angles,
         is_recurring: formData.is_recurring,
         month: formData.start_month,
         year: formData.start_year,
-        prep_months_needed: null,
-        prep_start_date: null,
+        prep_months_needed: undefined,
+        prep_start_date: undefined,
       };
 
       if (prepType === 'months' && formData.prep_months_needed > 0) {
