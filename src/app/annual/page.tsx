@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
@@ -219,6 +219,17 @@ function AnnualViewContent() {
 
       return false;
     });
+  };
+
+  const formatPrepPill = (event: EventIdea): string => {
+    if (event.prep_start_date) {
+      const date = new Date(event.prep_start_date);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    } else if (event.prep_months_needed > 0) {
+      return `${event.prep_months_needed}mo`;
+    }
+    return '';
   };
 
   if (loading) {
@@ -458,7 +469,7 @@ function AnnualViewContent() {
                   'flex flex-col h-full w-full cursor-pointer',
                   isCurrentMonth && 'shadow-[inset_0_0_0_2px_#765c8b]'
                 )}
-                onClick={() => {
+                onClick={(e) => {
                   router.push(`/month?month=${monthNumber}&year=${selectedYear}`);
                 }}
               >
@@ -497,6 +508,7 @@ function AnnualViewContent() {
                         outreachAngles,
                         selectedYear
                       );
+                      const prepLabel = formatPrepPill(event);
 
                       return (
                         <Card
@@ -526,8 +538,16 @@ function AnnualViewContent() {
                             )}
                           </div>
 
-                          {/* Pills: Outreach Angles + Yearly indicator */}
+                          {/* Pills: Prep + Outreach Angles + Yearly indicator */}
                           <div className="flex flex-wrap gap-1.5 w-full">
+                            {prepLabel && (
+                              <Pill
+                                type="info"
+                                size="small"
+                                label="Prep"
+                                subtextR={prepLabel}
+                              />
+                            )}
                             {processedEvent.processedOutreachAngles.map((angleSelection, idx) => (
                               <Pill
                                 key={idx}
@@ -538,7 +558,7 @@ function AnnualViewContent() {
                             ))}
                             {event.is_recurring && (
                               <Pill
-                                type="transparent"
+                                type="accent"
                                 size="small"
                                 label="Yearly"
                               />
@@ -562,7 +582,9 @@ function AnnualViewContent() {
 export default function AnnualViewPage() {
   return (
     <SidebarProvider>
-      <AnnualViewContent />
+      <Suspense fallback={<div>Loading...</div>}>
+        <AnnualViewContent />
+      </Suspense>
     </SidebarProvider>
   );
 }

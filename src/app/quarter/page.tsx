@@ -266,6 +266,29 @@ function QuarterViewContent() {
     return '';
   };
 
+  // Check if prep starts in a specific month
+  const isPrepStartingInMonth = (event: EventIdea, month: number, year: number): boolean => {
+    const eventStartMonth = event.start_month || event.month;
+    const eventStartYear = event.start_year || event.year;
+    const eventDate = new Date(eventStartYear, eventStartMonth - 1);
+
+    if (event.prep_start_date) {
+      const prepDate = new Date(event.prep_start_date);
+      const prepStartMonth = prepDate.getMonth() + 1;
+      const prepStartYear = prepDate.getFullYear();
+      return prepStartMonth === month && prepStartYear === year;
+    }
+
+    if (event.prep_months_needed > 0) {
+      const prepStartDate = new Date(eventDate);
+      prepStartDate.setMonth(prepStartDate.getMonth() - event.prep_months_needed);
+      return prepStartDate.getMonth() + 1 === month &&
+             prepStartDate.getFullYear() === year;
+    }
+
+    return false;
+  };
+
   const handleViewChange = (newView: string) => {
     setView(newView);
     if (newView === 'month') {
@@ -539,7 +562,7 @@ function QuarterViewContent() {
                   'flex flex-col gap-4 h-full w-full cursor-pointer',
                   isCurrentMonth && 'shadow-[inset_0_0_0_2px_#765c8b]'
                 )}
-                onClick={() => {
+                onClick={(e) => {
                   router.push(`/month?month=${monthNumber}&year=${selectedYear}`);
                 }}
               >
@@ -569,95 +592,6 @@ function QuarterViewContent() {
                 {monthEvents.length > 0 && (
                   <div className="flex flex-col gap-2 w-full">
                     {monthEvents.map((event) => {
-                      const processedEvent = eventDataProcessor.formatEventForDisplay(
-                        event,
-                        outreachAngles,
-                        selectedYear
-                      );
-                      const materialsCount = materialsCounts[event.id] || 0;
-
-                      return (
-                        <Card
-                          key={event.id}
-                          size="small"
-                          variant="interactive"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const params = new URLSearchParams({
-                              return: 'quarter',
-                              year: selectedYear.toString(),
-                              quarter: selectedQuarter.toString(),
-                            });
-                            router.push(`/event/${event.id}?${params.toString()}`);
-                          }}
-                        >
-                          {/* Header Block */}
-                          <div className="flex flex-col w-full">
-                            <h3 className="text-sm font-medium leading-5 text-[#181818]">
-                              {event.title}
-                            </h3>
-                            {processedEvent.displayDate.isMultiMonth && (
-                              <p className="text-xs font-normal leading-5 text-[#424242]">
-                                {processedEvent.displayDate.start}
-                                {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Description */}
-                          {event.description && (
-                            <p className="text-sm font-normal leading-5 text-[#181818] w-full">
-                              {event.description}
-                            </p>
-                          )}
-
-                          {/* Outreach Angle Perspectives */}
-                          {processedEvent.processedOutreachAngles.map((angleSelection, idx) => {
-                            if (!angleSelection.notes) return null;
-
-                            return (
-                              <div key={idx} className="flex flex-col w-full">
-                                <p className="text-xs font-medium leading-5 text-[#424242]">
-                                  {angleSelection.angle} Perspective
-                                </p>
-                                <p className="text-sm font-normal leading-5 text-[#181818]">
-                                  {angleSelection.notes}
-                                </p>
-                              </div>
-                            );
-                          })}
-
-                          {/* Pills Row */}
-                          <div className="flex flex-wrap gap-1.5 w-full">
-                            {event.is_recurring && (
-                              <Pill
-                                type="transparent"
-                                size="small"
-                                label="Yearly"
-                              />
-                            )}
-                            {materialsCount > 0 && (
-                              <Pill
-                                type="transparent"
-                                size="small"
-                                label="Materials"
-                                subtextR={materialsCount.toString()}
-                              />
-                            )}
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Preparation Needed Section - Future events with prep starting this month */}
-                {prepEvents.length > 0 && (
-                  <div className="flex flex-col gap-2 w-full">
-                    <h3 className="text-sm font-medium leading-5 text-[#181818]">
-                      Preparation Needed
-                    </h3>
-                    {prepEvents.map((event) => {
                       const processedEvent = eventDataProcessor.formatEventForDisplay(
                         event,
                         outreachAngles,
@@ -719,19 +653,118 @@ function QuarterViewContent() {
 
                           {/* Pills Row */}
                           <div className="flex flex-wrap gap-1.5 w-full">
+                            {prepLabel && (
+                              <Pill
+                                type="info"
+                                size="small"
+                                label="Prep"
+                                subtextR={prepLabel}
+                              />
+                            )}
                             {event.is_recurring && (
                               <Pill
-                                type="transparent"
+                                type="accent"
                                 size="small"
                                 label="Yearly"
                               />
                             )}
-                            {prepLabel && (
+                            {materialsCount > 0 && (
                               <Pill
                                 type="transparent"
                                 size="small"
-                                label="Prep"
+                                label="Materials"
+                                subtextR={materialsCount.toString()}
+                              />
+                            )}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Preparation Needed Section - Future events with prep starting this month */}
+                {prepEvents.length > 0 && (
+                  <div className="flex flex-col gap-2 w-full">
+                    <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                      Preparation Needed
+                    </h3>
+                    {prepEvents.map((event) => {
+                      const processedEvent = eventDataProcessor.formatEventForDisplay(
+                        event,
+                        outreachAngles,
+                        selectedYear
+                      );
+                      const materialsCount = materialsCounts[event.id] || 0;
+                      const prepLabel = formatPrepPill(event);
+                      const isPrepStart = isPrepStartingInMonth(event, monthNumber, selectedYear);
+
+                      return (
+                        <Card
+                          key={event.id}
+                          size="small"
+                          variant="interactive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const params = new URLSearchParams({
+                              return: 'quarter',
+                              year: selectedYear.toString(),
+                              quarter: selectedQuarter.toString(),
+                            });
+                            router.push(`/event/${event.id}?${params.toString()}`);
+                          }}
+                        >
+                          {/* Header Block */}
+                          <div className="flex flex-col w-full">
+                            <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                              {event.title}
+                            </h3>
+                            {processedEvent.displayDate.isMultiMonth && (
+                              <p className="text-xs font-normal leading-5 text-[#424242]">
+                                {processedEvent.displayDate.start}
+                                {processedEvent.displayDate.end && ` – ${processedEvent.displayDate.end}`}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Description */}
+                          {event.description && (
+                            <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                              {event.description}
+                            </p>
+                          )}
+
+                          {/* Outreach Angle Perspectives */}
+                          {processedEvent.processedOutreachAngles.map((angleSelection, idx) => {
+                            if (!angleSelection.notes) return null;
+
+                            return (
+                              <div key={idx} className="flex flex-col w-full">
+                                <p className="text-xs font-medium leading-5 text-[#424242]">
+                                  {angleSelection.angle} Perspective
+                                </p>
+                                <p className="text-sm font-normal leading-5 text-[#181818]">
+                                  {angleSelection.notes}
+                                </p>
+                              </div>
+                            );
+                          })}
+
+                          {/* Pills Row */}
+                          <div className="flex flex-wrap gap-1.5 w-full">
+                            {prepLabel && (
+                              <Pill
+                                type={isPrepStart ? "important-info" : "info"}
+                                size="small"
+                                label={isPrepStart ? "Prep Start" : "Prep"}
                                 subtextR={prepLabel}
+                              />
+                            )}
+                            {event.is_recurring && (
+                              <Pill
+                                type="accent"
+                                size="small"
+                                label="Yearly"
                               />
                             )}
                             {materialsCount > 0 && (

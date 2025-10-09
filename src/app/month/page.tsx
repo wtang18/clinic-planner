@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
@@ -279,6 +279,77 @@ function MonthViewContent() {
     }
   };
 
+  // Get events whose preparation window falls in the selected month
+  const getPrepEventsForMonth = () => {
+    return events.filter(event => {
+      const eventStartMonth = event.start_month || event.month;
+      const eventStartYear = event.start_year || event.year;
+      const eventDate = new Date(eventStartYear, eventStartMonth - 1);
+      const checkDate = new Date(selectedYear, selectedMonth - 1);
+
+      // For multi-month events, check if this month is within the event span
+      if (event.end_month && event.end_year) {
+        const endDate = new Date(event.end_year, event.end_month - 1);
+        if (checkDate >= eventDate && checkDate <= endDate) {
+          return false; // Event is occurring, don't show in prep section
+        }
+      } else {
+        // Single month event
+        if (eventStartYear === selectedYear && eventStartMonth === selectedMonth) {
+          return false; // Event is occurring, don't show in prep section
+        }
+      }
+
+      // For events with specific prep start date
+      if (event.prep_start_date) {
+        const prepDate = new Date(event.prep_start_date);
+        const prepStartMonth = prepDate.getMonth() + 1; // 1-12
+        const prepStartYear = prepDate.getFullYear();
+
+        // Check if this month falls within prep window (from prep start to event start)
+        const prepStartDate = new Date(prepStartYear, prepStartMonth - 1);
+
+        // Check if current month is between prep start and event start (exclusive of event month)
+        return checkDate >= prepStartDate && checkDate < eventDate;
+      }
+
+      // For events with prep months needed
+      if (event.prep_months_needed > 0) {
+        // Calculate prep start month by subtracting prep months from event start
+        const prepStartDate = new Date(eventDate);
+        prepStartDate.setMonth(prepStartDate.getMonth() - event.prep_months_needed);
+
+        // Check if current month falls within prep window (from prep start to event start)
+        return checkDate >= prepStartDate && checkDate < eventDate;
+      }
+
+      return false;
+    });
+  };
+
+  // Check if prep starts in the current selected month
+  const isPrepStartingThisMonth = (event: EventIdea): boolean => {
+    const eventStartMonth = event.start_month || event.month;
+    const eventStartYear = event.start_year || event.year;
+    const eventDate = new Date(eventStartYear, eventStartMonth - 1);
+
+    if (event.prep_start_date) {
+      const prepDate = new Date(event.prep_start_date);
+      const prepStartMonth = prepDate.getMonth() + 1;
+      const prepStartYear = prepDate.getFullYear();
+      return prepStartMonth === selectedMonth && prepStartYear === selectedYear;
+    }
+
+    if (event.prep_months_needed > 0) {
+      const prepStartDate = new Date(eventDate);
+      prepStartDate.setMonth(prepStartDate.getMonth() - event.prep_months_needed);
+      return prepStartDate.getMonth() + 1 === selectedMonth &&
+             prepStartDate.getFullYear() === selectedYear;
+    }
+
+    return false;
+  };
+
   const handleViewChange = (newView: string) => {
     setView(newView);
     if (newView === 'quarter') {
@@ -313,6 +384,7 @@ function MonthViewContent() {
   // Calculate month ranges for each column
   // This Month: selected month
   const thisMonthEvents = getEventsForMonthRange(selectedMonth, selectedYear, selectedMonth, selectedYear);
+  const prepEvents = getPrepEventsForMonth();
 
   // Upcoming Events: next 3 months
   const upcomingStart = { month: selectedMonth, year: selectedYear };
@@ -580,11 +652,11 @@ function MonthViewContent() {
             </div>
 
             <div className="flex flex-col gap-2 w-full">
-              {thisMonthEvents.length === 0 ? (
+              {thisMonthEvents.length === 0 && prepEvents.length === 0 ? (
                 <p className="text-sm font-normal leading-5 text-[#424242]">
                   No Events Planned
                 </p>
-              ) : (
+              ) : thisMonthEvents.length > 0 ? (
                 thisMonthEvents.map((event) => {
                   const processedEvent = eventDataProcessor.formatEventForDisplay(
                     event,
@@ -643,9 +715,17 @@ function MonthViewContent() {
 
                       {/* Pills Row */}
                       <div className="flex flex-wrap gap-1.5 w-full">
+                        {prepLabel && (
+                          <Pill
+                            type="info"
+                            size="small"
+                            label="Prep"
+                            subtextR={prepLabel}
+                          />
+                        )}
                         {event.is_recurring && (
                           <Pill
-                            type="transparent"
+                            type="accent"
                             size="small"
                             label="Yearly"
                           />
@@ -662,8 +742,103 @@ function MonthViewContent() {
                     </Card>
                   );
                 })
-              )}
+              ) : null}
             </div>
+
+            {/* Preparation Needed Section - Future events with prep starting this month */}
+            {prepEvents.length > 0 && (
+              <div className="flex flex-col gap-2 w-full">
+                <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                  Preparation Needed
+                </h3>
+                {prepEvents.map((event) => {
+                  const processedEvent = eventDataProcessor.formatEventForDisplay(
+                    event,
+                    outreachAngles,
+                    selectedYear
+                  );
+                  const materialsCount = materialsCounts[event.id] || 0;
+                  const prepLabel = formatPrepPill(event);
+                  const isPrepStart = isPrepStartingThisMonth(event);
+
+                  return (
+                    <Card
+                      key={event.id}
+                      size="small"
+                      variant="interactive"
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          return: 'month',
+                          year: selectedYear.toString(),
+                          month: selectedMonth.toString(),
+                        });
+                        router.push(`/event/${event.id}?${params.toString()}`);
+                      }}
+                    >
+                      {/* Header Block */}
+                      <div className="flex flex-col w-full">
+                        <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                          {event.title}
+                        </h3>
+                        <p className="text-xs font-normal leading-5 text-[#424242]">
+                          {formatEventDate(event)}
+                        </p>
+                      </div>
+
+                      {/* Description */}
+                      {event.description && (
+                        <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                          {event.description}
+                        </p>
+                      )}
+
+                      {/* Outreach Angle Perspectives */}
+                      {processedEvent.processedOutreachAngles.map((angleSelection, idx) => {
+                        if (!angleSelection.notes) return null;
+
+                        return (
+                          <div key={idx} className="flex flex-col w-full">
+                            <p className="text-xs font-medium leading-5 text-[#424242]">
+                              {angleSelection.angle} Perspective
+                            </p>
+                            <p className="text-sm font-normal leading-5 text-[#181818]">
+                              {angleSelection.notes}
+                            </p>
+                          </div>
+                        );
+                      })}
+
+                      {/* Pills Row */}
+                      <div className="flex flex-wrap gap-1.5 w-full">
+                        {prepLabel && (
+                          <Pill
+                            type={isPrepStart ? "important-info" : "info"}
+                            size="small"
+                            label={isPrepStart ? "Prep Start" : "Prep"}
+                            subtextR={prepLabel}
+                          />
+                        )}
+                        {event.is_recurring && (
+                          <Pill
+                            type="accent"
+                            size="small"
+                            label="Yearly"
+                          />
+                        )}
+                        {materialsCount > 0 && (
+                          <Pill
+                            type="transparent"
+                            size="small"
+                            label="Materials"
+                            subtextR={materialsCount.toString()}
+                          />
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
           </Container>
 
           {/* Column 2: Upcoming Events (next 3 months) */}
@@ -738,19 +913,19 @@ function MonthViewContent() {
 
                       {/* Pills Row */}
                       <div className="flex flex-wrap gap-1.5 w-full">
-                        {event.is_recurring && (
-                          <Pill
-                            type="transparent"
-                            size="small"
-                            label="Yearly"
-                          />
-                        )}
                         {prepLabel && (
                           <Pill
-                            type="transparent"
+                            type="info"
                             size="small"
                             label="Prep"
                             subtextR={prepLabel}
+                          />
+                        )}
+                        {event.is_recurring && (
+                          <Pill
+                            type="accent"
+                            size="small"
+                            label="Yearly"
                           />
                         )}
                         {materialsCount > 0 && (
@@ -790,6 +965,7 @@ function MonthViewContent() {
                     selectedYear
                   );
                   const materialsCount = materialsCounts[event.id] || 0;
+                  const prepLabel = formatPrepPill(event);
 
                   return (
                     <Card
@@ -840,9 +1016,17 @@ function MonthViewContent() {
 
                       {/* Pills Row */}
                       <div className="flex flex-wrap gap-1.5 w-full">
+                        {prepLabel && (
+                          <Pill
+                            type="info"
+                            size="small"
+                            label="Prep"
+                            subtextR={prepLabel}
+                          />
+                        )}
                         {event.is_recurring && (
                           <Pill
-                            type="transparent"
+                            type="accent"
                             size="small"
                             label="Yearly"
                           />
@@ -872,7 +1056,9 @@ function MonthViewContent() {
 export default function MonthViewPage() {
   return (
     <SidebarProvider>
-      <MonthViewContent />
+      <Suspense fallback={<div>Loading...</div>}>
+        <MonthViewContent />
+      </Suspense>
     </SidebarProvider>
   );
 }
