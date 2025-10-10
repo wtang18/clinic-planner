@@ -110,7 +110,7 @@ export const AllVariants: Story = {
           </Card>
           <Card variant="interactive" onClick={() => alert('Card clicked!')}>
             <h4 className="text-base font-semibold">Interactive</h4>
-            <p className="text-sm text-gray-600">Click me! Has shadow and hover effect</p>
+            <p className="text-sm text-gray-600">Click me! Elevates from shadow to shadow-md on hover</p>
           </Card>
           <Card variant="interactive" disabled>
             <h4 className="text-base font-semibold">Disabled Interactive</h4>
@@ -189,7 +189,7 @@ export const InteractiveStates: Story = {
         <div className="flex flex-wrap gap-4">
           <Card variant="interactive" onClick={() => console.log('Default state clicked')}>
             <h4 className="text-base font-semibold">Default State</h4>
-            <p className="text-sm text-gray-600">Has default shadow, shows hover shadow on hover</p>
+            <p className="text-sm text-gray-600">Has shadow, elevates to shadow-md on hover</p>
           </Card>
           <Card variant="interactive" disabled>
             <h4 className="text-base font-semibold">Disabled State</h4>

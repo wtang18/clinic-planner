@@ -39,7 +39,7 @@ const cardVariants = cva(
       {
         variant: "interactive",
         disabled: false,
-        className: "shadow-sm hover:shadow-[0px_0.5px_2px_0px_rgba(0,0,0,0.16)] cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+        className: "shadow hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
       },
     ],
     defaultVariants: {
