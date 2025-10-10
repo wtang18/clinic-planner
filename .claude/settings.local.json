@@ -17,7 +17,8 @@
       "Bash(npm run tokens:parse:*)",
       "Bash(npx style-dictionary build:*)",
       "Bash(npx style-dictionary:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

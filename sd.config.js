@@ -11,7 +11,18 @@
  */
 
 module.exports = {
-  source: ['src/design-system/tokens/sd-input/**/*.json'],
+  source: [
+    'src/design-system/tokens/sd-input/primitives-color-ramp.json',
+    'src/design-system/tokens/sd-input/primitives-typography.json',
+    'src/design-system/tokens/sd-input/primitives-dimensions.json',
+    'src/design-system/tokens/sd-input/decorative-color-on-light.json',
+    'src/design-system/tokens/sd-input/decorative-color-on-dark.json',
+    'src/design-system/tokens/sd-input/semantic-color-on-light.json',
+    'src/design-system/tokens/sd-input/semantic-color-on-dark.json',
+    'src/design-system/tokens/sd-input/semantic-dimensions.json',
+    'src/design-system/tokens/sd-input/semantic-typography-small-viewport.json',
+    'src/design-system/tokens/sd-input/semantic-typography-large-viewport.json'
+  ],
 
   platforms: {
     // ========================================================================
@@ -47,54 +58,73 @@ module.exports = {
           }
         },
 
-        // Decorative
+        // Decorative Light
         {
           destination: 'decorative-light.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('decorative') && token.filePath.includes('on-light'),
+          filter: (token) => token.filePath.includes('decorative-color-on-light.json'),
           options: {
             outputReferences: true,
             selector: ':root, [data-theme="light"]'
           }
         },
+
+        // Decorative Dark
         {
           destination: 'decorative-dark.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('decorative') && token.filePath.includes('on-dark'),
+          filter: (token) => token.filePath.includes('decorative-color-on-dark.json'),
           options: {
             outputReferences: true,
             selector: '[data-theme="dark"]'
           }
         },
 
-        // Semantic
+        // Semantic Light
         {
           destination: 'semantic-light.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic') && token.filePath.includes('on-light'),
+          filter: (token) => token.filePath.includes('semantic-color-on-light.json') || token.filePath.includes('semantic-dimensions.json'),
           options: {
             outputReferences: true,
             selector: ':root, [data-theme="light"]'
           }
         },
+
+        // Semantic Dark
         {
           destination: 'semantic-dark.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic') && token.filePath.includes('on-dark'),
+          filter: (token) => token.filePath.includes('semantic-color-on-dark.json'),
           options: {
             outputReferences: true,
             selector: '[data-theme="dark"]'
           }
         },
 
-        // All tokens in one file (for import convenience)
+        // Responsive Typography Small
         {
-          destination: 'index.css',
+          destination: 'typography-small.css',
           format: 'css/variables',
+          filter: (token) => token.filePath.includes('semantic-typography-small-viewport.json'),
           options: {
             outputReferences: true,
+            selector: '@media (max-width: 768px)'
           }
-        }
+        },
+
+        // Responsive Typography Large
+        {
+          destination: 'typography-large.css',
+          format: 'css/variables',
+          filter: (token) => token.filePath.includes('semantic-typography-large-viewport.json'),
+          options: {
+            outputReferences: true,
+            selector: '@media (min-width: 769px)'
+          }
+        },
+
+        //  Index file - manually create after build
       ]
     },
 
