@@ -1,0 +1,103 @@
+{
+  "dimension": {
+    "space": {
+      "0": {
+        "value": "0px",
+        "type": "dimension",
+        "comment": "Auto-added: referenced by semantic tokens"
+      },
+      "25": {
+        "value": "2px",
+        "type": "dimension"
+      },
+      "50": {
+        "value": "4px",
+        "type": "dimension"
+      },
+      "75": {
+        "value": "6px",
+        "type": "dimension"
+      },
+      "100": {
+        "value": "8px",
+        "type": "dimension"
+      },
+      "125": {
+        "value": "10px",
+        "type": "dimension"
+      },
+      "150": {
+        "value": "12px",
+        "type": "dimension"
+      },
+      "200": {
+        "value": "16px",
+        "type": "dimension"
+      },
+      "250": {
+        "value": "20px",
+        "type": "dimension"
+      },
+      "300": {
+        "value": "24px",
+        "type": "dimension"
+      },
+      "400": {
+        "value": "32px",
+        "type": "dimension"
+      },
+      "500": {
+        "value": "40px",
+        "type": "dimension"
+      },
+      "550": {
+        "value": "44px",
+        "type": "dimension"
+      },
+      "600": {
+        "value": "48px",
+        "type": "dimension"
+      },
+      "700": {
+        "value": "56px",
+        "type": "dimension"
+      },
+      "800": {
+        "value": "64px",
+        "type": "dimension"
+      },
+      "900": {
+        "value": "72px",
+        "type": "dimension"
+      },
+      "1000": {
+        "value": "80px",
+        "type": "dimension"
+      },
+      "1200": {
+        "value": "96px",
+        "type": "dimension"
+      },
+      "negative-25": {
+        "value": "-2px",
+        "type": "dimension"
+      },
+      "negative-50": {
+        "value": "-4px",
+        "type": "dimension"
+      },
+      "negative-100": {
+        "value": "-8px",
+        "type": "dimension"
+      },
+      "negative-200": {
+        "value": "-16px",
+        "type": "dimension"
+      },
+      "negative-300": {
+        "value": "-24px",
+        "type": "dimension"
+      }
+    }
+  }
+}

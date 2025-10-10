@@ -1,0 +1,197 @@
+{
+  "font": {
+    "global-sans": {
+      "value": "Inter",
+      "type": "string"
+    },
+    "global-sans-alt": {
+      "value": "TT Norms Pro",
+      "type": "string"
+    },
+    "global-mono": {
+      "value": "Atlas Typewriter",
+      "type": "string"
+    },
+    "global-sans-expressive": {
+      "value": "Campton",
+      "type": "string"
+    }
+  },
+  "font-size": {
+    "100": {
+      "value": "8px",
+      "type": "dimension"
+    },
+    "150": {
+      "value": "10px",
+      "type": "dimension"
+    },
+    "200": {
+      "value": "12px",
+      "type": "dimension"
+    },
+    "250": {
+      "value": "14px",
+      "type": "dimension"
+    },
+    "300": {
+      "value": "16px",
+      "type": "dimension"
+    },
+    "325": {
+      "value": "18px",
+      "type": "dimension"
+    },
+    "350": {
+      "value": "20px",
+      "type": "dimension"
+    },
+    "400": {
+      "value": "24px",
+      "type": "dimension"
+    },
+    "450": {
+      "value": "28px",
+      "type": "dimension"
+    },
+    "500": {
+      "value": "32px",
+      "type": "dimension"
+    },
+    "550": {
+      "value": "40px",
+      "type": "dimension"
+    },
+    "600": {
+      "value": "48px",
+      "type": "dimension"
+    },
+    "650": {
+      "value": "56px",
+      "type": "dimension"
+    },
+    "700": {
+      "value": "64px",
+      "type": "dimension"
+    },
+    "750": {
+      "value": "80px",
+      "type": "dimension"
+    },
+    "800": {
+      "value": "96px",
+      "type": "dimension"
+    },
+    "950": {
+      "value": "160px",
+      "type": "dimension"
+    }
+  },
+  "font-line-height": {
+    "200": {
+      "value": "12px",
+      "type": "dimension"
+    },
+    "300": {
+      "value": "16px",
+      "type": "dimension"
+    },
+    "350": {
+      "value": "20px",
+      "type": "dimension"
+    },
+    "400": {
+      "value": "24px",
+      "type": "dimension"
+    },
+    "450": {
+      "value": "28px",
+      "type": "dimension"
+    },
+    "500": {
+      "value": "32px",
+      "type": "dimension"
+    },
+    "550": {
+      "value": "40px",
+      "type": "dimension"
+    },
+    "600": {
+      "value": "48px",
+      "type": "dimension"
+    },
+    "650": {
+      "value": "56px",
+      "type": "dimension"
+    },
+    "700": {
+      "value": "64px",
+      "type": "dimension"
+    },
+    "750": {
+      "value": "80px",
+      "type": "dimension"
+    },
+    "800": {
+      "value": "96px",
+      "type": "dimension"
+    },
+    "900": {
+      "value": "128px",
+      "type": "dimension"
+    },
+    "1000": {
+      "value": "192px",
+      "type": "dimension"
+    }
+  },
+  "font-weight": {
+    "400": {
+      "value": "Regular",
+      "type": "string"
+    },
+    "500": {
+      "value": "Medium",
+      "type": "string"
+    },
+    "600": {
+      "value": "Semi Bold",
+      "type": "string"
+    },
+    "700": {
+      "value": "Bold",
+      "type": "string"
+    }
+  },
+  "font-letter-spacing": {
+    "100": {
+      "value": "-2px",
+      "type": "dimension"
+    },
+    "200": {
+      "value": "-1px",
+      "type": "dimension"
+    },
+    "300": {
+      "value": "-0.5px",
+      "type": "dimension"
+    },
+    "400": {
+      "value": "0px",
+      "type": "dimension",
+      "comment": "Auto-added: normal letter spacing"
+    },
+    "500": {
+      "value": "0.5px",
+      "type": "dimension"
+    },
+    "600": {
+      "value": "1px",
+      "type": "dimension"
+    },
+    "700": {
+      "value": "2px",
+      "type": "dimension"
+    }
+  }
+}

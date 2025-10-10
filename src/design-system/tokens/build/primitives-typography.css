@@ -1,0 +1,52 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --font-global-sans: Inter;
+  --font-global-sans-alt: TT Norms Pro;
+  --font-global-mono: Atlas Typewriter;
+  --font-global-sans-expressive: Campton;
+  --font-size-100: 8px;
+  --font-size-150: 10px;
+  --font-size-200: 12px;
+  --font-size-250: 14px;
+  --font-size-300: 16px;
+  --font-size-325: 18px;
+  --font-size-350: 20px;
+  --font-size-400: 24px;
+  --font-size-450: 28px;
+  --font-size-500: 32px;
+  --font-size-550: 40px;
+  --font-size-600: 48px;
+  --font-size-650: 56px;
+  --font-size-700: 64px;
+  --font-size-750: 80px;
+  --font-size-800: 96px;
+  --font-size-950: 160px;
+  --font-line-height-200: 12px;
+  --font-line-height-300: 16px;
+  --font-line-height-350: 20px;
+  --font-line-height-400: 24px;
+  --font-line-height-450: 28px;
+  --font-line-height-500: 32px;
+  --font-line-height-550: 40px;
+  --font-line-height-600: 48px;
+  --font-line-height-650: 56px;
+  --font-line-height-700: 64px;
+  --font-line-height-750: 80px;
+  --font-line-height-800: 96px;
+  --font-line-height-900: 128px;
+  --font-line-height-1000: 192px;
+  --font-weight-400: Regular;
+  --font-weight-500: Medium;
+  --font-weight-600: Semi Bold;
+  --font-weight-700: Bold;
+  --font-letter-spacing-100: -2px;
+  --font-letter-spacing-200: -1px;
+  --font-letter-spacing-300: -0.5px;
+  --font-letter-spacing-400: 0px; /** Auto-added: normal letter spacing */
+  --font-letter-spacing-500: 0.5px;
+  --font-letter-spacing-600: 1px;
+  --font-letter-spacing-700: 2px;
+}

@@ -11,7 +11,13 @@
       "Bash(npm run tokens:generate:*)",
       "Bash(npm run build:*)",
       "Bash(timeout 10 npm run dev)",
-      "Bash(gtimeout 5 npm run dev)"
+      "Bash(gtimeout 5 npm run dev)",
+      "Bash(npm install:*)",
+      "Bash(npm run tokens:build:*)",
+      "Bash(npm run tokens:parse:*)",
+      "Bash(npx style-dictionary build:*)",
+      "Bash(npx style-dictionary:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []
