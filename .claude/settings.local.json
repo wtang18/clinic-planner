@@ -6,7 +6,12 @@
       "Read(//Users/william.tang/Projects/**)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm run tokens:generate:*)",
+      "Bash(npm run build:*)",
+      "Bash(timeout 10 npm run dev)",
+      "Bash(gtimeout 5 npm run dev)"
     ],
     "deny": [],
     "ask": []

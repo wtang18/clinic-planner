@@ -11,7 +11,9 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "generate-icon-map": "node src/design-system/icons/generate-icon-map.js",
-    "generate-bicolor-icon-map": "node src/design-system/icons/generate-bicolor-icon-map.js"
+    "generate-bicolor-icon-map": "node src/design-system/icons/generate-bicolor-icon-map.js",
+    "tokens:generate": "node scripts/generate-tokens.js",
+    "tokens:validate": "node scripts/generate-tokens.js --validate"
   },
   "keywords": [],
   "author": "",

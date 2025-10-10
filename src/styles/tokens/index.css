@@ -1,0 +1,26 @@
+/**
+ * Token System Index
+ *
+ * Imports all token CSS files in the correct order:
+ * 1. Primitives (base values)
+ * 2. Semantic (contextual tokens that reference primitives)
+ * 3. Decorative (edge case tokens)
+ *
+ * Import this file in your main CSS/app entry point.
+ */
+
+/* Primitives Layer - Base values, not for direct use in components */
+@import './primitives-color-ramp.css';
+@import './primitives-typography.css';
+@import './primitives-dimensions.css';
+
+/* Semantic Layer - Use these in components */
+@import './semantic-color-light.css';
+@import './semantic-color-dark.css';
+@import './semantic-typography-small.css';
+@import './semantic-typography-large.css';
+@import './semantic-dimensions.css';
+
+/* Decorative Layer - Edge cases */
+@import './decorative-color-light.css';
+@import './decorative-color-dark.css';

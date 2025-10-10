@@ -1,3 +1,6 @@
+/* Import design tokens (primitives, semantic, decorative) */
+@import '../styles/tokens/index.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
