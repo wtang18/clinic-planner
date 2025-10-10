@@ -100,41 +100,53 @@ Our token system follows a **three-layer hierarchy**:
 3. Export as JSON
 4. Save as `design-tokens-variables-full.json` in this directory (`src/design-system/tokens/`)
 
-### 2. Generate CSS Files
+### 2. Build Tokens with Style Dictionary
 
-Run the token generation script:
+Run the token build script:
 
 ```bash
-npm run tokens:generate
+npm run tokens:build
 ```
 
-This will:
-- Parse `design-tokens-variables-full.json`
-- Generate CSS custom properties in `src/styles/tokens/`
-- Create mode-aware files for theming (light/dark)
-- Create responsive typography files (small/large viewport)
-- Generate an `index.css` that imports everything in the correct order
+This runs a two-step process:
+
+**Step 1: Parse Figma JSON** (`npm run tokens:parse`)
+- Parses `design-tokens-variables-full.json`
+- Resolves variable aliases and modes
+- Auto-fills missing primitives (e.g., `dimension.space.0`)
+- Generates Style Dictionary-compatible JSON in `sd-input/`
+
+**Step 2: Build with Style Dictionary** (`style-dictionary build`)
+- Transforms tokens for multiple platforms
+- Generates CSS custom properties (web)
+- Generates JavaScript constants (React Native)
+- Generates TypeScript definitions
+- Outputs to `build/` directory
 
 ### 3. Review Generated Files
 
 Check the git diff to see what changed:
 
 ```bash
-git diff src/styles/tokens/
+git diff src/design-system/tokens/build/
 ```
 
 **Generated files:**
-- `primitives-color-ramp.css` - All base colors
-- `primitives-typography.css` - Base typography tokens
-- `primitives-dimensions.css` - Base spacing/dimensions
-- `decorative-color-light.css` - Named colors for light theme
-- `decorative-color-dark.css` - Named colors for dark theme
-- `semantic-color-light.css` - Semantic colors for light theme
-- `semantic-color-dark.css` - Semantic colors for dark theme
-- `semantic-typography-small.css` - Typography for small viewports
-- `semantic-typography-large.css` - Typography for large viewports
-- `semantic-dimensions.css` - Semantic spacing tokens
-- `index.css` - Imports all token files
+
+**CSS (Web):**
+- `index.css` - Imports all CSS tokens
+- `primitives-color.css` - Base colors
+- `primitives-typography.css` - Base typography
+- `primitives-dimensions.css` - Base dimensions
+- `decorative-light.css` - Named colors for light theme
+- `semantic-light.css` - Semantic tokens for light theme
+
+**JavaScript (React Native):**
+- `tokens.js` - Flat exports with resolved hex values
+- `tokens.d.ts` - TypeScript type definitions
+
+**Intermediate (can be regenerated):**
+- `sd-input/*.json` - Style Dictionary source files (10 files)
 
 ### 4. Test in Storybook
 
@@ -148,12 +160,69 @@ Navigate to **Design System → Tokens** to see:
 - Theme switching (light/dark)
 - Responsive typography behavior
 
-### 5. Commit Changes
+### 5. Test Build
+
+Ensure the app builds successfully:
 
 ```bash
-git add src/design-system/tokens/design-tokens-variables-full.json
-git add src/styles/tokens/
+npm run build
+```
+
+### 6. Commit Changes
+
+```bash
+git add src/design-system/tokens/
 git commit -m "Update design tokens from Figma export"
+```
+
+---
+
+## Multi-Platform Support
+
+Style Dictionary generates tokens for multiple platforms from a single source:
+
+### Web (CSS Custom Properties)
+
+```tsx
+import '@/design-system/tokens/build/index.css';
+
+// Use CSS variables
+<div style={{ backgroundColor: 'var(--color-bg-neutral-base)' }}>
+  Hello World
+</div>
+```
+
+### React Native (JavaScript Constants)
+
+```tsx
+import { ColorBgNeutralBase, ColorFgNeutralPrimary } from '@/design-system/tokens/build/tokens';
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  container: {
+    backgroundColor: ColorBgNeutralBase,  // '#ffffff'
+    color: ColorFgNeutralPrimary,         // '#171717'
+  }
+});
+```
+
+**Key difference:**
+- **CSS**: Uses `var()` references to maintain token hierarchy
+- **React Native**: Uses resolved values (hex codes) since RN doesn't support CSS variables
+
+---
+
+## Token Generation Scripts
+
+```bash
+# Build all tokens (parse + Style Dictionary)
+npm run tokens:build
+
+# Parse Figma JSON only (generates sd-input/*.json)
+npm run tokens:parse
+
+# Clean generated files (build/ and sd-input/)
+npm run tokens:clean
 ```
 
 ---
@@ -269,11 +338,38 @@ This adds another layer of abstraction for components with specific token needs.
 
 - **`design-tokens-variables-full.json`** - Source of truth exported from Figma (516+ variables)
 - **`README.md`** - This file (documentation and workflow)
+- **`build/`** - Generated tokens (CSS, JS, TS) - **DO NOT EDIT**
+- **`sd-input/`** - Style Dictionary source files (generated from Figma JSON)
 - **`Colors.stories.tsx`** - Storybook documentation for color tokens
 - **`Typography.stories.tsx`** - Storybook documentation for typography tokens
 - **`Spacing.stories.tsx`** - Storybook documentation for spacing tokens
 - **`BorderRadius.stories.tsx`** - Storybook documentation for border radius
 - **`Shadows.stories.tsx`** - Storybook documentation for shadows
+
+## Style Dictionary Architecture
+
+Our token system uses a two-step generation process:
+
+```
+design-tokens-variables-full.json (Figma export)
+    ↓
+[scripts/parse-figma-tokens.js]
+    ↓
+sd-input/*.json (Style Dictionary format)
+    ↓
+[Style Dictionary (sd.config.js)]
+    ↓
+build/*.css, build/tokens.js, build/tokens.d.ts
+```
+
+**Why two steps?**
+1. **Parser handles Figma complexity** - Variable aliases, modes, nested structure
+2. **Style Dictionary handles platforms** - Generates CSS, JS, TS from clean JSON
+3. **Clean separation** - Easy to debug, easy to modify
+
+**Related files:**
+- `scripts/parse-figma-tokens.js` - Figma → Style Dictionary parser
+- `sd.config.js` (root) - Style Dictionary configuration
 
 ---
 

@@ -3,8 +3,8 @@
 /**
  * Tailwind Configuration with Design Token System
  *
- * This configuration leverages CSS custom properties defined in src/styles/tokens/
- * Generated from design-tokens-variables-full.json via `npm run tokens:generate`
+ * This configuration leverages CSS custom properties defined in src/design-system/tokens/build/
+ * Generated from design-tokens-variables-full.json via Style Dictionary (`npm run tokens:build`)
  *
  * Token Architecture:
  * - Primitives: Base values (colors, dimensions, typography)
@@ -15,6 +15,7 @@
  * - Theme switching via data-theme="light|dark"
  * - Responsive typography via viewport-based tokens
  * - Semantic color system (bg/fg with context)
+ * - Multi-platform support (CSS + React Native + TypeScript)
  */
 
 module.exports = {

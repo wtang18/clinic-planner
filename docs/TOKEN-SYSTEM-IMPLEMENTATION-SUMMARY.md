@@ -2,13 +2,13 @@
 
 **Branch:** `feature/token-architecture-restructure`
 **Date:** 2025-10-10
-**Status:** ✅ Complete - Ready for Testing & Merge
+**Status:** ✅ Complete - Migrated to Style Dictionary
 
 ---
 
 ## What Was Built
 
-A complete **3-layer token architecture** with automatic generation from Figma exports, theme switching support, and comprehensive documentation.
+A complete **3-layer token architecture** with automatic generation from Figma exports using **Style Dictionary** for multi-platform support, theme switching, and comprehensive documentation.
 
 ### Architecture
 
@@ -26,12 +26,13 @@ Primitive Tokens (raw Figma values)
 
 ## Key Features
 
-### 1. Token Generation System
-- ✅ **Custom Node.js script** (`scripts/generate-tokens.js`)
+### 1. Token Generation System (Style Dictionary)
+- ✅ **Style Dictionary v4.4.0** - Industry-standard token platform
+- ✅ **Two-step process**: Figma parser → Style Dictionary build
 - ✅ **Parses Figma JSON** (516+ variables across 7 collections)
-- ✅ **Generates CSS custom properties** with proper aliasing
+- ✅ **Multi-platform support**: CSS (web) + JavaScript (React Native) + TypeScript
 - ✅ **Mode-aware output** (light/dark themes, small/large viewports)
-- ✅ **One command**: `npm run tokens:generate`
+- ✅ **One command**: `npm run tokens:build`
 
 ### 2. Theme Support
 - ✅ **Light/Dark mode infrastructure** via `data-theme` attribute
@@ -44,27 +45,38 @@ Primitive Tokens (raw Figma values)
 **Source:**
 - `design-tokens-variables-full.json` (Figma export)
 
-**Generated CSS:**
-- `primitives-color-ramp.css` (110 variables)
-- `primitives-typography.css` (46 variables)
-- `primitives-dimensions.css` (24 variables)
-- `decorative-color-light.css` (74 variables)
-- `decorative-color-dark.css` (74 variables)
-- `semantic-color-light.css` (114 variables)
-- `semantic-color-dark.css` (114 variables)
-- `semantic-typography-small.css` (132 variables)
-- `semantic-typography-large.css` (132 variables)
-- `semantic-dimensions.css` (16 variables)
-- `index.css` (imports all token files)
+**Intermediate (Style Dictionary input):**
+- `sd-input/primitives-color.json`
+- `sd-input/primitives-typography.json`
+- `sd-input/primitives-dimensions.json`
+- `sd-input/decorative-color-light.json`
+- `sd-input/semantic-color-light.json`
+- `sd-input/semantic-typography-small.json`
+- `sd-input/semantic-dimensions.json`
+
+**Generated CSS (Web):**
+- `build/index.css` (imports all CSS tokens)
+- `build/primitives-color.css` (110 variables)
+- `build/primitives-typography.css` (46 variables)
+- `build/primitives-dimensions.css` (24 variables)
+- `build/decorative-light.css` (74 variables with var() references)
+- `build/semantic-light.css` (114 variables with var() references)
+
+**Generated JavaScript (React Native):**
+- `build/tokens.js` (flat exports with resolved hex values)
+- `build/tokens.d.ts` (TypeScript definitions)
 
 ### 4. Documentation Created
 
 | Document | Purpose |
 |----------|---------|
-| `src/design-system/tokens/README.md` | Token architecture & update workflow |
+| `src/design-system/README.md` | Design system overview with token usage |
+| `src/design-system/tokens/README.md` | Token architecture & Style Dictionary workflow |
+| `docs/STYLE-DICTIONARY-MIGRATION.md` | Complete Style Dictionary migration summary |
 | `docs/COMPONENT-MIGRATION-GUIDE.md` | How to migrate components to semantic tokens |
 | `docs/TOKEN-SYSTEM-COMPARISON.md` | Custom script vs. Style Dictionary comparison |
 | `docs/TOKEN-SYSTEM-IMPLEMENTATION-SUMMARY.md` | This document |
+| `docs/PACKAGE-EXTRACTION-GUIDE.md` | How to extract design system to separate package |
 
 ### 5. Storybook Documentation
 - ✅ **Token Architecture story** - Visual overview of 3-layer system
@@ -76,20 +88,25 @@ Primitive Tokens (raw Figma values)
 ## Files Modified
 
 ### Core Implementation
-- ✅ `scripts/generate-tokens.js` - Token generation script (NEW)
-- ✅ `package.json` - Added `tokens:generate` script
-- ✅ `src/app/globals.css` - Import token CSS
+- ✅ `scripts/parse-figma-tokens.js` - Figma → Style Dictionary parser (NEW)
+- ✅ `sd.config.js` - Style Dictionary configuration (NEW)
+- ✅ `package.json` - Added `tokens:build`, `tokens:parse`, `tokens:clean` scripts, style-dictionary dep
+- ✅ `src/app/globals.css` - Import SD-generated tokens from build/index.css
+- ✅ `src/design-system/package.json` - Package configuration for @carbon-health/design-system (NEW)
+- ✅ `src/design-system/index.ts` - Public API entry point (NEW)
 - ✅ `tailwind.config.js` - Reference CSS custom properties
-- ✅ `src/components/ThemeProvider.tsx` - Theme switching (NEW)
+- ✅ `src/components/ThemeProvider.tsx` - Theme switching
 - ✅ `src/components/Providers.tsx` - Added ThemeProvider
-- ✅ `src/design-system/tokens/TokenArchitecture.stories.tsx` - Storybook docs (NEW)
+- ✅ `src/design-system/tokens/TokenArchitecture.stories.tsx` - Storybook docs
 
-### Generated Files (in `src/styles/tokens/`)
-- ✅ 10 CSS files with token definitions
-- ✅ 1 index.css file for imports
+### Generated Files (in `src/design-system/tokens/`)
+- ✅ `build/*.css` - 6 CSS files with token definitions
+- ✅ `build/tokens.js` - React Native JavaScript tokens
+- ✅ `build/tokens.d.ts` - TypeScript definitions
+- ✅ `sd-input/*.json` - 10 Style Dictionary source files
 
 ### Documentation
-- ✅ 4 comprehensive markdown documents
+- ✅ 7 comprehensive markdown documents
 
 ---
 
@@ -110,18 +127,20 @@ To minimize risk and allow thorough testing:
 
 ```bash
 # 1. Export from Figma → design-tokens-variables-full.json
-# 2. Run generation script
-npm run tokens:generate
+# 2. Build tokens with Style Dictionary
+npm run tokens:build
 
 # 3. Review changes
-git diff src/styles/tokens/
+git diff src/design-system/tokens/build/
 
 # 4. Test in Storybook
 npm run storybook
 
-# 5. Commit
-git add src/design-system/tokens/design-tokens-variables-full.json
-git add src/styles/tokens/
+# 5. Test build
+npm run build
+
+# 6. Commit
+git add src/design-system/tokens/
 git commit -m "Update design tokens from Figma export"
 ```
 
@@ -174,7 +193,7 @@ Before merging to main, verify:
 - ☐ No visual regressions
 
 ### Token System
-- ☐ `npm run tokens:generate` works
+- ✅ `npm run tokens:build` works
 - ☐ Storybook loads Token Architecture story
 - ☐ Theme switching demo works in Storybook
 - ☐ Theme persists in localStorage
@@ -259,24 +278,32 @@ We chose **Approach A: Gradual Migration** for safety:
 
 ## Comparison: Custom Script vs. Style Dictionary
 
-We built a custom token generation script instead of using Style Dictionary.
+We initially built a custom token generation script, then **migrated to Style Dictionary**.
 
-**Why?**
-- Web-only project (no mobile apps)
-- Small team (simple workflow preferred)
-- Fast iteration needed
-- Full control over output
-- Zero external dependencies
+**Why Style Dictionary?**
+- Carbon Health has iOS/Android apps using React Native
+- Multi-platform token support critical for product portfolio
+- Type safety with auto-generated TypeScript definitions
+- Industry standard with better team familiarity
+- Future-proof for mobile needs
 
-**See full comparison:** `docs/TOKEN-SYSTEM-COMPARISON.md`
+**See full comparison and migration details:**
+- `docs/TOKEN-SYSTEM-COMPARISON.md` - Comparison and decision
+- `docs/STYLE-DICTIONARY-MIGRATION.md` - Complete migration summary
 
 ---
 
 ## Commands Reference
 
 ```bash
-# Generate tokens from Figma export
-npm run tokens:generate
+# Build tokens from Figma export (parse + Style Dictionary)
+npm run tokens:build
+
+# Parse Figma JSON only (generates sd-input/*.json)
+npm run tokens:parse
+
+# Clean generated token files
+npm run tokens:clean
 
 # Start development server
 npm run dev

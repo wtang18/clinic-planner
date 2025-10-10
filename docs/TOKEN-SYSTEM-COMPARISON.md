@@ -1,8 +1,27 @@
 # Token System Comparison: Custom Script vs. Style Dictionary
 
+## ✅ Our Decision: Style Dictionary
+
+**Date:** 2025-10-10
+**Status:** Successfully migrated to Style Dictionary
+
+After evaluating both approaches, we chose **Style Dictionary** because:
+
+1. ✅ **Multi-platform support** - Carbon Health has iOS/Android apps using React Native
+2. ✅ **Future-proof** - Ready for mobile token needs when the time comes
+3. ✅ **Type safety** - Auto-generates TypeScript definitions
+4. ✅ **Industry standard** - Team members likely already familiar
+5. ✅ **Better maintainability** - Community support and documentation
+
+While the custom script was simpler for web-only, Style Dictionary's multi-platform support is critical for our product portfolio.
+
+**See:** [docs/STYLE-DICTIONARY-MIGRATION.md](./STYLE-DICTIONARY-MIGRATION.md) for migration details.
+
+---
+
 ## Overview
 
-We chose to build a **custom token generation script** rather than use Style Dictionary. This document explains the differences, trade-offs, and when you might consider switching.
+This document compares our initial **custom token generation script** with the **Style Dictionary** approach we ultimately chose. It's preserved for reference and to help understand the trade-offs.
 
 ---
 
@@ -200,35 +219,50 @@ If you decide to switch to Style Dictionary later:
 
 ---
 
-## Our Decision Rationale
+## ~~Our Decision Rationale~~ (Original - Now Superseded)
 
-We chose the **custom script** because:
+~~We chose the **custom script** because:~~
 
-1. ✅ **Web-only project** - No need for iOS/Android tokens
-2. ✅ **Small team** - Simple workflow preferred
-3. ✅ **Fast iteration** - Test library, need to move quickly
-4. ✅ **Full control** - Can customize output exactly as needed
-5. ✅ **Zero complexity** - Team can understand entire script in 10 minutes
-6. ✅ **Easy debugging** - Can add logging, modify output instantly
+1. ~~✅ **Web-only project** - No need for iOS/Android tokens~~
+2. ~~✅ **Small team** - Simple workflow preferred~~
+3. ~~✅ **Fast iteration** - Test library, need to move quickly~~
+4. ~~✅ **Full control** - Can customize output exactly as needed~~
+5. ~~✅ **Zero complexity** - Team can understand entire script in 10 minutes~~
+6. ~~✅ **Easy debugging** - Can add logging, modify output instantly~~
 
-This gives us a **solid foundation** while staying **simple and maintainable**. If requirements change (mobile apps, larger team), we can migrate to Style Dictionary with minimal disruption.
+**UPDATE:** We reconsidered after learning Carbon Health has iOS/Android apps using React Native. Style Dictionary better serves our multi-platform needs.
 
 ---
 
-## Recommendation
+## ~~Recommendation~~ (Superseded)
 
-**Stick with custom script for now** unless:
-- Mobile apps are confirmed in roadmap (6-12 months)
-- Team grows beyond 10 developers
-- You need complex token transforms
-- Type generation becomes critical
+~~**Stick with custom script for now** unless:~~
+- ~~Mobile apps are confirmed in roadmap (6-12 months)~~ ✅ **Confirmed - RN apps exist**
+- ~~Team grows beyond 10 developers~~
+- ~~You need complex token transforms~~
+- ~~Type generation becomes critical~~ ✅ **Implemented with SD**
 
-**The custom script serves us well for this project's scope.**
+**NEW RECOMMENDATION:** Use Style Dictionary for multi-platform token systems. For web-only projects with no mobile plans, custom script may still be appropriate.
+
+---
+
+## Current Implementation (2025-10-10)
+
+We successfully migrated to **Style Dictionary** with:
+- ✅ CSS tokens for web (var() references preserved)
+- ✅ JavaScript tokens for React Native (resolved hex values)
+- ✅ TypeScript definitions auto-generated
+- ✅ Two-step process: Figma parser → Style Dictionary build
+- ✅ Zero breaking changes to existing components
+
+**Time invested:** ~3 hours
+**Result:** Multi-platform token system ready for web + React Native
 
 ---
 
 ## Questions?
 
-- Custom script too simple? Add features as needed
-- Considering Style Dictionary? Review migration path above
-- Hybrid approach? Use custom for CSS, SD for mobile when needed
+- **Migration details?** See [docs/STYLE-DICTIONARY-MIGRATION.md](./STYLE-DICTIONARY-MIGRATION.md)
+- **How to use tokens?** See [src/design-system/README.md](../src/design-system/README.md)
+- **Component migration?** See [docs/COMPONENT-MIGRATION-GUIDE.md](./COMPONENT-MIGRATION-GUIDE.md)
+- **Package extraction?** See [docs/PACKAGE-EXTRACTION-GUIDE.md](./PACKAGE-EXTRACTION-GUIDE.md)

@@ -1,0 +1,57 @@
+{
+  "name": "@carbon-health/design-system",
+  "version": "0.1.0",
+  "description": "Carbon Health Design System - Tokens, components, and styles for web and React Native",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "require": "./index.js"
+    },
+    "./tokens": {
+      "types": "./tokens/build/tokens.d.ts",
+      "import": "./tokens/build/tokens.js",
+      "require": "./tokens/build/tokens.js"
+    },
+    "./tokens/css": "./tokens/build/index.css"
+  },
+  "files": [
+    "tokens/build/**/*",
+    "components/**/*",
+    "index.js",
+    "index.d.ts",
+    "README.md"
+  ],
+  "scripts": {
+    "tokens:parse": "node ../../scripts/parse-figma-tokens.js",
+    "tokens:build": "npm run tokens:parse && style-dictionary build --config ../../sd.config.js",
+    "tokens:clean": "rm -rf tokens/build tokens/sd-input"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-native": ">=0.70.0"
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.4.0"
+  },
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "carbon-health",
+    "react",
+    "react-native",
+    "css-variables",
+    "style-dictionary"
+  ],
+  "author": "Carbon Health",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carbon-health/design-system.git"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
