@@ -9,64 +9,64 @@ const buttonVariants = cva(
   // Base styles - common to all variants
   [
     "inline-flex items-center justify-center gap-1 font-semibold transition-all duration-200",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-bg-accent-high)] focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
     "select-none cursor-pointer",
   ],
   {
     variants: {
       type: {
-        // Primary - Dark background with white text
+        // Primary - Dark background with white text (uses neutral tokens)
         primary: [
-          "bg-gray-1000 text-white border border-transparent",
-          "hover:bg-gray-900",
-          "active:bg-gray-800",
+          "bg-[var(--color-bg-neutral-high)] text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-medium)]",
+          "active:bg-[var(--color-bg-neutral-low)]",
         ],
         // Outlined - Border with transparent background
         outlined: [
-          "bg-transparent text-gray-1000 border border-gray-1000",
-          "hover:bg-gray-50 hover:border-gray-900",
-          "active:bg-gray-100",
+          "bg-transparent text-[var(--color-fg-neutral-primary)] border border-[var(--color-bg-neutral-high)]",
+          "hover:bg-[var(--color-bg-neutral-subtle)] hover:border-[var(--color-bg-neutral-medium)]",
+          "active:bg-[var(--color-bg-neutral-low)]",
         ],
         // Solid - Light gray background
         solid: [
-          "bg-gray-100 text-gray-1000 border border-transparent",
-          "hover:bg-gray-200",
-          "active:bg-gray-300",
+          "bg-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-medium)]",
+          "active:bg-[var(--color-bg-neutral-mid)]",
         ],
-        // Transparent - Glassmorphism with backdrop blur (exact Figma: rgba(0,0,0,0.12))
+        // Transparent - Glassmorphism with backdrop blur
         transparent: [
-          "backdrop-blur-xl backdrop-filter bg-[rgba(0,0,0,0.12)] text-gray-1000 border border-transparent",
-          "hover:bg-[rgba(0,0,0,0.20)] hover:backdrop-blur-xl hover:backdrop-filter",
-          "active:bg-[rgba(0,0,0,0.25)]",
+          "backdrop-blur-xl backdrop-filter bg-[var(--color-bg-neutral-subtle)] text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-low)] hover:backdrop-blur-xl hover:backdrop-filter",
+          "active:bg-[var(--color-bg-neutral-medium)]",
         ],
-        // Generative - AI/ML themed styling (exact Figma: #247450)
+        // Generative - AI/ML themed styling (uses positive/success tokens)
         generative: [
-          "bg-[#247450] text-white border border-transparent",
-          "hover:bg-[#174b34]",
-          "active:bg-[#0d3a26]",
+          "bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-positive-medium)]",
+          "active:bg-[var(--color-bg-positive-low)]",
         ],
-        // High Impact - Attention-grabbing design (exact Figma: #b33f3b)
+        // High Impact - Attention-grabbing design (uses alert tokens)
         "high-impact": [
-          "bg-[#b33f3b] text-white border border-transparent",
-          "hover:bg-[#9d3530]",
-          "active:bg-[#872b27]",
+          "bg-[var(--color-bg-alert-high)] text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-alert-medium)]",
+          "active:bg-[var(--color-bg-alert-low)]",
         ],
         // No Fill - Minimal with subtle hover
         "no-fill": [
-          "bg-transparent text-gray-1000 border border-transparent",
-          "hover:bg-[rgba(0,0,0,0.20)]",
-          "active:bg-[rgba(0,0,0,0.25)]",
+          "bg-transparent text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-low)]",
+          "active:bg-[var(--color-bg-neutral-medium)]",
         ],
-        // Subtle - Very minimal styling (exact Figma: rgba(0,0,0,0.02))
+        // Subtle - Very minimal styling
         subtle: [
-          "bg-[rgba(0,0,0,0.02)] text-gray-1000 border border-transparent",
-          "hover:bg-[rgba(0,0,0,0.05)] hover:text-gray-900",
-          "active:bg-[rgba(0,0,0,0.08)]",
+          "bg-[var(--color-bg-neutral-subtle)] text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-low)] hover:text-[var(--color-fg-neutral-secondary)]",
+          "active:bg-[var(--color-bg-neutral-medium)]",
         ],
         // Carby - Brand themed (exact Figma colors)
         carby: [
-          "bg-brand-carby-green text-gray-1000 border border-transparent",
+          "bg-brand-carby-green text-[var(--color-fg-neutral-primary)] border border-transparent",
           "hover:brightness-110",
           "active:brightness-90",
         ],

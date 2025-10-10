@@ -10,21 +10,21 @@ const pillVariants = cva(
   [
     "inline-flex items-center gap-1 font-medium whitespace-nowrap",
     "transition-all duration-200",
-    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+    "focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-1",
   ],
   {
     variants: {
       // 12 pill types
       type: {
-        transparent: "bg-[rgba(0,0,0,0.12)] text-fg-neutral-primary",
-        outlined: "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.24)] text-fg-neutral-primary",
-        "subtle-outlined": "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)] text-fg-neutral-secondary",
+        transparent: "bg-[var(--color-bg-neutral-subtle)] text-fg-neutral-primary",
+        outlined: "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-medium)] text-fg-neutral-primary",
+        "subtle-outlined": "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-subtle)] text-fg-neutral-secondary",
         positive: "bg-bg-positive-low text-fg-positive-primary",
         attention: "bg-bg-attention-low text-fg-attention-primary",
         alert: "bg-bg-alert-low text-fg-alert-primary",
-        "high-alert": "bg-bg-alert-high text-white",
+        "high-alert": "bg-bg-alert-high text-[var(--color-fg-neutral-inverse-primary)]",
         info: "bg-bg-information-low text-fg-information-primary",
-        "important-info": "bg-bg-information-high text-white",
+        "important-info": "bg-bg-information-high text-[var(--color-fg-neutral-inverse-primary)]",
         accent: "bg-bg-accent-low text-fg-accent-primary",
         "no-fill": "text-fg-neutral-primary",
         carby: "bg-utility-carby-green text-fg-positive-primary",
@@ -64,19 +64,19 @@ const pillVariants = cva(
         type: "transparent",
         interactive: true,
         state: "default",
-        className: "hover:bg-[rgba(0,0,0,0.20)]",
+        className: "hover:bg-[var(--color-bg-neutral-low)]",
       },
       {
         type: "outlined",
         interactive: true,
         state: "default",
-        className: "hover:shadow-[inset_0_0_0_1px_#181818]",
+        className: "hover:shadow-[inset_0_0_0_1px_var(--color-bg-neutral-high)]",
       },
       {
         type: "subtle-outlined",
         interactive: true,
         state: "default",
-        className: "hover:shadow-[inset_0_0_0_1px_#181818] hover:text-fg-neutral-primary",
+        className: "hover:shadow-[inset_0_0_0_1px_var(--color-bg-neutral-high)] hover:text-fg-neutral-primary",
       },
       {
         type: "positive",
@@ -124,13 +124,13 @@ const pillVariants = cva(
         type: "no-fill",
         interactive: true,
         state: "default",
-        className: "hover:bg-[rgba(0,0,0,0.06)]",
+        className: "hover:bg-[var(--color-bg-neutral-subtle)]",
       },
       {
         type: "carby",
         interactive: true,
         state: "default",
-        className: "hover:bg-green-400",
+        className: "hover:brightness-110",
       },
     ],
     defaultVariants: {
@@ -467,7 +467,7 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
           return "text-fg-alert-secondary";
         case "high-alert":
         case "important-info":
-          return "text-white";
+          return "text-[var(--color-fg-neutral-inverse-primary)]";
         case "attention":
           return "text-fg-attention-secondary";
         case "info":
