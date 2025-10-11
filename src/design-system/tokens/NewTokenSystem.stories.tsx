@@ -285,6 +285,10 @@ export const ThemeComparison: Story = {
 
     React.useEffect(() => {
       document.documentElement.setAttribute('data-theme', theme);
+      console.log('Theme set to:', theme);
+      console.log('data-theme attribute:', document.documentElement.getAttribute('data-theme'));
+      console.log('--gray-highest value:', getComputedStyle(document.documentElement).getPropertyValue('--gray-highest'));
+      console.log('--color-bg-neutral-subtle value:', getComputedStyle(document.documentElement).getPropertyValue('--color-bg-neutral-subtle'));
 
       // Cleanup: reset to light theme when component unmounts
       return () => {
