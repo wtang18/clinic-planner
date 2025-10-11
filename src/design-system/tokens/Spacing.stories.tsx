@@ -35,6 +35,8 @@ Tokens for padding around elements:
 | \`--dimension-space-around-medium\` | 16px | Standard padding (cards, default buttons) |
 | \`--dimension-space-around-large\` | 20px | Generous padding (large cards, sections) |
 
+**Note**: Space Around tokens can be applied to individual sides (paddingTop, paddingRight, paddingBottom, paddingLeft) for asymmetric layouts.
+
 ## Usage
 
 \`\`\`tsx
@@ -47,6 +49,16 @@ Tokens for padding around elements:
 // Padding around content
 <div style={{ padding: 'var(--dimension-space-around-medium)' }}>
   Card content with standard padding
+</div>
+
+// Directional padding (asymmetric)
+<div style={{
+  paddingTop: 'var(--dimension-space-around-large)',
+  paddingBottom: 'var(--dimension-space-around-large)',
+  paddingLeft: 'var(--dimension-space-around-medium)',
+  paddingRight: 'var(--dimension-space-around-medium)'
+}}>
+  Card with more vertical breathing room
 </div>
 
 // Combining with Tailwind
@@ -309,6 +321,176 @@ export const SpaceAround: Story = {
     docs: {
       description: {
         story: 'Semantic padding tokens for spacing around content.',
+      },
+    },
+  },
+};
+
+export const DirectionalSpacing: Story = {
+  render: () => (
+    <div className="p-8 space-y-8 bg-[var(--color-bg-neutral-base)]">
+      <div>
+        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
+          Directional Spacing
+        </h2>
+        <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
+          Space Around tokens can be applied to individual sides for asymmetric padding
+        </p>
+      </div>
+
+      {/* Different vertical and horizontal padding */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Asymmetric Card Padding
+        </h3>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Cards with more vertical breathing room than horizontal
+        </p>
+        <div
+          className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg max-w-md"
+          style={{
+            paddingTop: 'var(--dimension-space-around-large)',
+            paddingBottom: 'var(--dimension-space-around-large)',
+            paddingLeft: 'var(--dimension-space-around-medium)',
+            paddingRight: 'var(--dimension-space-around-medium)',
+          }}
+        >
+          <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Featured Event</h4>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
+            Larger top/bottom padding (20px) creates vertical emphasis, while medium left/right padding (16px) keeps content width comfortable.
+          </p>
+        </div>
+        <div className="mt-2 text-xs text-[var(--color-fg-neutral-secondary)]">
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingTop/Bottom: around-large (20px)
+          </code>
+          {' • '}
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingLeft/Right: around-medium (16px)
+          </code>
+        </div>
+      </div>
+
+      {/* Top-heavy padding */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Top-Heavy Padding
+        </h3>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Extra top padding for header sections
+        </p>
+        <div
+          className="bg-gradient-to-b from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-neutral-base)] rounded-lg max-w-md"
+          style={{
+            paddingTop: 'var(--dimension-space-around-large)',
+            paddingBottom: 'var(--dimension-space-around-small)',
+            paddingLeft: 'var(--dimension-space-around-medium)',
+            paddingRight: 'var(--dimension-space-around-medium)',
+          }}
+        >
+          <h3 className="text-xl font-bold text-[var(--color-fg-accent-primary)] mb-2">
+            Section Header
+          </h3>
+          <p className="text-sm text-[var(--color-fg-accent-secondary)]">
+            Generous top padding (20px) creates hierarchy, while smaller bottom padding (12px) keeps it compact.
+          </p>
+        </div>
+        <div className="mt-2 text-xs text-[var(--color-fg-neutral-secondary)]">
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingTop: around-large (20px)
+          </code>
+          {' • '}
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingBottom: around-small (12px)
+          </code>
+        </div>
+      </div>
+
+      {/* Sidebar-style padding */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Sidebar-Style Padding
+        </h3>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Extra left padding for indented/nested content
+        </p>
+        <div
+          className="bg-[var(--color-bg-information-subtle)] border-l-4 border-[var(--color-bg-information-high)] rounded max-w-md"
+          style={{
+            paddingTop: 'var(--dimension-space-around-medium)',
+            paddingBottom: 'var(--dimension-space-around-medium)',
+            paddingLeft: 'var(--dimension-space-around-large)',
+            paddingRight: 'var(--dimension-space-around-medium)',
+          }}
+        >
+          <h4 className="font-semibold text-[var(--color-fg-information-primary)] mb-1">Pro Tip</h4>
+          <p className="text-sm text-[var(--color-fg-information-secondary)]">
+            Larger left padding (20px) creates clear indentation, while other sides use medium padding (16px).
+          </p>
+        </div>
+        <div className="mt-2 text-xs text-[var(--color-fg-neutral-secondary)]">
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingLeft: around-large (20px)
+          </code>
+          {' • '}
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            other sides: around-medium (16px)
+          </code>
+        </div>
+      </div>
+
+      {/* Compact horizontal, standard vertical */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Inline Button with Asymmetric Padding
+        </h3>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Wider horizontal padding for better clickability
+        </p>
+        <button
+          className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded"
+          style={{
+            paddingTop: 'var(--dimension-space-around-x-small)',
+            paddingBottom: 'var(--dimension-space-around-x-small)',
+            paddingLeft: 'var(--dimension-space-around-medium)',
+            paddingRight: 'var(--dimension-space-around-medium)',
+          }}
+        >
+          Call to Action
+        </button>
+        <div className="mt-2 text-xs text-[var(--color-fg-neutral-secondary)]">
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingTop/Bottom: around-x-small (8px)
+          </code>
+          {' • '}
+          <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">
+            paddingLeft/Right: around-medium (16px)
+          </code>
+        </div>
+      </div>
+
+      {/* Best Practices */}
+      <div
+        className="bg-[var(--color-bg-accent-subtle)] border-l-4 border-[var(--color-bg-accent-high)] rounded"
+        style={{ padding: 'var(--dimension-space-around-medium)' }}
+      >
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-accent-primary)]">
+          Directional Spacing Guidelines
+        </h3>
+        <ul className="space-y-2 text-sm text-[var(--color-fg-accent-secondary)]">
+          <li>• Use directional padding to create visual hierarchy and emphasis</li>
+          <li>• Consistent asymmetric padding across similar components maintains rhythm</li>
+          <li>• Common pattern: Larger vertical padding for breathing room, standard horizontal for content width</li>
+          <li>• Avoid arbitrary values - stick to token combinations for predictable spacing</li>
+          <li>• CSS properties: <code className="bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded font-mono">paddingTop</code>, <code className="bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded font-mono">paddingRight</code>, <code className="bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded font-mono">paddingBottom</code>, <code className="bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded font-mono">paddingLeft</code></li>
+        </ul>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Applying spacing tokens to individual sides for asymmetric layouts.',
       },
     },
   },
