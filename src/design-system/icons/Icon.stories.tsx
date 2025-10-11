@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 import { ALL_ICON_NAMES, SMALL_ICON_NAMES, MEDIUM_ICON_NAMES } from './icon-names';
 
 const meta: Meta<typeof Icon> = {
-  title: 'Design System/Icon',
+  title: 'Design System/Icons/Icon',
   component: Icon,
   parameters: {
     layout: 'centered',

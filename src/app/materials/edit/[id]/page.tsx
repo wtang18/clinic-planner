@@ -270,7 +270,7 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
           >
             {/* Header */}
             <div className="flex flex-col gap-2">
-              <h1 className="text-[32px] font-semibold leading-[40px] text-[#181818]">
+              <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)]">
                 Edit Material
               </h1>
             </div>
@@ -309,7 +309,7 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
 
               {/* Event Association */}
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-[#676767]">
+                <label className="text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)]">
                   Associated Event
                 </label>
                 <div className="relative">
@@ -319,7 +319,7 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
                       setHasUnsavedChanges(true);
                       setFormData({ ...formData, event_id: e.target.value });
                     }}
-                    className="w-full h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-[#181818] appearance-none pr-10"
+                    className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                   >
                     <option value="">Any Time (Not Event Specific)</option>
                     {events.map((event) => (
@@ -392,7 +392,7 @@ function LoadingFallback() {
       }}
     >
       <div className="text-center">
-        <div className="text-lg font-medium text-[#181818]">Loading...</div>
+        <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading...</div>
       </div>
     </div>
   );

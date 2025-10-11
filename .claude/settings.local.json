@@ -18,7 +18,17 @@
       "Bash(npx style-dictionary build:*)",
       "Bash(npx style-dictionary:*)",
       "Bash(cat:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm run tokens:clean:*)",
+      "Bash(npx tsc:*)",
+      "Bash(head -1 echo \"\" echo \"3. Primitive Token: --font-global-sans\" grep \"font-global-sans:\" /Users/william.tang/Projects/clinic-planner/src/design-system/tokens/build/primitives-typography.css echo \"\" echo \"4. Final Value: Inter (loaded via Google Fonts in Storybook)\")",
+      "Bash(lsof:*)",
+      "Bash(npm run text-styles:generate:*)",
+      "Bash(npm run storybook:*)",
+      "Bash(xargs kill:*)",
+      "Bash(pkill:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(xargs basename:*)"
     ],
     "deny": [],
     "ask": []

@@ -23,10 +23,10 @@ const searchInputVariants = cva(
         large: 'h-14 px-4 py-4 gap-2',
       },
       state: {
-        default: 'bg-[rgba(0,0,0,0.12)]',
-        hover: 'bg-[rgba(0,0,0,0.20)]',
-        focused: 'bg-[rgba(0,0,0,0.12)]',
-        disabled: 'bg-[rgba(0,0,0,0.12)] opacity-50 cursor-not-allowed',
+        default: 'bg-[var(--color-bg-transparent-low)]',
+        hover: 'bg-[var(--color-bg-transparent-medium)]',
+        focused: 'bg-[var(--color-bg-transparent-low)]',
+        disabled: 'bg-[var(--color-bg-transparent-low)] opacity-50 cursor-not-allowed',
       },
     },
     defaultVariants: {
@@ -39,23 +39,22 @@ const searchInputVariants = cva(
 const searchInputFieldVariants = cva(
   [
     'flex-1 bg-transparent border-0 outline-none',
-    'font-normal',
-    'placeholder:text-[#424242]',
+    'placeholder:!text-[var(--color-fg-neutral-secondary)]',
   ],
   {
     variants: {
       size: {
         // Body/Sm Regular: 14px / 20px line height
-        small: 'text-[14px] leading-[20px]',
-        medium: 'text-[14px] leading-[20px]',
+        small: 'text-body-sm-regular',
+        medium: 'text-body-sm-regular',
         // Body/Md Regular: 16px / 24px line height
-        large: 'text-[16px] leading-[24px]',
+        large: 'text-body-md-regular',
       },
       state: {
-        default: 'text-[#181818]',
-        hover: 'text-[#181818]',
-        focused: 'text-[#181818]',
-        disabled: 'text-[#424242] cursor-not-allowed',
+        default: '!text-[var(--color-fg-neutral-primary)]',
+        hover: '!text-[var(--color-fg-neutral-primary)]',
+        focused: '!text-[var(--color-fg-neutral-primary)]',
+        disabled: '!text-[var(--color-fg-neutral-secondary)] cursor-not-allowed',
       },
     },
     defaultVariants: {
@@ -192,7 +191,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Search Icon */}
-        <Icon name="magnifying-glass" size={iconSize} className="shrink-0 text-[#424242]" />
+        <Icon name="magnifying-glass" size={iconSize} className="shrink-0 !text-[var(--color-fg-neutral-secondary)]" />
 
         {/* Input Field */}
         <input
@@ -217,7 +216,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             type="button"
             onClick={handleClear}
             onMouseDown={(e) => e.preventDefault()}
-            className="shrink-0 text-[#181818] hover:text-[#424242] transition-colors flex items-center justify-center"
+            className="shrink-0 !text-[var(--color-fg-neutral-primary)] hover:!text-[var(--color-fg-neutral-secondary)] transition-colors flex items-center justify-center"
             aria-label="Clear search"
           >
             <Icon name="x" size={iconSize} />

@@ -15,131 +15,82 @@ module.exports = {
     'src/design-system/tokens/sd-input/primitives-color-ramp.json',
     'src/design-system/tokens/sd-input/primitives-typography.json',
     'src/design-system/tokens/sd-input/primitives-dimensions.json',
+    'src/design-system/tokens/sd-input/primitives-elevation.json',
     'src/design-system/tokens/sd-input/decorative-color-on-light.json',
-    'src/design-system/tokens/sd-input/decorative-color-on-dark.json',
     'src/design-system/tokens/sd-input/semantic-color-on-light.json',
-    'src/design-system/tokens/sd-input/semantic-color-on-dark.json',
     'src/design-system/tokens/sd-input/semantic-dimensions.json',
-    'src/design-system/tokens/sd-input/semantic-typography-small-viewport.json',
-    'src/design-system/tokens/sd-input/semantic-typography-large-viewport.json'
+    'src/design-system/tokens/sd-input/semantic-elevation.json',
+    'src/design-system/tokens/sd-input/semantic-typography-small-viewport.json'
   ],
 
   platforms: {
     // ========================================================================
-    // WEB - CSS Custom Properties
+    // WEB - CSS Custom Properties (Theme-Independent)
     // ========================================================================
-    css: {
+    'css-base': {
       transformGroup: 'css',
       buildPath: 'src/design-system/tokens/build/',
       files: [
-        // Primitives
         {
           destination: 'primitives-color.css',
           format: 'css/variables',
           filter: (token) => token.filePath.includes('primitives-color-ramp'),
-          options: {
-            outputReferences: true,
-          }
+          options: { outputReferences: true }
         },
         {
           destination: 'primitives-typography.css',
           format: 'css/variables',
           filter: (token) => token.filePath.includes('primitives-typography'),
-          options: {
-            outputReferences: true,
-          }
+          options: { outputReferences: true }
         },
         {
           destination: 'primitives-dimensions.css',
           format: 'css/variables',
           filter: (token) => token.filePath.includes('primitives-dimensions'),
-          options: {
-            outputReferences: true,
-          }
+          options: { outputReferences: true }
         },
-
-        // Decorative Light
         {
-          destination: 'decorative-light.css',
+          destination: 'primitives-elevation.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('decorative-color-on-light.json'),
-          options: {
-            outputReferences: true,
-            selector: ':root, [data-theme="light"]'
-          }
+          filter: (token) => token.filePath.includes('primitives-elevation'),
+          options: { outputReferences: true }
         },
-
-        // Decorative Dark
         {
-          destination: 'decorative-dark.css',
+          destination: 'semantic-dimensions.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('decorative-color-on-dark.json'),
-          options: {
-            outputReferences: true,
-            selector: '[data-theme="dark"]'
-          }
+          filter: (token) => token.filePath.includes('semantic-dimensions'),
+          options: { outputReferences: true }
         },
-
-        // Semantic Light
         {
-          destination: 'semantic-light.css',
+          destination: 'semantic-elevation.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic-color-on-light.json') || token.filePath.includes('semantic-dimensions.json'),
-          options: {
-            outputReferences: true,
-            selector: ':root, [data-theme="light"]'
-          }
+          filter: (token) => token.filePath.includes('semantic-elevation'),
+          options: { outputReferences: true }
         },
-
-        // Semantic Dark
         {
-          destination: 'semantic-dark.css',
+          destination: 'semantic-typography-small.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic-color-on-dark.json'),
-          options: {
-            outputReferences: true,
-            selector: '[data-theme="dark"]'
-          }
-        },
-
-        // Responsive Typography Small
-        {
-          destination: 'typography-small.css',
-          format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic-typography-small-viewport.json'),
-          options: {
-            outputReferences: true,
-            selector: '@media (max-width: 768px)'
-          }
-        },
-
-        // Responsive Typography Large
-        {
-          destination: 'typography-large.css',
-          format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic-typography-large-viewport.json'),
-          options: {
-            outputReferences: true,
-            selector: '@media (min-width: 769px)'
-          }
-        },
-
-        //  Index file - manually create after build
+          filter: (token) => token.filePath.includes('semantic-typography-small-viewport'),
+          options: { outputReferences: true }
+        }
       ]
     },
 
     // ========================================================================
     // REACT NATIVE - JavaScript Objects
+    // (Light theme tokens - RN will use separate theme provider for dark)
     // ========================================================================
-    js: {
+    'rn-light': {
       transformGroup: 'js',
       buildPath: 'src/design-system/tokens/build/',
       files: [
         {
           destination: 'tokens.js',
           format: 'javascript/es6',
+          // Exclude decorative/semantic from other themes to only include base + light
+          filter: (token) => !token.filePath.includes('on-dark'),
           options: {
-            outputReferences: false,  // RN needs actual values, not references
+            outputReferences: false  // RN needs actual values, not references
           }
         }
       ]
@@ -147,14 +98,16 @@ module.exports = {
 
     // ========================================================================
     // TYPESCRIPT - Type Definitions
+    // (Light theme tokens - same as RN)
     // ========================================================================
-    ts: {
+    'ts-light': {
       transformGroup: 'js',
       buildPath: 'src/design-system/tokens/build/',
       files: [
         {
           destination: 'tokens.d.ts',
-          format: 'typescript/es6-declarations'
+          format: 'typescript/es6-declarations',
+          filter: (token) => !token.filePath.includes('on-dark')
         }
       ]
     }

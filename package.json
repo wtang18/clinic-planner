@@ -13,8 +13,11 @@
     "generate-icon-map": "node src/design-system/icons/generate-icon-map.js",
     "generate-bicolor-icon-map": "node src/design-system/icons/generate-bicolor-icon-map.js",
     "tokens:parse": "node scripts/parse-figma-tokens.js",
-    "tokens:build": "npm run tokens:parse && style-dictionary build --config sd.config.js",
-    "tokens:clean": "rm -rf src/design-system/tokens/build src/design-system/tokens/sd-input"
+    "tokens:build": "npm run tokens:parse && style-dictionary build --config sd.config.js && style-dictionary build --config sd.config.light.js && style-dictionary build --config sd.config.dark.js && style-dictionary build --config sd.config.typography-large.js && node scripts/wrap-typography-media-queries.js",
+    "tokens:clean": "rm -rf src/design-system/tokens/build src/design-system/tokens/sd-input",
+    "text-styles:generate": "node scripts/generate-text-styles-core.js && node scripts/generate-text-styles-expressive.js",
+    "text-styles:generate:all": "npm run text-styles:generate",
+    "elevation:generate": "node scripts/generate-elevation-utilities.js"
   },
   "keywords": [],
   "author": "",

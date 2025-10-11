@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Toast } from './Toast';
 
 const meta = {
-  title: 'Design System/Toast',
+  title: 'Design System/Components/Toast',
   component: Toast,
   parameters: {
     layout: 'centered',

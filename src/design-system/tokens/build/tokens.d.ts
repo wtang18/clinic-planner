@@ -316,6 +316,133 @@ export const DimensionRadiusSmall: string;
 export const DimensionRadiusMedium: string;
 export const DimensionRadiusLarge: string;
 export const DimensionRadiusXLarge: string;
+/** No horizontal offset */
+export const ElevationShadowX0: string;
+/** Minimal horizontal offset */
+export const ElevationShadowX1: string;
+/** No vertical offset */
+export const ElevationShadowY0: string;
+/** 1 - Very subtle lift */
+export const ElevationShadowY1: string;
+/** 2 - Subtle lift */
+export const ElevationShadowY2: string;
+/** 3 - Small lift */
+export const ElevationShadowY3: string;
+/** 4 - Medium lift */
+export const ElevationShadowY4: string;
+/** 6 - Noticeable lift */
+export const ElevationShadowY6: string;
+/** 8 - Elevated */
+export const ElevationShadowY8: string;
+/** 12 - High elevation */
+export const ElevationShadowY12: string;
+/** 16 - Very high elevation */
+export const ElevationShadowY16: string;
+/** 20 - Maximum elevation */
+export const ElevationShadowY20: string;
+/** No blur (sharp shadow) */
+export const ElevationShadowBlur0: string;
+/** Minimal blur */
+export const ElevationShadowBlur2: string;
+/** Subtle blur */
+export const ElevationShadowBlur4: string;
+/** Small blur */
+export const ElevationShadowBlur6: string;
+/** Medium blur */
+export const ElevationShadowBlur8: string;
+/** Noticeable blur */
+export const ElevationShadowBlur12: string;
+/** Large blur */
+export const ElevationShadowBlur16: string;
+/** Very large blur */
+export const ElevationShadowBlur20: string;
+/** Extra large blur */
+export const ElevationShadowBlur24: string;
+/** Dramatic blur */
+export const ElevationShadowBlur32: string;
+/** Maximum blur */
+export const ElevationShadowBlur40: string;
+/** No spread */
+export const ElevationShadowSpread0: string;
+/** Slight outward spread */
+export const ElevationShadowSpread2: string;
+/** Outward spread */
+export const ElevationShadowSpread4: string;
+/** Inward spread */
+export const ElevationShadowSpreadNegative4: string;
+/** Slight inward spread */
+export const ElevationShadowSpreadNegative2: string;
+/** Very subtle shadow (5% opacity) */
+export const ElevationShadowColorSubtle: string;
+/** Soft shadow (6% opacity) */
+export const ElevationShadowColorSoft: string;
+/** Default shadow (12% opacity) */
+export const ElevationShadowColorDefault: string;
+/** Medium shadow (24% opacity) */
+export const ElevationShadowColorMedium: string;
+/** Strong shadow (36% opacity) */
+export const ElevationShadowColorStrong: string;
+export const ElevationXsLayer1X: string;
+export const ElevationXsLayer1Y: string;
+export const ElevationXsLayer1Blur: string;
+export const ElevationXsLayer1Spread: string;
+export const ElevationXsLayer1Color: string;
+export const ElevationSmLayer1X: string;
+export const ElevationSmLayer1Y: string;
+export const ElevationSmLayer1Blur: string;
+export const ElevationSmLayer1Spread: string;
+export const ElevationSmLayer1Color: string;
+export const ElevationSmLayer2X: string;
+export const ElevationSmLayer2Y: string;
+export const ElevationSmLayer2Blur: string;
+export const ElevationSmLayer2Spread: string;
+export const ElevationSmLayer2Color: string;
+export const ElevationMdLayer1X: string;
+export const ElevationMdLayer1Y: string;
+export const ElevationMdLayer1Blur: string;
+export const ElevationMdLayer1Spread: string;
+export const ElevationMdLayer1Color: string;
+export const ElevationMdLayer2X: string;
+export const ElevationMdLayer2Y: string;
+export const ElevationMdLayer2Blur: string;
+export const ElevationMdLayer2Spread: string;
+export const ElevationMdLayer2Color: string;
+export const ElevationLgLayer1X: string;
+export const ElevationLgLayer1Y: string;
+export const ElevationLgLayer1Blur: string;
+export const ElevationLgLayer1Spread: string;
+export const ElevationLgLayer1Color: string;
+export const ElevationLgLayer2X: string;
+export const ElevationLgLayer2Y: string;
+export const ElevationLgLayer2Blur: string;
+export const ElevationLgLayer2Spread: string;
+export const ElevationLgLayer2Color: string;
+export const ElevationXlLayer1X: string;
+export const ElevationXlLayer1Y: string;
+export const ElevationXlLayer1Blur: string;
+export const ElevationXlLayer1Spread: string;
+export const ElevationXlLayer1Color: string;
+export const ElevationXlLayer2X: string;
+export const ElevationXlLayer2Y: string;
+export const ElevationXlLayer2Blur: string;
+export const ElevationXlLayer2Spread: string;
+export const ElevationXlLayer2Color: string;
+export const Elevation2xlLayer1X: string;
+export const Elevation2xlLayer1Y: string;
+export const Elevation2xlLayer1Blur: string;
+export const Elevation2xlLayer1Spread: string;
+export const Elevation2xlLayer1Color: string;
+export const Elevation2xlLayer2X: string;
+export const Elevation2xlLayer2Y: string;
+export const Elevation2xlLayer2Blur: string;
+export const Elevation2xlLayer2Spread: string;
+export const Elevation2xlLayer2Color: string;
+export const ElevationInnerLayer1X: string;
+export const ElevationInnerLayer1Y: string;
+export const ElevationInnerLayer1Blur: string;
+export const ElevationInnerLayer1Spread: string;
+export const ElevationInnerLayer1Color: string;
+export const ElevationInnerLayer1Inset: string;
 export const GrayMin: string;
 export const GrayLowest: string;
 export const GrayLower: string;

@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { TogglePill } from './TogglePill';
 
 const meta: Meta<typeof TogglePill> = {
-  title: 'Design System/TogglePill',
+  title: 'Design System/Components/TogglePill',
   component: TogglePill,
   argTypes: {
     // Core variant props

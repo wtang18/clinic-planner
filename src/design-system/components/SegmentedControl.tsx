@@ -15,7 +15,7 @@ const segmentVariants = cva(
     variants: {
       selected: {
         true: [
-          "bg-white",
+          "bg-[var(--color-bg-neutral-base)]",
           // No shadow here - will be added separately to avoid conflicts
         ],
         false: [
@@ -37,12 +37,12 @@ const segmentVariants = cva(
         selected: false,
         disabled: false,
         hover: true,
-        className: "bg-[rgba(255,255,255,0.68)]",
+        className: "bg-[var(--color-bg-transparent-inverse-low)]",
       },
       // Selected state always has shadow
       {
         selected: true,
-        className: "shadow-[0px_1px_4px_0px_rgba(0,0,0,0.16)]",
+        className: "elevation-sm",
       },
     ],
     defaultVariants: {
@@ -55,22 +55,22 @@ const segmentVariants = cva(
 
 const segmentLabelVariants = cva(
   [
-    // Body/Sm Medium/Bold: 14px / 20px line height
-    "text-[14px] leading-[20px] text-center whitespace-nowrap",
+    "text-center whitespace-nowrap",
     "transition-all duration-200",
+    "text-body-sm-medium", // 14px / 20px line height
   ],
   {
     variants: {
       selected: {
-        true: "font-semibold text-[#181818]", // Body/Sm Bold, fg/neutral/primary
-        false: "font-medium text-[#424242]", // Body/Sm Medium, fg/neutral/secondary
+        true: "font-semibold !text-[var(--color-fg-neutral-primary)]", // Body/Sm Bold
+        false: "font-medium !text-[var(--color-fg-neutral-secondary)]", // Body/Sm Medium
       },
       disabled: {
-        true: "text-[#a4a4a4]", // fg/neutral/disabled
+        true: "!text-[var(--color-fg-neutral-disabled)]",
         false: "",
       },
       hover: {
-        true: "text-[#181818]", // Hover state changes text to primary
+        true: "!text-[var(--color-fg-neutral-primary)]", // Hover state changes text to primary
         false: "",
       },
     },
@@ -79,7 +79,7 @@ const segmentLabelVariants = cva(
       {
         disabled: true,
         selected: true,
-        className: "text-[#a4a4a4]",
+        className: "!text-[var(--color-fg-neutral-disabled)]",
       },
     ],
     defaultVariants: {
@@ -239,7 +239,7 @@ export const SegmentedControl = React.forwardRef<
         role="radiogroup"
         aria-label={ariaLabel}
         className={cn(
-          "flex items-start p-1 bg-[rgba(0,0,0,0.06)] rounded-full",
+          "flex items-start p-1 bg-[var(--color-bg-transparent-subtle)] rounded-full",
           className
         )}
       >

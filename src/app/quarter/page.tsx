@@ -341,7 +341,7 @@ function QuarterViewContent() {
         }}
       >
         <div className="text-center">
-          <div className="text-lg font-medium text-[#181818]">Loading events...</div>
+          <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading events...</div>
         </div>
       </div>
     );
@@ -413,17 +413,17 @@ function QuarterViewContent() {
                       'transition-colors duration-200',
                       'cursor-pointer select-none',
                       'w-full',
-                      isActive && 'bg-[rgba(0,0,0,0.12)]',
-                      !isActive && 'hover:bg-[rgba(0,0,0,0.06)]'
+                      isActive && 'bg-[var(--color-bg-transparent-low)]',
+                      !isActive && 'hover:bg-[var(--color-bg-neutral-subtle)]'
                     )}
                   >
                     {/* Icon */}
                     <div className="flex items-center justify-center shrink-0">
-                      <Icon name={item.icon as any} size="medium" className="text-[#181818]" />
+                      <Icon name={item.icon as any} size="medium" className="!text-[var(--color-fg-neutral-primary)]" />
                     </div>
 
                     {/* Label */}
-                    <span className="flex-1 text-left font-medium text-[16px] leading-[24px] text-[#181818]">
+                    <span className="flex-1 text-left text-body-md-medium !text-[var(--color-fg-neutral-primary)]">
                       {item.label}
                     </span>
                   </button>
@@ -459,7 +459,7 @@ function QuarterViewContent() {
               className="hidden md:flex"
             />
             {/* Page Title - Mobile only, next to menu button */}
-            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818] truncate">{quarter.name} {selectedYear}</h1>
+            <h1 className="sm:hidden text-[24px] leading-[32px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)] truncate">{quarter.name} {selectedYear}</h1>
           </div>
 
           {/* Center - Segmented Control (Tablet+) */}
@@ -539,14 +539,14 @@ function QuarterViewContent() {
 
         {/* Quarter Header - Desktop only */}
         <div className="hidden sm:flex gap-2 items-start">
-          <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{quarter.name} {selectedYear}</h1>
+          <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)]">{quarter.name} {selectedYear}</h1>
         </div>
 
         {/* Error State */}
         {error ? (
           <Container className="flex flex-col items-center justify-center p-12">
-            <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
-            <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+            <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Oops! Something went wrong</p>
+            <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6 text-center max-w-md">{error}</p>
             <Button
               type="primary"
               size="medium"
@@ -569,7 +569,7 @@ function QuarterViewContent() {
                 variant="interactive"
                 className={cn(
                   'flex flex-col gap-4 h-full w-full cursor-pointer',
-                  isCurrentMonth && 'shadow-[inset_0_0_0_2px_#765c8b]'
+                  isCurrentMonth && 'border-2 border-solid border-[var(--color-bg-accent-high)]'
                 )}
                 onClick={() => {
                   router.push(`/month?month=${monthNumber}&year=${selectedYear}`);
@@ -578,8 +578,8 @@ function QuarterViewContent() {
                 {/* Month Header */}
                 <div className="flex items-center justify-between w-full">
                   <h2
-                    className={`flex-1 text-base font-semibold leading-6 ${
-                      isCurrentMonth ? 'text-[#4c3c5a]' : 'text-[#181818]'
+                    className={`flex-1 text-body-md-bold ${
+                      isCurrentMonth ? '!text-[var(--color-fg-accent-high)]' : '!text-[var(--color-fg-neutral-primary)]'
                     }`}
                   >
                     {monthName}
@@ -600,7 +600,7 @@ function QuarterViewContent() {
                 {/* Events Occurring This Month */}
                 <div className="flex flex-col gap-2 w-full">
                   {monthEvents.length === 0 ? (
-                    <p className="text-sm font-normal leading-5 text-[#424242]">
+                    <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
                       No Events Planned
                     </p>
                   ) : (
@@ -630,11 +630,11 @@ function QuarterViewContent() {
                         >
                           {/* Header Block */}
                           <div className="flex flex-col w-full">
-                            <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                            <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                               {event.title}
                             </h3>
                             {formatMonthContainerEventDate(event) && (
-                              <p className="text-xs font-normal leading-5 text-[#424242]">
+                              <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)]">
                                 {formatMonthContainerEventDate(event)}
                               </p>
                             )}
@@ -642,7 +642,7 @@ function QuarterViewContent() {
 
                           {/* Description */}
                           {event.description && (
-                            <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                            <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
                               {event.description}
                             </p>
                           )}
@@ -653,10 +653,10 @@ function QuarterViewContent() {
 
                             return (
                               <div key={idx} className="flex flex-col w-full">
-                                <p className="text-xs font-medium leading-5 text-[#424242]">
+                                <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
                                   {angleSelection.angle} Perspective
                                 </p>
-                                <p className="text-sm font-normal leading-5 text-[#181818]">
+                                <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)]">
                                   {angleSelection.notes}
                                 </p>
                               </div>
@@ -728,7 +728,7 @@ function QuarterViewContent() {
                         >
                           {/* Header Block */}
                           <div className="flex flex-col w-full">
-                            <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                            <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                               {event.title}
                             </h3>
                             <p className="text-xs font-normal leading-5 text-[#424242]">
@@ -739,7 +739,7 @@ function QuarterViewContent() {
 
                           {/* Description */}
                           {event.description && (
-                            <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                            <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
                               {event.description}
                             </p>
                           )}
@@ -750,10 +750,10 @@ function QuarterViewContent() {
 
                             return (
                               <div key={idx} className="flex flex-col w-full">
-                                <p className="text-xs font-medium leading-5 text-[#424242]">
+                                <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
                                   {angleSelection.angle} Perspective
                                 </p>
-                                <p className="text-sm font-normal leading-5 text-[#181818]">
+                                <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)]">
                                   {angleSelection.notes}
                                 </p>
                               </div>

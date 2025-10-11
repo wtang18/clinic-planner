@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
   // Base styles
-  "bg-white flex flex-col items-start justify-center transition-shadow",
+  "bg-[var(--color-bg-neutral-base)] flex flex-col items-start justify-center transition-shadow",
   {
     variants: {
       size: {
@@ -39,7 +39,7 @@ const cardVariants = cva(
       {
         variant: "interactive",
         disabled: false,
-        className: "shadow hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+        className: "cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-2",
       },
     ],
     defaultVariants: {
@@ -135,6 +135,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ) => {
     const isInteractive = variant === "interactive";
     const isDisabled = isInteractive && disabled;
+    const [isHovered, setIsHovered] = React.useState(false);
 
     // Handle keyboard interaction for interactive cards
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -167,10 +168,14 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
             variant,
             disabled: isDisabled,
           }),
+          // Add elevation based on interactive state and hover
+          isInteractive && !isDisabled && (isHovered ? 'elevation-md' : 'elevation-sm'),
           className
         )}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        onMouseEnter={() => !isDisabled && setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         tabIndex={isInteractive && !isDisabled ? 0 : undefined}
         role={isInteractive ? "button" : undefined}
         aria-label={ariaLabel}

@@ -5,7 +5,7 @@ import { Button } from './Button';
 import { Pill } from './Pill';
 
 const meta: Meta<typeof Card> = {
-  title: 'Design System/Card',
+  title: 'Design System/Components/Card',
   component: Card,
   argTypes: {
     // Core variant props

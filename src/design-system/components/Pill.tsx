@@ -8,32 +8,36 @@ import { Icon, type IconName, type IconSize } from "@/design-system/icons";
 const pillVariants = cva(
   // Base styles - common to all types
   [
-    "inline-flex items-center gap-1 font-medium whitespace-nowrap",
+    "inline-flex items-center gap-1 whitespace-nowrap",
     "transition-all duration-200",
     "focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-1",
   ],
   {
     variants: {
-      // 12 pill types
+      // 15 pill types (12 primary + 3 deprecated aliases)
       type: {
-        transparent: "bg-[var(--color-bg-neutral-subtle)] text-fg-neutral-primary",
-        outlined: "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-medium)] text-fg-neutral-primary",
-        "subtle-outlined": "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-subtle)] text-fg-neutral-secondary",
-        positive: "bg-bg-positive-low text-fg-positive-primary",
-        attention: "bg-bg-attention-low text-fg-attention-primary",
-        alert: "bg-bg-alert-low text-fg-alert-primary",
-        "high-alert": "bg-bg-alert-high text-[var(--color-fg-neutral-inverse-primary)]",
-        info: "bg-bg-information-low text-fg-information-primary",
-        "important-info": "bg-bg-information-high text-[var(--color-fg-neutral-inverse-primary)]",
-        accent: "bg-bg-accent-low text-fg-accent-primary",
-        "no-fill": "text-fg-neutral-primary",
-        carby: "bg-utility-carby-green text-fg-positive-primary",
+        transparent: "bg-[var(--color-bg-transparent-low)] !text-[var(--color-fg-neutral-primary)]",
+        outlined: "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-medium)] !text-[var(--color-fg-neutral-primary)]",
+        "subtle-outlined": "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-subtle)] !text-[var(--color-fg-neutral-secondary)]",
+        positive: "bg-[var(--color-bg-positive-low)] !text-[var(--color-fg-positive-primary)]",
+        attention: "bg-[var(--color-bg-attention-low)] !text-[var(--color-fg-attention-primary)]",
+        alert: "bg-[var(--color-bg-alert-low)] !text-[var(--color-fg-alert-primary)]",
+        "alert-emphasis": "bg-[var(--color-bg-alert-high)] !text-[var(--color-fg-neutral-inverse-primary)]",
+        info: "bg-[var(--color-bg-information-low)] !text-[var(--color-fg-information-primary)]",
+        "info-emphasis": "bg-[var(--color-bg-information-high)] !text-[var(--color-fg-neutral-inverse-primary)]",
+        accent: "bg-[var(--color-bg-accent-low)] !text-[var(--color-fg-accent-primary)]",
+        "accent-emphasis": "bg-[var(--color-bg-accent-high)] !text-[var(--color-fg-neutral-inverse-primary)]",
+        "no-fill": "!text-[var(--color-fg-neutral-primary)]",
+        carby: "bg-[var(--color-bg-carby-default)] !text-[var(--color-fg-carby-primary)]",
+        // Deprecated aliases (will be removed in future version)
+        "high-alert": "bg-[var(--color-bg-alert-high)] !text-[var(--color-fg-neutral-inverse-primary)]",
+        "important-info": "bg-[var(--color-bg-information-high)] !text-[var(--color-fg-neutral-inverse-primary)]",
       },
       // Size variants
       size: {
-        "x-small": "h-5 px-1.5 py-0 text-xs leading-5 rounded", // 20px height, 6px h-padding, 0 v-padding, 4px radius
-        small: "h-6 px-1.5 py-0.5 text-xs leading-5 rounded-lg", // 24px height, 6px h-padding, 2px v-padding, 8px radius
-        medium: "h-8 px-2 py-1.5 text-sm leading-5 rounded-lg", // 32px height, 8px h-padding, 6px v-padding, 8px radius
+        "x-small": "h-5 px-1.5 py-0 rounded text-label-2xs-medium", // 20px height, 6px h-padding, 0 v-padding, 4px radius
+        small: "h-6 px-1.5 py-0.5 rounded-lg text-label-xs-medium", // 24px height, 6px h-padding, 2px v-padding, 8px radius
+        medium: "h-8 px-2 py-1.5 rounded-lg text-label-sm-medium", // 32px height, 8px h-padding, 6px v-padding, 8px radius
       },
       // Icon-only variant
       iconOnly: {
@@ -54,7 +58,7 @@ const pillVariants = cva(
       state: {
         default: "",
         hover: "",
-        disabled: "cursor-not-allowed pointer-events-none !bg-bg-neutral-low !text-fg-neutral-disabled !shadow-none",
+        disabled: "cursor-not-allowed pointer-events-none !bg-[var(--color-bg-neutral-low)] !text-[var(--color-fg-neutral-disabled)] !shadow-none",
       },
     },
     // Compound variants for hover states
@@ -64,61 +68,80 @@ const pillVariants = cva(
         type: "transparent",
         interactive: true,
         state: "default",
-        className: "hover:bg-[var(--color-bg-neutral-low)]",
+        className: "hover:bg-[var(--color-bg-transparent-low-accented)]",
       },
       {
         type: "outlined",
         interactive: true,
         state: "default",
-        className: "hover:shadow-[inset_0_0_0_1px_var(--color-bg-neutral-high)]",
+        className: "hover:shadow-[inset_0_0_0_1px_var(--color-bg-neutral-inverse-base)]",
       },
       {
         type: "subtle-outlined",
         interactive: true,
         state: "default",
-        className: "hover:shadow-[inset_0_0_0_1px_var(--color-bg-neutral-high)] hover:text-fg-neutral-primary",
+        className: "hover:shadow-[inset_0_0_0_1px_var(--color-bg-neutral-inverse-base)] hover:text-[var(--color-fg-neutral-primary)]",
       },
       {
         type: "positive",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-positive-low-accented",
+        className: "hover:bg-[var(--color-bg-positive-low-accented)]",
       },
       {
         type: "attention",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-attention-low-accented",
+        className: "hover:bg-[var(--color-bg-attention-low-accented)]",
       },
       {
         type: "alert",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-alert-low-accented",
+        className: "hover:bg-[var(--color-bg-alert-low-accented)]",
       },
       {
-        type: "high-alert",
+        type: "alert-emphasis",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-alert-high-accented",
+        className: "hover:bg-[var(--color-bg-alert-high-accented)]",
       },
       {
         type: "info",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-information-low-accented",
+        className: "hover:bg-[var(--color-bg-information-low-accented)]",
       },
       {
-        type: "important-info",
+        type: "info-emphasis",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-information-high-accented",
+        className: "hover:bg-[var(--color-bg-information-high-accented)]",
       },
       {
         type: "accent",
         interactive: true,
         state: "default",
-        className: "hover:bg-bg-accent-low-accented",
+        className: "hover:bg-[var(--color-bg-accent-low-accented)]",
+      },
+      {
+        type: "accent-emphasis",
+        interactive: true,
+        state: "default",
+        className: "hover:bg-[var(--color-bg-accent-high-accented)]",
+      },
+      // Deprecated hover states (for backward compatibility)
+      {
+        type: "high-alert",
+        interactive: true,
+        state: "default",
+        className: "hover:bg-[var(--color-bg-alert-high-accented)]",
+      },
+      {
+        type: "important-info",
+        interactive: true,
+        state: "default",
+        className: "hover:bg-[var(--color-bg-information-high-accented)]",
       },
       {
         type: "no-fill",
@@ -156,12 +179,15 @@ export interface PillProps
    * - "positive": Green for success states
    * - "attention": Yellow for warnings
    * - "alert": Red for errors/alerts
-   * - "high-alert": Darker red for critical alerts
+   * - "alert-emphasis": High-contrast red for critical alerts
    * - "info": Blue for information
-   * - "important-info": Darker blue for important information
+   * - "info-emphasis": High-contrast blue for important information
    * - "accent": Purple for accent/special states
+   * - "accent-emphasis": High-contrast purple for emphasized accents
    * - "no-fill": No background or border (text only)
    * - "carby": Brand green color
+   * @deprecated "high-alert" - Use "alert-emphasis" instead
+   * @deprecated "important-info" - Use "info-emphasis" instead
    */
   type?:
     | "transparent"
@@ -170,12 +196,15 @@ export interface PillProps
     | "positive"
     | "attention"
     | "alert"
-    | "high-alert"
+    | "alert-emphasis"
     | "info"
-    | "important-info"
+    | "info-emphasis"
     | "accent"
+    | "accent-emphasis"
     | "no-fill"
-    | "carby";
+    | "carby"
+    | "high-alert" // @deprecated - Use "alert-emphasis"
+    | "important-info"; // @deprecated - Use "info-emphasis"
 
   /**
    * Size variant
@@ -381,6 +410,14 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
     // For icon-only pills, we need an accessible label
     const accessibleLabel = ariaLabel || (iconOnly ? label : undefined);
 
+    // Deprecation warnings
+    if (type === "high-alert") {
+      console.warn("Pill: 'high-alert' type is deprecated. Use 'alert-emphasis' instead.");
+    }
+    if (type === "important-info") {
+      console.warn("Pill: 'important-info' type is deprecated. Use 'info-emphasis' instead.");
+    }
+
     // Validation: Icon-only requires an accessible label
     if (iconOnly && !accessibleLabel) {
       console.warn("Pill: iconOnly pills require an 'aria-label' or 'label' prop for accessibility");
@@ -459,23 +496,28 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
         case "outlined":
         case "subtle-outlined":
         case "no-fill":
-          return "text-fg-neutral-secondary";
+          return "text-[var(--color-fg-neutral-secondary)]";
         case "positive":
         case "carby":
-          return "text-fg-positive-secondary";
+          return "text-[var(--color-fg-positive-secondary)]";
         case "alert":
-          return "text-fg-alert-secondary";
-        case "high-alert":
-        case "important-info":
+          return "text-[var(--color-fg-alert-secondary)]";
+        case "alert-emphasis":
+        case "high-alert": // deprecated
           return "text-[var(--color-fg-neutral-inverse-primary)]";
         case "attention":
-          return "text-fg-attention-secondary";
+          return "text-[var(--color-fg-attention-secondary)]";
         case "info":
-          return "text-fg-information-secondary";
+          return "text-[var(--color-fg-information-secondary)]";
+        case "info-emphasis":
+        case "important-info": // deprecated
+          return "text-[var(--color-fg-neutral-inverse-primary)]";
         case "accent":
-          return "text-fg-accent-secondary";
+          return "text-[var(--color-fg-accent-secondary)]";
+        case "accent-emphasis":
+          return "text-[var(--color-fg-neutral-inverse-primary)]";
         default:
-          return "text-fg-neutral-secondary";
+          return "text-[var(--color-fg-neutral-secondary)]";
       }
     };
 

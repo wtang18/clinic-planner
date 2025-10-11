@@ -12,9 +12,9 @@ export default function Home() {
   }, [router]);
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <main className="min-h-screen bg-[var(--color-bg-neutral-subtle)] flex items-center justify-center">
       <div className="text-center">
-        <div className="text-lg text-gray-600">Loading...</div>
+        <div className="text-body-lg-regular !text-[var(--color-fg-neutral-secondary)]">Loading...</div>
       </div>
     </main>
   );

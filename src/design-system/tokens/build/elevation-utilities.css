@@ -1,0 +1,60 @@
+/**
+ * Elevation Utility Classes
+ *
+ * Auto-generated from semantic elevation tokens.
+ * DO NOT EDIT DIRECTLY - regenerate with: npm run elevation:generate
+ *
+ * Usage:
+ *   <div className="elevation-md">Card with medium elevation</div>
+ *   <button className="elevation-sm hover:elevation-md">Interactive card</button>
+ *
+ * Elevation Scale:
+ * - elevation-xs: Extra small - Barely visible, subtle depth
+ * - elevation-sm: Small - Subtle card shadow, hover states
+ * - elevation-md: Medium - Default card shadow (recommended for most cards)
+ * - elevation-lg: Large - Elevated cards, sticky headers, dropdowns
+ * - elevation-xl: Extra large - Popovers, floating menus
+ * - elevation-2xl: 2XL - Modals, dialogs, maximum elevation
+ * - elevation-inner: Inner shadow - Pressed states, inset elements
+ * - elevation-none: Remove shadow
+ */
+
+/* Extra small elevation - Barely visible, subtle depth */
+.elevation-xs {
+  box-shadow: var(--elevation-xs-layer-1-x) var(--elevation-xs-layer-1-y) var(--elevation-xs-layer-1-blur) var(--elevation-xs-layer-1-spread) var(--elevation-xs-layer-1-color);
+}
+
+/* Small elevation - Subtle card shadow, hover states */
+.elevation-sm {
+  box-shadow: var(--elevation-sm-layer-1-x) var(--elevation-sm-layer-1-y) var(--elevation-sm-layer-1-blur) var(--elevation-sm-layer-1-spread) var(--elevation-sm-layer-1-color), var(--elevation-sm-layer-2-x) var(--elevation-sm-layer-2-y) var(--elevation-sm-layer-2-blur) var(--elevation-sm-layer-2-spread) var(--elevation-sm-layer-2-color);
+}
+
+/* Medium elevation - Default card shadow, standard containers */
+.elevation-md {
+  box-shadow: var(--elevation-md-layer-1-x) var(--elevation-md-layer-1-y) var(--elevation-md-layer-1-blur) var(--elevation-md-layer-1-spread) var(--elevation-md-layer-1-color), var(--elevation-md-layer-2-x) var(--elevation-md-layer-2-y) var(--elevation-md-layer-2-blur) var(--elevation-md-layer-2-spread) var(--elevation-md-layer-2-color);
+}
+
+/* Large elevation - Elevated cards, sticky headers, dropdowns */
+.elevation-lg {
+  box-shadow: var(--elevation-lg-layer-1-x) var(--elevation-lg-layer-1-y) var(--elevation-lg-layer-1-blur) var(--elevation-lg-layer-1-spread) var(--elevation-lg-layer-1-color), var(--elevation-lg-layer-2-x) var(--elevation-lg-layer-2-y) var(--elevation-lg-layer-2-blur) var(--elevation-lg-layer-2-spread) var(--elevation-lg-layer-2-color);
+}
+
+/* Extra large elevation - Popovers, floating menus */
+.elevation-xl {
+  box-shadow: var(--elevation-xl-layer-1-x) var(--elevation-xl-layer-1-y) var(--elevation-xl-layer-1-blur) var(--elevation-xl-layer-1-spread) var(--elevation-xl-layer-1-color), var(--elevation-xl-layer-2-x) var(--elevation-xl-layer-2-y) var(--elevation-xl-layer-2-blur) var(--elevation-xl-layer-2-spread) var(--elevation-xl-layer-2-color);
+}
+
+/* 2XL elevation - Modals, dialogs, maximum elevation */
+.elevation-2xl {
+  box-shadow: var(--elevation-2xl-layer-1-x) var(--elevation-2xl-layer-1-y) var(--elevation-2xl-layer-1-blur) var(--elevation-2xl-layer-1-spread) var(--elevation-2xl-layer-1-color), var(--elevation-2xl-layer-2-x) var(--elevation-2xl-layer-2-y) var(--elevation-2xl-layer-2-blur) var(--elevation-2xl-layer-2-spread) var(--elevation-2xl-layer-2-color);
+}
+
+/* Inner shadow - Pressed states, inset elements */
+.elevation-inner {
+  box-shadow: inset var(--elevation-inner-layer-1-x) var(--elevation-inner-layer-1-y) var(--elevation-inner-layer-1-blur) var(--elevation-inner-layer-1-spread) var(--elevation-inner-layer-1-color);
+}
+
+/* Remove all shadows */
+.elevation-none {
+  box-shadow: none;
+}

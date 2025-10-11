@@ -1,0 +1,67 @@
+/**
+ * Do not edit directly, this file was auto-generated.
+ */
+
+:root {
+  --elevation-inner-layer-1-inset: inset;
+  --elevation-xs-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-xs-layer-1-spread: var(--elevation-shadow-spread-0);
+  --elevation-sm-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-sm-layer-1-spread: var(--elevation-shadow-spread-0);
+  --elevation-sm-layer-2-x: var(--elevation-shadow-x-0);
+  --elevation-sm-layer-2-spread: var(--elevation-shadow-spread-0);
+  --elevation-md-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-md-layer-2-x: var(--elevation-shadow-x-0);
+  --elevation-md-layer-2-spread: var(--elevation-shadow-spread-0);
+  --elevation-lg-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-lg-layer-2-x: var(--elevation-shadow-x-0);
+  --elevation-lg-layer-2-spread: var(--elevation-shadow-spread-0);
+  --elevation-xl-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-xl-layer-2-x: var(--elevation-shadow-x-0);
+  --elevation-xl-layer-2-spread: var(--elevation-shadow-spread-0);
+  --elevation-2xl-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-2xl-layer-2-x: var(--elevation-shadow-x-0);
+  --elevation-2xl-layer-2-spread: var(--elevation-shadow-spread-0);
+  --elevation-inner-layer-1-x: var(--elevation-shadow-x-0);
+  --elevation-inner-layer-1-spread: var(--elevation-shadow-spread-0);
+  --elevation-xs-layer-1-y: var(--elevation-shadow-y-1);
+  --elevation-xs-layer-1-blur: var(--elevation-shadow-blur-2);
+  --elevation-sm-layer-1-y: var(--elevation-shadow-y-1);
+  --elevation-sm-layer-1-blur: var(--elevation-shadow-blur-4);
+  --elevation-sm-layer-2-y: var(--elevation-shadow-y-2);
+  --elevation-sm-layer-2-blur: var(--elevation-shadow-blur-2);
+  --elevation-md-layer-1-y: var(--elevation-shadow-y-4);
+  --elevation-md-layer-1-blur: var(--elevation-shadow-blur-8);
+  --elevation-md-layer-1-spread: var(--elevation-shadow-spread-negative-2);
+  --elevation-md-layer-2-y: var(--elevation-shadow-y-2);
+  --elevation-md-layer-2-blur: var(--elevation-shadow-blur-4);
+  --elevation-lg-layer-1-y: var(--elevation-shadow-y-12);
+  --elevation-lg-layer-1-blur: var(--elevation-shadow-blur-16);
+  --elevation-lg-layer-1-spread: var(--elevation-shadow-spread-negative-4);
+  --elevation-lg-layer-2-y: var(--elevation-shadow-y-4);
+  --elevation-lg-layer-2-blur: var(--elevation-shadow-blur-8);
+  --elevation-xl-layer-1-y: var(--elevation-shadow-y-20);
+  --elevation-xl-layer-1-blur: var(--elevation-shadow-blur-24);
+  --elevation-xl-layer-1-spread: var(--elevation-shadow-spread-negative-4);
+  --elevation-xl-layer-2-y: var(--elevation-shadow-y-8);
+  --elevation-xl-layer-2-blur: var(--elevation-shadow-blur-12);
+  --elevation-2xl-layer-1-y: var(--elevation-shadow-y-20);
+  --elevation-2xl-layer-1-blur: var(--elevation-shadow-blur-40);
+  --elevation-2xl-layer-1-spread: var(--elevation-shadow-spread-negative-4);
+  --elevation-2xl-layer-2-y: var(--elevation-shadow-y-12);
+  --elevation-2xl-layer-2-blur: var(--elevation-shadow-blur-24);
+  --elevation-inner-layer-1-y: var(--elevation-shadow-y-2);
+  --elevation-inner-layer-1-blur: var(--elevation-shadow-blur-4);
+  --elevation-xs-layer-1-color: var(--elevation-shadow-color-subtle);
+  --elevation-sm-layer-1-color: var(--elevation-shadow-color-soft);
+  --elevation-sm-layer-2-color: var(--elevation-shadow-color-soft);
+  --elevation-md-layer-1-color: var(--elevation-shadow-color-default);
+  --elevation-md-layer-2-color: var(--elevation-shadow-color-soft);
+  --elevation-lg-layer-1-color: var(--elevation-shadow-color-default);
+  --elevation-lg-layer-2-color: var(--elevation-shadow-color-default);
+  --elevation-xl-layer-1-color: var(--elevation-shadow-color-medium);
+  --elevation-xl-layer-2-color: var(--elevation-shadow-color-default);
+  --elevation-2xl-layer-1-color: var(--elevation-shadow-color-medium);
+  --elevation-2xl-layer-2-color: var(--elevation-shadow-color-default);
+  --elevation-inner-layer-1-color: var(--elevation-shadow-color-default);
+}

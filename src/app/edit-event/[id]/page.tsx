@@ -412,7 +412,7 @@ function EditEventForm({ params }: EditEventPageProps) {
           <div className="flex flex-col gap-6 w-full max-w-[600px] pb-32">
             {/* Page Title */}
             <div>
-              <h1 className="text-[32px] font-semibold leading-10 text-fg-neutral-primary">
+              <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] text-fg-neutral-primary">
                 Edit Event
               </h1>
             </div>
@@ -463,7 +463,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                   {/* Start Date Row */}
                   <div className="flex gap-3 items-end">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-[#676767] mb-1">
+                      <label className="block text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)] mb-1">
                         {formData.is_multi_month ? 'Start Month' : formData.is_recurring ? 'Month' : 'Start Date'}
                       </label>
                       <div className="relative">
@@ -471,7 +471,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                           name="start_month"
                           value={formData.start_month}
                           onChange={handleInputChange}
-                          className="w-full h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-fg-neutral-primary appearance-none pr-10"
+                          className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                         >
                           {monthNames.map((month, index) => (
                             <option key={month} value={index + 1}>
@@ -499,7 +499,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                             name="start_year"
                             value={formData.start_year}
                             onChange={handleInputChange}
-                            className="w-full h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-fg-neutral-primary appearance-none pr-10"
+                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                           >
                             {years.map((year) => (
                               <option key={year} value={year}>
@@ -527,7 +527,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                   {formData.is_multi_month && (
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
-                        <label className="block text-sm font-medium text-[#676767] mb-1">
+                        <label className="block text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)] mb-1">
                           End Month
                         </label>
                         <div className="relative">
@@ -535,7 +535,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                             name="end_month"
                             value={formData.end_month}
                             onChange={handleInputChange}
-                            className="w-full h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-fg-neutral-primary appearance-none pr-10"
+                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                           >
                             {monthNames.map((month, index) => (
                               <option key={month} value={index + 1}>
@@ -563,7 +563,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                               name="end_year"
                               value={formData.end_year}
                               onChange={handleInputChange}
-                              className="w-full h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-fg-neutral-primary appearance-none pr-10"
+                              className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                             >
                               {years.map((year) => (
                                 <option key={year} value={year}>
@@ -650,7 +650,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                   {/* Conditional Input Fields */}
                   {prepType === 'date' && (
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-[#676767]">
+                      <label className="text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)]">
                         Preparation Start Date
                       </label>
                       <input
@@ -658,13 +658,13 @@ function EditEventForm({ params }: EditEventPageProps) {
                         name="prep_start_date"
                         value={formData.prep_start_date}
                         onChange={handleInputChange}
-                        className="h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-fg-neutral-primary focus:bg-[#c9e6f0] outline-none transition-colors"
+                        className="h-10 px-3 py-2.5 bg-[var(--color-bg-neutral-subtle)] rounded-lg text-sm text-fg-neutral-primary focus:bg-[#c9e6f0] outline-none transition-colors"
                       />
                     </div>
                   )}
                   {prepType === 'months' && (
                     <div className="flex flex-col gap-1">
-                      <label className="text-sm font-medium text-[#676767]">
+                      <label className="text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)]">
                         Months Before Event
                       </label>
                       <input
@@ -674,7 +674,7 @@ function EditEventForm({ params }: EditEventPageProps) {
                         onChange={handleInputChange}
                         min="1"
                         max="12"
-                        className="h-10 px-3 py-2.5 bg-[rgba(0,0,0,0.06)] rounded-lg text-sm text-fg-neutral-primary focus:bg-[#c9e6f0] outline-none transition-colors"
+                        className="h-10 px-3 py-2.5 bg-[var(--color-bg-neutral-subtle)] rounded-lg text-sm text-fg-neutral-primary focus:bg-[#c9e6f0] outline-none transition-colors"
                       />
                     </div>
                   )}
@@ -717,7 +717,7 @@ function LoadingFallback() {
       }}
     >
       <div className="text-center">
-        <div className="text-lg font-medium text-[#181818]">Loading event...</div>
+        <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading event...</div>
       </div>
     </div>
   );

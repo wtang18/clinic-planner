@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
-  title: 'Design System/Design Tokens/Colors',
+  title: 'Design System/Foundations/Legacy Tokens/Colors',
   parameters: {
     layout: 'padded',
     docs: {

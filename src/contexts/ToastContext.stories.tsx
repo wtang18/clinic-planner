@@ -4,7 +4,7 @@ import { ToastProvider, useToast } from './ToastContext';
 import { Button } from '@/design-system/components/Button';
 
 const meta = {
-  title: 'Design System/Toast Provider',
+  title: 'Design System/Components/Toast Provider',
   component: ToastProvider,
   parameters: {
     layout: 'fullscreen',

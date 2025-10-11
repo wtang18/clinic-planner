@@ -46,27 +46,90 @@ export interface BicolorIconProps {
 }
 
 /**
- * Default color schemes for semantic bicolor icons
+ * Get CSS variable value at runtime
  */
-const defaultColors: Record<BicolorIconName, { signifier: string; container: string }> = {
-  'positive': { signifier: '#181818', container: '#A9E2B3' },
-  'positive-bold': { signifier: '#FFFFFF', container: '#247450' },
-  'alert': { signifier: '#712C28', container: '#F5CBC5' },
-  'alert-bold': { signifier: '#FFFFFF', container: '#B33F3B' },
-  'attention': { signifier: '#181818', container: '#EED366' },
-  'info': { signifier: '#181818', container: '#B9DFEA' },
-  'info-bold': { signifier: '#FFFFFF', container: '#376C89' },
-  'question': { signifier: '#181818', container: '#E0E0E0' },
-  'plus': { signifier: '#181818', container: '#E0E0E0' },
-  'minus': { signifier: '#181818', container: '#E0E0E0' },
-  'arrow-up': { signifier: '#181818', container: '#E0E0E0' },
-  'arrow-down': { signifier: '#181818', container: '#E0E0E0' },
-  'arrow-left': { signifier: '#181818', container: '#E0E0E0' },
-  'arrow-right': { signifier: '#181818', container: '#E0E0E0' },
-  'chevron-up': { signifier: '#181818', container: '#E0E0E0' },
-  'chevron-down': { signifier: '#181818', container: '#E0E0E0' },
-  'chevron-left': { signifier: '#181818', container: '#E0E0E0' },
-  'chevron-right': { signifier: '#181818', container: '#E0E0E0' },
+function getCssVar(varName: string): string {
+  if (typeof window === 'undefined') return varName; // SSR fallback
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+/**
+ * Default color schemes for semantic bicolor icons
+ * Uses semantic tokens that resolve at runtime to support theming
+ */
+const defaultColors: Record<BicolorIconName, { signifier: () => string; container: () => string }> = {
+  'positive': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-positive-low') || '#A9E2B3'
+  },
+  'positive-bold': {
+    signifier: () => getCssVar('--color-fg-neutral-inverse-primary') || '#FFFFFF',
+    container: () => getCssVar('--color-bg-positive-high') || '#247450'
+  },
+  'alert': {
+    signifier: () => getCssVar('--color-fg-alert-high') || '#712C28',
+    container: () => getCssVar('--color-bg-alert-low') || '#F5CBC5'
+  },
+  'alert-bold': {
+    signifier: () => getCssVar('--color-fg-neutral-inverse-primary') || '#FFFFFF',
+    container: () => getCssVar('--color-bg-alert-high') || '#B33F3B'
+  },
+  'attention': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-attention-medium') || '#EED366'
+  },
+  'info': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-input-low') || '#B9DFEA'
+  },
+  'info-bold': {
+    signifier: () => getCssVar('--color-fg-neutral-inverse-primary') || '#FFFFFF',
+    container: () => getCssVar('--color-bg-input-high') || '#376C89'
+  },
+  'question': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'plus': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'minus': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'arrow-up': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'arrow-down': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'arrow-left': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'arrow-right': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'chevron-up': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'chevron-down': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'chevron-left': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
+  'chevron-right': {
+    signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+  },
 };
 
 /**
@@ -262,10 +325,13 @@ export const BicolorIcon = React.forwardRef<HTMLSpanElement, BicolorIconProps>(
     // Compute size classes
     const sizeClasses = size === 'small' ? 'w-5 h-5' : 'w-6 h-6';
 
-    // Get default colors for this icon
-    const colors = defaultColors[name] || { signifier: '#181818', container: '#A9E2B3' };
-    const finalSignifierColor = signifierColor || colors.signifier;
-    const finalContainerColor = containerColor || colors.container;
+    // Get default colors for this icon (call functions to resolve CSS variables)
+    const colors = defaultColors[name] || {
+      signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
+      container: () => getCssVar('--color-bg-positive-low') || '#A9E2B3'
+    };
+    const finalSignifierColor = signifierColor || colors.signifier();
+    const finalContainerColor = containerColor || colors.container();
 
     // Get SVG string
     let rawSvgContent = getBicolorIconSvg(name, size);

@@ -3,13 +3,14 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Pill } from './Pill';
 
 const meta: Meta<typeof Pill> = {
-  title: 'Design System/Pill',
+  title: 'Design System/Components/Pill',
   component: Pill,
+  tags: ['autodocs'],
   argTypes: {
     // Core variant props
     type: {
       control: 'select',
-      options: ['transparent', 'outlined', 'subtle-outlined', 'positive', 'attention', 'alert', 'high-alert', 'info', 'important-info', 'accent', 'no-fill', 'carby'],
+      options: ['transparent', 'outlined', 'subtle-outlined', 'positive', 'attention', 'alert', 'alert-emphasis', 'info', 'info-emphasis', 'accent', 'accent-emphasis', 'no-fill', 'carby'],
       description: 'The visual style variant of the pill',
     },
     size: {
@@ -115,30 +116,162 @@ const meta: Meta<typeof Pill> = {
     docs: {
       description: {
         component: `
-Pill/Badge component with Figma design system integration.
+# Pill Component
 
-## Icon Props
-The \`iconL\` and \`iconR\` props accept icon names from the icon library (386+ options). Examples:
-- \`iconL="star"\` - Star icon on left
-- \`iconR="chevron-down"\` - Chevron down icon on right
-- \`iconL="checkmark" iconR="arrow-right"\` - Custom icon combination
+Production-ready pill/badge component with semantic token integration and comprehensive variant support.
 
-Icons render automatically when iconL/iconR props are provided.
+## Quick Reference
+**Types**: 12 variants (transparent, outlined, subtle-outlined, positive, attention, alert, alert-emphasis, info, info-emphasis, accent, accent-emphasis, no-fill, carby)
+**Sizes**: 3 sizes (x-small, small, medium)
+**Tokens**: Uses semantic color tokens for theme support
+**Icons**: 386+ icons supported via iconL/iconR props (small/medium sizes only)
 
-## Subtext Props
+## Features
+- Semantic design tokens for theme-aware styling
+- 12 distinct visual types for different use cases
+- Optional left/right icons with automatic sizing
+- Optional left/right subtexts for metadata
+- Text truncation with ellipsis for long content
+- Interactive states (hover/disabled) when clickable
+- Icon-only mode with proper centering
+- Accessibility with aria-label support
+- Figma design system integration
+
+## Pill Types
+| Type | Background Token | Foreground Token | Use Case |
+|------|------------------|------------------|----------|
+| \`transparent\` | \`bg-transparent-low\` | \`fg-neutral-primary\` | Glassmorphism, overlays |
+| \`outlined\` | \`bg-neutral-medium\` (border) | \`fg-neutral-primary\` | Neutral borders |
+| \`subtle-outlined\` | \`bg-neutral-subtle\` (border) | \`fg-neutral-secondary\` | Very subtle borders |
+| \`positive\` | \`bg-positive-low\` | \`fg-positive-primary\` | Success, completed |
+| \`attention\` | \`bg-attention-low\` | \`fg-attention-primary\` | Warnings, pending |
+| \`alert\` | \`bg-alert-low\` | \`fg-alert-primary\` | Errors, critical |
+| \`alert-emphasis\` | \`bg-alert-high\` | \`fg-neutral-inverse-primary\` | Urgent/critical errors |
+| \`info\` | \`bg-information-low\` | \`fg-information-primary\` | Informational |
+| \`info-emphasis\` | \`bg-information-high\` | \`fg-neutral-inverse-primary\` | High-priority info |
+| \`accent\` | \`bg-accent-low\` | \`fg-accent-primary\` | Featured content |
+| \`accent-emphasis\` | \`bg-accent-high\` | \`fg-neutral-inverse-primary\` | Emphasized featured content |
+| \`no-fill\` | transparent | \`fg-neutral-primary\` | Minimal styling |
+| \`carby\` | \`bg-carby-default\` | \`fg-carby-primary\` | Brand-specific |
+
+## Icon System
+The \`iconL\` and \`iconR\` props accept icon names from the icon library (386+ options):
+- **Icon Sizes**: Always 20px (small) for all pill sizes
+- **Icon Support**: Only available for \`small\` and \`medium\` sizes (not \`x-small\`)
+- **Icon-Only Mode**: Set \`iconOnly={true}\` for icon-only pills (requires aria-label)
+- **Examples**:
+  - \`iconL="star"\` - Star icon on left
+  - \`iconR="chevron-down"\` - Chevron down icon on right
+  - \`iconL="checkmark" iconR="arrow-right"\` - Both icons
+
+See IconVariations story for comprehensive examples.
+
+## Subtext System
 The \`subtextL\` and \`subtextR\` props add small text before/after the label:
-- Shown by default when content is provided
-- Use \`showSubtextL={false}\` or \`showSubtextR={false}\` to hide them
-- Hidden automatically when \`iconOnly={true}\`
+- **Default Behavior**: Shown by default when content is provided
+- **Hide Subtexts**: Use \`showSubtextL={false}\` or \`showSubtextR={false}\`
+- **Icon-Only Mode**: Subtexts automatically hidden when \`iconOnly={true}\`
+- **Examples**:
+  - \`subtextL="Q1" label="2024" subtextR="Jan"\` - Quarter/year/month metadata
+  - \`subtextL="3" label="Tasks"\` - Count prefix
+  - \`subtextL="URL" label="https://..."\` - Label prefix
 
-## Truncation
+## Sizes
+| Size | Height | Text Style | Icons | Icon-Only | Use Case |
+|------|--------|------------|-------|-----------|----------|
+| \`x-small\` | 20px | text-xs | ❌ No | ❌ No | Compact spaces, dense lists |
+| \`small\` | 24px | text-xs | ✅ Yes | ✅ Yes | Default, most common |
+| \`medium\` | 32px | text-sm | ✅ Yes | ✅ Yes | Larger touch targets |
+
+## Text Truncation
 The \`truncate\` prop enables text truncation with ellipsis:
 - Set \`truncate={true}\` on the Pill component
 - Apply a max-width constraint via \`className\` (e.g., \`className="max-w-[200px]"\`)
 - Text will automatically truncate with \`...\` when it exceeds the max-width
-- Subtexts are preserved and won't truncate (useful for labels like "URL")
+- **Subtexts Preserved**: Subtexts won't truncate (useful for labels like "URL")
 
-See the TextTruncation story for examples.
+**Example**:
+\`\`\`tsx
+<Pill
+  subtextL="URL"
+  label="https://www.example.com/very-long-path/to/resource/page.html"
+  truncate
+  className="max-w-[200px]"
+/>
+// Result: "URL https://www.examp..."
+\`\`\`
+
+See TextTruncation story for examples.
+
+## Interactive States
+Pills can be interactive (clickable) with hover/disabled states:
+- Set \`interactive={true}\` to enable hover effects
+- Add \`onClick\` handler for click events
+- Use \`disabled={true}\` or \`state="disabled"\` to disable
+- Disabled pills use gray background with reduced opacity
+
+## Token Usage Examples
+
+### Semantic Tokens (Recommended)
+\`\`\`tsx
+// Success state
+<Pill type="positive" label="Completed" />
+// Uses: bg-positive-low, fg-positive-primary
+
+// Warning state
+<Pill type="attention" label="Pending" />
+// Uses: bg-attention-low, fg-attention-primary
+
+// Error state
+<Pill type="alert" label="Failed" />
+// Uses: bg-alert-low, fg-alert-primary
+\`\`\`
+
+### Transparent Backgrounds
+\`\`\`tsx
+// Glassmorphism effect
+<Pill type="transparent" label="Overlay" />
+// Uses: bg-transparent-low (with alpha channel)
+// Hover: bg-transparent-low-accented
+\`\`\`
+
+### Brand Colors
+\`\`\`tsx
+// Brand-specific styling
+<Pill type="carby" label="Premium" />
+// Uses: bg-carby-default, fg-carby-primary
+\`\`\`
+
+## Best Practices
+
+### When to Use Pills
+✅ Status indicators (success, warning, error)
+✅ Category tags and labels
+✅ Metadata badges (counts, dates)
+✅ Filter chips in search interfaces
+✅ Notification badges
+✅ Icon-only action buttons (small UI controls)
+
+### Accessibility
+✅ Always provide \`aria-label\` for icon-only pills
+✅ Use semantic types that match the content meaning
+✅ Ensure sufficient color contrast (all types are WCAG AA compliant)
+✅ Provide clear labels (avoid vague text like "Info")
+
+### Common Patterns
+\`\`\`tsx
+// Status badge with icon
+<Pill type="positive" iconL="checkmark" label="Completed" />
+
+// Count badge
+<Pill subtextL="3" label="Tasks" subtextR="pending" />
+
+// Interactive tag
+<Pill type="outlined" label="React" interactive onClick={handleRemove} />
+
+// URL truncation
+<Pill subtextL="URL" label={longUrl} truncate className="max-w-[200px]" />
+\`\`\`
         `.trim(),
       },
     },
@@ -181,12 +314,37 @@ export const AllTypes: Story = {
           <Pill type="positive" label="Positive" />
           <Pill type="attention" label="Attention" />
           <Pill type="alert" label="Alert" />
-          <Pill type="high-alert" label="High Alert" />
+          <Pill type="alert-emphasis" label="Alert Emphasis" />
           <Pill type="info" label="Info" />
-          <Pill type="important-info" label="Important Info" />
+          <Pill type="info-emphasis" label="Info Emphasis" />
           <Pill type="accent" label="Accent" />
+          <Pill type="accent-emphasis" label="Accent Emphasis" />
           <Pill type="no-fill" label="No Fill" />
           <Pill type="carby" label="Carby" />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Emphasis Variants Comparison</h3>
+        <p className="text-sm text-gray-600 mb-3">
+          Emphasis variants use high-contrast backgrounds with inverse text for important messaging.
+        </p>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-gray-500 w-20">Alert:</span>
+            <Pill type="alert" label="Standard" />
+            <Pill type="alert-emphasis" label="Emphasis" />
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-gray-500 w-20">Info:</span>
+            <Pill type="info" label="Standard" />
+            <Pill type="info-emphasis" label="Emphasis" />
+          </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-xs text-gray-500 w-20">Accent:</span>
+            <Pill type="accent" label="Standard" />
+            <Pill type="accent-emphasis" label="Emphasis" />
+          </div>
         </div>
       </div>
     </div>
@@ -530,6 +688,168 @@ export const AdvancedExamples: Story = {
           <Pill size="medium" iconOnly iconL="heart" type="positive" aria-label="Like this item" interactive />
           <Pill size="small" iconOnly iconL="share" type="info" aria-label="Share content" interactive />
         </div>
+      </div>
+    </div>
+  ),
+};
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6 text-[var(--color-fg-neutral-primary)]">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-8">
+        When working with Claude Code, use these example prompts to modify Pill components.
+        Claude understands the component's prop API and semantic token system.
+      </p>
+
+      <div className="space-y-8">
+        {/* Example 1: Update Pill Type */}
+        <div className="border rounded-lg p-6 bg-[var(--color-bg-neutral-subtle)]">
+          <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">1. Update Pill Type</h3>
+          <div className="mb-3">
+            <code className="text-sm bg-[var(--color-bg-neutral-low)] px-2 py-1 rounded text-[var(--color-fg-accent-primary)]">
+              "Change the status pill from outlined to positive type"
+            </code>
+          </div>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-2">
+            <strong>Expected:</strong> Claude will update <code>type="outlined"</code> to <code>type="positive"</code>
+          </p>
+          <div className="flex gap-3 items-center mt-4">
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">Before:</p>
+              <Pill type="outlined" label="Status" />
+            </div>
+            <span className="text-[var(--color-fg-neutral-secondary)]">→</span>
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">After:</p>
+              <Pill type="positive" label="Status" />
+            </div>
+          </div>
+        </div>
+
+        {/* Example 2: Add Icon to Pill */}
+        <div className="border rounded-lg p-6 bg-[var(--color-bg-neutral-subtle)]">
+          <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">2. Add Icon to Pill</h3>
+          <div className="mb-3">
+            <code className="text-sm bg-[var(--color-bg-neutral-low)] px-2 py-1 rounded text-[var(--color-fg-accent-primary)]">
+              "Add a checkmark icon to the left of the completed pill"
+            </code>
+          </div>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-2">
+            <strong>Expected:</strong> Claude will add <code>iconL="checkmark"</code> to the Pill component
+          </p>
+          <div className="flex gap-3 items-center mt-4">
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">Before:</p>
+              <Pill type="positive" label="Completed" />
+            </div>
+            <span className="text-[var(--color-fg-neutral-secondary)]">→</span>
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">After:</p>
+              <Pill type="positive" iconL="checkmark" label="Completed" />
+            </div>
+          </div>
+        </div>
+
+        {/* Example 3: Migrate to Semantic Tokens */}
+        <div className="border rounded-lg p-6 bg-[var(--color-bg-neutral-subtle)]">
+          <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">3. Migrate to Semantic Tokens</h3>
+          <div className="mb-3">
+            <code className="text-sm bg-[var(--color-bg-neutral-low)] px-2 py-1 rounded text-[var(--color-fg-accent-primary)]">
+              "Update the error pill to use semantic alert tokens instead of hardcoded colors"
+            </code>
+          </div>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-2">
+            <strong>Expected:</strong> Claude will change from custom className to <code>type="alert"</code>
+          </p>
+          <div className="mt-4">
+            <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-2">Code transformation:</p>
+            <pre className="text-xs bg-[var(--color-bg-neutral-low)] p-3 rounded overflow-x-auto">
+{`// Before
+<Pill className="bg-red-100 text-red-700" label="Error" />
+
+// After
+<Pill type="alert" label="Error" />`}
+            </pre>
+          </div>
+        </div>
+
+        {/* Example 4: Make Pill Interactive */}
+        <div className="border rounded-lg p-6 bg-[var(--color-bg-neutral-subtle)]">
+          <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">4. Make Pill Interactive</h3>
+          <div className="mb-3">
+            <code className="text-sm bg-[var(--color-bg-neutral-low)] px-2 py-1 rounded text-[var(--color-fg-accent-primary)]">
+              "Make the tag pill clickable and add a handler to remove it"
+            </code>
+          </div>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-2">
+            <strong>Expected:</strong> Claude will add <code>interactive</code> and <code>onClick</code> props
+          </p>
+          <div className="flex gap-3 items-center mt-4">
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">Before (not clickable):</p>
+              <Pill type="outlined" label="React" />
+            </div>
+            <span className="text-[var(--color-fg-neutral-secondary)]">→</span>
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">After (clickable with hover):</p>
+              <Pill type="outlined" label="React" interactive onClick={() => alert('Removed!')} />
+            </div>
+          </div>
+        </div>
+
+        {/* Example 5: Add Subtext */}
+        <div className="border rounded-lg p-6 bg-[var(--color-bg-neutral-subtle)]">
+          <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">5. Add Count Subtext</h3>
+          <div className="mb-3">
+            <code className="text-sm bg-[var(--color-bg-neutral-low)] px-2 py-1 rounded text-[var(--color-fg-accent-primary)]">
+              "Add a count of 5 to the left of the tasks pill"
+            </code>
+          </div>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-2">
+            <strong>Expected:</strong> Claude will add <code>subtextL="5"</code>
+          </p>
+          <div className="flex gap-3 items-center mt-4">
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">Before:</p>
+              <Pill type="info" label="Tasks" />
+            </div>
+            <span className="text-[var(--color-fg-neutral-secondary)]">→</span>
+            <div>
+              <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-1">After:</p>
+              <Pill type="info" subtextL="5" label="Tasks" />
+            </div>
+          </div>
+        </div>
+
+        {/* Example 6: Choose Right Pill Type */}
+        <div className="border rounded-lg p-6 bg-[var(--color-bg-neutral-subtle)]">
+          <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">6. Choose Right Pill Type</h3>
+          <div className="mb-3">
+            <code className="text-sm bg-[var(--color-bg-neutral-low)] px-2 py-1 rounded text-[var(--color-fg-accent-primary)]">
+              "Show a warning pill for pending approval items"
+            </code>
+          </div>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-2">
+            <strong>Expected:</strong> Claude will choose <code>type="attention"</code> (yellow/warning semantic)
+          </p>
+          <div className="mt-4">
+            <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-2">Claude's reasoning:</p>
+            <ul className="text-xs text-[var(--color-fg-neutral-secondary)] list-disc list-inside space-y-1 mb-3">
+              <li><code>positive</code> - Success/completed (green) ❌</li>
+              <li><code>attention</code> - Warning/pending (yellow) ✅</li>
+              <li><code>alert</code> - Error/critical (red) ❌</li>
+            </ul>
+            <Pill type="attention" label="Pending Approval" />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-8 p-4 bg-[var(--color-bg-information-low)] rounded-lg">
+        <p className="text-sm text-[var(--color-fg-information-primary)]">
+          <strong>💡 Tip:</strong> Claude understands the semantic token system and will choose appropriate pill types
+          based on context (positive for success, attention for warnings, alert for errors, etc.)
+        </p>
       </div>
     </div>
   ),

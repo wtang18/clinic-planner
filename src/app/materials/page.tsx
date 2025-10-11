@@ -50,17 +50,17 @@ function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEv
       <div className="flex flex-col gap-3 w-full">
         {/* Header Row - Title and URL */}
         <div className="flex flex-col gap-0 w-full">
-          <p className="font-medium text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+          <p className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
             {material.label}
           </p>
-          <p className="font-normal text-[12px] leading-[20px] text-[#424242] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
             {material.url}
           </p>
         </div>
 
         {/* Notes */}
         <div className="flex gap-2 items-start w-full h-[20px]">
-          <p className="font-normal text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap flex-1">
+          <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] truncate overflow-ellipsis overflow-hidden whitespace-nowrap flex-1">
             {material.notes || ''}
           </p>
         </div>
@@ -370,17 +370,17 @@ function MarketingMaterialsContent() {
                       'transition-colors duration-200',
                       'cursor-pointer select-none',
                       'w-full',
-                      isActive && 'bg-[rgba(0,0,0,0.12)]',
-                      !isActive && 'hover:bg-[rgba(0,0,0,0.06)]'
+                      isActive && 'bg-[var(--color-bg-transparent-low)]',
+                      !isActive && 'hover:bg-[var(--color-bg-neutral-subtle)]'
                     )}
                   >
                     {/* Icon */}
                     <div className="flex items-center justify-center shrink-0">
-                      <Icon name={item.icon as any} size="medium" className="text-[#181818]" />
+                      <Icon name={item.icon as any} size="medium" className="!text-[var(--color-fg-neutral-primary)]" />
                     </div>
 
                     {/* Label */}
-                    <span className="flex-1 text-left font-medium text-[16px] leading-[24px] text-[#181818]">
+                    <span className="flex-1 text-left text-body-md-medium !text-[var(--color-fg-neutral-primary)]">
                       {item.label}
                     </span>
                   </button>
@@ -416,7 +416,7 @@ function MarketingMaterialsContent() {
               className="hidden md:flex"
             />
             {/* Page Title - Mobile only, next to menu button */}
-            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818] truncate">Materials</h1>
+            <h1 className="sm:hidden text-[24px] leading-[32px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)] truncate">Materials</h1>
           </div>
 
           {/* Center - Search (Tablet+ centered, Mobile full-width second row) */}
@@ -583,7 +583,7 @@ function MarketingMaterialsContent() {
         <div className="flex flex-col gap-6 items-start w-full">
           {/* Header Section - Hidden on mobile, title is in navbar */}
           <div className="hidden sm:flex flex-col gap-2 items-start w-full">
-            <h1 className="font-semibold text-[32px] leading-[40px] text-[#181818]">
+            <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)]">
               Marketing Materials
             </h1>
           </div>
@@ -591,8 +591,8 @@ function MarketingMaterialsContent() {
           {/* Error State */}
           {error && !loading && (
             <Container className="flex flex-col items-center justify-center p-12 w-full">
-              <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
-              <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+              <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Oops! Something went wrong</p>
+              <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6 text-center max-w-md">{error}</p>
               <Button type="primary" size="medium" label="Try Again" onClick={handleRetry} />
             </Container>
           )}
@@ -600,15 +600,15 @@ function MarketingMaterialsContent() {
           {/* Loading State */}
           {loading && (
             <div className="flex items-center justify-center w-full py-12">
-              <p className="text-[16px] text-[#424242]">Loading materials...</p>
+              <p className="text-body-md-regular !text-[var(--color-fg-neutral-secondary)]">Loading materials...</p>
             </div>
           )}
 
           {/* Empty State - No materials at all */}
           {!loading && !error && materials.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
-              <Icon name="file-stack" size="medium" className="text-[#424242] opacity-50" />
-              <p className="text-[16px] text-[#424242]">No materials yet</p>
+              <Icon name="file-stack" size="medium" className="!text-[var(--color-fg-neutral-secondary)] opacity-50" />
+              <p className="text-body-md-regular !text-[var(--color-fg-neutral-secondary)]">No materials yet</p>
               <Button
                 type="primary"
                 size="medium"
@@ -622,8 +622,8 @@ function MarketingMaterialsContent() {
           {/* Empty State - No search/filter results */}
           {!loading && !error && materials.length > 0 && filteredMaterials.length === 0 && (
             <div className="flex flex-col items-center justify-center w-full py-12 gap-3">
-              <Icon name="magnifying-glass" size="medium" className="text-[#424242] opacity-50" />
-              <p className="text-[16px] text-[#424242]">
+              <Icon name="magnifying-glass" size="medium" className="!text-[var(--color-fg-neutral-secondary)] opacity-50" />
+              <p className="text-body-md-regular !text-[var(--color-fg-neutral-secondary)]">
                 {searchQuery ? 'No materials match your search' : 'No materials match your filter'}
               </p>
               <Button

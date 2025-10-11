@@ -7657,7 +7657,7 @@
           "key": "8f18377e7769fe5d39c0629d1f171b6b8f847422",
           "resolvedType": "STRING",
           "valuesByMode": {
-            "2024:0": "Regular"
+            "2024:0": "400"
           },
           "scopes": [
             "ALL_SCOPES"
@@ -7673,7 +7673,7 @@
           "key": "4597923f330dd4e18e842386e8d3fd59e4681b60",
           "resolvedType": "STRING",
           "valuesByMode": {
-            "2024:0": "Medium"
+            "2024:0": "500"
           },
           "scopes": [
             "ALL_SCOPES"
@@ -7689,7 +7689,7 @@
           "key": "315d3fc3801c6eeed38ee69e223436a47b1926b0",
           "resolvedType": "STRING",
           "valuesByMode": {
-            "2024:0": "Semi Bold"
+            "2024:0": "600"
           },
           "scopes": [
             "ALL_SCOPES"
@@ -7705,7 +7705,7 @@
           "key": "26ece1671712420c92797f70e897b3b8de754d35",
           "resolvedType": "STRING",
           "valuesByMode": {
-            "2024:0": "Bold"
+            "2024:0": "700"
           },
           "scopes": [
             "ALL_SCOPES"

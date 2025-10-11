@@ -26,7 +26,7 @@ const textareaContainerVariants = cva(
         ],
         filled: [
           "border-0",
-          "bg-[rgba(0,0,0,0.06)]",
+          "bg-[var(--color-bg-transparent-subtle)]",
         ],
       },
       state: {
@@ -42,48 +42,48 @@ const textareaContainerVariants = cva(
       {
         type: "outlined",
         state: "default",
-        className: "shadow-[0_0_0_1px_rgba(0,0,0,0.24)]",
+        className: "shadow-[0_0_0_1px_var(--color-bg-neutral-low)]",
       },
       {
         type: "outlined",
         state: "hover",
-        className: "shadow-[0_0_0_1px_rgba(0,0,0,0.36)]",
+        className: "shadow-[0_0_0_1px_var(--color-bg-neutral-medium)]",
       },
       {
         type: "outlined",
         state: "focused",
-        className: "shadow-[0_0_0_2px_#6ab0ca]",
+        className: "shadow-[0_0_0_2px_var(--color-bg-input-high)]",
       },
       {
         type: "outlined",
         state: "error",
-        className: "shadow-[0_0_0_1px_#b33f3b]",
+        className: "shadow-[0_0_0_1px_var(--color-bg-alert-high)]",
       },
       {
         type: "outlined",
         state: "disabled",
-        className: "shadow-[0_0_0_1px_rgba(0,0,0,0.12)]",
+        className: "shadow-[0_0_0_1px_var(--color-bg-transparent-low)]",
       },
       // Filled type states (no borders)
       {
         type: "filled",
         state: "hover",
-        className: "bg-[rgba(0,0,0,0.08)]",
+        className: "bg-[var(--color-bg-neutral-low)]",
       },
       {
         type: "filled",
         state: "focused",
-        className: "bg-[#c9e6f0]", // bg/input/low
+        className: "bg-[var(--color-bg-input-low)]",
       },
       {
         type: "filled",
         state: "error",
-        className: "bg-[#f8dad6]", // bg/alert/low
+        className: "bg-[var(--color-bg-alert-low)]",
       },
       {
         type: "filled",
         state: "disabled",
-        className: "bg-[rgba(0,0,0,0.04)]",
+        className: "bg-[var(--color-bg-neutral-disabled)]",
       },
     ],
     defaultVariants: {
@@ -96,21 +96,20 @@ const textareaContainerVariants = cva(
 const textareaFieldVariants = cva(
   [
     "w-full bg-transparent border-0 outline-none",
-    "font-normal",
     "placeholder:transition-colors placeholder:duration-200",
     // Body/Sm Regular: 14px / 20px line height (matches medium Input)
-    "text-[14px] leading-[20px]",
+    "text-body-sm-regular",
     // Padding: matches medium Input (10px vertical, 12px horizontal)
     "px-3 py-2.5",
   ],
   {
     variants: {
       state: {
-        default: "text-[#181818] placeholder:text-[#a4a4a4]",
-        hover: "text-[#181818] placeholder:text-[#a4a4a4]",
-        focused: "text-[#181818] placeholder:text-[#a4a4a4]",
-        error: "text-[#181818] placeholder:text-[#a4a4a4]",
-        disabled: "text-[#424242] placeholder:text-[#a4a4a4] cursor-not-allowed",
+        default: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
+        hover: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
+        focused: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
+        error: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
+        disabled: "!text-[var(--color-fg-neutral-secondary)] placeholder:!text-[var(--color-fg-neutral-disabled)] cursor-not-allowed",
       },
       resize: {
         none: "resize-none",
@@ -128,17 +127,17 @@ const textareaFieldVariants = cva(
 const labelVariants = cva(
   [
     // Label/Sm Medium: 14px / 20px line height, Medium weight 500
-    "font-medium text-[14px] leading-[20px]",
+    "text-label-sm-medium",
     "transition-colors duration-200",
   ],
   {
     variants: {
       state: {
-        default: "text-[#676767]",
-        hover: "text-[#181818]",
-        focused: "text-[#676767]",
-        error: "text-[#b33f3b]",
-        disabled: "text-[#a4a4a4]",
+        default: "!text-[var(--color-fg-neutral-tertiary)]",
+        hover: "!text-[var(--color-fg-neutral-primary)]",
+        focused: "!text-[var(--color-fg-neutral-tertiary)]",
+        error: "!text-[var(--color-fg-alert-high)]",
+        disabled: "!text-[var(--color-fg-neutral-disabled)]",
       },
     },
     defaultVariants: {
@@ -150,17 +149,17 @@ const labelVariants = cva(
 const helperTextVariants = cva(
   [
     // Body/Sm Regular: 14px / 20px line height
-    "font-normal text-[14px] leading-[20px]",
+    "text-body-sm-regular",
     "transition-colors duration-200",
   ],
   {
     variants: {
       state: {
-        default: "text-[#676767]",
-        hover: "text-[#676767]",
-        focused: "text-[#676767]",
-        error: "text-[#b33f3b]",
-        disabled: "text-[#a4a4a4]",
+        default: "!text-[var(--color-fg-neutral-tertiary)]",
+        hover: "!text-[var(--color-fg-neutral-tertiary)]",
+        focused: "!text-[var(--color-fg-neutral-tertiary)]",
+        error: "!text-[var(--color-fg-alert-high)]",
+        disabled: "!text-[var(--color-fg-neutral-disabled)]",
       },
     },
     defaultVariants: {

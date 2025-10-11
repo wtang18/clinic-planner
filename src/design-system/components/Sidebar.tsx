@@ -58,7 +58,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-[rgba(255,255,255,0.68)] rounded-[24px] shadow-[0px_4px_16px_0px_rgba(0,0,0,0.16)]',
+          'bg-[var(--color-bg-transparent-inverse-low)] rounded-[24px] elevation-lg',
           'p-4 w-[280px] h-full',
           'flex flex-col gap-8',
           className
@@ -81,17 +81,17 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                   'transition-colors duration-200',
                   'cursor-pointer select-none',
                   'w-full',
-                  isActive && 'bg-[rgba(0,0,0,0.12)]',
-                  isHovered && 'bg-[rgba(0,0,0,0.06)]'
+                  isActive && 'bg-[var(--color-bg-transparent-low)]',
+                  isHovered && 'bg-[var(--color-bg-transparent-subtle)]'
                 )}
               >
                 {/* Icon */}
                 <div className="flex items-center justify-center shrink-0">
-                  <Icon name={item.icon as any} size="medium" className="text-[#181818]" />
+                  <Icon name={item.icon as any} size="medium" className="!text-[var(--color-fg-neutral-primary)]" />
                 </div>
 
                 {/* Label */}
-                <span className="flex-1 text-left font-medium text-[16px] leading-[24px] text-[#181818]">
+                <span className="flex-1 text-left text-body-md-medium !text-[var(--color-fg-neutral-primary)]">
                   {item.label}
                 </span>
               </button>

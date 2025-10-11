@@ -8,7 +8,7 @@ import { Icon, type IconSize, type IconName } from '@/design-system/icons';
 const buttonVariants = cva(
   // Base styles - common to all variants
   [
-    "inline-flex items-center justify-center gap-1 font-semibold transition-all duration-200",
+    "inline-flex items-center justify-center gap-1 transition-all duration-200",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-bg-accent-high)] focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
     "select-none cursor-pointer",
@@ -16,81 +16,86 @@ const buttonVariants = cva(
   {
     variants: {
       type: {
-        // Primary - Dark background with white text (uses neutral tokens)
+        // Primary - Dark background with white text (uses neutral inverse tokens)
         primary: [
-          "bg-[var(--color-bg-neutral-high)] text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
-          "hover:bg-[var(--color-bg-neutral-medium)]",
-          "active:bg-[var(--color-bg-neutral-low)]",
+          "bg-[var(--color-bg-neutral-inverse-base)] !text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-inverse-low)]",
+          "active:bg-[var(--color-bg-neutral-medium)]",
         ],
         // Outlined - Border with transparent background
         outlined: [
-          "bg-transparent text-[var(--color-fg-neutral-primary)] border border-[var(--color-bg-neutral-high)]",
-          "hover:bg-[var(--color-bg-neutral-subtle)] hover:border-[var(--color-bg-neutral-medium)]",
+          "bg-transparent !text-[var(--color-fg-neutral-primary)] border border-[var(--color-bg-neutral-inverse-base)]",
+          "hover:bg-[var(--color-bg-neutral-subtle)] hover:border-[var(--color-bg-neutral-inverse-low)]",
           "active:bg-[var(--color-bg-neutral-low)]",
         ],
         // Solid - Light gray background
         solid: [
-          "bg-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "bg-[var(--color-bg-neutral-low)] !text-[var(--color-fg-neutral-primary)] border border-transparent",
           "hover:bg-[var(--color-bg-neutral-medium)]",
           "active:bg-[var(--color-bg-neutral-mid)]",
         ],
         // Transparent - Glassmorphism with backdrop blur
         transparent: [
-          "backdrop-blur-xl backdrop-filter bg-[var(--color-bg-neutral-subtle)] text-[var(--color-fg-neutral-primary)] border border-transparent",
-          "hover:bg-[var(--color-bg-neutral-low)] hover:backdrop-blur-xl hover:backdrop-filter",
-          "active:bg-[var(--color-bg-neutral-medium)]",
+          "backdrop-blur-xl backdrop-filter bg-[var(--color-bg-transparent-low)] !text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-transparent-low-accented)] hover:backdrop-blur-xl hover:backdrop-filter",
+          "active:bg-[var(--color-bg-transparent-medium)]",
         ],
         // Generative - AI/ML themed styling (uses positive/success tokens)
         generative: [
-          "bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
-          "hover:bg-[var(--color-bg-positive-medium)]",
-          "active:bg-[var(--color-bg-positive-low)]",
+          "bg-[var(--color-bg-positive-high)] !text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-positive-high-accented)]",
+          "active:bg-[var(--color-bg-positive-medium)]",
         ],
         // High Impact - Attention-grabbing design (uses alert tokens)
         "high-impact": [
-          "bg-[var(--color-bg-alert-high)] text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
-          "hover:bg-[var(--color-bg-alert-medium)]",
-          "active:bg-[var(--color-bg-alert-low)]",
+          "bg-[var(--color-bg-alert-high)] !text-[var(--color-fg-neutral-inverse-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-alert-high-accented)]",
+          "active:bg-[var(--color-bg-alert-medium)]",
         ],
         // No Fill - Minimal with subtle hover
         "no-fill": [
-          "bg-transparent text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "bg-transparent !text-[var(--color-fg-neutral-primary)] border border-transparent",
           "hover:bg-[var(--color-bg-neutral-low)]",
           "active:bg-[var(--color-bg-neutral-medium)]",
         ],
         // Subtle - Very minimal styling
         subtle: [
-          "bg-[var(--color-bg-neutral-subtle)] text-[var(--color-fg-neutral-primary)] border border-transparent",
-          "hover:bg-[var(--color-bg-neutral-low)] hover:text-[var(--color-fg-neutral-secondary)]",
+          "bg-[var(--color-bg-neutral-subtle)] !text-[var(--color-fg-neutral-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-neutral-low)] hover:!text-[var(--color-fg-neutral-secondary)]",
           "active:bg-[var(--color-bg-neutral-medium)]",
         ],
-        // Carby - Brand themed (exact Figma colors)
+        // Carby - Brand themed (uses carby semantic tokens)
         carby: [
-          "bg-brand-carby-green text-[var(--color-fg-neutral-primary)] border border-transparent",
-          "hover:brightness-110",
-          "active:brightness-90",
+          "bg-[var(--color-bg-carby-default)] !text-[var(--color-fg-carby-primary)] border border-transparent",
+          "hover:bg-[var(--color-bg-carby-default-accent)]",
+          "active:bg-[var(--color-bg-carby-high-contrast)] active:!text-[var(--color-fg-carby-accent)]",
         ],
       },
       size: {
         "x-small": [
-          "h-6 px-3 py-0.5 text-xs font-semibold leading-5 rounded-full",
+          "h-6 px-3 py-0.5 rounded-full",
           "gap-1",
+          "text-label-xs-medium",
         ],
         small: [
-          "h-8 px-3 py-1.5 text-xs font-semibold leading-5 rounded-full",
+          "h-8 px-3 py-1.5 rounded-full",
           "gap-1",
+          "text-label-xs-medium",
         ],
         medium: [
-          "h-10 px-4 py-2.5 text-sm font-semibold leading-5 rounded-full",
+          "h-10 px-4 py-2.5 rounded-full",
           "gap-2",
+          "text-label-sm-medium",
         ],
         large: [
-          "h-14 px-6 py-4 text-base font-semibold leading-6 rounded-full",
+          "h-14 px-6 py-4 rounded-full",
           "gap-2",
+          "text-label-md-medium",
         ],
         "large-floating": [
-          "h-14 px-6 py-4 text-base font-semibold leading-6 rounded-full shadow-[0px_2px_8px_0px_rgba(0,0,0,0.16)]",
+          "h-14 px-6 py-4 rounded-full elevation-md",
           "gap-2",
+          "text-label-md-medium",
         ],
       },
       iconOnly: {

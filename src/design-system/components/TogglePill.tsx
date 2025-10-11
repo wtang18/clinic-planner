@@ -27,9 +27,10 @@ import { Icon, type IconName, type IconSize } from "@/design-system/icons";
 const togglePillVariants = cva(
   // Base styles
   [
-    "inline-flex items-center gap-1 font-medium whitespace-nowrap",
+    "inline-flex items-center gap-1 whitespace-nowrap",
+    "text-label-sm-medium",
     "transition-all duration-200",
-    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+    "focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-1",
     "cursor-pointer",
   ],
   {
@@ -43,8 +44,8 @@ const togglePillVariants = cva(
       },
       // Selected state
       selected: {
-        false: "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)] text-fg-neutral-secondary hover:shadow-[inset_0_0_0_1px_#181818]",
-        true: "bg-[#c9e6f0] text-fg-neutral-primary hover:bg-[#b9dfea]",
+        false: "shadow-[inset_0_0_0_1px_var(--color-fg-transparent-soft)] !text-[var(--color-fg-neutral-secondary)] hover:shadow-[inset_0_0_0_1px_var(--color-fg-transparent-medium)]",
+        true: "bg-[var(--color-bg-input-low)] !text-[var(--color-fg-neutral-primary)] hover:bg-[var(--color-bg-input-low-accented)]",
       },
       // Disabled state
       disabled: {
@@ -57,12 +58,12 @@ const togglePillVariants = cva(
       {
         disabled: true,
         selected: false,
-        className: "!shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)] !text-fg-neutral-disabled hover:!shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)]",
+        className: "!shadow-[inset_0_0_0_1px_var(--color-fg-transparent-soft)] !text-[var(--color-fg-neutral-disabled)] hover:!shadow-[inset_0_0_0_1px_var(--color-fg-transparent-soft)]",
       },
       {
         disabled: true,
         selected: true,
-        className: "!bg-[rgba(0,0,0,0.06)] !text-fg-neutral-disabled hover:!bg-[rgba(0,0,0,0.06)]",
+        className: "!bg-[var(--color-bg-neutral-subtle)] !text-[var(--color-fg-neutral-disabled)] hover:!bg-[var(--color-bg-neutral-subtle)]",
       },
     ],
     defaultVariants: {

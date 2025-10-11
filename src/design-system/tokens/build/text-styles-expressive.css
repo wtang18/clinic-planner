@@ -1,0 +1,469 @@
+/**
+ * Expressive Text Style Utilities
+ *
+ * Auto-generated from Figma text styles export.
+ * DO NOT EDIT DIRECTLY - regenerate with: npm run text-styles:generate
+ *
+ * Usage:
+ *   <h1 className="text-expressive-display-xl-bold text-fg-neutral-primary">
+ *     Hero Title
+ *   </h1>
+ *
+ * Font: Campton (marketing/customer-facing)
+ * Responsive: Yes (scales at 768px breakpoint via media queries in tokens)
+ * Count: 49 styles
+ */
+
+/* Display Styles (12) */
+
+/* Display/Sm Regular 24→40 */
+.text-expressive-display-sm-regular {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-sm);
+  line-height: var(--text-line-height-display-expressive-sm);
+  font-weight: var(--text-font-weight-display-regular);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Sm Medium 24→40 */
+.text-expressive-display-sm-medium {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-sm);
+  line-height: var(--text-line-height-display-expressive-sm);
+  font-weight: var(--text-font-weight-display-medium);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Sm Bold 24→40 */
+.text-expressive-display-sm-bold {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-sm);
+  line-height: var(--text-line-height-display-expressive-sm);
+  font-weight: var(--text-font-weight-display-bold);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Md Regular 28→48 */
+.text-expressive-display-md-regular {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-md);
+  line-height: var(--text-line-height-display-expressive-md);
+  font-weight: var(--text-font-weight-display-regular);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Md Medium 28→48 */
+.text-expressive-display-md-medium {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-md);
+  line-height: var(--text-line-height-display-expressive-md);
+  font-weight: var(--text-font-weight-display-medium);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Md Bold 28→48 */
+.text-expressive-display-md-bold {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-md);
+  line-height: var(--text-line-height-display-expressive-md);
+  font-weight: var(--text-font-weight-display-bold);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Lg Regular 32→64 */
+.text-expressive-display-lg-regular {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-lg);
+  line-height: var(--text-line-height-display-expressive-lg);
+  font-weight: var(--text-font-weight-display-regular);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Lg Medium 32→64 */
+.text-expressive-display-lg-medium {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-lg);
+  line-height: var(--text-line-height-display-expressive-lg);
+  font-weight: var(--text-font-weight-display-medium);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/Lg Bold 32→64 */
+.text-expressive-display-lg-bold {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-lg);
+  line-height: var(--text-line-height-display-expressive-lg);
+  font-weight: var(--text-font-weight-display-bold);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/XL Regular 40→80 */
+.text-expressive-display-xl-regular {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-xl);
+  line-height: var(--text-line-height-display-expressive-xl);
+  font-weight: var(--text-font-weight-display-regular);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/XL Medium 40→80 */
+.text-expressive-display-xl-medium {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-xl);
+  line-height: var(--text-line-height-display-expressive-xl);
+  font-weight: var(--text-font-weight-display-medium);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Display/XL Bold 40→80 */
+.text-expressive-display-xl-bold {
+  font-family: var(--text-font-family-display-expressive);
+  font-size: var(--text-font-size-display-expressive-xl);
+  line-height: var(--text-line-height-display-expressive-xl);
+  font-weight: var(--text-font-weight-display-bold);
+  letter-spacing: var(--text-letter-spacing-display-expressive);
+}
+
+/* Heading Styles (18) */
+
+/* Heading/XS Medium 12→14 */
+.text-expressive-heading-xs-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-xs);
+  line-height: var(--text-line-height-heading-expressive-xs);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/XS Bold 12→14 */
+.text-expressive-heading-xs-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-xs);
+  line-height: var(--text-line-height-heading-expressive-xs);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/Sm Medium 14→16 */
+.text-expressive-heading-sm-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-sm);
+  line-height: var(--text-line-height-heading-expressive-sm);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/Sm Bold 14→16 */
+.text-expressive-heading-sm-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-sm);
+  line-height: var(--text-line-height-heading-expressive-sm);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/Md Medium 16→20 */
+.text-expressive-heading-md-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-md);
+  line-height: var(--text-line-height-heading-expressive-md);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/Md Bold 16→20 */
+.text-expressive-heading-md-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-md);
+  line-height: var(--text-line-height-heading-expressive-md);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/Lg Medium 18→20 */
+.text-expressive-heading-lg-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-lg);
+  line-height: var(--text-line-height-heading-expressive-lg);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/Lg Bold 18→20 */
+.text-expressive-heading-lg-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-lg);
+  line-height: var(--text-line-height-heading-expressive-lg);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/XL Medium 20→24 */
+.text-expressive-heading-xl-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-xl);
+  line-height: var(--text-line-height-heading-expressive-xl);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/XL Bold 20→24 */
+.text-expressive-heading-xl-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-xl);
+  line-height: var(--text-line-height-heading-expressive-xl);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/2XL Medium 24→40 */
+.text-expressive-heading-2xl-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-2xl);
+  line-height: var(--text-line-height-heading-expressive-2xl);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/2XL Bold 24→40 */
+.text-expressive-heading-2xl-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-2xl);
+  line-height: var(--text-line-height-heading-expressive-2xl);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/3XL Medium 32→64 */
+.text-expressive-heading-3xl-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-3xl);
+  line-height: var(--text-line-height-heading-expressive-3xl);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/3XL Bold 32→64 */
+.text-expressive-heading-3xl-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-3xl);
+  line-height: var(--text-line-height-heading-expressive-3xl);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/4XL Medium 40→80 */
+.text-expressive-heading-4xl-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-4xl);
+  line-height: var(--text-line-height-heading-expressive-4xl);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/4XL Bold 40→80 */
+.text-expressive-heading-4xl-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-4xl);
+  line-height: var(--text-line-height-heading-expressive-4xl);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/5XL Medium 48→64 */
+.text-expressive-heading-5xl-medium {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-5xl);
+  line-height: var(--text-line-height-heading-expressive-5xl);
+  font-weight: var(--text-font-weight-heading-medium);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Heading/5XL Bold 48→64 */
+.text-expressive-heading-5xl-bold {
+  font-family: var(--text-font-family-heading-expressive);
+  font-size: var(--text-font-size-heading-expressive-5xl);
+  line-height: var(--text-line-height-heading-expressive-5xl);
+  font-weight: var(--text-font-weight-heading-bold);
+  letter-spacing: var(--text-letter-spacing-heading-expressive);
+}
+
+/* Body Styles (12) */
+
+/* Body/XS Regular 12→14 */
+.text-expressive-body-xs-regular {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-xs);
+  line-height: var(--text-line-height-body-xs);
+  font-weight: var(--text-font-weight-body-regular);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/XS Medium 12→14 */
+.text-expressive-body-xs-medium {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-xs);
+  line-height: var(--text-line-height-body-xs);
+  font-weight: var(--text-font-weight-body-medium);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/XS Bold 12→14 */
+.text-expressive-body-xs-bold {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-xs);
+  line-height: var(--text-line-height-body-xs);
+  font-weight: var(--text-font-weight-body-bold);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Sm Regular 14→16 */
+.text-expressive-body-sm-regular {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-sm);
+  line-height: var(--text-line-height-body-sm);
+  font-weight: var(--text-font-weight-body-regular);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Sm Medium 14→16 */
+.text-expressive-body-sm-medium {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-sm);
+  line-height: var(--text-line-height-body-sm);
+  font-weight: var(--text-font-weight-body-medium);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Sm Bold 14→16 */
+.text-expressive-body-sm-bold {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-sm);
+  line-height: var(--text-line-height-body-sm);
+  font-weight: var(--text-font-weight-body-bold);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Md Regular 16→18 */
+.text-expressive-body-md-regular {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-md);
+  line-height: var(--text-line-height-body-md);
+  font-weight: var(--text-font-weight-body-regular);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Md Medium 16→18 */
+.text-expressive-body-md-medium {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-md);
+  line-height: var(--text-line-height-body-md);
+  font-weight: var(--text-font-weight-body-medium);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Md Bold 16→18 */
+.text-expressive-body-md-bold {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-md);
+  line-height: var(--text-line-height-body-md);
+  font-weight: var(--text-font-weight-body-bold);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Lg Regular 18→20 */
+.text-expressive-body-lg-regular {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-lg);
+  line-height: var(--text-line-height-body-lg);
+  font-weight: var(--text-font-weight-body-regular);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Lg Medium 18→20 */
+.text-expressive-body-lg-medium {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-lg);
+  line-height: var(--text-line-height-body-lg);
+  font-weight: var(--text-font-weight-body-medium);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Body/Lg Bold 18→20 */
+.text-expressive-body-lg-bold {
+  font-family: var(--text-font-family-body);
+  font-size: var(--text-font-size-body-lg);
+  line-height: var(--text-line-height-body-lg);
+  font-weight: var(--text-font-weight-body-bold);
+  letter-spacing: var(--text-letter-spacing-body);
+}
+
+/* Label Styles (5) */
+
+/* Label/2XS Medium */
+.text-expressive-label-2xs-medium {
+  font-family: var(--text-font-family-label);
+  font-size: var(--text-font-size-label-2xs);
+  line-height: var(--text-line-height-label-2xs);
+  font-weight: var(--text-font-weight-label-medium);
+  letter-spacing: var(--text-letter-spacing-label);
+}
+
+/* Label/XS Medium */
+.text-expressive-label-xs-medium {
+  font-family: var(--text-font-family-label);
+  font-size: var(--text-font-size-label-xs);
+  line-height: var(--text-line-height-label-xs);
+  font-weight: var(--text-font-weight-label-medium);
+  letter-spacing: var(--text-letter-spacing-label);
+}
+
+/* Label/Sm Medium */
+.text-expressive-label-sm-medium {
+  font-family: var(--text-font-family-label);
+  font-size: var(--text-font-size-label-sm);
+  line-height: var(--text-line-height-label-sm);
+  font-weight: var(--text-font-weight-label-medium);
+  letter-spacing: var(--text-letter-spacing-label);
+}
+
+/* Label/Md Medium */
+.text-expressive-label-md-medium {
+  font-family: var(--text-font-family-label);
+  font-size: var(--text-font-size-label-md);
+  line-height: var(--text-line-height-label-md);
+  font-weight: var(--text-font-weight-label-medium);
+  letter-spacing: var(--text-letter-spacing-label);
+}
+
+/* Label/Lg Medium */
+.text-expressive-label-lg-medium {
+  font-family: var(--text-font-family-label);
+  font-size: var(--text-font-size-label-lg);
+  line-height: var(--text-line-height-label-lg);
+  font-weight: var(--text-font-weight-label-medium);
+  letter-spacing: var(--text-letter-spacing-label);
+}
+
+/* Eyebrow Styles (2) */
+
+/* Eyebrow/Sm Medium */
+.text-expressive-eyebrow-sm-medium {
+  font-family: var(--text-font-family-eyebrow-expressive);
+  font-size: var(--text-font-size-eyebrow-expressive-sm);
+  line-height: var(--text-line-height-eyebrow-expressive-sm);
+  font-weight: var(--text-font-weight-eyebrow-medium);
+  letter-spacing: var(--text-letter-spacing-eyebrow-expressive);
+  text-transform: uppercase;
+}
+
+/* Eyebrow/Md Medium */
+.text-expressive-eyebrow-md-medium {
+  font-family: var(--text-font-family-eyebrow-expressive);
+  font-size: var(--text-font-size-eyebrow-expressive-md);
+  line-height: var(--text-line-height-eyebrow-expressive-md);
+  font-weight: var(--text-font-weight-eyebrow-medium);
+  letter-spacing: var(--text-letter-spacing-eyebrow-expressive);
+  text-transform: uppercase;
+}
+

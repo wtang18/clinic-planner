@@ -127,10 +127,10 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
 
     try {
       await navigator.clipboard.writeText(material.url);
-      // TODO: Show toast notification
-      console.log('URL copied to clipboard');
+      toast.positive('URL copied successfully');
     } catch (error) {
       console.error('Failed to copy URL:', error);
+      toast.alert('Failed to copy URL', { showSubtext: true, subtext: 'Please try again' });
     }
   };
 
@@ -178,7 +178,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
         }}
       >
         <div className="text-center">
-          <div className="text-lg font-medium text-[#181818]">Loading material...</div>
+          <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading material...</div>
         </div>
       </div>
     );
@@ -194,8 +194,8 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
         }}
       >
         <div className="flex flex-col items-center justify-center p-12">
-          <p className="text-lg font-semibold text-gray-900 mb-2">Material Not Found</p>
-          <p className="text-sm text-gray-600 mb-6">This material may have been deleted.</p>
+          <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Material Not Found</p>
+          <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6">This material may have been deleted.</p>
           <Button
             type="primary"
             size="medium"
@@ -217,7 +217,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
         }}
       >
         <div className="flex flex-col items-center justify-center p-12">
-          <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+          <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Oops! Something went wrong</p>
           <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
           <Button
             type="primary"
@@ -240,8 +240,8 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
         }}
       >
         <div className="flex flex-col items-center justify-center p-12">
-          <p className="text-lg font-semibold text-gray-900 mb-2">Material Not Found</p>
-          <p className="text-sm text-gray-600 mb-6">This material may have been deleted.</p>
+          <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Material Not Found</p>
+          <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6">This material may have been deleted.</p>
           <Button
             type="primary"
             size="medium"
@@ -297,14 +297,14 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
             {/* Header Section */}
             <div className="flex flex-col gap-2">
               {/* Material Title */}
-              <h1 className="text-[32px] font-semibold leading-[40px] text-[#181818]">
+              <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)]">
                 {material.label}
               </h1>
 
               {/* URL and Copy Button */}
               <div className="flex items-start gap-2 w-full">
                 <p
-                  className="text-base font-medium leading-6 text-[#424242] cursor-pointer hover:underline break-words flex-1 min-w-0"
+                  className="text-body-md-medium !text-[var(--color-fg-neutral-secondary)] cursor-pointer hover:underline break-words flex-1 min-w-0"
                   onClick={handleUrlClick}
                 >
                   {material.url}
@@ -325,7 +325,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
               <Container className="flex flex-col gap-4">
                 {/* Container Header */}
                 <div className="flex items-center justify-between w-full">
-                  <h2 className="text-base font-semibold leading-6 text-[#181818]">
+                  <h2 className="text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
                     Details
                   </h2>
                 </div>
@@ -335,10 +335,10 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
                   {/* Notes Card */}
                   {material.notes && (
                     <Card size="small" className="w-full">
-                      <p className="text-sm font-medium leading-5 text-[#424242]">
+                      <p className="text-body-sm-medium !text-[var(--color-fg-neutral-secondary)]">
                         Notes
                       </p>
-                      <p className="text-base font-normal leading-6 text-[#181818] whitespace-pre-wrap">
+                      <p className="text-body-md-regular !text-[var(--color-fg-neutral-primary)] whitespace-pre-wrap">
                         {material.notes}
                       </p>
                     </Card>
@@ -350,7 +350,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
                       Associated Event
                     </p>
                     <div className="flex items-start justify-between gap-2 w-full">
-                      <p className="flex-1 text-base font-normal leading-6 text-[#181818]">
+                      <p className="flex-1 text-body-md-regular !text-[var(--color-fg-neutral-primary)]">
                         {getEventDisplay()}
                       </p>
                       {event && (
@@ -368,7 +368,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
                 {/* Created and Updated Dates */}
                 <div className="flex items-center justify-between w-full gap-4">
                   <div className="flex-1">
-                    <p className="text-sm font-normal leading-5 text-[#424242]">
+                    <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
                       Created {formatDate(material.created_at)}
                     </p>
                   </div>

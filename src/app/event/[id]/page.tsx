@@ -43,10 +43,10 @@ function MaterialCard({ material, eventName, onCardClick, onEventClick, enableEv
       <div className="flex flex-col gap-3 w-full">
         {/* Header Row - Title and URL */}
         <div className="flex flex-col gap-0 w-full">
-          <p className="font-medium text-[14px] leading-[20px] text-[#181818] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+          <p className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
             {material.label}
           </p>
-          <p className="font-normal text-[12px] leading-[20px] text-[#424242] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
+          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)] truncate overflow-ellipsis overflow-hidden whitespace-nowrap">
             {material.url}
           </p>
         </div>
@@ -303,7 +303,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
         }}
       >
         <div className="text-center">
-          <div className="text-lg font-medium text-[#181818]">Loading event...</div>
+          <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading event...</div>
         </div>
       </div>
     );
@@ -319,8 +319,8 @@ function EventDetailContent({ params }: EventDetailPageProps) {
         }}
       >
         <div className="flex flex-col items-center justify-center p-12">
-          <p className="text-lg font-semibold text-gray-900 mb-2">Event Not Found</p>
-          <p className="text-sm text-gray-600 mb-6">This event may have been deleted.</p>
+          <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Event Not Found</p>
+          <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6">This event may have been deleted.</p>
           <Button
             type="primary"
             size="medium"
@@ -342,7 +342,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
         }}
       >
         <div className="flex flex-col items-center justify-center p-12">
-          <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
+          <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Oops! Something went wrong</p>
           <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
           <Button
             type="primary"
@@ -365,8 +365,8 @@ function EventDetailContent({ params }: EventDetailPageProps) {
         }}
       >
         <div className="flex flex-col items-center justify-center p-12">
-          <p className="text-lg font-semibold text-gray-900 mb-2">Event Not Found</p>
-          <p className="text-sm text-gray-600 mb-6">This event may have been deleted.</p>
+          <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Event Not Found</p>
+          <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6">This event may have been deleted.</p>
           <Button
             type="primary"
             size="medium"
@@ -432,13 +432,13 @@ function EventDetailContent({ params }: EventDetailPageProps) {
             {/* Header Section */}
             <div className="flex flex-col gap-2">
               {/* Event Title */}
-              <h1 className="text-[32px] font-semibold leading-[40px] text-[#181818]">
+              <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)]">
                 {event.title}
               </h1>
 
               {/* Date and Recurring Badge */}
               <div className="flex items-center gap-2">
-                <p className="text-base font-medium leading-6 text-[#424242]">
+                <p className="text-body-md-medium !text-[var(--color-fg-neutral-secondary)]">
                   {formattedEvent.displayDate.start}
                   {formattedEvent.displayDate.end && ` – ${formattedEvent.displayDate.end}`}
                 </p>
@@ -454,7 +454,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
               <Container className="flex flex-col gap-4">
                 {/* Container Header */}
                 <div className="flex items-center justify-between w-full">
-                  <h2 className="text-base font-semibold leading-6 text-[#181818]">
+                  <h2 className="text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
                     Event Details
                   </h2>
                 </div>
@@ -464,10 +464,10 @@ function EventDetailContent({ params }: EventDetailPageProps) {
                   {/* Description Card */}
                   {event.description && (
                     <Card size="small" className="w-full">
-                      <p className="text-sm font-medium leading-5 text-[#424242]">
+                      <p className="text-body-sm-medium !text-[var(--color-fg-neutral-secondary)]">
                         Description
                       </p>
-                      <p className="text-base font-normal leading-6 text-[#181818] whitespace-pre-wrap">
+                      <p className="text-body-md-regular !text-[var(--color-fg-neutral-primary)] whitespace-pre-wrap">
                         {event.description}
                       </p>
                     </Card>
@@ -476,17 +476,17 @@ function EventDetailContent({ params }: EventDetailPageProps) {
                   {/* Preparation Planning Card */}
                   {(event.prep_months_needed > 0 || event.prep_start_date) && (
                     <Card size="small" className="w-full">
-                      <p className="text-sm font-medium leading-5 text-[#424242]">
+                      <p className="text-body-sm-medium !text-[var(--color-fg-neutral-secondary)]">
                         Preparation Planning
                       </p>
                       <div className="flex flex-col gap-1">
                         {event.prep_start_date && (
-                          <p className="text-base font-normal leading-6 text-[#181818]">
+                          <p className="text-body-md-regular !text-[var(--color-fg-neutral-primary)]">
                             Start preparation: {formatDate(event.prep_start_date)}
                           </p>
                         )}
                         {event.prep_months_needed > 0 && (
-                          <p className="text-base font-normal leading-6 text-[#181818]">
+                          <p className="text-body-md-regular !text-[var(--color-fg-neutral-primary)]">
                             {event.prep_months_needed} {event.prep_months_needed === 1 ? 'month' : 'months'} of preparation needed
                           </p>
                         )}
@@ -517,16 +517,16 @@ function EventDetailContent({ params }: EventDetailPageProps) {
                             />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium leading-5 text-[#424242]">
+                            <p className="text-body-sm-medium !text-[var(--color-fg-neutral-secondary)]">
                               {displayHeader}
                             </p>
                             {angleSelection.description && (
-                              <p className="text-base font-normal leading-6 text-[#181818] mt-1">
+                              <p className="text-body-md-regular !text-[var(--color-fg-neutral-primary)] mt-1">
                                 {angleSelection.description}
                               </p>
                             )}
                             {angleSelection.notes && (
-                              <p className="text-base font-normal leading-6 text-[#181818] mt-2 whitespace-pre-wrap">
+                              <p className="text-body-md-regular !text-[var(--color-fg-neutral-primary)] mt-2 whitespace-pre-wrap">
                                 {angleSelection.notes}
                               </p>
                             )}
@@ -542,7 +542,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
               <Container className="flex flex-col gap-4">
                 {/* Container Header */}
                 <div className="flex items-center justify-between w-full">
-                  <h2 className="text-base font-semibold leading-6 text-[#181818]">
+                  <h2 className="text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
                     Marketing Materials
                   </h2>
                   <Button
@@ -560,7 +560,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
                   materials.length === 0 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
                 )}>
                   {materials.length === 0 ? (
-                    <p className="text-sm font-normal leading-5 text-[#424242]">
+                    <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
                       No materials added
                     </p>
                   ) : (

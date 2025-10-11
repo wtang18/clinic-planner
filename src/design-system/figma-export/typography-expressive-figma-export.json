@@ -1,0 +1,511 @@
+{
+  "styles": {
+    "colors": [],
+    "textStyles": [
+      {
+        "name": "Display/Sm Regular 24→40",
+        "token": "display-sm-regular-24-40",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Sm Medium 24→40",
+        "token": "display-sm-medium-24-40",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Sm Bold 24→40",
+        "token": "display-sm-bold-24-40",
+        "type": "text",
+        "description": "Card titles, Section",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Md Regular 28→48",
+        "token": "display-md-regular-28-48",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "28px",
+        "lineHeight": "40px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Md Medium 28→48",
+        "token": "display-md-medium-28-48",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "28px",
+        "lineHeight": "40px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Md Bold 28→48",
+        "token": "display-md-bold-28-48",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "28px",
+        "lineHeight": "40px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Lg Regular 32→64",
+        "token": "display-lg-regular-32-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Lg Medium 32→64",
+        "token": "display-lg-medium-32-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/Lg Bold 32→64",
+        "token": "display-lg-bold-32-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/XL Regular 40→80",
+        "token": "display-xl-regular-40-80",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/XL Medium 40→80",
+        "token": "display-xl-medium-40-80",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Display/XL Bold 40→80",
+        "token": "display-xl-bold-40-80",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "-1px"
+      },
+      {
+        "name": "Heading/XS Medium 12→14",
+        "token": "heading-xs-medium-12-14",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/XS Bold 12→14",
+        "token": "heading-xs-bold-12-14",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Sm Medium 14→16",
+        "token": "heading-sm-medium-14-16",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Sm Bold 14→16",
+        "token": "heading-sm-bold-14-16",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Md Medium 16→20",
+        "token": "heading-md-medium-16-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Md Bold 16→20",
+        "token": "heading-md-bold-16-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Lg Medium 18→20",
+        "token": "heading-lg-medium-18-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Lg Bold 18→20",
+        "token": "heading-lg-bold-18-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/XL Medium 20→24",
+        "token": "heading-xl-medium-20-24",
+        "type": "text",
+        "description": "Card titles, Section",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "20px",
+        "lineHeight": "28px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/XL Bold 20→24",
+        "token": "heading-xl-bold-20-24",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "20px",
+        "lineHeight": "28px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/2XL Medium 24→40",
+        "token": "heading-2xl-medium-24-40",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/2XL Bold 24→40",
+        "token": "heading-2xl-bold-24-40",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/3XL Medium 32→64",
+        "token": "heading-3xl-medium-32-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/3XL Bold 32→64",
+        "token": "heading-3xl-bold-32-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/4XL Medium 40→80",
+        "token": "heading-4xl-medium-40-80",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/4XL Bold 40→80",
+        "token": "heading-4xl-bold-40-80",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/5XL Medium 48→64",
+        "token": "heading-5xl-medium-48-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "48px",
+        "lineHeight": "64px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/5XL Bold 48→64",
+        "token": "heading-5xl-bold-48-64",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "48px",
+        "lineHeight": "64px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/XS Regular 12→14",
+        "token": "body-xs-regular-12-14",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/XS Medium 12→14",
+        "token": "body-xs-medium-12-14",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/XS Bold 12→14",
+        "token": "body-xs-bold-12-14",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Sm Regular 14→16",
+        "token": "body-sm-regular-14-16",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Sm Medium 14→16",
+        "token": "body-sm-medium-14-16",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Sm Bold 14→16",
+        "token": "body-sm-bold-14-16",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Md Regular 16→18",
+        "token": "body-md-regular-16-18",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Md Medium 16→18",
+        "token": "body-md-medium-16-18",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Md Bold 16→18",
+        "token": "body-md-bold-16-18",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Lg Regular 18→20",
+        "token": "body-lg-regular-18-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "400",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Lg Medium 18→20",
+        "token": "body-lg-medium-18-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Lg Bold 18→20",
+        "token": "body-lg-bold-18-20",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "600",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/2XS Medium",
+        "token": "label-2xs-medium",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "10px",
+        "lineHeight": "16px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/XS Medium",
+        "token": "label-xs-medium",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/Sm Medium",
+        "token": "label-sm-medium",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/Md Medium",
+        "token": "label-md-medium",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/Lg Medium",
+        "token": "label-lg-medium",
+        "type": "text",
+        "fontFamily": "Campton",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Eyebrow/Sm Medium",
+        "token": "eyebrow-sm-medium",
+        "type": "text",
+        "fontFamily": "Atlas Typewriter",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "1px",
+        "textTransform": "upper"
+      },
+      {
+        "name": "Eyebrow/Md Medium",
+        "token": "eyebrow-md-medium",
+        "type": "text",
+        "fontFamily": "Atlas Typewriter",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "1px",
+        "textTransform": "upper"
+      }
+    ],
+    "effectStyles": [],
+    "gridStyles": []
+  },
+  "metadata": {
+    "exportDate": "2025-10-10T20:06:51.046Z",
+    "figmaFileKey": "unknown",
+    "fileName": "Typography Styles: Expressive",
+    "pluginVersion": "1.0.0",
+    "collectionsFound": 0,
+    "collectionsExported": 0
+  }
+}

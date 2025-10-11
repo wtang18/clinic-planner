@@ -396,7 +396,7 @@ function MonthViewContent() {
         }}
       >
         <div className="text-center">
-          <div className="text-lg font-medium text-[#181818]">Loading events...</div>
+          <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading events...</div>
         </div>
       </div>
     );
@@ -511,17 +511,17 @@ function MonthViewContent() {
                       'transition-colors duration-200',
                       'cursor-pointer select-none',
                       'w-full',
-                      isActive && 'bg-[rgba(0,0,0,0.12)]',
-                      !isActive && 'hover:bg-[rgba(0,0,0,0.06)]'
+                      isActive && 'bg-[var(--color-bg-transparent-low)]',
+                      !isActive && 'hover:bg-[var(--color-bg-neutral-subtle)]'
                     )}
                   >
                     {/* Icon */}
                     <div className="flex items-center justify-center shrink-0">
-                      <Icon name={item.icon as any} size="medium" className="text-[#181818]" />
+                      <Icon name={item.icon as any} size="medium" className="!text-[var(--color-fg-neutral-primary)]" />
                     </div>
 
                     {/* Label */}
-                    <span className="flex-1 text-left font-medium text-[16px] leading-[24px] text-[#181818]">
+                    <span className="flex-1 text-left text-body-md-medium !text-[var(--color-fg-neutral-primary)]">
                       {item.label}
                     </span>
                   </button>
@@ -557,7 +557,7 @@ function MonthViewContent() {
               className="hidden md:flex"
             />
             {/* Page Title - Mobile only, next to menu button */}
-            <h1 className="sm:hidden text-2xl font-semibold leading-tight text-[#181818] truncate">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
+            <h1 className="sm:hidden text-[24px] leading-[32px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)] truncate">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
           </div>
 
           {/* Center - Segmented Control (Tablet+) */}
@@ -637,14 +637,14 @@ function MonthViewContent() {
 
         {/* Month Header - Desktop only */}
         <div className="hidden sm:flex gap-2 items-start">
-          <h1 className="text-2xl sm:text-3xl font-semibold leading-tight text-[#181818]">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
+          <h1 className="text-[24px] leading-[32px] sm:text-[32px] sm:leading-[40px] font-semibold tracking-[-0.5px] !text-[var(--color-fg-neutral-primary)]">{monthNames[selectedMonth - 1]} {selectedYear}</h1>
         </div>
 
         {/* Error State or Month Planning Grid */}
         {error ? (
           <Container className="flex flex-col items-center justify-center p-12">
-            <p className="text-lg font-semibold text-gray-900 mb-2">Oops! Something went wrong</p>
-            <p className="text-sm text-gray-600 mb-6 text-center max-w-md">{error}</p>
+            <p className="text-body-lg-semibold !text-[var(--color-fg-neutral-primary)] mb-2">Oops! Something went wrong</p>
+            <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] mb-6 text-center max-w-md">{error}</p>
             <Button type="primary" size="medium" label="Try Again" onClick={handleRetry} />
           </Container>
         ) : (
@@ -653,12 +653,12 @@ function MonthViewContent() {
           {/* Column 1: This Month */}
           <Container className={cn(
             "flex flex-col gap-4 h-full w-full",
-            selectedMonth === currentMonth && selectedYear === currentYear && 'border-2 border-solid border-[#765c8b]'
+            selectedMonth === currentMonth && selectedYear === currentYear && 'border-2 border-solid border-[var(--color-bg-accent-high)]'
           )}>
             <div className="flex items-center justify-between w-full">
               <h2 className={cn(
                 "flex-1 text-base font-semibold leading-6",
-                selectedMonth === currentMonth && selectedYear === currentYear ? 'text-[#4c3c5a]' : 'text-[#181818]'
+                selectedMonth === currentMonth && selectedYear === currentYear ? '!text-[var(--color-fg-accent-high)]' : '!text-[var(--color-fg-neutral-primary)]'
               )}>
                 This Month
               </h2>
@@ -674,7 +674,7 @@ function MonthViewContent() {
 
             <div className="flex flex-col gap-2 w-full">
               {thisMonthEvents.length === 0 ? (
-                <p className="text-sm font-normal leading-5 text-[#424242]">
+                <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
                   No Events Planned
                 </p>
               ) : (
@@ -703,11 +703,11 @@ function MonthViewContent() {
                     >
                       {/* Header Block */}
                       <div className="flex flex-col w-full">
-                        <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                        <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                           {event.title}
                         </h3>
                         {formatThisMonthEventDate(event) && (
-                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)]">
                             {formatThisMonthEventDate(event)}
                           </p>
                         )}
@@ -715,7 +715,7 @@ function MonthViewContent() {
 
                       {/* Description */}
                       {event.description && (
-                        <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                        <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
                           {event.description}
                         </p>
                       )}
@@ -726,7 +726,7 @@ function MonthViewContent() {
 
                         return (
                           <div key={idx} className="flex flex-col w-full">
-                            <p className="text-xs font-medium leading-5 text-[#424242]">
+                            <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
                               {angleSelection.angle} Perspective
                             </p>
                             <p className="text-sm font-normal leading-5 text-[#181818]">
@@ -771,7 +771,7 @@ function MonthViewContent() {
             {/* Preparation Needed Section - Future events with prep starting this month */}
             {prepEvents.length > 0 && (
               <div className="flex flex-col gap-2 w-full">
-                <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                   Preparation Needed
                 </h3>
                 {prepEvents.map((event) => {
@@ -800,11 +800,11 @@ function MonthViewContent() {
                     >
                       {/* Header Block */}
                       <div className="flex flex-col w-full">
-                        <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                        <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                           {event.title}
                         </h3>
                         {formatEventDate(event) && (
-                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)]">
                             {formatEventDate(event)}
                           </p>
                         )}
@@ -812,7 +812,7 @@ function MonthViewContent() {
 
                       {/* Description */}
                       {event.description && (
-                        <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                        <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
                           {event.description}
                         </p>
                       )}
@@ -823,7 +823,7 @@ function MonthViewContent() {
 
                         return (
                           <div key={idx} className="flex flex-col w-full">
-                            <p className="text-xs font-medium leading-5 text-[#424242]">
+                            <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
                               {angleSelection.angle} Perspective
                             </p>
                             <p className="text-sm font-normal leading-5 text-[#181818]">
@@ -869,14 +869,14 @@ function MonthViewContent() {
           {/* Column 2: Upcoming Events (next 3 months) */}
           <Container className="flex flex-col gap-4 h-full w-full">
             <div className="flex items-center justify-between w-full">
-              <h2 className="flex-1 text-base font-semibold leading-6 text-[#181818]">
+              <h2 className="flex-1 text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
                 Upcoming Events
               </h2>
             </div>
 
             <div className="flex flex-col gap-2 w-full">
               {upcomingEvents.length === 0 ? (
-                <p className="text-sm font-normal leading-5 text-[#424242]">
+                <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
                   No Upcoming Events
                 </p>
               ) : (
@@ -905,11 +905,11 @@ function MonthViewContent() {
                     >
                       {/* Header Block */}
                       <div className="flex flex-col w-full">
-                        <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                        <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                           {event.title}
                         </h3>
                         {formatEventDate(event) && (
-                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)]">
                             {formatEventDate(event)}
                           </p>
                         )}
@@ -917,7 +917,7 @@ function MonthViewContent() {
 
                       {/* Description */}
                       {event.description && (
-                        <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                        <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
                           {event.description}
                         </p>
                       )}
@@ -928,7 +928,7 @@ function MonthViewContent() {
 
                         return (
                           <div key={idx} className="flex flex-col w-full">
-                            <p className="text-xs font-medium leading-5 text-[#424242]">
+                            <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
                               {angleSelection.angle} Perspective
                             </p>
                             <p className="text-sm font-normal leading-5 text-[#181818]">
@@ -974,14 +974,14 @@ function MonthViewContent() {
           {/* Column 3: Long-term Planning (4-6 months ahead) */}
           <Container className="flex flex-col gap-4 h-full w-full">
             <div className="flex items-center justify-between w-full">
-              <h2 className="flex-1 text-base font-semibold leading-6 text-[#181818]">
+              <h2 className="flex-1 text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
                 Long-term Planning
               </h2>
             </div>
 
             <div className="flex flex-col gap-2 w-full">
               {longTermEvents.length === 0 ? (
-                <p className="text-sm font-normal leading-5 text-[#424242]">
+                <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
                   No Long-term Events
                 </p>
               ) : (
@@ -1010,11 +1010,11 @@ function MonthViewContent() {
                     >
                       {/* Header Block */}
                       <div className="flex flex-col w-full">
-                        <h3 className="text-sm font-medium leading-5 text-[#181818]">
+                        <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
                           {event.title}
                         </h3>
                         {formatEventDate(event) && (
-                          <p className="text-xs font-normal leading-5 text-[#424242]">
+                          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)]">
                             {formatEventDate(event)}
                           </p>
                         )}
@@ -1022,7 +1022,7 @@ function MonthViewContent() {
 
                       {/* Description */}
                       {event.description && (
-                        <p className="text-sm font-normal leading-5 text-[#181818] w-full">
+                        <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
                           {event.description}
                         </p>
                       )}
@@ -1033,7 +1033,7 @@ function MonthViewContent() {
 
                         return (
                           <div key={idx} className="flex flex-col w-full">
-                            <p className="text-xs font-medium leading-5 text-[#424242]">
+                            <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
                               {angleSelection.angle} Perspective
                             </p>
                             <p className="text-sm font-normal leading-5 text-[#181818]">

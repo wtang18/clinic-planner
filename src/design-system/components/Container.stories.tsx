@@ -4,7 +4,7 @@ import { Container } from './Container';
 import { Card } from './Card';
 
 const meta: Meta<typeof Container> = {
-  title: 'Design System/Container',
+  title: 'Design System/Components/Container',
   component: Container,
   argTypes: {
     // Core variant props

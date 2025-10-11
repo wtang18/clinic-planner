@@ -1,0 +1,181 @@
+{
+  "elevation": {
+    "shadow": {
+      "x": {
+        "0": {
+          "value": "0px",
+          "type": "dimension",
+          "comment": "No horizontal offset"
+        },
+        "1": {
+          "value": "{dimension.space.25}",
+          "type": "dimension",
+          "comment": "Minimal horizontal offset"
+        }
+      },
+      "y": {
+        "0": {
+          "value": "0px",
+          "type": "dimension",
+          "comment": "No vertical offset"
+        },
+        "1": {
+          "value": "{dimension.space.25}",
+          "type": "dimension",
+          "comment": "1 - Very subtle lift"
+        },
+        "2": {
+          "value": "{dimension.space.50}",
+          "type": "dimension",
+          "comment": "2 - Subtle lift"
+        },
+        "3": {
+          "value": "{dimension.space.75}",
+          "type": "dimension",
+          "comment": "3 - Small lift"
+        },
+        "4": {
+          "value": "{dimension.space.100}",
+          "type": "dimension",
+          "comment": "4 - Medium lift"
+        },
+        "6": {
+          "value": "{dimension.space.150}",
+          "type": "dimension",
+          "comment": "6 - Noticeable lift"
+        },
+        "8": {
+          "value": "{dimension.space.200}",
+          "type": "dimension",
+          "comment": "8 - Elevated"
+        },
+        "12": {
+          "value": "{dimension.space.300}",
+          "type": "dimension",
+          "comment": "12 - High elevation"
+        },
+        "16": {
+          "value": "{dimension.space.400}",
+          "type": "dimension",
+          "comment": "16 - Very high elevation"
+        },
+        "20": {
+          "value": "{dimension.space.500}",
+          "type": "dimension",
+          "comment": "20 - Maximum elevation"
+        }
+      },
+      "blur": {
+        "0": {
+          "value": "0px",
+          "type": "dimension",
+          "comment": "No blur (sharp shadow)"
+        },
+        "2": {
+          "value": "{dimension.space.25}",
+          "type": "dimension",
+          "comment": "Minimal blur"
+        },
+        "4": {
+          "value": "{dimension.space.50}",
+          "type": "dimension",
+          "comment": "Subtle blur"
+        },
+        "6": {
+          "value": "{dimension.space.75}",
+          "type": "dimension",
+          "comment": "Small blur"
+        },
+        "8": {
+          "value": "{dimension.space.100}",
+          "type": "dimension",
+          "comment": "Medium blur"
+        },
+        "12": {
+          "value": "{dimension.space.150}",
+          "type": "dimension",
+          "comment": "Noticeable blur"
+        },
+        "16": {
+          "value": "{dimension.space.200}",
+          "type": "dimension",
+          "comment": "Large blur"
+        },
+        "20": {
+          "value": "{dimension.space.250}",
+          "type": "dimension",
+          "comment": "Very large blur"
+        },
+        "24": {
+          "value": "{dimension.space.300}",
+          "type": "dimension",
+          "comment": "Extra large blur"
+        },
+        "32": {
+          "value": "{dimension.space.400}",
+          "type": "dimension",
+          "comment": "Dramatic blur"
+        },
+        "40": {
+          "value": "{dimension.space.500}",
+          "type": "dimension",
+          "comment": "Maximum blur"
+        }
+      },
+      "spread": {
+        "0": {
+          "value": "0px",
+          "type": "dimension",
+          "comment": "No spread"
+        },
+        "negative-4": {
+          "value": "{dimension.space.negative-50}",
+          "type": "dimension",
+          "comment": "Inward spread"
+        },
+        "negative-2": {
+          "value": "{dimension.space.negative-25}",
+          "type": "dimension",
+          "comment": "Slight inward spread"
+        },
+        "2": {
+          "value": "{dimension.space.25}",
+          "type": "dimension",
+          "comment": "Slight outward spread"
+        },
+        "4": {
+          "value": "{dimension.space.50}",
+          "type": "dimension",
+          "comment": "Outward spread"
+        }
+      },
+      "color": {
+        "subtle": {
+          "value": "{black.alpha-min}",
+          "type": "color",
+          "comment": "Very subtle shadow (5% opacity)"
+        },
+        "soft": {
+          "value": "{black.alpha-lowest}",
+          "type": "color",
+          "comment": "Soft shadow (6% opacity)"
+        },
+        "default": {
+          "value": "{black.alpha-lower}",
+          "type": "color",
+          "comment": "Default shadow (12% opacity)"
+        },
+        "medium": {
+          "value": "{black.alpha-low}",
+          "type": "color",
+          "comment": "Medium shadow (24% opacity)"
+        },
+        "strong": {
+          "value": "{black.alpha-mid}",
+          "type": "color",
+          "comment": "Strong shadow (36% opacity)"
+        }
+      }
+    }
+  }
+}

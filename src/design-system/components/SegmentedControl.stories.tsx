@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { SegmentedControl } from './SegmentedControl';
 
 const meta: Meta<typeof SegmentedControl> = {
-  title: 'Design System/SegmentedControl',
+  title: 'Design System/Components/SegmentedControl',
   component: SegmentedControl,
   argTypes: {
     // Core props

@@ -3,8 +3,9 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from './Button';
 
 const meta: Meta<typeof Button> = {
-  title: 'Design System/Button',
+  title: 'Design System/Components/Button',
   component: Button,
+  tags: ['autodocs'],
   argTypes: {
     // Core variant props
     type: {
@@ -85,22 +86,122 @@ const meta: Meta<typeof Button> = {
     docs: {
       description: {
         component: `
-Button component with Figma design system integration.
+# Button Component
 
-## Icon Sizing
-Icons are automatically sized based on button size:
-- **Small icons (20px)**: xSmall, small, medium buttons
-- **Medium icons (24px)**: large, largeFloating buttons
+Production-ready button component with semantic token integration and comprehensive variant support.
 
-Icon size is determined by the button's \`size\` prop, not a separate icon size prop.
+## Quick Reference
 
-## Icon Props
-The \`iconL\` and \`iconR\` props accept icon names from the icon library (386+ options). Examples:
-- \`iconL="star"\` - Star icon on left
-- \`iconR="chevron-down"\` - Chevron down icon on right
-- \`iconL="checkmark" iconR="arrow-right"\` - Custom icon combination
+**Types**: 9 variants (primary, outlined, solid, transparent, generative, high-impact, no-fill, subtle, carby)
+**Sizes**: 5 sizes (x-small, small, medium, large, large-floating)
+**Tokens**: Uses semantic color tokens for theme support
 
-See the IconVariations story for more examples.
+---
+
+## Features
+
+- ✅ **Semantic Tokens**: Uses \`--color-bg-*\` and \`--color-fg-*\` tokens for automatic theme support
+- ✅ **Icon Integration**: Built-in support for 386+ icons with automatic sizing
+- ✅ **Accessibility**: ARIA support, keyboard navigation, focus management
+- ✅ **States**: Default, hover, active, disabled states
+- ✅ **Flexible**: Text-only, icon-only, or combined layouts
+
+---
+
+## Button Types
+
+| Type | Background Token | Use Case |
+|------|------------------|----------|
+| \`primary\` | \`bg-neutral-inverse-base\` | Primary actions (save, submit) |
+| \`outlined\` | \`transparent\` with border | Secondary actions (cancel, back) |
+| \`solid\` | \`bg-neutral-low\` | Tertiary actions |
+| \`transparent\` | \`bg-transparent-low\` | Glassmorphism, overlays |
+| \`generative\` | \`bg-positive-high\` | AI/ML features |
+| \`high-impact\` | \`bg-alert-high\` | Destructive actions (delete) |
+| \`no-fill\` | \`transparent\` | Minimal actions |
+| \`subtle\` | \`bg-neutral-subtle\` | Very minimal |
+| \`carby\` | \`bg-carby-default\` | Brand-specific |
+
+---
+
+## Icon System
+
+Icons are **automatically sized** based on button size:
+- **20px icons** (small): x-small, small, medium buttons
+- **24px icons** (medium): large, large-floating buttons
+
+### Using Icons
+
+\`\`\`tsx
+// Icon library (386+ options)
+<Button iconL="star" label="Favorite" />
+<Button iconR="chevron-down" label="Menu" />
+<Button iconL="checkmark" iconR="arrow-right" label="Continue" />
+
+// Icon-only (requires aria-label)
+<Button iconOnly iconL="star" aria-label="Add to favorites" />
+
+// Custom React icons
+<Button leftIcon={<CustomIcon />} label="Custom" />
+\`\`\`
+
+---
+
+## Sizes
+
+| Size | Height | Padding | Icon Size | Use Case |
+|------|--------|---------|-----------|----------|
+| \`x-small\` | 24px | 0px 12px | 20px | Compact UIs, dense layouts |
+| \`small\` | 32px | 6px 12px | 20px | **Default - Most common** |
+| \`medium\` | 40px | 10px 16px | 20px | Standard forms |
+| \`large\` | 56px | 16px 24px | 24px | Hero sections, CTAs |
+| \`large-floating\` | 56px | 16px 24px | 24px | Large + elevation shadow |
+
+---
+
+## Token Usage
+
+All button types use semantic tokens:
+
+\`\`\`css
+/* Primary Button */
+.button-primary {
+  background: var(--color-bg-neutral-inverse-base);  /* Dark bg */
+  color: var(--color-fg-neutral-inverse-primary);    /* White text */
+}
+
+/* Transparent Button */
+.button-transparent {
+  background: var(--color-bg-transparent-low);       /* Semi-transparent */
+  backdrop-filter: blur(24px);                       /* Glassmorphism */
+}
+
+/* Carby Button */
+.button-carby {
+  background: var(--color-bg-carby-default);         /* Brand green */
+  color: var(--color-fg-carby-primary);              /* Dark text */
+}
+\`\`\`
+
+---
+
+## Best Practices
+
+### ✅ Do
+
+- Use \`primary\` for main actions (save, submit, continue)
+- Use \`outlined\` for secondary actions (cancel, back)
+- Use \`high-impact\` for destructive actions (delete, remove)
+- Provide \`aria-label\` for icon-only buttons
+- Use \`transparent\` over images/gradients for glassmorphism
+
+### ❌ Don't
+
+- Use multiple \`primary\` buttons in the same view
+- Use \`high-impact\` for non-destructive actions
+- Forget accessibility for icon-only buttons
+- Mix button sizes randomly in the same group
+- Override semantic tokens with hard-coded colors
         `.trim(),
       },
     },
@@ -398,32 +499,32 @@ export const IconTester: Story = {
           You'll get autocomplete with all 386+ available icon names.
         </p>
       </div>
-      
+
       <div>
         <h3 className="font-bold mb-3">Test Button with Custom Icons</h3>
-        <Button 
+        <Button
           type="transparent"
           size="medium"
           iconL="star"              // ← Edit this
           iconR="chevron-down"      // ← Edit this
-          label="Test Icons" 
+          label="Test Icons"
         />
       </div>
-      
+
       <div>
         <h3 className="font-bold mb-3">Test Button with Custom Icons</h3>
-        <Button 
+        <Button
           type="primary"
           size="large"
           iconL="star"              // ← Edit this
           iconR="chevron-down"      // ← Edit this
-          label="Test Icons" 
+          label="Test Icons"
         />
       </div>
 
       <div>
         <h3 className="font-bold mb-3">Icon Only</h3>
-        <Button 
+        <Button
           iconOnly
           type="transparent"
           iconL="plus"          // ← Edit this
@@ -433,7 +534,7 @@ export const IconTester: Story = {
 
       <div>
         <h3 className="font-bold mb-3">Icon Only</h3>
-        <Button 
+        <Button
           iconOnly
           size="large"
           iconL="plus"          // ← Edit this
@@ -443,4 +544,136 @@ export const IconTester: Story = {
 
     </div>
   ),
+};
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">
+        Use these natural language prompts to work with Claude Code when using the Button component.
+      </p>
+
+      <div className="space-y-8">
+        {/* Update Button Type */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-blue-600">🎨</span>
+            Update Button Type
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Change the save button from outlined to primary type"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will update <code className="bg-gray-100 px-1 rounded">type="outlined"</code> to <code className="bg-gray-100 px-1 rounded">type="primary"</code>
+          </p>
+        </div>
+
+        {/* Add Icon */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-green-600">✨</span>
+            Add Icon to Button
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add a checkmark icon to the left of the submit button"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">iconL="checkmark"</code> to the button
+          </p>
+        </div>
+
+        {/* Replace with Semantic Tokens */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-purple-600">🔄</span>
+            Migrate to Semantic Tokens
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "This custom button uses bg-green-500. Can you replace it with our semantic carby button type?"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will suggest <code className="bg-gray-100 px-1 rounded">{"<Button type=\"carby\" />"}</code> using semantic tokens
+          </p>
+        </div>
+
+        {/* Create Destructive Action */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-red-600">⚠️</span>
+            Create Destructive Action Button
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Create a delete button with a trash icon and make it look dangerous"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will create <code className="bg-gray-100 px-1 rounded">{"<Button type=\"high-impact\" iconL=\"trash\" label=\"Delete\" />"}</code>
+          </p>
+        </div>
+
+        {/* Make Button Accessible */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-orange-600">♿</span>
+            Fix Accessibility
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "This icon-only button is missing an aria-label. Can you fix it?"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">aria-label="Descriptive text"</code> to the button
+          </p>
+        </div>
+
+        {/* Find Right Button Size */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-indigo-600">📏</span>
+            Choose Right Size
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "What button size should I use for a hero CTA on a landing page?"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will recommend <code className="bg-gray-100 px-1 rounded">size="large"</code> or <code className="bg-gray-100 px-1 rounded">size="large-floating"</code> for prominence
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Always use <code className="bg-white px-1 rounded">type="primary"</code> for main actions</li>
+          <li>• Use <code className="bg-white px-1 rounded">type="high-impact"</code> only for destructive actions</li>
+          <li>• Icon-only buttons require <code className="bg-white px-1 rounded">aria-label</code> for accessibility</li>
+          <li>• Button types use semantic tokens that adapt to light/dark themes automatically</li>
+        </ul>
+      </div>
+
+      <div className="mt-6 p-6 bg-gray-100 rounded-lg">
+        <p className="text-sm text-gray-700">
+          <strong>Component Documentation:</strong> See the Docs page above for complete API reference and token usage
+        </p>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Example prompts for working with Claude Code AI assistant when using the Button component.',
+      },
+    },
+  },
 };

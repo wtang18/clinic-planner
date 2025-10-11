@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { BicolorIcon, type BicolorIconName } from './BicolorIcon';
 
 const meta: Meta<typeof BicolorIcon> = {
-  title: 'Design System/BicolorIcon',
+  title: 'Design System/Icons/BicolorIcon',
   component: BicolorIcon,
   parameters: {
     layout: 'centered',

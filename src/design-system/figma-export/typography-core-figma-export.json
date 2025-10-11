@@ -1,0 +1,511 @@
+{
+  "styles": {
+    "colors": [],
+    "textStyles": [
+      {
+        "name": "Display/Sm Regular",
+        "token": "display-sm-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Sm Medium",
+        "token": "display-sm-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Sm Bold",
+        "token": "display-sm-bold",
+        "type": "text",
+        "description": "Card titles, Section",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Md Regular",
+        "token": "display-md-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "28px",
+        "lineHeight": "40px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Md Medium",
+        "token": "display-md-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "28px",
+        "lineHeight": "40px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Md Bold",
+        "token": "display-md-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "28px",
+        "lineHeight": "40px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Lg Regular",
+        "token": "display-lg-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Lg Medium",
+        "token": "display-lg-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/Lg Bold",
+        "token": "display-lg-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/XL Regular",
+        "token": "display-xl-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/XL Medium",
+        "token": "display-xl-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Display/XL Bold",
+        "token": "display-xl-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "-0.5px"
+      },
+      {
+        "name": "Heading/XS Medium",
+        "token": "heading-xs-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/XS Bold",
+        "token": "heading-xs-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Sm Medium",
+        "token": "heading-sm-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Sm Bold",
+        "token": "heading-sm-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Md Medium",
+        "token": "heading-md-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Md Bold",
+        "token": "heading-md-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Lg Medium",
+        "token": "heading-lg-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/Lg Bold",
+        "token": "heading-lg-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/XL Medium",
+        "token": "heading-xl-medium",
+        "type": "text",
+        "description": "Card titles, Section",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "20px",
+        "lineHeight": "28px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/XL Bold",
+        "token": "heading-xl-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "20px",
+        "lineHeight": "28px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/2XL Medium",
+        "token": "heading-2xl-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/2XL Bold",
+        "token": "heading-2xl-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "24px",
+        "lineHeight": "32px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/3XL Medium",
+        "token": "heading-3xl-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/3XL Bold",
+        "token": "heading-3xl-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "32px",
+        "lineHeight": "40px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/4XL Medium",
+        "token": "heading-4xl-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/4XL Bold",
+        "token": "heading-4xl-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "40px",
+        "lineHeight": "48px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/5XL Medium",
+        "token": "heading-5xl-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "48px",
+        "lineHeight": "64px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Heading/5XL Bold",
+        "token": "heading-5xl-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "48px",
+        "lineHeight": "64px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/XS Regular",
+        "token": "body-xs-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/XS Medium",
+        "token": "body-xs-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/XS Bold",
+        "token": "body-xs-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Sm Regular",
+        "token": "body-sm-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Sm Medium",
+        "token": "body-sm-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Sm Bold",
+        "token": "body-sm-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Md Regular",
+        "token": "body-md-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Md Medium",
+        "token": "body-md-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Md Bold",
+        "token": "body-md-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Lg Regular",
+        "token": "body-lg-regular",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "400",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Lg Medium",
+        "token": "body-lg-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Body/Lg Bold",
+        "token": "body-lg-bold",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "700",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/2XS Medium",
+        "token": "label-2xs-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "10px",
+        "lineHeight": "16px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/XS Medium",
+        "token": "label-xs-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/Sm Medium",
+        "token": "label-sm-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/Md Medium",
+        "token": "label-md-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "16px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Label/Lg Medium",
+        "token": "label-lg-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "18px",
+        "lineHeight": "24px",
+        "letterSpacing": "0px"
+      },
+      {
+        "name": "Eyebrow/Sm Medium",
+        "token": "eyebrow-sm-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "12px",
+        "lineHeight": "20px",
+        "letterSpacing": "1px",
+        "textTransform": "upper"
+      },
+      {
+        "name": "Eyebrow/Md Medium",
+        "token": "eyebrow-md-medium",
+        "type": "text",
+        "fontFamily": "Inter",
+        "fontWeight": "500",
+        "fontSize": "14px",
+        "lineHeight": "20px",
+        "letterSpacing": "1px",
+        "textTransform": "upper"
+      }
+    ],
+    "effectStyles": [],
+    "gridStyles": []
+  },
+  "metadata": {
+    "exportDate": "2025-10-10T20:07:53.989Z",
+    "figmaFileKey": "unknown",
+    "fileName": "Typography Styles: Core",
+    "pluginVersion": "1.0.0",
+    "collectionsFound": 0,
+    "collectionsExported": 0
+  }
+}

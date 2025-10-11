@@ -2,7 +2,7 @@
  * Do not edit directly, this file was auto-generated.
  */
 
-:root, [data-theme="light"] {
+:root {
   --dimension-space-between-coupled: var(--dimension-space-50);
   --dimension-space-between-repeating-small: var(--dimension-space-75); /** Gap between pills, child elements, etc. */
   --dimension-space-between-repeating-medium: var(--dimension-space-100); /** Gap between cards, etc. */

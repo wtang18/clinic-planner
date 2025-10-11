@@ -23,7 +23,7 @@ const toggleTrackVariants = cva(
   [
     'relative inline-flex shrink-0 p-[2px] rounded-full cursor-pointer',
     'transition-colors duration-200 ease-in-out',
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+    'focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-2',
   ],
   {
     variants: {
@@ -32,8 +32,8 @@ const toggleTrackVariants = cva(
         medium: 'w-12 h-7 min-w-[48px]', // 48x28px
       },
       checked: {
-        true: 'bg-[#376c89] justify-end', // bg-input-high, thumb aligned to right
-        false: 'bg-[rgba(0,0,0,0.12)] justify-start', // bg-transparent-low, thumb aligned to left
+        true: 'bg-[var(--color-bg-input-high)] justify-end', // thumb aligned to right
+        false: 'bg-[var(--color-bg-transparent-low)] justify-start', // thumb aligned to left
       },
       disabled: {
         true: 'opacity-50 cursor-not-allowed',
@@ -45,12 +45,12 @@ const toggleTrackVariants = cva(
       {
         checked: false,
         disabled: false,
-        className: 'hover:bg-[rgba(0,0,0,0.20)]', // bg-transparent-low-accented (darker)
+        className: 'hover:bg-[var(--color-bg-transparent-low-accented)]',
       },
       {
         checked: true,
         disabled: false,
-        className: 'hover:bg-[#306385]', // bg-input-high-accented (blue-700)
+        className: 'hover:bg-[var(--color-bg-input-high-accented)]',
       },
     ],
     defaultVariants: {
@@ -225,13 +225,13 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         )}
       >
         {labelPosition === 'left' && (
-          <span className={cn('text-sm font-medium text-[#181818]', disabled && 'opacity-50')}>
+          <span className={cn('text-label-sm-medium !text-[var(--color-fg-neutral-primary)]', disabled && 'opacity-50')}>
             {label}
           </span>
         )}
         {toggleElement}
         {labelPosition === 'right' && (
-          <span className={cn('text-sm font-medium text-[#181818]', disabled && 'opacity-50')}>
+          <span className={cn('text-label-sm-medium !text-[var(--color-fg-neutral-primary)]', disabled && 'opacity-50')}>
             {label}
           </span>
         )}

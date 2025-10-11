@@ -133,7 +133,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
             <div className="flex items-end shrink-0">
               {/* Regular Icon scaled to 32x32px to match BicolorIcon dimensions */}
               <div className="w-8 h-8 flex items-center justify-center">
-                <Icon name={customIcon} size="medium" className="!w-8 !h-8 text-[#181818]" />
+                <Icon name={customIcon} size="medium" className="!w-8 !h-8 !text-[var(--color-fg-neutral-primary)]" />
               </div>
             </div>
           );
@@ -158,8 +158,8 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         ref={ref}
         className={cn(
           // Exact Figma container specs
-          'bg-white box-border flex gap-[16px] items-center px-[16px] py-[12px] rounded-[16px]',
-          'shadow-[0px_4px_16px_0px_rgba(0,0,0,0.16)]',
+          'bg-[var(--color-bg-neutral-base)] box-border flex gap-[16px] items-center px-[16px] py-[12px] rounded-[16px]',
+          'elevation-lg',
           'min-h-[72px]', // Ensures proper height for title + subtext
           // Width: 480px default, responsive to container
           'w-[480px] max-w-full',
@@ -177,7 +177,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
           <div className="flex flex-col items-start grow min-w-0">
             {/* Title - Exact Figma: Body/Md Medium (16px/24px, font-medium) */}
             <div className="flex items-start w-full">
-              <p className="font-medium text-[16px] leading-[24px] text-[#181818] grow min-w-0">
+              <p className="text-body-md-medium !text-[var(--color-fg-neutral-primary)] grow min-w-0">
                 {title}
               </p>
             </div>
@@ -185,7 +185,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
             {/* Subtext - Exact Figma: Body/Sm Regular (14px/20px, font-normal) */}
             {showSubtext && subtext && (
               <div className="flex items-start w-full">
-                <p className="font-normal text-[14px] leading-[20px] text-[#424242] grow min-w-0">
+                <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)] grow min-w-0">
                   {subtext}
                 </p>
               </div>
@@ -214,7 +214,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
               className="flex items-end shrink-0 hover:opacity-70 transition-opacity"
               aria-label="Close notification"
             >
-              <Icon name="x" size="medium" className="text-[#181818]" />
+              <Icon name="x" size="medium" className="!text-[var(--color-fg-neutral-primary)]" />
             </button>
           )}
         </div>
