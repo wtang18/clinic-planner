@@ -9,66 +9,24 @@ const meta: Meta = {
     docs: {
       description: {
         component: `
-# Token System - Style Dictionary v4
+# Token System Overview
 
-A production-ready design token system with **834 tokens** organized in a three-layer hierarchy for automatic theming, consistency, and maintainability.
+A production-ready design token system with **834 tokens** organized in a three-layer hierarchy.
 
-## Architecture
+## Quick Reference
 
-\`\`\`
-Components → Semantic Tokens → Decorative Tokens → Primitive Tokens
-\`\`\`
+**Architecture**: Components → Semantic Tokens → Decorative Tokens → Primitive Tokens
 
-**Layer 1: Primitives** - Raw values from Figma (colors, typography, dimensions)
-**Layer 2: Decorative** - Human-readable names with light/dark modes
-**Layer 3: Semantic** - Contextual tokens for components (USE THESE!)
+**Usage**: Always use semantic tokens (\`--color-bg-*\`, \`--color-fg-*\`) instead of primitives in your components.
 
-## Quick Start
+**Build**: \`npm run tokens:build\` to regenerate tokens from Figma export.
 
-\`\`\`bash
-# Update tokens from Figma export
-npm run tokens:build
+## Stories
 
-# View in Storybook
-npm run storybook
-\`\`\`
+- **Architecture**: Build pipeline, generated files, and responsive typography details
+- **Theme Comparison**: Interactive light/dark theme demonstration
 
-## Token Count: 834 tokens
-
-- **Primitives**: 180 tokens (colors, typography, dimensions)
-- **Decorative**: 148 tokens (light + dark theme abstractions)
-- **Semantic**: 506 tokens (contextual, theme-aware)
-
-## Key Features
-
-- 🎨 **Automatic theming** via \`data-theme="light|dark"\`
-- 📱 **Responsive typography** that scales between mobile and desktop
-- ♿ **Semantic naming** for better accessibility
-- 🔄 **Direct Figma sync** via JSON export
-- 🔒 **Type-safe** - TypeScript definitions generated
-- 📦 **React Native ready** - Flat JS exports
-
-## Usage
-
-✅ **Always use semantic tokens** in components:
-\`\`\`tsx
-<div className="bg-[var(--color-bg-neutral-subtle)]">
-  <p className="text-[var(--color-fg-neutral-primary)]">Text</p>
-</div>
-\`\`\`
-
-❌ **Never use primitives** directly:
-\`\`\`tsx
-<div className="bg-[var(--color-gray-50)]">  {/* Bad! */}
-  <p className="text-[var(--color-gray-900)]">Text</p>
-</div>
-\`\`\`
-
-## Documentation
-
-- **Build Files**: \`src/design-system/tokens/build/*.css\`
-- **Config Files**: \`sd.config.js\`, \`sd.config.light.js\`, \`sd.config.dark.js\`, \`sd.config.typography-large.js\`
-- **Migration Guide**: \`docs/COMPONENT-MIGRATION-PLAN.md\`
+See individual stories below for detailed documentation.
         `.trim(),
       },
     },

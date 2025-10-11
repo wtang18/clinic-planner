@@ -49,8 +49,15 @@ export interface BicolorIconProps {
  * Get CSS variable value at runtime
  */
 function getCssVar(varName: string): string {
-  if (typeof window === 'undefined') return varName; // SSR fallback
-  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+  if (typeof window === 'undefined') return ''; // SSR fallback - return empty to trigger fallback color
+  const value = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+
+  // Debug: log if value is empty
+  if (!value && process.env.NODE_ENV === 'development') {
+    console.warn(`BicolorIcon: CSS variable "${varName}" is empty or not defined`);
+  }
+
+  return value; // Return empty string if not found, which will trigger || fallback
 }
 
 /**
