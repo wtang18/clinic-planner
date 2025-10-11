@@ -57,20 +57,100 @@ const meta: Meta<typeof Toggle> = {
     docs: {
       description: {
         component: `
-Toggle/Switch component with Figma design system integration.
+# Toggle Component
 
-## Size Specifications
-- **Small**: 32x18px track, 14x14px thumb, 2px padding
-- **Medium** (default): 48x28px track, 24x24px thumb, 2px padding
+Production-ready toggle/switch component with semantic token integration and smooth animations.
 
-## State Specifications
-- **Off**: Light gray track (bg-transparent-low), white thumb
-- **On**: Blue track (bg-input-high #376c89), white thumb, thumb slides to right
-- **Hover Off**: Darker gray track (bg-transparent-low-accented)
-- **Hover On**: Darker blue track (bg-input-high-accented)
-- **Disabled**: 50% opacity, cannot be toggled, no hover effects
+## Quick Reference
 
-Smooth transitions animate between states.
+**Sizes**: 2 sizes (small, medium)
+**States**: On/Off with hover and disabled states
+**Tokens**: Uses semantic input and transparent tokens for theme support
+
+---
+
+## Features
+
+- ✅ **Semantic Tokens**: Uses \`--color-bg-input-*\` and \`--color-bg-transparent-*\` tokens for automatic theme support
+- ✅ **Smooth Animations**: Thumb slides smoothly with transition effects
+- ✅ **Accessibility**: Full keyboard navigation, ARIA switch role, screen reader support
+- ✅ **Controlled Component**: Fully controlled state management
+- ✅ **Optional Labels**: Left or right label positioning
+
+---
+
+## Sizes
+
+| Size | Track Dimensions | Thumb Size | Padding | Use Case |
+|------|------------------|------------|---------|----------|
+| \`small\` | 32x18px | 14x14px | 2px | Compact UIs, dense settings |
+| \`medium\` | 48x28px | 24x24px | 2px | **Default - Most common** |
+
+---
+
+## States
+
+| State | Track Color | Thumb Position | Hover Effect | Interactive |
+|-------|-------------|----------------|--------------|-------------|
+| **Off** | \`bg-transparent-low\` (gray) | Left | Darker gray | Yes |
+| **On** | \`bg-input-high\` (blue) | Right | Darker blue | Yes |
+| **Disabled Off** | Gray, 50% opacity | Left | None | No |
+| **Disabled On** | Blue, 50% opacity | Right | None | No |
+
+All state transitions include smooth animations.
+
+---
+
+## Token Usage
+
+Toggle uses semantic tokens that adapt to themes:
+
+\`\`\`tsx
+// Off state
+// Track: var(--color-bg-transparent-low)
+// Hover: var(--color-bg-transparent-low-accented)
+
+// On state
+// Track: var(--color-bg-input-high)
+// Hover: var(--color-bg-input-high-accented)
+
+// Thumb: Always white (--color-white-solid)
+\`\`\`
+
+---
+
+## Best Practices
+
+### ✅ When to Use Toggles
+
+- Binary settings (on/off, enable/disable)
+- Feature flags and preferences
+- Instant state changes (no form submission needed)
+- Visibility controls (show/hide sections)
+- Notification preferences
+
+### ✅ Do
+
+- Provide a clear label describing what the toggle controls
+- Use \`onChange\` to handle state updates immediately
+- Show the effect of the toggle change immediately
+- Use labels that work in both on/off states ("Dark Mode", not "Turn on dark mode")
+- Provide \`aria-label\` if no visible label is present
+
+### ❌ Don't
+
+- Use for actions that require confirmation (use Button instead)
+- Use for more than two options (use SegmentedControl or Radio buttons)
+- Rely solely on color to indicate state (motion and position are primary indicators)
+- Change the label text based on the toggle state
+- Use when the change isn't immediate (use Checkbox with submit button instead)
+
+### Accessibility
+
+✓ **Keyboard Navigation**: Space or Enter to toggle
+✓ **Screen Readers**: Announces as "switch" with "on"/"off" state
+✓ **Focus Indicator**: Visible focus ring for keyboard users
+✓ **ARIA Attributes**: \`role="switch"\`, \`aria-checked\`, \`aria-label\`/\`aria-labelledby\`
         `.trim(),
       },
     },

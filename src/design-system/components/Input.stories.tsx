@@ -138,25 +138,158 @@ const meta: Meta<typeof Input> = {
     docs: {
       description: {
         component: `
-Input component with Figma design system integration.
+# Input Component
 
-## Icon Props
-The \`leftIcon\` and \`rightIcon\` props accept icon names from the icon library (386+ options). Examples:
-- \`leftIcon="search"\` - Search icon on left
-- \`rightIcon="envelope"\` - Envelope icon on right
-- \`leftIcon="dollar-sign" rightIcon="calculator"\` - Custom icon combination
+Production-ready text input with semantic token integration, icon support, and comprehensive validation states.
 
-Icons are positioned inside the input field border. Icon size is automatically determined:
-- **Small/Medium inputs**: 20px icons (small)
-- **Large inputs**: 24px icons (medium)
+## Quick Reference
 
-## Subtext Props
+**Types**: 2 variants (outlined, filled)
+**Sizes**: 3 sizes (small, medium, large)
+**Tokens**: Uses semantic color tokens for theme support
+**Icons**: 386+ icons supported via leftIcon/rightIcon props
+
+---
+
+## Features
+
+- ✅ **Semantic Tokens**: Uses \`--color-bg-*\` and \`--color-fg-*\` tokens for automatic theme support
+- ✅ **Icon Integration**: Built-in support for 386+ icons with automatic sizing
+- ✅ **Subtext Support**: Currency symbols, units, and labels inside the field
+- ✅ **Validation States**: Error states with custom messages
+- ✅ **Accessibility**: ARIA support, proper labeling, focus management
+- ✅ **Helper Text**: Optional descriptive text below the input
+
+---
+
+## Types
+
+| Type | Background | Border | Use Case |
+|------|------------|--------|----------|
+| \`outlined\` | Transparent | Visible border | **Default - Most forms** |
+| \`filled\` | Subtle background | No border | Dense layouts, alternative style |
+
+---
+
+## Sizes
+
+| Size | Height | Padding | Icon Size | Font Size | Use Case |
+|------|--------|---------|-----------|-----------|----------|
+| \`small\` | 32px | 6px 12px | 20px | 14px | Compact UIs, toolbars |
+| \`medium\` | 40px | 10px 12px | 20px | 14px | **Default - Most common** |
+| \`large\` | 56px | 16px 16px | 24px | 16px | Hero sections, emphasis |
+
+---
+
+## Icon System
+
+The \`leftIcon\` and \`rightIcon\` props accept icon names from the icon library (386+ options):
+
+**Examples**:
+\`\`\`tsx
+// Search input
+<Input leftIcon="search" placeholder="Search..." />
+
+// Email input
+<Input leftIcon="envelope" type="email" label="Email" />
+
+// Password with visibility toggle
+<Input leftIcon="lock" rightIcon="eye" type="password" label="Password" />
+
+// Phone input
+<Input leftIcon="phone" label="Phone Number" />
+\`\`\`
+
+Icon sizes are automatically determined by input size:
+- **Small/Medium inputs**: 20px icons
+- **Large inputs**: 24px icons
+
+---
+
+## Subtext System
+
 The \`leftSubtext\` and \`rightSubtext\` props add small text inside the field:
-- Position: Inside the input field border (left/right)
-- Use cases: Currency symbols ("$"), units ("%", "USD"), etc.
-- Automatically hidden when field is disabled
 
-See the IconVariations and WithSubtexts stories for examples.
+**Examples**:
+\`\`\`tsx
+// Currency input
+<Input leftSubtext="$" placeholder="0.00" label="Price" />
+
+// Percentage input
+<Input rightSubtext="%" placeholder="0" label="Discount" />
+
+// URL prefix
+<Input leftSubtext="https://" placeholder="example.com" label="Website" />
+
+// Currency with unit
+<Input leftSubtext="$" rightSubtext="USD" label="Amount" />
+\`\`\`
+
+**Position**: Inside the input field border
+**Behavior**: Automatically hidden when field is disabled
+
+---
+
+## Validation States
+
+Inputs support error states with custom messages:
+
+\`\`\`tsx
+// Show error
+<Input
+  label="Email"
+  value="invalid-email"
+  error
+  errorMessage="Please enter a valid email address"
+/>
+
+// Helper text (no error)
+<Input
+  label="Password"
+  helperText="Must be at least 8 characters"
+/>
+\`\`\`
+
+Error messages replace helper text when \`error=true\`.
+
+---
+
+## Best Practices
+
+### ✅ When to Use Inputs
+
+- Single-line text entry
+- Email, password, phone number fields
+- Search bars
+- Numeric inputs (prices, quantities)
+- URL/link inputs
+
+### ✅ Do
+
+- Always provide a \`label\` for accessibility
+- Use appropriate \`type\` attribute (email, password, tel, url, etc.)
+- Provide helpful \`helperText\` for complex requirements
+- Use \`leftIcon\` to indicate input type (search, email, phone)
+- Use \`rightIcon\` for actions (clear, visibility toggle)
+- Use \`leftSubtext\`/\`rightSubtext\` for units and prefixes
+- Show clear error messages with \`errorMessage\`
+
+### ❌ Don't
+
+- Use for multi-line text (use Textarea instead)
+- Forget labels for accessibility
+- Use vague error messages ("Invalid input")
+- Overload with too many icons/subtexts
+- Use outlined and filled types inconsistently in the same form
+- Disable inputs without explanation
+
+### Accessibility
+
+✓ **Labels**: Always provide \`label\` or \`aria-label\`
+✓ **Helper Text**: Use \`helperText\` for additional context
+✓ **Error States**: Use \`error\` and \`errorMessage\` for validation
+✓ **Focus Management**: Automatic focus ring and keyboard navigation
+✓ **ARIA Attributes**: \`aria-describedby\` links helper/error text
         `.trim(),
       },
     },

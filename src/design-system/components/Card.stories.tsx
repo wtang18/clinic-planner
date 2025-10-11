@@ -44,17 +44,90 @@ const meta: Meta<typeof Card> = {
     docs: {
       description: {
         component: `
-Card component with Figma design system integration.
+# Card Component
 
-## Size Specifications
-- **Small**: 8px border radius, 12px padding, 8px gap
-- **Medium** (default): 16px border radius, 16px padding, 16px gap
+Production-ready card container with semantic token integration and flexible layout support.
 
-## Variant Specifications
-- **Interactive**: Clickable/hoverable card with shadow effects and cursor pointer
-- **Non-interactive**: Static container without shadow
+## Quick Reference
 
-Interactive cards show a default shadow and a hover shadow effect.
+**Variants**: 2 types (interactive, non-interactive)
+**Sizes**: 2 sizes (small, medium)
+**Tokens**: Uses semantic elevation and neutral tokens for theme support
+
+---
+
+## Features
+
+- ✅ **Semantic Tokens**: Uses \`--color-bg-*\` tokens and elevation classes for automatic theme support
+- ✅ **Flexible Container**: Wraps any content with consistent spacing and layout
+- ✅ **Interactive States**: Hover shadow elevation for clickable cards
+- ✅ **Accessibility**: Proper keyboard navigation and ARIA support
+- ✅ **Semantic HTML**: Can render as any HTML element (div, section, article, etc.)
+
+---
+
+## Variants
+
+| Variant | Shadow | Hover Effect | Cursor | Use Case |
+|---------|--------|--------------|--------|----------|
+| \`non-interactive\` | None | None | Default | Static content containers |
+| \`interactive\` | elevation | elevation-md | Pointer | Clickable cards, navigation |
+
+---
+
+## Sizes
+
+| Size | Border Radius | Padding | Gap | Use Case |
+|------|---------------|---------|-----|----------|
+| \`small\` | 8px | 12px | 8px | Compact layouts, dense lists |
+| \`medium\` | 16px | 16px | 16px | **Default - Most common** |
+
+---
+
+## Token Usage
+
+Cards use semantic tokens and Figma elevation classes:
+
+\`\`\`tsx
+// Non-interactive card
+<Card variant="non-interactive">
+  // Uses: bg-neutral-base, no shadow
+</Card>
+
+// Interactive card (default shadow)
+<Card variant="interactive" onClick={() => {}}>
+  // Uses: bg-neutral-base, elevation class
+  // Hover: elevation-md class
+</Card>
+\`\`\`
+
+---
+
+## Best Practices
+
+### ✅ When to Use Cards
+
+- Group related information together
+- Create clickable navigation targets
+- Display list items with consistent styling
+- Organize dashboard sections
+- Wrap form sections or settings groups
+
+### ✅ Do
+
+- Use \`interactive\` variant for clickable cards
+- Provide \`onClick\` handler for interactive cards
+- Use \`aria-label\` for interactive cards without clear text
+- Group related content within a single card
+- Use \`small\` size for dense layouts, \`medium\` for standard layouts
+
+### ❌ Don't
+
+- Use cards for single text elements (use Pills or Buttons instead)
+- Nest interactive cards within other interactive elements
+- Use non-interactive variant with onClick handler
+- Forget keyboard accessibility for interactive cards
+- Mix card sizes inconsistently in the same list
         `.trim(),
       },
     },
@@ -216,6 +289,59 @@ export const ResponsiveLayout: Story = {
               <Button type="no-fill" size="small" label="View Details" />
             </Card>
           ))}
+        </div>
+      </div>
+    </div>
+  ),
+};
+
+export const AccessibilityDemo: Story = {
+  render: () => (
+    <div className="p-8 space-y-8">
+      <div className="bg-blue-50 p-6 rounded-lg">
+        <h3 className="text-lg font-bold mb-4">Accessibility Features</h3>
+        <p className="text-sm text-gray-700 mb-4">
+          Interactive cards are fully keyboard accessible and follow WCAG guidelines.
+        </p>
+        <ul className="text-sm space-y-2 mb-6 text-gray-700">
+          <li>✓ Proper role="button" for interactive cards</li>
+          <li>✓ Keyboard navigation (Tab to focus, Enter/Space to click)</li>
+          <li>✓ Visible focus ring for keyboard users</li>
+          <li>✓ aria-label support for cards without descriptive text</li>
+          <li>✓ aria-disabled state for disabled cards</li>
+        </ul>
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs text-gray-600 mb-2">Interactive card with clear text (no aria-label needed):</p>
+            <Card
+              variant="interactive"
+              onClick={() => alert('Card clicked!')}
+            >
+              <h4 className="text-base font-semibold">Event Details</h4>
+              <p className="text-sm text-gray-600">Click to view more information</p>
+            </Card>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 mb-2">Interactive card with aria-label for clarity:</p>
+            <Card
+              variant="interactive"
+              onClick={() => alert('Card clicked!')}
+              aria-label="View patient record for John Doe"
+            >
+              <h4 className="text-base font-semibold">John Doe</h4>
+              <p className="text-sm text-gray-600">Last visit: Jan 15, 2025</p>
+            </Card>
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 mb-2">Disabled interactive card:</p>
+            <Card
+              variant="interactive"
+              disabled
+            >
+              <h4 className="text-base font-semibold">Disabled Card</h4>
+              <p className="text-sm text-gray-600">This card cannot be interacted with</p>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
