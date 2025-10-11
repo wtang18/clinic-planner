@@ -314,15 +314,7 @@ export const ThemeComparison: Story = {
 
           <div key={theme} className="grid grid-cols-2 gap-6">
             {/* Neutral */}
-            <div
-              className="p-6 rounded-lg"
-              style={{
-                backgroundColor: 'var(--color-bg-neutral-subtle)',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--color-bg-neutral-low-accented)'
-              }}
-            >
+            <div className="p-6 rounded-lg bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low-accented)]">
               <h2 className="text-xl font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
                 Neutral
               </h2>
@@ -330,36 +322,20 @@ export const ThemeComparison: Story = {
                 Background and foreground colors for general content
               </p>
               <div className="space-y-2 text-xs font-mono">
-                <div
-                  className="p-2 rounded"
-                  style={{
-                    backgroundColor: 'var(--color-bg-neutral-base)',
-                    borderWidth: '1px',
-                    borderStyle: 'solid',
-                    borderColor: 'var(--color-bg-neutral-low-accented)'
-                  }}
-                >
+                <div className="p-2 rounded bg-[var(--color-bg-neutral-base)] border border-[var(--color-bg-neutral-low-accented)]">
                   <span className="text-[var(--color-fg-neutral-primary)]">--color-bg-neutral-base</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-neutral-subtle)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-neutral-subtle)]">
                   <span className="text-[var(--color-fg-neutral-primary)]">--color-bg-neutral-subtle</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-neutral-low-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-neutral-low-accented)]">
                   <span className="text-[var(--color-fg-neutral-primary)]">--color-bg-neutral-low-accented</span>
                 </div>
               </div>
             </div>
 
             {/* Positive */}
-            <div
-              className="p-6 rounded-lg"
-              style={{
-                backgroundColor: 'var(--color-bg-positive-subtle)',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--color-bg-positive-medium)'
-              }}
-            >
+            <div className="p-6 rounded-lg bg-[var(--color-bg-positive-subtle)] border border-[var(--color-bg-positive-medium)]">
               <h2 className="text-xl font-semibold mb-3 text-[var(--color-fg-positive-primary)]">
                 Positive / Success
               </h2>
@@ -367,28 +343,20 @@ export const ThemeComparison: Story = {
                 For success states, confirmations, and positive feedback
               </p>
               <div className="space-y-2 text-xs font-mono">
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-positive-subtle)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-positive-subtle)]">
                   <span className="text-[var(--color-fg-positive-primary)]">--color-bg-positive-subtle</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-positive-low-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-positive-low-accented)]">
                   <span className="text-[var(--color-fg-positive-primary)]">--color-bg-positive-low-accented</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-positive-high-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-positive-high-accented)]">
                   <span className="text-[var(--color-fg-neutral-inverse-primary)]">--color-bg-positive-high-accented</span>
                 </div>
               </div>
             </div>
 
             {/* Alert */}
-            <div
-              className="p-6 rounded-lg"
-              style={{
-                backgroundColor: 'var(--color-bg-alert-subtle)',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--color-bg-alert-medium)'
-              }}
-            >
+            <div className="p-6 rounded-lg bg-[var(--color-bg-alert-subtle)] border border-[var(--color-bg-alert-medium)]">
               <h2 className="text-xl font-semibold mb-3 text-[var(--color-fg-alert-primary)]">
                 Alert / Error
               </h2>
@@ -396,28 +364,20 @@ export const ThemeComparison: Story = {
                 For error states, warnings, and critical information
               </p>
               <div className="space-y-2 text-xs font-mono">
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-alert-subtle)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-alert-subtle)]">
                   <span className="text-[var(--color-fg-alert-primary)]">--color-bg-alert-subtle</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-alert-low-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-alert-low-accented)]">
                   <span className="text-[var(--color-fg-alert-primary)]">--color-bg-alert-low-accented</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-alert-high-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-alert-high-accented)]">
                   <span className="text-[var(--color-fg-neutral-inverse-primary)]">--color-bg-alert-high-accented</span>
                 </div>
               </div>
             </div>
 
             {/* Information */}
-            <div
-              className="p-6 rounded-lg"
-              style={{
-                backgroundColor: 'var(--color-bg-information-subtle)',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: 'var(--color-bg-information-medium)'
-              }}
-            >
+            <div className="p-6 rounded-lg bg-[var(--color-bg-information-subtle)] border border-[var(--color-bg-information-medium)]">
               <h2 className="text-xl font-semibold mb-3 text-[var(--color-fg-information-primary)]">
                 Information
               </h2>
@@ -425,13 +385,13 @@ export const ThemeComparison: Story = {
                 For informational messages and helpful content
               </p>
               <div className="space-y-2 text-xs font-mono">
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-information-subtle)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-information-subtle)]">
                   <span className="text-[var(--color-fg-information-primary)]">--color-bg-information-subtle</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-information-low-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-information-low-accented)]">
                   <span className="text-[var(--color-fg-information-primary)]">--color-bg-information-low-accented</span>
                 </div>
-                <div className="p-2 rounded" style={{ backgroundColor: 'var(--color-bg-information-high-accented)' }}>
+                <div className="p-2 rounded bg-[var(--color-bg-information-high-accented)]">
                   <span className="text-[var(--color-fg-neutral-inverse-primary)]">--color-bg-information-high-accented</span>
                 </div>
               </div>
