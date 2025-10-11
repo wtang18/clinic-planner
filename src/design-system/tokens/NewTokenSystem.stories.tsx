@@ -286,6 +286,18 @@ export const ThemeComparison: Story = {
     React.useEffect(() => {
       document.documentElement.setAttribute('data-theme', theme);
 
+      // Debug: Check computed values
+      const styles = getComputedStyle(document.documentElement);
+      console.log('=== Theme Debug ===');
+      console.log('Theme:', theme);
+      console.log('data-theme attribute:', document.documentElement.getAttribute('data-theme'));
+      console.log('--color-bg-neutral-base:', styles.getPropertyValue('--color-bg-neutral-base').trim());
+      console.log('--color-bg-neutral-subtle:', styles.getPropertyValue('--color-bg-neutral-subtle').trim());
+      console.log('--gray-lowest:', styles.getPropertyValue('--gray-lowest').trim());
+      console.log('--gray-highest:', styles.getPropertyValue('--gray-highest').trim());
+      console.log('--white-solid:', styles.getPropertyValue('--white-solid').trim());
+      console.log('--black-solid:', styles.getPropertyValue('--black-solid').trim());
+
       // Cleanup: reset to light theme when component unmounts
       return () => {
         document.documentElement.setAttribute('data-theme', 'light');
@@ -350,7 +362,7 @@ export const ThemeComparison: Story = {
                   <span className="text-[var(--color-fg-positive-primary)]">--color-bg-positive-low-accented</span>
                 </div>
                 <div className="p-2 rounded bg-[var(--color-bg-positive-high-accented)]">
-                  <span className="text-[var(--color-fg-neutral-inverse-primary)]">--color-bg-positive-high-accented</span>
+                  <span className="text-[var(--color-fg-positive-inverse-primary)]">--color-bg-positive-high-accented</span>
                 </div>
               </div>
             </div>
@@ -371,7 +383,7 @@ export const ThemeComparison: Story = {
                   <span className="text-[var(--color-fg-alert-primary)]">--color-bg-alert-low-accented</span>
                 </div>
                 <div className="p-2 rounded bg-[var(--color-bg-alert-high-accented)]">
-                  <span className="text-[var(--color-fg-neutral-inverse-primary)]">--color-bg-alert-high-accented</span>
+                  <span className="text-[var(--color-fg-alert-inverse-primary)]">--color-bg-alert-high-accented</span>
                 </div>
               </div>
             </div>
@@ -392,7 +404,7 @@ export const ThemeComparison: Story = {
                   <span className="text-[var(--color-fg-information-primary)]">--color-bg-information-low-accented</span>
                 </div>
                 <div className="p-2 rounded bg-[var(--color-bg-information-high-accented)]">
-                  <span className="text-[var(--color-fg-neutral-inverse-primary)]">--color-bg-information-high-accented</span>
+                  <span className="text-[var(--color-fg-information-inverse-primary)]">--color-bg-information-high-accented</span>
                 </div>
               </div>
             </div>
