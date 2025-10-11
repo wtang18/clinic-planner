@@ -7,61 +7,89 @@ const meta: Meta = {
     docs: {
       description: {
         component: `
-# Color Tokens
+# Semantic Color Tokens
 
-A comprehensive color system with semantic naming for consistent UI design.
+Purpose-driven color tokens for consistent, accessible UI design. These semantic tokens reference primitive colors and provide clear meaning through their naming.
 
-## Color System Structure
+## What are Semantic Colors?
 
-### Base Color Scales
-- **Gray**: Neutral scale from light to dark (25-1000)
-- **Cream**: Warm neutral alternative
-- **Blue**: Information and accents
-- **Green**: Success and positive actions
-- **Yellow**: Attention and warnings
-- **Red**: Errors and destructive actions
-- **Purple**: Accent and special highlights
-- **Saturated Red**: High-contrast alerts
+Semantic color tokens abstract away raw color values (like `#e5f3f8` or `blue-50`) and replace them with purpose-driven names that describe **what** the color is for, not **what** it looks like.
 
-### Semantic Color System
+**Benefits**:
+- **Meaningful names**: `--color-bg-alert-subtle` is clearer than `saturated-red-50`
+- **Themeability**: Change the entire color scheme by swapping primitive references
+- **Consistency**: Colors with the same purpose look the same everywhere
+- **Accessibility**: Semantic pairings (bg + fg) ensure sufficient contrast
+
+## Semantic Color Categories
 
 Colors are organized by intent with background (bg) and foreground (fg) variants:
 
-- **Neutral**: Base UI elements, text, backgrounds
-- **Alert**: Errors, destructive actions
-- **Attention**: Warnings, cautions
-- **Positive**: Success, confirmations
-- **Information**: Informational messages, links
-- **Accent**: Special highlights, premium features
+- **Neutral**: Base UI elements, text, backgrounds, borders
+- **Alert**: Errors, destructive actions, critical warnings
+- **Attention**: Warnings, cautions, important notices
+- **Positive**: Success, confirmations, positive outcomes
+- **Information**: Informational messages, links, helpful tips
+- **Accent**: Special highlights, premium features, branding
+- **Transparent**: Overlays, modals, glass effects
 
-### Usage Patterns
+## Intensity Scale
 
-**Background Colors** follow an intensity scale:
-- \`subtle\`: Lightest, barely visible
-- \`low\`: Light, for containers
-- \`low-accented\`: Light, slightly more prominent
-- \`medium\`: Mid-tone, moderate emphasis
-- \`high\`: Dark, high emphasis
+**Background Colors** follow an intensity scale from subtle to high:
+- \`base\`: Default background (usually white/near-white)
+- \`min\`: Minimal tint, barely visible
+- \`subtle\`: Very light tint for subtle containers
+- \`low\`: Light tint for cards and panels
+- \`low-accented\`: Light with slightly more color
+- \`medium\`: Mid-tone for moderate emphasis
+- \`high\`: Dark, high emphasis for buttons/CTAs
 - \`high-accented\`: Darkest, maximum emphasis
+- \`inverse-*\`: Dark mode variants
 
 **Foreground Colors** are optimized for readability:
-- \`primary\`: Main text color on light backgrounds
-- \`secondary\`: Slightly lighter for less important text
-- \`spot-readable\`: Colored text that remains readable
-- \`inverse-primary\`: Text color on dark backgrounds
+- \`primary\`: Main text color (highest contrast)
+- \`secondary\`: Supporting text (medium contrast)
+- \`spot-readable\`: Subtle colored text
+- \`disabled\`: Inactive/disabled text
+- \`inverse-primary\`: Text on dark backgrounds
 - \`inverse-secondary\`: Secondary text on dark backgrounds
 
-## Using Color Tokens
+## Usage
 
 \`\`\`tsx
-// Semantic colors (recommended)
-<div className="bg-alert-subtle text-alert-primary">Error message</div>
-<div className="bg-positive-low text-positive-primary">Success</div>
+// ✅ Use semantic color tokens
+<div className="bg-[var(--color-bg-alert-subtle)] border-l-4 border-[var(--color-bg-alert-high)]">
+  <p className="text-[var(--color-fg-alert-primary)]">Error message</p>
+</div>
 
-// Base color scales (for custom cases)
-<div className="bg-gray-50 text-gray-900">Neutral content</div>
-<div className="bg-blue-100 text-blue-800">Custom info box</div>
+// ✅ Pair backgrounds and foregrounds from the same category
+<button className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-positive-inverse-primary)]">
+  Save Changes
+</button>
+
+// ❌ Don't use primitive colors directly
+<div style={{ backgroundColor: '#fcedeb', color: '#b4272c' }}>
+  Error message
+</div>
+
+// ❌ Don't mix categories inappropriately
+<div className="bg-[var(--color-bg-alert-subtle)] text-[var(--color-fg-positive-primary)]">
+  Confusing mixed semantics
+</div>
 \`\`\`
+
+## Relationship to Primitives
+
+Semantic tokens reference primitive colors from the **Primitives/Colors** story:
+
+| Semantic Token | References Primitive |
+|----------------|---------------------|
+| \`--color-bg-alert-subtle\` | \`saturated-red-50\` |
+| \`--color-bg-positive-high\` | \`green-600\` |
+| \`--color-bg-information-subtle\` | \`blue-50\` |
+| \`--color-fg-neutral-primary\` | \`gray-900\` |
+
+See **Primitives/Colors** for the complete list of base color values.
         `,
       },
     },
@@ -71,28 +99,6 @@ Colors are organized by intent with background (bg) and foreground (fg) variants
 
 export default meta;
 type Story = StoryObj;
-
-// Color swatch component
-const ColorSwatch = ({
-  name,
-  value,
-  textColor = 'text-gray-900'
-}: {
-  name: string;
-  value: string;
-  textColor?: string;
-}) => (
-  <div className="flex flex-col gap-2">
-    <div
-      className="w-full h-16 rounded-lg border border-gray-200 shadow-sm"
-      style={{ backgroundColor: value }}
-    />
-    <div className="flex flex-col">
-      <span className="text-xs font-semibold text-gray-900">{name}</span>
-      <span className="text-2xs text-gray-600 font-mono">{value}</span>
-    </div>
-  </div>
-);
 
 // Semantic color swatch with both bg and fg
 const SemanticSwatch = ({
@@ -117,321 +123,6 @@ const SemanticSwatch = ({
     <span className="text-2xs text-[var(--color-fg-neutral-secondary)] text-center">{label}</span>
   </div>
 );
-
-export const BaseColorScales: Story = {
-  render: () => (
-    <div className="p-8 space-y-12">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Gray Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Primary neutral scale for UI elements</p>
-        <div className="grid grid-cols-6 gap-4">
-          <ColorSwatch name="gray-25" value="#fafafa" />
-          <ColorSwatch name="gray-50" value="#f1f1f1" />
-          <ColorSwatch name="gray-100" value="#e1e1e1" />
-          <ColorSwatch name="gray-200" value="#d4d4d4" />
-          <ColorSwatch name="gray-300" value="#bcbcbc" />
-          <ColorSwatch name="gray-400" value="#a4a4a4" />
-        </div>
-        <div className="grid grid-cols-6 gap-4 mt-4">
-          <ColorSwatch name="gray-500" value="#8b8b8b" textColor="text-white" />
-          <ColorSwatch name="gray-600" value="#676767" textColor="text-white" />
-          <ColorSwatch name="gray-700" value="#5f5f5f" textColor="text-white" />
-          <ColorSwatch name="gray-800" value="#424242" textColor="text-white" />
-          <ColorSwatch name="gray-900" value="#323232" textColor="text-white" />
-          <ColorSwatch name="gray-1000" value="#181818" textColor="text-white" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Blue Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Information and interactive elements</p>
-        <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="blue-50" value="#e5f3f8" />
-          <ColorSwatch name="blue-100" value="#c9e6f0" />
-          <ColorSwatch name="blue-200" value="#b9dfea" />
-          <ColorSwatch name="blue-300" value="#8bc9de" />
-          <ColorSwatch name="blue-400" value="#6ab0ca" />
-        </div>
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <ColorSwatch name="blue-500" value="#4d93af" textColor="text-white" />
-          <ColorSwatch name="blue-600" value="#376c89" textColor="text-white" />
-          <ColorSwatch name="blue-700" value="#306385" textColor="text-white" />
-          <ColorSwatch name="blue-800" value="#234658" textColor="text-white" />
-          <ColorSwatch name="blue-900" value="#1b3644" textColor="text-white" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Green Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Success and positive actions</p>
-        <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="green-50" value="#e3f5eb" />
-          <ColorSwatch name="green-100" value="#cbedda" />
-          <ColorSwatch name="green-200" value="#a9e2b3" />
-          <ColorSwatch name="green-300" value="#76ce98" />
-          <ColorSwatch name="green-400" value="#52b784" />
-        </div>
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <ColorSwatch name="green-500" value="#319d6d" textColor="text-white" />
-          <ColorSwatch name="green-600" value="#247450" textColor="text-white" />
-          <ColorSwatch name="green-700" value="#0e6c52" textColor="text-white" />
-          <ColorSwatch name="green-800" value="#174b34" textColor="text-white" />
-          <ColorSwatch name="green-900" value="#123928" textColor="text-white" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Yellow Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Warnings and attention</p>
-        <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="yellow-50" value="#faf1ce" />
-          <ColorSwatch name="yellow-100" value="#f3e197" />
-          <ColorSwatch name="yellow-200" value="#eed366" />
-          <ColorSwatch name="yellow-300" value="#d7ba5a" />
-          <ColorSwatch name="yellow-400" value="#c1a14e" />
-        </div>
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <ColorSwatch name="yellow-500" value="#a9863c" textColor="text-white" />
-          <ColorSwatch name="yellow-600" value="#7f6139" textColor="text-white" />
-          <ColorSwatch name="yellow-700" value="#755a34" textColor="text-white" />
-          <ColorSwatch name="yellow-800" value="#523f25" textColor="text-white" />
-          <ColorSwatch name="yellow-900" value="#3f301c" textColor="text-white" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Saturated Red Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Errors and alerts</p>
-        <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="saturated-red-50" value="#fcedeb" />
-          <ColorSwatch name="saturated-red-100" value="#f8dad6" />
-          <ColorSwatch name="saturated-red-200" value="#f5cbc5" />
-          <ColorSwatch name="saturated-red-300" value="#ecada5" />
-          <ColorSwatch name="saturated-red-400" value="#e18e85" />
-        </div>
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <ColorSwatch name="saturated-red-500" value="#d36d64" textColor="text-white" />
-          <ColorSwatch name="saturated-red-600" value="#b33f3b" textColor="text-white" />
-          <ColorSwatch name="saturated-red-700" value="#b4272c" textColor="text-white" />
-          <ColorSwatch name="saturated-red-800" value="#712c28" textColor="text-white" />
-          <ColorSwatch name="saturated-red-900" value="#552320" textColor="text-white" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Purple Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Accents and special highlights</p>
-        <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="purple-50" value="#f3eff6" />
-          <ColorSwatch name="purple-100" value="#e9e3ee" />
-          <ColorSwatch name="purple-200" value="#ddcfeb" />
-          <ColorSwatch name="purple-300" value="#cfb7dd" />
-          <ColorSwatch name="purple-400" value="#b39cc5" />
-        </div>
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <ColorSwatch name="purple-500" value="#a489bb" textColor="text-white" />
-          <ColorSwatch name="purple-600" value="#765c8b" textColor="text-white" />
-          <ColorSwatch name="purple-700" value="#6f5782" textColor="text-white" />
-          <ColorSwatch name="purple-800" value="#4c3c5a" textColor="text-white" />
-          <ColorSwatch name="purple-900" value="#3a2e45" textColor="text-white" />
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Black Alpha Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Transparent black for overlays on light backgrounds</p>
-        <div className="grid grid-cols-6 gap-4">
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.02)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a25</div>
-            <div className="text-2xs text-gray-600 font-mono">2% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.06)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a50</div>
-            <div className="text-2xs text-gray-600 font-mono">6% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.12)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a100</div>
-            <div className="text-2xs text-gray-600 font-mono">12% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.24)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a200</div>
-            <div className="text-2xs text-gray-600 font-mono">24% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a300</div>
-            <div className="text-2xs text-gray-600 font-mono">30% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.36)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a400</div>
-            <div className="text-2xs text-gray-600 font-mono">36% opacity</div>
-          </div>
-        </div>
-        <div className="grid grid-cols-6 gap-4 mt-4">
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.48)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">black-a500</div>
-            <div className="text-2xs text-gray-600 font-mono">48% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-white">black-a600</div>
-            <div className="text-2xs text-white/80 font-mono">60% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.72)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-white">black-a700</div>
-            <div className="text-2xs text-white/80 font-mono">72% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-white">black-a800</div>
-            <div className="text-2xs text-white/80 font-mono">80% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.88)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-white">black-a900</div>
-            <div className="text-2xs text-white/80 font-mono">88% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-lg overflow-hidden border border-gray-200">
-              <div style={{ backgroundColor: 'rgba(0, 0, 0, 0.96)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-white">black-a1000</div>
-            <div className="text-2xs text-white/80 font-mono">96% opacity</div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-2">White Alpha Scale</h2>
-        <p className="text-sm text-gray-600 mb-6">Transparent white for overlays on dark backgrounds</p>
-        <div className="grid grid-cols-6 gap-4">
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a25</div>
-            <div className="text-2xs text-gray-600 font-mono">8% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.16)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a50</div>
-            <div className="text-2xs text-gray-600 font-mono">16% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.24)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a100</div>
-            <div className="text-2xs text-gray-600 font-mono">24% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.32)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a200</div>
-            <div className="text-2xs text-gray-600 font-mono">32% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.4)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a300</div>
-            <div className="text-2xs text-gray-600 font-mono">40% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.48)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a400</div>
-            <div className="text-2xs text-gray-600 font-mono">48% opacity</div>
-          </div>
-        </div>
-        <div className="grid grid-cols-6 gap-4 mt-4">
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.56)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a500</div>
-            <div className="text-2xs text-gray-600 font-mono">56% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.68)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a600</div>
-            <div className="text-2xs text-gray-600 font-mono">68% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.74)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a700</div>
-            <div className="text-2xs text-gray-600 font-mono">74% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.8)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a800</div>
-            <div className="text-2xs text-gray-600 font-mono">80% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.88)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a900</div>
-            <div className="text-2xs text-gray-600 font-mono">88% opacity</div>
-          </div>
-          <div className="space-y-2">
-            <div className="relative h-16 bg-gradient-to-br from-gray-900 to-gray-700 rounded-lg overflow-hidden border border-gray-600">
-              <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.96)' }} className="absolute inset-0" />
-            </div>
-            <div className="text-xs font-semibold text-gray-900">white-a1000</div>
-            <div className="text-2xs text-gray-600 font-mono">96% opacity</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Complete base color scales available in the design system.',
-      },
-    },
-  },
-};
 
 export const SemanticNeutral: Story = {
   render: () => (
@@ -1041,33 +732,6 @@ export const SemanticTransparent: Story = {
     docs: {
       description: {
         story: 'Transparent color tokens for overlays, modals, and adaptive UI elements.',
-      },
-    },
-  },
-};
-
-export const BrandColors: Story = {
-  render: () => (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-2">Brand Colors</h2>
-      <p className="text-sm text-gray-600 mb-6">Official brand colors and logo palette</p>
-      <div className="grid grid-cols-4 gap-4">
-        <ColorSwatch name="carby-green" value="#6bd9a1" />
-        <ColorSwatch name="logo-primary" value="#222324" textColor="text-white" />
-        <ColorSwatch name="logo-secondary" value="#6e7071" textColor="text-white" />
-        <ColorSwatch name="logo-purple" value="#baa3bf" />
-        <ColorSwatch name="logo-mint" value="#a3e1c2" />
-        <ColorSwatch name="logo-green" value="#24a06d" textColor="text-white" />
-        <ColorSwatch name="logo-orange" value="#e15c18" textColor="text-white" />
-        <ColorSwatch name="logo-yellow" value="#ebc627" />
-        <ColorSwatch name="logo-blue" value="#58b3ca" />
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Official brand colors from the logo and brand guidelines.',
       },
     },
   },
