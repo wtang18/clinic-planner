@@ -347,3 +347,106 @@ export const AccessibilityDemo: Story = {
     </div>
   ),
 };
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">
+        Use these natural language prompts to work with Claude Code when using the Card component.
+      </p>
+
+      <div className="space-y-8">
+        {/* Update Card Variant */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-blue-600">🎨</span>
+            Make Card Interactive
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Make this card clickable so users can navigate to the event details page"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">variant="interactive"</code> and <code className="bg-gray-100 px-1 rounded">onClick</code> handler
+          </p>
+        </div>
+
+        {/* Change Card Size */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-green-600">📏</span>
+            Adjust Card Size
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Use the small card size for this compact event list"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">size="small"</code>
+          </p>
+        </div>
+
+        {/* Add Accessibility */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-orange-600">♿</span>
+            Improve Accessibility
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add an accessible label to this interactive card that describes the patient's name and last visit date"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">aria-label="View patient record for [name], last visit [date]"</code>
+          </p>
+        </div>
+
+        {/* Create Card List */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-purple-600">📋</span>
+            Create Consistent Card Layout
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Create a grid of interactive cards for the event list, using medium size with consistent spacing"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will create a responsive grid layout with Card components using appropriate variant and size
+          </p>
+        </div>
+
+        {/* Disable Card */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-red-600">🚫</span>
+            Disable Interaction
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Disable this card when the event is in the past"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add conditional <code className="bg-gray-100 px-1 rounded">disabled={'{isEventPast}'}</code> prop
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Use <code className="bg-white px-1 rounded">variant="interactive"</code> for clickable cards</li>
+          <li>• Always provide onClick handler for interactive cards</li>
+          <li>• Use <code className="bg-white px-1 rounded">aria-label</code> for cards without descriptive text content</li>
+          <li>• Cards use semantic tokens that automatically adapt to light/dark themes</li>
+        </ul>
+      </div>
+    </div>
+  ),
+};

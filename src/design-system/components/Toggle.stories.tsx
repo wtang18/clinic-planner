@@ -379,6 +379,126 @@ export const FormExample: Story = {
   },
 };
 
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">
+        Use these natural language prompts to work with Claude Code when using the Toggle component.
+      </p>
+
+      <div className="space-y-8">
+        {/* Add Toggle for Setting */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-blue-600">⚙️</span>
+            Add Settings Toggle
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add a toggle switch to enable/disable dark mode in the settings"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add a Toggle component with <code className="bg-gray-100 px-1 rounded">checked</code> state and <code className="bg-gray-100 px-1 rounded">onChange</code> handler, plus a label
+          </p>
+        </div>
+
+        {/* Change Toggle Size */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-green-600">📏</span>
+            Adjust Toggle Size
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Use the small toggle size for this compact settings panel"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">size="small"</code> to the Toggle
+          </p>
+        </div>
+
+        {/* Add Label */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-purple-600">🏷️</span>
+            Add Descriptive Label
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add a label to the left of the toggle that says 'Email Notifications'"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">label="Email Notifications"</code> and <code className="bg-gray-100 px-1 rounded">labelPosition="left"</code>
+          </p>
+        </div>
+
+        {/* Disable Toggle */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-red-600">🚫</span>
+            Conditionally Disable
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Disable this toggle when the user doesn't have admin permissions"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add conditional <code className="bg-gray-100 px-1 rounded">disabled={'{!isAdmin}'}</code> prop
+          </p>
+        </div>
+
+        {/* Immediate Effect */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-orange-600">⚡</span>
+            Trigger Immediate Action
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "When the user toggles 'Show Advanced Options', immediately show/hide the advanced settings section"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add Toggle with onChange handler that updates state, and conditional rendering for the advanced section
+          </p>
+        </div>
+
+        {/* Accessibility */}
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-indigo-600">♿</span>
+            Add Accessible Label
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "This toggle doesn't have a visible label, add an aria-label for screen readers"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">aria-label</code> prop with descriptive text
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Toggles are for instant binary changes (on/off)</li>
+          <li>• Always provide a clear label describing what the toggle controls</li>
+          <li>• Use labels that work in both states (e.g., "Dark Mode" not "Enable Dark Mode")</li>
+          <li>• Show the effect of the toggle immediately, no submit button needed</li>
+          <li>• Toggles use semantic tokens that automatically adapt to light/dark themes</li>
+        </ul>
+      </div>
+    </div>
+  ),
+};
+
 export const AccessibilityDemo: Story = {
   render: () => {
     const [enabled, setEnabled] = useState(false);
