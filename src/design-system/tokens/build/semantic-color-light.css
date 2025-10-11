@@ -2,7 +2,7 @@
  * Do not edit directly, this file was auto-generated.
  */
 
-:root, [data-theme="light"] {
+:root {
   --color-bg-carby-default: var(--color-utility-carby-green);
   --color-bg-carby-default-accent: var(--color-green-400);
   --color-bg-carby-high-contrast: var(--color-green-800);

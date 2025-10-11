@@ -22,7 +22,7 @@ module.exports = {
           filter: (token) => token.filePath.includes('decorative-color-on-light'),
           options: {
             outputReferences: true,
-            selector: ':root, [data-theme="light"]'
+            selector: ':root'
           }
         },
         {
@@ -31,7 +31,7 @@ module.exports = {
           filter: (token) => token.filePath.includes('semantic-color-on-light'),
           options: {
             outputReferences: true,
-            selector: ':root, [data-theme="light"]'
+            selector: ':root'
           }
         }
       ]
