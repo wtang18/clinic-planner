@@ -6,189 +6,199 @@ const meta: Meta = {
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
+    docs: {
+      description: {
+        component: `
+# Design Token System
+
+A production-ready design token system with **834 tokens** organized in a three-layer hierarchy, built with Style Dictionary v4 and exported across 11 CSS files + 2 JS/TS exports.
+
+## Three-Layer Architecture
+
+\`\`\`
+Components
+    ↓
+Semantic Tokens (--color-bg-*, --color-fg-*)
+    ↓
+Decorative Tokens (--green-low, --gray-highest)
+    ↓
+Primitive Tokens (--color-green-200, #a8e3b3)
+\`\`\`
+
+### Why Three Layers?
+
+1. **Primitives** - Raw color values from design (110 color tokens)
+2. **Decoratives** - Named aliases that invert between light/dark themes
+3. **Semantics** - Context-based tokens for UI components (always use these!)
+
+## Token Categories
+
+### Colors (228 semantic tokens)
+- **Backgrounds**: \`--color-bg-neutral-*\`, \`--color-bg-positive-*\`, \`--color-bg-alert-*\`, etc.
+- **Foregrounds**: \`--color-fg-neutral-*\`, \`--color-fg-positive-*\`, \`--color-fg-alert-*\`, etc.
+- **Themes**: Automatic light/dark theme support via \`[data-theme="dark"]\` selector
+
+### Typography (262 tokens)
+- **Standard** (131 tokens): Consistent across viewports
+- **Expressive** (131 tokens): Scales automatically between mobile (≤768px) and desktop (>768px)
+- **Font families**: \`--font-global-sans\` (Inter), \`--font-global-mono\` (monospace)
+
+### Dimensions (40 tokens)
+- **Spacing**: \`--dimension-space-*\` (4px to 96px scale)
+- **Border Radius**: \`--dimension-radius-*\` (0px to 32px scale)
+- **Elevation**: \`--dimension-elevation-*\` (box-shadow presets)
+
+## Generated Files
+
+### Primitives (3 files, 180 tokens)
+- \`primitives-color.css\` - 110 base color values
+- \`primitives-typography.css\` - 46 font tokens
+- \`primitives-dimensions.css\` - 24 spacing/radius values
+
+### Decoratives (2 files, 148 tokens)
+- \`decorative-light.css\` - 74 light theme aliases
+- \`decorative-dark.css\` - 74 dark theme aliases (inverted)
+
+### Semantics (5 files, 506 tokens)
+- \`semantic-color-light.css\` - 114 light theme colors
+- \`semantic-color-dark.css\` - 114 dark theme colors
+- \`semantic-dimensions.css\` - 16 spacing/radius tokens
+- \`semantic-typography-small.css\` - 131 tokens (default + mobile)
+- \`semantic-typography-large.css\` - 131 tokens (desktop)
+
+### Exports
+- \`index.css\` - Imports all token files
+- \`tokens.js\` - React Native exports
+- \`tokens.d.ts\` - TypeScript definitions
+
+## Build Pipeline
+
+The token system is generated in 6 steps:
+
+1. **Parse Figma Export** → Convert Figma Variables JSON to Style Dictionary format
+2. **Generate Base** → Build primitives + semantic dimensions + typography (small) + JS/TS
+3. **Generate Light Theme** → Build light mode decorative + semantic colors
+4. **Generate Dark Theme** → Build dark mode decorative + semantic colors (inverted)
+5. **Generate Large Typography** → Build expressive typography for desktop
+6. **Wrap Media Queries** → Post-process to add \`@media (min-width: 768px)\` wrappers
+
+**Command**: \`npm run tokens:build\` (runs all steps)
+
+## Usage Guidelines
+
+### ✅ DO: Use Semantic Tokens
+
+\`\`\`tsx
+// Tailwind classes with semantic tokens
+<div className="bg-[var(--color-bg-neutral-subtle)]">
+  <p className="text-[var(--color-fg-neutral-primary)]">
+    Content
+  </p>
+</div>
+
+// Inline styles with semantic tokens
+<div style={{
+  backgroundColor: 'var(--color-bg-positive-subtle)',
+  color: 'var(--color-fg-positive-primary)'
+}}>
+  Success!
+</div>
+
+// Responsive typography (auto-scales on desktop)
+<h1 className="text-[var(--text-font-size-display-expressive-xl)]">
+  Hero Heading
+</h1>
+\`\`\`
+
+### ❌ DON'T: Use Primitives or Decoratives
+
+\`\`\`tsx
+// ❌ Bad - bypasses semantic layer, breaks theming
+<div className="bg-[var(--color-gray-50)]">
+  <p className="text-[var(--color-gray-900)]">...</p>
+</div>
+
+// ❌ Bad - decorative tokens can change meaning between themes
+<div className="bg-[var(--gray-lowest)]">
+  <p className="text-[var(--gray-highest)]">...</p>
+</div>
+\`\`\`
+
+## Theme Switching
+
+Set \`data-theme\` attribute on the root element:
+
+\`\`\`tsx
+// Light theme (default)
+document.documentElement.setAttribute('data-theme', 'light');
+
+// Dark theme
+document.documentElement.setAttribute('data-theme', 'dark');
+\`\`\`
+
+All semantic color tokens automatically adapt. No component changes needed!
+
+## Semantic Color States
+
+Each semantic color has 6 background variants and 4 foreground variants:
+
+### Backgrounds
+- \`*-base\` - Base canvas color
+- \`*-subtle\` - Very subtle background (low contrast)
+- \`*-low-accented\` - Light accent background
+- \`*-medium\` - Medium accent background
+- \`*-high\` - Strong accent background (use inverse foreground)
+- \`*-high-accented\` - Strongest accent background (use inverse foreground)
+
+### Foregrounds
+- \`*-primary\` - Primary text color (highest contrast)
+- \`*-secondary\` - Secondary text color (medium contrast)
+- \`*-disabled\` - Disabled text color (low contrast)
+- \`*-inverse-primary\` - Text on high/high-accented backgrounds
+
+## Commands
+
+\`\`\`bash
+# Build all tokens from Figma export
+npm run tokens:build
+
+# Clean all generated files
+npm run tokens:clean
+
+# Generate TypeScript types from primitives
+npm run tokens:generate
+\`\`\`
+
+## File Structure
+
+\`\`\`
+src/design-system/tokens/
+├── source/              # Figma exports (JSON)
+├── build/               # Generated CSS/JS/TS files
+├── scripts/             # Build pipeline scripts
+└── *.config.js          # Style Dictionary configs
+\`\`\`
+
+## Interactive Examples
+
+See the **Canvas** tab for interactive demonstrations:
+- **Documentation** - Overview with quick links
+- **Theme Comparison** - Toggle between light/dark themes
+        `.trim(),
+      },
+    },
   },
 };
 
 export default meta;
 type Story = StoryObj;
 
-/**
- * # Design Token System
- *
- * A production-ready design token system with **834 tokens** organized in a three-layer hierarchy,
- * built with Style Dictionary v4 and exported across 11 CSS files + 2 JS/TS exports.
- *
- * ## Three-Layer Architecture
- *
- * ```
- * Components
- *     ↓
- * Semantic Tokens (--color-bg-*, --color-fg-*)
- *     ↓
- * Decorative Tokens (--green-low, --gray-highest)
- *     ↓
- * Primitive Tokens (--color-green-200, #a8e3b3)
- * ```
- *
- * ### Why Three Layers?
- *
- * 1. **Primitives** - Raw color values from design (110 color tokens)
- * 2. **Decoratives** - Named aliases that invert between light/dark themes
- * 3. **Semantics** - Context-based tokens for UI components (always use these!)
- *
- * ## Token Categories
- *
- * ### Colors (228 semantic tokens)
- * - **Backgrounds**: `--color-bg-neutral-*`, `--color-bg-positive-*`, `--color-bg-alert-*`, etc.
- * - **Foregrounds**: `--color-fg-neutral-*`, `--color-fg-positive-*`, `--color-fg-alert-*`, etc.
- * - **Themes**: Automatic light/dark theme support via `[data-theme="dark"]` selector
- *
- * ### Typography (262 tokens)
- * - **Standard** (131 tokens): Consistent across viewports
- * - **Expressive** (131 tokens): Scales automatically between mobile (≤768px) and desktop (>768px)
- * - **Font families**: `--font-global-sans` (Inter), `--font-global-mono` (monospace)
- *
- * ### Dimensions (40 tokens)
- * - **Spacing**: `--dimension-space-*` (4px to 96px scale)
- * - **Border Radius**: `--dimension-radius-*` (0px to 32px scale)
- * - **Elevation**: `--dimension-elevation-*` (box-shadow presets)
- *
- * ## Generated Files
- *
- * ### Primitives (3 files, 180 tokens)
- * - `primitives-color.css` - 110 base color values
- * - `primitives-typography.css` - 46 font tokens
- * - `primitives-dimensions.css` - 24 spacing/radius values
- *
- * ### Decoratives (2 files, 148 tokens)
- * - `decorative-light.css` - 74 light theme aliases
- * - `decorative-dark.css` - 74 dark theme aliases (inverted)
- *
- * ### Semantics (5 files, 506 tokens)
- * - `semantic-color-light.css` - 114 light theme colors
- * - `semantic-color-dark.css` - 114 dark theme colors
- * - `semantic-dimensions.css` - 16 spacing/radius tokens
- * - `semantic-typography-small.css` - 131 tokens (default + mobile)
- * - `semantic-typography-large.css` - 131 tokens (desktop)
- *
- * ### Exports
- * - `index.css` - Imports all token files
- * - `tokens.js` - React Native exports
- * - `tokens.d.ts` - TypeScript definitions
- *
- * ## Build Pipeline
- *
- * The token system is generated in 5 steps:
- *
- * 1. **Parse Figma Export** → Convert Figma Variables JSON to Style Dictionary format
- * 2. **Generate Base** → Build primitives + semantic dimensions + typography (small) + JS/TS
- * 3. **Generate Light Theme** → Build light mode decorative + semantic colors
- * 4. **Generate Dark Theme** → Build dark mode decorative + semantic colors (inverted)
- * 5. **Generate Large Typography** → Build expressive typography for desktop
- * 6. **Wrap Media Queries** → Post-process to add `@media (min-width: 768px)` wrappers
- *
- * **Command**: `npm run tokens:build` (runs all steps)
- *
- * ## Usage Guidelines
- *
- * ### ✅ DO: Use Semantic Tokens
- *
- * ```tsx
- * // Tailwind classes with semantic tokens
- * <div className="bg-[var(--color-bg-neutral-subtle)]">
- *   <p className="text-[var(--color-fg-neutral-primary)]">
- *     Content
- *   </p>
- * </div>
- *
- * // Inline styles with semantic tokens
- * <div style={{
- *   backgroundColor: 'var(--color-bg-positive-subtle)',
- *   color: 'var(--color-fg-positive-primary)'
- * }}>
- *   Success!
- * </div>
- *
- * // Responsive typography (auto-scales on desktop)
- * <h1 className="text-[var(--text-font-size-display-expressive-xl)]">
- *   Hero Heading
- * </h1>
- * ```
- *
- * ### ❌ DON'T: Use Primitives or Decoratives
- *
- * ```tsx
- * // ❌ Bad - bypasses semantic layer, breaks theming
- * <div className="bg-[var(--color-gray-50)]">
- *   <p className="text-[var(--color-gray-900)]">...</p>
- * </div>
- *
- * // ❌ Bad - decorative tokens can change meaning between themes
- * <div className="bg-[var(--gray-lowest)]">
- *   <p className="text-[var(--gray-highest)]">...</p>
- * </div>
- * ```
- *
- * ## Theme Switching
- *
- * Set `data-theme` attribute on the root element:
- *
- * ```tsx
- * // Light theme (default)
- * document.documentElement.setAttribute('data-theme', 'light');
- *
- * // Dark theme
- * document.documentElement.setAttribute('data-theme', 'dark');
- * ```
- *
- * All semantic color tokens automatically adapt. No component changes needed!
- *
- * ## Semantic Color States
- *
- * Each semantic color has 6 background variants and 4 foreground variants:
- *
- * ### Backgrounds
- * - `*-base` - Base canvas color
- * - `*-subtle` - Very subtle background (low contrast)
- * - `*-low-accented` - Light accent background
- * - `*-medium` - Medium accent background
- * - `*-high` - Strong accent background (use inverse foreground)
- * - `*-high-accented` - Strongest accent background (use inverse foreground)
- *
- * ### Foregrounds
- * - `*-primary` - Primary text color (highest contrast)
- * - `*-secondary` - Secondary text color (medium contrast)
- * - `*-disabled` - Disabled text color (low contrast)
- * - `*-inverse-primary` - Text on high/high-accented backgrounds
- *
- * ## Interactive Examples
- *
- * - **Theme Comparison** - Toggle between light/dark themes to see color adaptation
- *
- * ## Commands
- *
- * ```bash
- * # Build all tokens from Figma export
- * npm run tokens:build
- *
- * # Clean all generated files
- * npm run tokens:clean
- *
- * # Generate TypeScript types from primitives
- * npm run tokens:generate
- * ```
- *
- * ## Files Structure
- *
- * ```
- * src/design-system/tokens/
- * ├── source/              # Figma exports (JSON)
- * ├── build/               # Generated CSS/JS/TS files
- * ├── scripts/             # Build pipeline scripts
- * └── *.config.js          # Style Dictionary configs
- * ```
- */
 export const Documentation: Story = {
+  parameters: {
+    docs: {
+      disable: true, // Don't show this story in docs
+    },
+  },
   render: () => (
     <div className="p-8 bg-[var(--color-bg-neutral-base)] min-h-screen">
       <div className="max-w-4xl mx-auto">
@@ -264,17 +274,12 @@ export const Documentation: Story = {
   ),
 };
 
-/**
- * Interactive demonstration of light and dark theme switching.
- *
- * Toggle the theme to see how all semantic color tokens automatically adapt.
- * Notice how:
- * - Background colors invert appropriately
- * - Text colors maintain readable contrast
- * - Accent colors maintain visual hierarchy
- * - No component code changes needed
- */
 export const ThemeComparison: Story = {
+  parameters: {
+    docs: {
+      disable: true, // Don't show this story in docs
+    },
+  },
   render: () => {
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
 
