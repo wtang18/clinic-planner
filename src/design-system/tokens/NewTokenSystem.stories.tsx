@@ -37,6 +37,13 @@ export default meta;
 type Story = StoryObj;
 
 export const Architecture: Story = {
+  parameters: {
+    docs: {
+      story: {
+        inline: false,
+      },
+    },
+  },
   render: () => (
     <div className="p-8 space-y-12 bg-[var(--color-bg-neutral-base)]">
       <div>

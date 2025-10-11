@@ -111,10 +111,6 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
 
     // Ensure svgContent is a string
     if (typeof svgContent !== 'string') {
-      console.error(`Icon "${name}" returned non-string content:`, typeof svgContent);
-      console.error('Content keys:', svgContent ? Object.keys(svgContent) : 'null');
-      console.error('Content value:', svgContent);
-
       // Check if it's a module with a default export (Vite might be doing this)
       if (svgContent && typeof svgContent === 'object') {
         // Handle Next.js/Storybook image imports with data URLs
@@ -126,7 +122,6 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
             // Decode the data URL to get the actual SVG content
             const encodedSvg = srcValue.replace('data:image/svg+xml,', '');
             const decodedSvg = decodeURIComponent(encodedSvg);
-            console.warn(`Icon "${name}" decoded from data URL`);
             svgContent = decodedSvg;
           } else {
             console.warn(`Icon "${name}" got URL/path instead of SVG content:`, srcValue);
@@ -140,7 +135,6 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
 
           for (const exportValue of possibleExports) {
             if (typeof exportValue === 'string' && exportValue.trim().startsWith('<svg')) {
-              console.warn(`Icon "${name}" found SVG string in module export`);
               svgContent = exportValue;
               break;
             }
@@ -148,8 +142,9 @@ export const Icon = React.forwardRef<HTMLSpanElement, IconProps>(
         }
       }
 
-      // If still not a string, show fallback
+      // If still not a string after attempts, log error and show fallback
       if (typeof svgContent !== 'string') {
+        console.error(`Icon "${name}" could not be loaded - invalid format:`, typeof svgContent);
         return (
           <svg
             className={cn(sizeClasses, 'shrink-0', className)}
