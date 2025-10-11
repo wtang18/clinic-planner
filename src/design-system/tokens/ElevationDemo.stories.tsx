@@ -2,7 +2,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
-  title: 'Design System/Foundations/Elevation',
+  title: 'Design System/Semantics/Elevation',
   tags: ['autodocs'],
   parameters: {
     layout: 'padded',

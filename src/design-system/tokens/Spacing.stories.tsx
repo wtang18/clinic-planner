@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
-  title: 'Design System/Foundations/Spacing',
+  title: 'Design System/Semantics/Spacing',
   parameters: {
     layout: 'padded',
     docs: {

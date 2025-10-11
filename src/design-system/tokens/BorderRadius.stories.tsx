@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
-  title: 'Design System/Foundations/Border Radius',
+  title: 'Design System/Semantics/Border Radius',
   parameters: {
     layout: 'padded',
     docs: {

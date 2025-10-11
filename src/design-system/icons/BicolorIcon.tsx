@@ -60,19 +60,19 @@ function getCssVar(varName: string): string {
 const defaultColors: Record<BicolorIconName, { signifier: () => string; container: () => string }> = {
   'positive': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-positive-low') || '#A9E2B3'
+    container: () => getCssVar('--color-bg-positive-low-accented') || '#A9E2B3'
   },
   'positive-bold': {
     signifier: () => getCssVar('--color-fg-neutral-inverse-primary') || '#FFFFFF',
-    container: () => getCssVar('--color-bg-positive-high') || '#247450'
+    container: () => getCssVar('--color-bg-positive-high-accented') || '#247450'
   },
   'alert': {
-    signifier: () => getCssVar('--color-fg-alert-high') || '#712C28',
-    container: () => getCssVar('--color-bg-alert-low') || '#F5CBC5'
+    signifier: () => getCssVar('--color-fg-alert-secondary') || '#712C28',
+    container: () => getCssVar('--color-bg-alert-low-accented') || '#F5CBC5'
   },
   'alert-bold': {
     signifier: () => getCssVar('--color-fg-neutral-inverse-primary') || '#FFFFFF',
-    container: () => getCssVar('--color-bg-alert-high') || '#B33F3B'
+    container: () => getCssVar('--color-bg-alert-high-accented') || '#B33F3B'
   },
   'attention': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
@@ -80,55 +80,55 @@ const defaultColors: Record<BicolorIconName, { signifier: () => string; containe
   },
   'info': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-input-low') || '#B9DFEA'
+    container: () => getCssVar('--color-bg-input-low-accented') || '#B9DFEA'
   },
   'info-bold': {
     signifier: () => getCssVar('--color-fg-neutral-inverse-primary') || '#FFFFFF',
-    container: () => getCssVar('--color-bg-input-high') || '#376C89'
+    container: () => getCssVar('--color-bg-input-high-accented') || '#376C89'
   },
   'question': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'plus': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'minus': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'arrow-up': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'arrow-down': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'arrow-left': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'arrow-right': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'chevron-up': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'chevron-down': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'chevron-left': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
   'chevron-right': {
     signifier: () => getCssVar('--color-fg-neutral-primary') || '#181818',
-    container: () => getCssVar('--color-bg-neutral-low') || '#E0E0E0'
+    container: () => getCssVar('--color-bg-neutral-low-accented') || '#E0E0E0'
   },
 };
 
