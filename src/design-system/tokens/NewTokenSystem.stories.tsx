@@ -323,6 +323,13 @@ export const Architecture: Story = {
 };
 
 export const ThemeComparison: Story = {
+  parameters: {
+    docs: {
+      story: {
+        inline: false,
+      },
+    },
+  },
   render: () => {
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
 
