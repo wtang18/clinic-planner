@@ -39,9 +39,7 @@ type Story = StoryObj;
 export const Architecture: Story = {
   parameters: {
     docs: {
-      story: {
-        inline: false,
-      },
+      disable: true, // Don't show this story in the docs page
     },
   },
   render: () => (
@@ -325,9 +323,7 @@ export const Architecture: Story = {
 export const ThemeComparison: Story = {
   parameters: {
     docs: {
-      story: {
-        inline: false,
-      },
+      disable: true, // Don't show this story in the docs page
     },
   },
   render: () => {
@@ -362,7 +358,7 @@ export const ThemeComparison: Story = {
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div key={theme} className="grid grid-cols-2 gap-6">
             {/* Neutral */}
             <div
               className="p-6 rounded-lg"
