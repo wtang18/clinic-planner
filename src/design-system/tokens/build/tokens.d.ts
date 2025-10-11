@@ -300,22 +300,27 @@ export const DimensionSpaceNegative200: string;
 export const DimensionSpaceNegative300: string;
 export const DimensionSpaceBetweenCoupled: string;
 /** Gap between pills, child elements, etc. */
-export const DimensionSpaceBetweenRepeatingSmall: string;
+export const DimensionSpaceBetweenRepeatingSm: string;
 /** Gap between cards, etc. */
-export const DimensionSpaceBetweenRepeatingMedium: string;
-export const DimensionSpaceBetweenRelatedSmall: string;
-export const DimensionSpaceBetweenRelatedMedium: string;
-export const DimensionSpaceBetweenSeparated: string;
-export const DimensionSpaceAroundXSmall: string;
-export const DimensionSpaceAroundSmall: string;
-export const DimensionSpaceAroundMedium: string;
-export const DimensionSpaceAroundLarge: string;
+export const DimensionSpaceBetweenRepeatingMd: string;
+export const DimensionSpaceBetweenRelatedSm: string;
+export const DimensionSpaceBetweenRelatedMd: string;
+export const DimensionSpaceBetweenSeparatedSm: string;
+export const DimensionSpaceBetweenSeparatedMd: string;
+export const DimensionSpaceAround4xs: string;
+export const DimensionSpaceAround3xs: string;
+export const DimensionSpaceAround2xs: string;
+export const DimensionSpaceAroundXs: string;
+export const DimensionSpaceAroundSm: string;
+export const DimensionSpaceAroundMd: string;
+export const DimensionSpaceAroundLg: string;
+export const DimensionSpaceAroundXl: string;
 export const DimensionRadiusNone: string;
-export const DimensionRadiusXSmall: string;
-export const DimensionRadiusSmall: string;
-export const DimensionRadiusMedium: string;
-export const DimensionRadiusLarge: string;
-export const DimensionRadiusXLarge: string;
+export const DimensionRadiusXs: string;
+export const DimensionRadiusSm: string;
+export const DimensionRadiusMd: string;
+export const DimensionRadiusLg: string;
+export const DimensionRadiusXl: string;
 /** No horizontal offset */
 export const ElevationShadowX0: string;
 /** Minimal horizontal offset */

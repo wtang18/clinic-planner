@@ -18,9 +18,9 @@ const searchInputVariants = cva(
     variants: {
       size: {
         // Match Input component sizes exactly
-        small: 'h-8 px-3 py-1.5 gap-2',
-        medium: 'h-10 px-2.5 py-2.5 gap-2',
-        large: 'h-14 px-4 py-4 gap-2',
+        small: 'h-8 px-3 py-1.5',
+        medium: 'h-10 px-2.5 py-2.5',
+        large: 'h-14 px-4 py-4',
       },
       state: {
         default: 'bg-[var(--color-bg-transparent-low)]',
@@ -180,6 +180,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
 
     return (
       <div
+        style={{ gap: 'var(--dimension-space-between-related-sm)' }}
         className={cn(
           searchInputVariants({
             size,

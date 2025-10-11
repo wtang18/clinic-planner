@@ -13,7 +13,7 @@ const generateId = (prefix: string) => {
 const textareaContainerVariants = cva(
   // Base styles - common to all variants
   [
-    "box-border flex items-start rounded-lg transition-all duration-200",
+    "box-border flex items-start transition-all duration-200",
     "w-full",
   ],
   {
@@ -375,7 +375,10 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const helperTextIdToUse = error && errorMessage ? errorTextId : helperTextId;
 
     return (
-      <div className={cn("flex flex-col gap-1", wrapperClassName)}>
+      <div
+        className={cn("flex flex-col", wrapperClassName)}
+        style={{ gap: 'var(--dimension-space-between-coupled)' }}
+      >
         {/* Label */}
         {label && (
           <label
@@ -388,6 +391,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 
         {/* Textarea Container */}
         <div
+          style={{ borderRadius: 'var(--dimension-radius-sm)' }}
           className={cn(
             textareaContainerVariants({
               type,

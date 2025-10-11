@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 const toggleTrackVariants = cva(
   // Base styles for track
   [
-    'relative inline-flex shrink-0 p-[2px] rounded-full cursor-pointer',
+    'relative inline-flex shrink-0 rounded-full cursor-pointer',
     'transition-colors duration-200 ease-in-out',
     'focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-2',
   ],
@@ -197,6 +197,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         disabled={disabled}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        style={{ padding: 'var(--dimension-space-around-4xs)' }}
         className={cn(
           toggleTrackVariants({ size, checked, disabled }),
           !label && className

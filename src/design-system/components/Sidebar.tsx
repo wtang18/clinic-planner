@@ -58,14 +58,19 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
       <div
         ref={ref}
         className={cn(
-          'bg-[var(--color-bg-transparent-inverse-low)] rounded-[24px] elevation-lg',
-          'p-4 w-[280px] h-full',
-          'flex flex-col gap-8',
+          'bg-[var(--color-bg-transparent-inverse-low)] elevation-lg',
+          'w-[280px] h-full',
+          'flex flex-col',
           className
         )}
+        style={{
+          borderRadius: 'var(--dimension-radius-lg)',
+          padding: 'var(--dimension-space-around-md)',
+          gap: 'var(--dimension-space-between-separated-md)',
+        }}
       >
         {/* Menu Section */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-around-sm)' }}>
           {menuItems.map((item) => {
             const isActive = item.active;
             const isHovered = hoveredId === item.id && !isActive;
@@ -77,13 +82,14 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                 onMouseEnter={() => setHoveredId(item.id)}
                 onMouseLeave={() => setHoveredId(null)}
                 className={cn(
-                  'flex items-center gap-3 h-10 px-3 py-2 rounded-full',
+                  'flex items-center h-10 px-3 py-2 rounded-full',
                   'transition-colors duration-200',
                   'cursor-pointer select-none',
                   'w-full',
                   isActive && 'bg-[var(--color-bg-transparent-low)]',
                   isHovered && 'bg-[var(--color-bg-transparent-subtle)]'
                 )}
+                style={{ gap: 'var(--dimension-space-around-sm)' }}
               >
                 {/* Icon */}
                 <div className="flex items-center justify-center shrink-0">

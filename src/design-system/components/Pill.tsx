@@ -8,7 +8,7 @@ import { Icon, type IconName, type IconSize } from "@/design-system/icons";
 const pillVariants = cva(
   // Base styles - common to all types
   [
-    "inline-flex items-center gap-1 whitespace-nowrap",
+    "inline-flex items-center whitespace-nowrap",
     "transition-all duration-200",
     "focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-1",
   ],
@@ -35,9 +35,9 @@ const pillVariants = cva(
       },
       // Size variants
       size: {
-        "x-small": "h-5 px-1.5 py-0 rounded text-label-2xs-medium", // 20px height, 6px h-padding, 0 v-padding, 4px radius
-        small: "h-6 px-1.5 py-0.5 rounded-lg text-label-xs-medium", // 24px height, 6px h-padding, 2px v-padding, 8px radius
-        medium: "h-8 px-2 py-1.5 rounded-lg text-label-sm-medium", // 32px height, 8px h-padding, 6px v-padding, 8px radius
+        "x-small": "h-5 px-1.5 py-0 text-label-2xs-medium", // 20px height, 6px h-padding, 0 v-padding
+        small: "h-6 px-1.5 py-0.5 text-label-xs-medium", // 24px height, 6px h-padding, 2px v-padding
+        medium: "h-8 px-2 py-1.5 text-label-sm-medium", // 32px height, 8px h-padding, 6px v-padding
       },
       // Icon-only variant
       iconOnly: {
@@ -523,6 +523,14 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
 
     const subtextColorClass = getSubtextColor();
 
+    // Dimension token styles based on size
+    const dimensionStyles: React.CSSProperties = {
+      gap: 'var(--dimension-space-between-coupled)',
+      borderRadius: size === "x-small"
+        ? 'var(--dimension-radius-xs)'
+        : 'var(--dimension-radius-sm)',
+    };
+
     return (
       <div
         ref={ref}
@@ -533,6 +541,7 @@ export const Pill = React.forwardRef<HTMLDivElement, PillProps>(
         aria-describedby={ariaDescribedby}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        style={dimensionStyles}
         className={cn(
           pillVariants({
             type,

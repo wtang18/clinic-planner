@@ -8,7 +8,7 @@ import { Icon, type IconSize, type IconName } from '@/design-system/icons';
 const buttonVariants = cva(
   // Base styles - common to all variants
   [
-    "inline-flex items-center justify-center gap-1 transition-all duration-200",
+    "inline-flex items-center justify-center transition-all duration-200",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-bg-accent-high)] focus-visible:ring-offset-2",
     "disabled:pointer-events-none disabled:opacity-50",
     "select-none cursor-pointer",
@@ -74,27 +74,22 @@ const buttonVariants = cva(
       size: {
         "x-small": [
           "h-6 px-3 py-0.5 rounded-full",
-          "gap-1",
           "text-label-xs-medium",
         ],
         small: [
           "h-8 px-3 py-1.5 rounded-full",
-          "gap-1",
           "text-label-xs-medium",
         ],
         medium: [
           "h-10 px-4 py-2.5 rounded-full",
-          "gap-2",
           "text-label-sm-medium",
         ],
         large: [
           "h-14 px-6 py-4 rounded-full",
-          "gap-2",
           "text-label-md-medium",
         ],
         "large-floating": [
           "h-14 px-6 py-4 rounded-full elevation-md",
-          "gap-2",
           "text-label-md-medium",
         ],
       },
@@ -199,9 +194,17 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Icon name={iconR} size={iconSize} />
     ) : rightIcon;
 
+    // Dimension token styles based on size
+    const dimensionStyles: React.CSSProperties = {
+      gap: (size === 'x-small' || size === 'small')
+        ? 'var(--dimension-space-between-coupled)'
+        : 'var(--dimension-space-between-related-sm)',
+    };
+
     return (
       <button
         type={htmlType}
+        style={dimensionStyles}
         className={cn(
           buttonVariants({
             type,

@@ -23,8 +23,8 @@ const cardVariants = cva(
   {
     variants: {
       size: {
-        small: "rounded-lg p-3 gap-2", // 8px radius, 12px padding, 8px gap
-        medium: "rounded-2xl p-4 gap-4", // 16px radius, 16px padding, 16px gap
+        small: "p-3 gap-2", // 12px padding, 8px gap
+        medium: "p-4 gap-4", // 16px padding, 16px gap
       },
       variant: {
         interactive: "",
@@ -137,6 +137,19 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const isDisabled = isInteractive && disabled;
     const [isHovered, setIsHovered] = React.useState(false);
 
+    // Dimension token styles based on size
+    const dimensionStyles: React.CSSProperties = size === "small"
+      ? {
+          borderRadius: 'var(--dimension-radius-sm)',
+          padding: 'var(--dimension-space-around-sm)',
+          gap: 'var(--dimension-space-between-related-sm)',
+        }
+      : {
+          borderRadius: 'var(--dimension-radius-md)',
+          padding: 'var(--dimension-space-around-md)',
+          gap: 'var(--dimension-space-between-related-md)',
+        };
+
     // Handle keyboard interaction for interactive cards
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (isInteractive && !isDisabled && onClick) {
@@ -162,6 +175,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <Component
         ref={ref}
+        style={dimensionStyles}
         className={cn(
           cardVariants({
             size,

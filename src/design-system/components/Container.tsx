@@ -117,15 +117,19 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
     const isInteractive = variant === "interactive";
     const isDisabled = isInteractive && disabled;
 
-    // Gap styles
+    // Gap styles using semantic tokens
     const gapStyles = {
-      sm: "gap-2", // 8px
-      md: "gap-4", // 16px
-      lg: "gap-6", // 24px
+      sm: { gap: 'var(--dimension-space-between-related-sm)' }, // 8px
+      md: { gap: 'var(--dimension-space-between-related-md)' }, // 16px
+      lg: { gap: 'var(--dimension-space-between-separated-sm)' }, // 24px
     };
 
     // Base styles - Figma specs: 16px radius, 16px padding
-    const baseStyles = "box-border flex flex-col items-start rounded-[16px] p-4";
+    const baseStyles = "box-border flex flex-col items-start";
+    const baseInlineStyles = {
+      borderRadius: 'var(--dimension-radius-md)',
+      padding: 'var(--dimension-space-around-md)',
+    };
 
     // Background color based on state
     const backgroundStyles = isInteractive
@@ -189,11 +193,15 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
         className={cn(
           baseStyles,
           backgroundStyles,
-          gapStyles[gap],
           variantStyles,
           focusStyles,
           className
         )}
+        style={{
+          ...baseInlineStyles,
+          ...gapStyles[gap],
+          ...props.style,
+        }}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         onMouseEnter={handleMouseEnter}

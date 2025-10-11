@@ -238,8 +238,11 @@ export const SegmentedControl = React.forwardRef<
         ref={ref}
         role="radiogroup"
         aria-label={ariaLabel}
+        style={{
+          padding: 'var(--dimension-space-around-3xs)',
+        }}
         className={cn(
-          "flex items-start p-1 bg-[var(--color-bg-transparent-subtle)] rounded-full",
+          "flex items-start bg-[var(--color-bg-transparent-subtle)] rounded-full",
           className
         )}
       >
@@ -271,7 +274,10 @@ export const SegmentedControl = React.forwardRef<
                 })
               )}
             >
-              <div className="flex gap-1 items-center justify-center w-full">
+              <div
+                className="flex items-center justify-center w-full"
+                style={{ gap: 'var(--dimension-space-between-coupled)' }}
+              >
                 <span
                   className={cn(
                     segmentLabelVariants({

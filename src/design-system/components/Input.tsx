@@ -15,7 +15,7 @@ const generateId = (prefix: string) => {
 const inputContainerVariants = cva(
   // Base styles - common to all variants
   [
-    "box-border flex items-center gap-2 rounded-lg transition-all duration-200",
+    "box-border flex items-center transition-all duration-200",
     "w-full",
   ],
   {
@@ -32,9 +32,9 @@ const inputContainerVariants = cva(
         ],
       },
       size: {
-        small: "h-8 px-3 py-1.5 gap-2",
-        medium: "h-10 px-3 py-2.5 gap-2",
-        large: "h-14 px-4 py-4 gap-2",
+        small: "h-8 px-3 py-1.5",
+        medium: "h-10 px-3 py-2.5",
+        large: "h-14 px-4 py-4",
       },
       state: {
         default: "",
@@ -429,7 +429,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const helperTextIdToUse = error && errorMessage ? errorTextId : helperTextId;
 
     return (
-      <div className={cn("flex flex-col gap-1", wrapperClassName)}>
+      <div
+        className={cn("flex flex-col", wrapperClassName)}
+        style={{ gap: 'var(--dimension-space-between-coupled)' }}
+      >
         {/* Label */}
         {label && (
           <label
@@ -442,6 +445,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         {/* Input Container */}
         <div
+          style={{
+            gap: 'var(--dimension-space-between-related-sm)',
+            borderRadius: 'var(--dimension-radius-sm)',
+          }}
           className={cn(
             inputContainerVariants({
               type,

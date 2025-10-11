@@ -38,10 +38,10 @@
   --font-line-height-800: 96px;
   --font-line-height-900: 128px;
   --font-line-height-1000: 192px;
-  --font-weight-400: 400;
-  --font-weight-500: 500;
-  --font-weight-600: 600;
-  --font-weight-700: 700;
+  --font-weight-400: Regular;
+  --font-weight-500: Medium;
+  --font-weight-600: Semi Bold;
+  --font-weight-700: Bold;
   --font-letter-spacing-100: -2px;
   --font-letter-spacing-200: -1px;
   --font-letter-spacing-300: -0.5px;

@@ -27,7 +27,7 @@ import { Icon, type IconName, type IconSize } from "@/design-system/icons";
 const togglePillVariants = cva(
   // Base styles
   [
-    "inline-flex items-center gap-1 whitespace-nowrap",
+    "inline-flex items-center whitespace-nowrap",
     "text-label-sm-medium",
     "transition-all duration-200",
     "focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-1",
@@ -37,10 +37,10 @@ const togglePillVariants = cva(
     variants: {
       // Size variants
       size: {
-        "x-small": "h-5 px-1.5 py-0 text-xs leading-5 rounded", // 20px height, 6px h-padding, 0 v-padding, 4px radius
-        small: "h-6 px-1.5 py-0.5 text-xs leading-5 rounded-lg", // 24px height, 6px h-padding, 2px v-padding, 8px radius
-        medium: "h-8 px-2 py-1.5 text-sm leading-5 rounded-lg", // 32px height, 8px h-padding, 6px v-padding, 8px radius
-        large: "h-10 px-3 py-2.5 text-sm leading-5 rounded-lg", // 40px height, 12px h-padding, 10px v-padding, 8px radius
+        "x-small": "h-5 px-1.5 py-0 text-xs leading-5", // 20px height, 6px h-padding, 0 v-padding
+        small: "h-6 px-1.5 py-0.5 text-xs leading-5", // 24px height, 6px h-padding, 2px v-padding
+        medium: "h-8 px-2 py-1.5 text-sm leading-5", // 32px height, 8px h-padding, 6px v-padding
+        large: "h-10 px-3 py-2.5 text-sm leading-5", // 40px height, 12px h-padding, 10px v-padding
       },
       // Selected state
       selected: {
@@ -232,6 +232,14 @@ export const TogglePill = React.forwardRef<HTMLButtonElement, TogglePillProps>(
       onKeyDown?.(e);
     };
 
+    // Dimension token styles based on size
+    const dimensionStyles: React.CSSProperties = {
+      gap: 'var(--dimension-space-between-coupled)',
+      borderRadius: size === "x-small"
+        ? 'var(--dimension-radius-xs)'
+        : 'var(--dimension-radius-sm)',
+    };
+
     return (
       <button
         ref={ref}
@@ -243,6 +251,7 @@ export const TogglePill = React.forwardRef<HTMLButtonElement, TogglePillProps>(
         disabled={disabled}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        style={dimensionStyles}
         className={cn(
           togglePillVariants({
             size,

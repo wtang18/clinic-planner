@@ -15,7 +15,7 @@ Raw dimension values that serve as the foundation for all spacing and sizing in 
 
 Primitive tokens are the lowest-level design tokens in our system. They represent raw, reusable values that are referenced by semantic tokens. Think of them as the "atoms" of our design system.
 
-**Important**: In most cases, you should use semantic tokens (like \`--dimension-space-between-medium\`) instead of primitives. Only use primitive tokens when:
+**Important**: In most cases, you should use semantic tokens (like \`--dimension-space-around-md\` or \`--dimension-space-between-related-md\`) instead of primitives. Only use primitive tokens when:
 - Creating new semantic tokens
 - Handling edge cases not covered by semantic tokens
 - Building foundation-level components
@@ -368,7 +368,33 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-between-small
+                  --dimension-space-between-coupled
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-50 (4px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-between-repeating-sm
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-75 (6px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-between-repeating-md
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -381,26 +407,39 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-between-medium
+                  --dimension-space-between-related-sm
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
                 </span>
                 <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
-                  --dimension-space-150 (12px)
+                  --dimension-space-100 (8px)
                 </span>
               </div>
             </div>
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-between-large
+                  --dimension-space-between-related-md
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
                 </span>
                 <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
                   --dimension-space-200 (16px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-between-separated
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-300 (24px)
                 </span>
               </div>
             </div>
@@ -415,7 +454,59 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-small
+                  --dimension-space-around-4xs
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-25 (2px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-around-3xs
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-50 (4px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-around-2xs
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-75 (6px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-around-xs
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-100 (8px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-around-sm
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -428,7 +519,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-medium
+                  --dimension-space-around-md
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -441,7 +532,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-large
+                  --dimension-space-around-lg
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -462,7 +553,33 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-radius-small
+                  --dimension-radius-none
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-0 (0px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-radius-xs
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-50 (4px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-radius-sm
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -475,13 +592,39 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-radius-medium
+                  --dimension-radius-md
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
                 </span>
                 <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
                   --dimension-space-200 (16px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-radius-lg
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-300 (24px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-radius-xl
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-400 (32px)
                 </span>
               </div>
             </div>

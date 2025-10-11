@@ -147,19 +147,19 @@
   },
   "font-weight": {
     "400": {
-      "value": "400",
+      "value": "Regular",
       "type": "string"
     },
     "500": {
-      "value": "500",
+      "value": "Medium",
       "type": "string"
     },
     "600": {
-      "value": "600",
+      "value": "Semi Bold",
       "type": "string"
     },
     "700": {
-      "value": "700",
+      "value": "Bold",
       "type": "string"
     }
   },

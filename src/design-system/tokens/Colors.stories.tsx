@@ -13,10 +13,10 @@ Purpose-driven color tokens for consistent, accessible UI design. These semantic
 
 ## What are Semantic Colors?
 
-Semantic color tokens abstract away raw color values (like `#e5f3f8` or `blue-50`) and replace them with purpose-driven names that describe **what** the color is for, not **what** it looks like.
+Semantic color tokens abstract away raw color values (like \`#e5f3f8\` or \`blue-50\`) and replace them with purpose-driven names that describe **what** the color is for, not **what** it looks like.
 
 **Benefits**:
-- **Meaningful names**: `--color-bg-alert-subtle` is clearer than `saturated-red-50`
+- **Meaningful names**: \`--color-bg-alert-subtle\` is clearer than \`saturated-red-50\`
 - **Themeability**: Change the entire color scheme by swapping primitive references
 - **Consistency**: Colors with the same purpose look the same everywhere
 - **Accessibility**: Semantic pairings (bg + fg) ensure sufficient contrast
@@ -84,10 +84,10 @@ Semantic tokens reference primitive colors from the **Primitives/Colors** story:
 
 | Semantic Token | References Primitive |
 |----------------|---------------------|
-| \`--color-bg-alert-subtle\` | \`saturated-red-50\` |
-| \`--color-bg-positive-high\` | \`green-600\` |
-| \`--color-bg-information-subtle\` | \`blue-50\` |
-| \`--color-fg-neutral-primary\` | \`gray-900\` |
+| \\\`--color-bg-alert-subtle\\\` | \\\`saturated-red-50\\\` |
+| \\\`--color-bg-positive-high\\\` | \\\`green-600\\\` |
+| \\\`--color-bg-information-subtle\\\` | \\\`blue-50\\\` |
+| \\\`--color-fg-neutral-primary\\\` | \\\`gray-900\\\` |
 
 See **Primitives/Colors** for the complete list of base color values.
         `,

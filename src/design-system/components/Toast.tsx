@@ -156,9 +156,15 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
     return (
       <div
         ref={ref}
+        style={{
+          gap: 'var(--dimension-space-between-related-md)',
+          paddingInline: 'var(--dimension-space-around-md)',
+          paddingBlock: 'var(--dimension-space-around-sm)',
+          borderRadius: 'var(--dimension-radius-md)',
+        }}
         className={cn(
           // Exact Figma container specs
-          'bg-[var(--color-bg-neutral-base)] box-border flex gap-[16px] items-center px-[16px] py-[12px] rounded-[16px]',
+          'bg-[var(--color-bg-neutral-base)] box-border flex items-center',
           'elevation-lg',
           'min-h-[72px]', // Ensures proper height for title + subtext
           // Width: 480px default, responsive to container
@@ -169,8 +175,11 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         aria-live={ariaLive}
         aria-label={ariaLabel}
       >
-        {/* Left section: Icon + Text (gap-[16px] between icon and text) */}
-        <div className="flex gap-[16px] items-center grow min-w-0">
+        {/* Left section: Icon + Text */}
+        <div
+          className="flex items-center grow min-w-0"
+          style={{ gap: 'var(--dimension-space-between-related-md)' }}
+        >
           {renderIcon()}
 
           {/* Text section */}
@@ -193,8 +202,11 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
           </div>
         </div>
 
-        {/* Right section: CTA + Close (gap-[12px] between buttons) */}
-        <div className="flex gap-[12px] items-center justify-end shrink-0">
+        {/* Right section: CTA + Close */}
+        <div
+          className="flex items-center justify-end shrink-0"
+          style={{ gap: 'var(--dimension-space-around-sm)' }}
+        >
           {/* CTA button using Button component with transparent type */}
           {showCta && (
             <Button

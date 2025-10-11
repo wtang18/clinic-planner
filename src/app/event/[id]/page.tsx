@@ -396,7 +396,13 @@ function EventDetailContent({ params }: EventDetailPageProps) {
           'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
       }}
     >
-      <div className="flex flex-col gap-6 p-6 flex-1">
+      <div
+        className="flex flex-col flex-1"
+        style={{
+          gap: 'var(--dimension-space-between-separated-sm)',
+          padding: 'var(--dimension-space-around-xl)'
+        }}
+      >
         {/* Navbar */}
         <div className="flex items-center justify-between w-full">
           {/* Left - Back Button */}
@@ -428,7 +434,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
 
         {/* Event Details Content - Centered */}
         <div className="flex justify-center w-full">
-          <div className="flex flex-col gap-6 w-full max-w-[800px]">
+          <div className="flex flex-col w-full max-w-[800px]" style={{ gap: 'var(--dimension-space-between-separated-sm)' }}>
             {/* Header Section */}
             <div className="flex flex-col gap-2">
               {/* Event Title */}
