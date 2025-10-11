@@ -6,326 +6,275 @@ const meta: Meta = {
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
-    docs: {
-      description: {
-        component: `
-# Token System Overview
-
-A production-ready design token system with **834 tokens** organized in a three-layer hierarchy.
-
-## Quick Reference
-
-**Architecture**: Components → Semantic Tokens → Decorative Tokens → Primitive Tokens
-
-**Usage**: Always use semantic tokens (\`--color-bg-*\`, \`--color-fg-*\`) instead of primitives in your components.
-
-**Build**: \`npm run tokens:build\` to regenerate tokens from Figma export.
-
-## Stories
-
-- **Architecture**: Build pipeline, generated files, and responsive typography details
-- **Theme Comparison**: Interactive light/dark theme demonstration
-
-See individual stories below for detailed documentation.
-        `.trim(),
-      },
-    },
   },
 };
 
 export default meta;
 type Story = StoryObj;
 
-export const Architecture: Story = {
-  parameters: {
-    docs: {
-      disable: true, // Don't show this story in the docs page
-    },
-  },
+/**
+ * # Design Token System
+ *
+ * A production-ready design token system with **834 tokens** organized in a three-layer hierarchy,
+ * built with Style Dictionary v4 and exported across 11 CSS files + 2 JS/TS exports.
+ *
+ * ## Three-Layer Architecture
+ *
+ * ```
+ * Components
+ *     ↓
+ * Semantic Tokens (--color-bg-*, --color-fg-*)
+ *     ↓
+ * Decorative Tokens (--green-low, --gray-highest)
+ *     ↓
+ * Primitive Tokens (--color-green-200, #a8e3b3)
+ * ```
+ *
+ * ### Why Three Layers?
+ *
+ * 1. **Primitives** - Raw color values from design (110 color tokens)
+ * 2. **Decoratives** - Named aliases that invert between light/dark themes
+ * 3. **Semantics** - Context-based tokens for UI components (always use these!)
+ *
+ * ## Token Categories
+ *
+ * ### Colors (228 semantic tokens)
+ * - **Backgrounds**: `--color-bg-neutral-*`, `--color-bg-positive-*`, `--color-bg-alert-*`, etc.
+ * - **Foregrounds**: `--color-fg-neutral-*`, `--color-fg-positive-*`, `--color-fg-alert-*`, etc.
+ * - **Themes**: Automatic light/dark theme support via `[data-theme="dark"]` selector
+ *
+ * ### Typography (262 tokens)
+ * - **Standard** (131 tokens): Consistent across viewports
+ * - **Expressive** (131 tokens): Scales automatically between mobile (≤768px) and desktop (>768px)
+ * - **Font families**: `--font-global-sans` (Inter), `--font-global-mono` (monospace)
+ *
+ * ### Dimensions (40 tokens)
+ * - **Spacing**: `--dimension-space-*` (4px to 96px scale)
+ * - **Border Radius**: `--dimension-radius-*` (0px to 32px scale)
+ * - **Elevation**: `--dimension-elevation-*` (box-shadow presets)
+ *
+ * ## Generated Files
+ *
+ * ### Primitives (3 files, 180 tokens)
+ * - `primitives-color.css` - 110 base color values
+ * - `primitives-typography.css` - 46 font tokens
+ * - `primitives-dimensions.css` - 24 spacing/radius values
+ *
+ * ### Decoratives (2 files, 148 tokens)
+ * - `decorative-light.css` - 74 light theme aliases
+ * - `decorative-dark.css` - 74 dark theme aliases (inverted)
+ *
+ * ### Semantics (5 files, 506 tokens)
+ * - `semantic-color-light.css` - 114 light theme colors
+ * - `semantic-color-dark.css` - 114 dark theme colors
+ * - `semantic-dimensions.css` - 16 spacing/radius tokens
+ * - `semantic-typography-small.css` - 131 tokens (default + mobile)
+ * - `semantic-typography-large.css` - 131 tokens (desktop)
+ *
+ * ### Exports
+ * - `index.css` - Imports all token files
+ * - `tokens.js` - React Native exports
+ * - `tokens.d.ts` - TypeScript definitions
+ *
+ * ## Build Pipeline
+ *
+ * The token system is generated in 5 steps:
+ *
+ * 1. **Parse Figma Export** → Convert Figma Variables JSON to Style Dictionary format
+ * 2. **Generate Base** → Build primitives + semantic dimensions + typography (small) + JS/TS
+ * 3. **Generate Light Theme** → Build light mode decorative + semantic colors
+ * 4. **Generate Dark Theme** → Build dark mode decorative + semantic colors (inverted)
+ * 5. **Generate Large Typography** → Build expressive typography for desktop
+ * 6. **Wrap Media Queries** → Post-process to add `@media (min-width: 768px)` wrappers
+ *
+ * **Command**: `npm run tokens:build` (runs all steps)
+ *
+ * ## Usage Guidelines
+ *
+ * ### ✅ DO: Use Semantic Tokens
+ *
+ * ```tsx
+ * // Tailwind classes with semantic tokens
+ * <div className="bg-[var(--color-bg-neutral-subtle)]">
+ *   <p className="text-[var(--color-fg-neutral-primary)]">
+ *     Content
+ *   </p>
+ * </div>
+ *
+ * // Inline styles with semantic tokens
+ * <div style={{
+ *   backgroundColor: 'var(--color-bg-positive-subtle)',
+ *   color: 'var(--color-fg-positive-primary)'
+ * }}>
+ *   Success!
+ * </div>
+ *
+ * // Responsive typography (auto-scales on desktop)
+ * <h1 className="text-[var(--text-font-size-display-expressive-xl)]">
+ *   Hero Heading
+ * </h1>
+ * ```
+ *
+ * ### ❌ DON'T: Use Primitives or Decoratives
+ *
+ * ```tsx
+ * // ❌ Bad - bypasses semantic layer, breaks theming
+ * <div className="bg-[var(--color-gray-50)]">
+ *   <p className="text-[var(--color-gray-900)]">...</p>
+ * </div>
+ *
+ * // ❌ Bad - decorative tokens can change meaning between themes
+ * <div className="bg-[var(--gray-lowest)]">
+ *   <p className="text-[var(--gray-highest)]">...</p>
+ * </div>
+ * ```
+ *
+ * ## Theme Switching
+ *
+ * Set `data-theme` attribute on the root element:
+ *
+ * ```tsx
+ * // Light theme (default)
+ * document.documentElement.setAttribute('data-theme', 'light');
+ *
+ * // Dark theme
+ * document.documentElement.setAttribute('data-theme', 'dark');
+ * ```
+ *
+ * All semantic color tokens automatically adapt. No component changes needed!
+ *
+ * ## Semantic Color States
+ *
+ * Each semantic color has 6 background variants and 4 foreground variants:
+ *
+ * ### Backgrounds
+ * - `*-base` - Base canvas color
+ * - `*-subtle` - Very subtle background (low contrast)
+ * - `*-low-accented` - Light accent background
+ * - `*-medium` - Medium accent background
+ * - `*-high` - Strong accent background (use inverse foreground)
+ * - `*-high-accented` - Strongest accent background (use inverse foreground)
+ *
+ * ### Foregrounds
+ * - `*-primary` - Primary text color (highest contrast)
+ * - `*-secondary` - Secondary text color (medium contrast)
+ * - `*-disabled` - Disabled text color (low contrast)
+ * - `*-inverse-primary` - Text on high/high-accented backgrounds
+ *
+ * ## Interactive Examples
+ *
+ * - **Theme Comparison** - Toggle between light/dark themes to see color adaptation
+ *
+ * ## Commands
+ *
+ * ```bash
+ * # Build all tokens from Figma export
+ * npm run tokens:build
+ *
+ * # Clean all generated files
+ * npm run tokens:clean
+ *
+ * # Generate TypeScript types from primitives
+ * npm run tokens:generate
+ * ```
+ *
+ * ## Files Structure
+ *
+ * ```
+ * src/design-system/tokens/
+ * ├── source/              # Figma exports (JSON)
+ * ├── build/               # Generated CSS/JS/TS files
+ * ├── scripts/             # Build pipeline scripts
+ * └── *.config.js          # Style Dictionary configs
+ * ```
+ */
+export const Documentation: Story = {
   render: () => (
-    <div className="p-8 space-y-12 bg-[var(--color-bg-neutral-base)]">
-      <div>
-        <h1 className="text-3xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
-          Style Dictionary Token System
-        </h1>
-        <p className="text-lg text-[var(--color-fg-neutral-secondary)] max-w-3xl">
-          A production-ready token system built with Style Dictionary v4, featuring 834 tokens across 11 CSS files.
-        </p>
-      </div>
-
-      {/* Build Pipeline */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
-          Build Pipeline
-        </h2>
-        <div className="bg-[var(--color-bg-information-subtle)] border-l-4 border-[var(--color-bg-information-high)] p-6 rounded">
-          <div className="space-y-4 text-sm">
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-[var(--color-bg-information-high)] rounded-full flex items-center justify-center text-[var(--color-fg-neutral-inverse-primary)] font-bold flex-shrink-0">1</div>
-              <div>
-                <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-1">Parse Figma JSON</h3>
-                <p className="text-[var(--color-fg-neutral-secondary)]">
-                  Convert Figma Variables export into Style Dictionary format
-                </p>
-                <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded mt-1 inline-block">
-                  node scripts/parse-figma-tokens.js
-                </code>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-[var(--color-bg-information-high)] rounded-full flex items-center justify-center text-[var(--color-fg-neutral-inverse-primary)] font-bold flex-shrink-0">2</div>
-              <div>
-                <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-1">Generate Base Tokens</h3>
-                <p className="text-[var(--color-fg-neutral-secondary)]">
-                  Primitives, semantic dimensions, typography (small viewport), JS/TS exports
-                </p>
-                <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded mt-1 inline-block">
-                  style-dictionary build --config sd.config.js
-                </code>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-[var(--color-bg-information-high)] rounded-full flex items-center justify-center text-[var(--color-fg-neutral-inverse-primary)] font-bold flex-shrink-0">3</div>
-              <div>
-                <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-1">Generate Light Theme</h3>
-                <p className="text-[var(--color-fg-neutral-secondary)]">
-                  Decorative + semantic colors for light mode
-                </p>
-                <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded mt-1 inline-block">
-                  style-dictionary build --config sd.config.light.js
-                </code>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-[var(--color-bg-information-high)] rounded-full flex items-center justify-center text-[var(--color-fg-neutral-inverse-primary)] font-bold flex-shrink-0">4</div>
-              <div>
-                <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-1">Generate Dark Theme</h3>
-                <p className="text-[var(--color-fg-neutral-secondary)]">
-                  Decorative + semantic colors for dark mode (inverted values)
-                </p>
-                <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded mt-1 inline-block">
-                  style-dictionary build --config sd.config.dark.js
-                </code>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-[var(--color-bg-information-high)] rounded-full flex items-center justify-center text-[var(--color-fg-neutral-inverse-primary)] font-bold flex-shrink-0">5</div>
-              <div>
-                <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-1">Generate Large Viewport Typography</h3>
-                <p className="text-[var(--color-fg-neutral-secondary)]">
-                  Expressive typography tokens for desktop screens
-                </p>
-                <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded mt-1 inline-block">
-                  style-dictionary build --config sd.config.typography-large.js
-                </code>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="w-8 h-8 bg-[var(--color-bg-positive-high)] rounded-full flex items-center justify-center text-[var(--color-fg-neutral-inverse-primary)] font-bold flex-shrink-0">✓</div>
-              <div>
-                <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-1">Wrap in Media Queries</h3>
-                <p className="text-[var(--color-fg-neutral-secondary)]">
-                  Post-process to add @media wrappers for responsive typography
-                </p>
-                <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded mt-1 inline-block">
-                  node scripts/wrap-typography-media-queries.js
-                </code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Generated Files */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
-          Generated Files (11 CSS + 2 JS/TS)
-        </h2>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">Primitives (3)</h3>
-            <div className="space-y-1 text-xs font-mono text-[var(--color-fg-neutral-secondary)]">
-              <div>primitives-color.css <span className="text-[var(--color-fg-neutral-disabled)]">(110 tokens)</span></div>
-              <div>primitives-typography.css <span className="text-[var(--color-fg-neutral-disabled)]">(46)</span></div>
-              <div>primitives-dimensions.css <span className="text-[var(--color-fg-neutral-disabled)]">(24)</span></div>
-            </div>
-          </div>
-          <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">Decorative (2)</h3>
-            <div className="space-y-1 text-xs font-mono text-[var(--color-fg-neutral-secondary)]">
-              <div>decorative-light.css <span className="text-[var(--color-fg-neutral-disabled)]">(74)</span></div>
-              <div>decorative-dark.css <span className="text-[var(--color-fg-neutral-disabled)]">(74)</span></div>
-            </div>
-          </div>
-          <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">Semantic (5)</h3>
-            <div className="space-y-1 text-xs font-mono text-[var(--color-fg-neutral-secondary)]">
-              <div>semantic-color-light.css <span className="text-[var(--color-fg-neutral-disabled)]">(114)</span></div>
-              <div>semantic-color-dark.css <span className="text-[var(--color-fg-neutral-disabled)]">(114)</span></div>
-              <div>semantic-dimensions.css <span className="text-[var(--color-fg-neutral-disabled)]">(16)</span></div>
-              <div>semantic-typography-small.css <span className="text-[var(--color-fg-neutral-disabled)]">(131)</span></div>
-              <div>semantic-typography-large.css <span className="text-[var(--color-fg-neutral-disabled)]">(131)</span></div>
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 bg-[var(--color-bg-accent-subtle)] p-4 rounded">
-          <h3 className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">Entry Point + Exports</h3>
-          <div className="space-y-1 text-xs font-mono text-[var(--color-fg-neutral-secondary)]">
-            <div>index.css <span className="text-[var(--color-fg-neutral-disabled)]">(imports all token files)</span></div>
-            <div>tokens.js <span className="text-[var(--color-fg-neutral-disabled)]">(React Native exports)</span></div>
-            <div>tokens.d.ts <span className="text-[var(--color-fg-neutral-disabled)]">(TypeScript definitions)</span></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Responsive Typography */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
-          Responsive Typography
-        </h2>
-        <div className="bg-[var(--color-bg-positive-subtle)] border-l-4 border-[var(--color-bg-positive-high)] p-6 rounded">
-          <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-4">
-            Expressive typography automatically scales between mobile and desktop viewports using CSS media queries.
+    <div className="p-8 bg-[var(--color-bg-neutral-base)] min-h-screen">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-[var(--color-bg-information-subtle)] border-l-4 border-[var(--color-bg-information-high)] p-6 rounded-lg">
+          <h2 className="text-xl font-semibold mb-2 text-[var(--color-fg-information-primary)]">
+            📚 Complete Documentation
+          </h2>
+          <p className="text-sm text-[var(--color-fg-information-secondary)]">
+            All token system documentation is available in the <strong>Docs</strong> tab above.
+            Click "Docs" to read the full guide on architecture, usage guidelines, and build pipeline.
           </p>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
-                Small Viewport (≤768px)
-              </h3>
-              <div className="space-y-2">
-                <div className="bg-[var(--color-bg-neutral-base)] p-3 rounded">
-                  <div className="text-xs font-mono text-[var(--color-fg-neutral-secondary)] mb-1">
-                    --text-font-size-display-expressive-sm
-                  </div>
-                  <div className="text-lg font-bold text-[var(--color-fg-neutral-primary)]" style={{ fontSize: '24px' }}>
-                    24px
-                  </div>
-                </div>
-                <div className="bg-[var(--color-bg-neutral-base)] p-3 rounded">
-                  <div className="text-xs font-mono text-[var(--color-fg-neutral-secondary)] mb-1">
-                    --text-font-size-display-expressive-xl
-                  </div>
-                  <div className="text-lg font-bold text-[var(--color-fg-neutral-primary)]" style={{ fontSize: '40px' }}>
-                    40px
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
-                Large Viewport (&gt;768px)
-              </h3>
-              <div className="space-y-2">
-                <div className="bg-[var(--color-bg-neutral-base)] p-3 rounded">
-                  <div className="text-xs font-mono text-[var(--color-fg-neutral-secondary)] mb-1">
-                    --text-font-size-display-expressive-sm
-                  </div>
-                  <div className="text-lg font-bold text-[var(--color-fg-neutral-primary)]" style={{ fontSize: '40px' }}>
-                    40px <span className="text-xs text-[var(--color-fg-positive-primary)]">(+67%)</span>
-                  </div>
-                </div>
-                <div className="bg-[var(--color-bg-neutral-base)] p-3 rounded">
-                  <div className="text-xs font-mono text-[var(--color-fg-neutral-secondary)] mb-1">
-                    --text-font-size-display-expressive-xl
-                  </div>
-                  <div className="text-lg font-bold text-[var(--color-fg-neutral-primary)]" style={{ fontSize: '80px', lineHeight: '1' }}>
-                    80px <span className="text-xs text-[var(--color-fg-positive-primary)]">(+100%)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 text-xs text-[var(--color-fg-neutral-secondary)] italic">
-            💡 Only expressive typography scales. Standard typography remains consistent across viewports.
-          </div>
         </div>
-      </section>
 
-      {/* Usage */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
-          How to Use
-        </h2>
-        <div className="space-y-4">
-          <div className="bg-[var(--color-bg-positive-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-2 text-[var(--color-fg-positive-primary)]">✅ Import in CSS</h3>
-            <pre className="text-xs bg-[var(--color-bg-neutral-base)] p-3 rounded overflow-x-auto">
-              <code className="text-[var(--color-fg-neutral-primary)]">{`/* Already imported in globals.css */
-@import '../design-system/tokens/build/index.css';`}</code>
-            </pre>
+        <div className="mt-8 space-y-4">
+          <h2 className="text-2xl font-bold text-[var(--color-fg-neutral-primary)]">
+            Quick Links
+          </h2>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded-lg border border-[var(--color-bg-neutral-low-accented)]">
+              <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">
+                🎨 Semantic Tokens
+              </h3>
+              <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-3">
+                Browse all available color, typography, and dimension tokens organized by category.
+              </p>
+              <p className="text-xs text-[var(--color-fg-neutral-disabled)]">
+                See: Colors, Text Styles, Border Radius, Spacing, Elevation
+              </p>
+            </div>
+
+            <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded-lg border border-[var(--color-bg-neutral-low-accented)]">
+              <h3 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">
+                🌗 Theme Comparison
+              </h3>
+              <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-3">
+                Interactive demo showing how semantic tokens adapt between light and dark themes.
+              </p>
+              <p className="text-xs text-[var(--color-fg-neutral-disabled)]">
+                See: Theme Comparison story
+              </p>
+            </div>
           </div>
-          <div className="bg-[var(--color-bg-positive-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-2 text-[var(--color-fg-positive-primary)]">✅ Use Semantic Tokens</h3>
-            <pre className="text-xs bg-[var(--color-bg-neutral-base)] p-3 rounded overflow-x-auto">
-              <code className="text-[var(--color-fg-neutral-primary)]">{`// In Tailwind classes
+
+          <div className="bg-[var(--color-bg-positive-subtle)] p-4 rounded-lg mt-6">
+            <h3 className="font-semibold text-[var(--color-fg-positive-primary)] mb-2">
+              ✅ Usage Pattern
+            </h3>
+            <pre className="text-xs bg-[var(--color-bg-neutral-base)] p-3 rounded overflow-x-auto border border-[var(--color-bg-neutral-low-accented)]">
+              <code className="text-[var(--color-fg-neutral-primary)]">{`// Always use semantic tokens in components
 <div className="bg-[var(--color-bg-neutral-subtle)]">
   <p className="text-[var(--color-fg-neutral-primary)]">
-    Hello World
+    Content
   </p>
-</div>
-
-// In inline styles
-<div style={{
-  backgroundColor: 'var(--color-bg-positive-subtle)',
-  color: 'var(--color-fg-positive-primary)'
-}}>
-  Success!
-</div>
-
-// Responsive typography
-<h1 className="text-[var(--text-font-size-display-expressive-xl)]">
-  Scales automatically
-</h1>`}</code>
+</div>`}</code>
             </pre>
           </div>
-          <div className="bg-[var(--color-bg-alert-subtle)] p-4 rounded border-l-4 border-[var(--color-bg-alert-high)]">
-            <h3 className="text-sm font-semibold mb-2 text-[var(--color-fg-alert-primary)]">❌ Don't Use Primitives</h3>
-            <pre className="text-xs bg-[var(--color-bg-neutral-base)] p-3 rounded overflow-x-auto">
-              <code className="text-[var(--color-fg-neutral-primary)]">{`// Bad - bypasses semantic layer, won't theme properly
+
+          <div className="bg-[var(--color-bg-alert-subtle)] p-4 rounded-lg border-l-4 border-[var(--color-bg-alert-high)]">
+            <h3 className="font-semibold text-[var(--color-fg-alert-primary)] mb-2">
+              ❌ Anti-Pattern
+            </h3>
+            <pre className="text-xs bg-[var(--color-bg-neutral-base)] p-3 rounded overflow-x-auto border border-[var(--color-bg-neutral-low-accented)]">
+              <code className="text-[var(--color-fg-neutral-primary)]">{`// Never use primitives or decoratives directly
 <div className="bg-[var(--color-gray-50)]">
-  <p className="text-[var(--color-gray-900)]">...</p>
+  <p className="text-[var(--gray-highest)]">...</p>
 </div>`}</code>
             </pre>
           </div>
         </div>
-      </section>
-
-      {/* Commands */}
-      <section>
-        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
-          Commands
-        </h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">Build Tokens</h3>
-            <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded block">
-              npm run tokens:build
-            </code>
-            <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
-              Parses Figma JSON and generates all CSS/JS/TS files
-            </p>
-          </div>
-          <div className="bg-[var(--color-bg-neutral-subtle)] p-4 rounded">
-            <h3 className="text-sm font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">Clean Build</h3>
-            <code className="text-xs bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded block">
-              npm run tokens:clean
-            </code>
-            <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
-              Removes all generated files for a fresh build
-            </p>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   ),
 };
 
+/**
+ * Interactive demonstration of light and dark theme switching.
+ *
+ * Toggle the theme to see how all semantic color tokens automatically adapt.
+ * Notice how:
+ * - Background colors invert appropriately
+ * - Text colors maintain readable contrast
+ * - Accent colors maintain visual hierarchy
+ * - No component code changes needed
+ */
 export const ThemeComparison: Story = {
-  parameters: {
-    docs: {
-      disable: true, // Don't show this story in the docs page
-    },
-  },
   render: () => {
     const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
 
