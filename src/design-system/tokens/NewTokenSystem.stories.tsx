@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
   title: 'Design System/Foundations/Token System',
+  tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
     docs: {
