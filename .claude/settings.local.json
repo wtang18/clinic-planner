@@ -28,7 +28,9 @@
       "Bash(xargs kill:*)",
       "Bash(pkill:*)",
       "Bash(npx tailwindcss:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(git log:*)",
+      "Bash(xargs ls:*)"
     ],
     "deny": [],
     "ask": []
