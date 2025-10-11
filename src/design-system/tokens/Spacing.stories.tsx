@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
 const meta: Meta = {
-  title: 'Design System/Foundations/Legacy Tokens/Spacing',
+  title: 'Design System/Foundations/Spacing',
   parameters: {
     layout: 'padded',
     docs: {
@@ -9,93 +9,58 @@ const meta: Meta = {
         component: `
 # Spacing Tokens
 
-A consistent spacing scale based on a 4px base unit for padding, margin, and gaps.
+Semantic spacing tokens for consistent padding and gaps across the design system.
 
-## Spacing Scale
+## Token Categories
 
-The spacing system uses a numeric scale from 0-64:
+### Space Between (Gaps)
+Tokens for gaps between elements (flexbox gap, grid gap):
 
-| Token | Value | Rem | Common Use Cases |
-|-------|-------|-----|------------------|
-| 0 | 0px | 0 | Reset spacing |
-| 1 | 4px | 0.25rem | Tight spacing, icon gaps |
-| 2 | 8px | 0.5rem | Small padding, compact layouts |
-| 3 | 12px | 0.75rem | Medium-tight spacing |
-| 4 | 16px | 1rem | Default spacing, standard padding |
-| 5 | 20px | 1.25rem | Medium spacing |
-| 6 | 24px | 1.5rem | Large padding, section spacing |
-| 7 | 28px | 1.75rem | Extra section spacing |
-| 8 | 32px | 2rem | Section padding, large gaps |
-| 9 | 36px | 2.25rem | Large section spacing |
-| 10 | 40px | 2.5rem | Extra large spacing |
-| 11 | 44px | 2.75rem | Generous spacing |
-| 12 | 48px | 3rem | Page section padding |
-| 14 | 56px | 3.5rem | Extra large sections |
-| 16 | 64px | 4rem | Major page sections |
-| 20 | 80px | 5rem | Spacious layouts |
-| 24 | 96px | 6rem | Extra spacious layouts |
-| 32 | 128px | 8rem | Large container spacing |
-| 40 | 160px | 10rem | Extra large containers |
-| 48 | 192px | 12rem | Major layout spacing |
-| 56 | 224px | 14rem | Extra major spacing |
-| 64 | 256px | 16rem | Maximum spacing |
+| Token | Value | Use Case |
+|-------|-------|----------|
+| \`--dimension-space-between-coupled\` | 4px | Tightly coupled elements (icon + text) |
+| \`--dimension-space-between-repeating-small\` | 6px | Small repeated elements (pills, chips) |
+| \`--dimension-space-between-repeating-medium\` | 8px | Medium repeated elements (cards in grid) |
+| \`--dimension-space-between-related-small\` | 8px | Related content sections |
+| \`--dimension-space-between-related-medium\` | 16px | Clearly related but distinct sections |
+| \`--dimension-space-between-separated\` | 24px | Separated content sections |
 
-## Spacing Utilities
+### Space Around (Padding)
+Tokens for padding around elements:
 
-### Padding
+| Token | Value | Use Case |
+|-------|-------|----------|
+| \`--dimension-space-around-x-small\` | 8px | Minimal padding (pills, small buttons) |
+| \`--dimension-space-around-small\` | 12px | Compact padding (medium buttons, inputs) |
+| \`--dimension-space-around-medium\` | 16px | Standard padding (cards, default buttons) |
+| \`--dimension-space-around-large\` | 20px | Generous padding (large cards, sections) |
+
+## Usage
+
 \`\`\`tsx
-// All sides
-<div className="p-4">16px padding on all sides</div>
+// Gap between elements
+<div className="flex" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
+  <button>First</button>
+  <button>Second</button>
+</div>
 
-// Individual sides
-<div className="pt-2 pr-4 pb-2 pl-4">Top/bottom 8px, left/right 16px</div>
+// Padding around content
+<div style={{ padding: 'var(--dimension-space-around-medium)' }}>
+  Card content with standard padding
+</div>
 
-// Horizontal / Vertical
-<div className="px-4 py-2">Horizontal 16px, vertical 8px</div>
-\`\`\`
-
-### Margin
-\`\`\`tsx
-// All sides
-<div className="m-6">24px margin on all sides</div>
-
-// Individual sides
-<div className="mt-4 mb-8">Top 16px, bottom 32px</div>
-
-// Horizontal / Vertical
-<div className="mx-auto my-4">Centered horizontally, 16px vertical</div>
-
-// Negative margins
-<div className="-mt-4">Negative 16px top margin</div>
-\`\`\`
-
-### Gap (for Flexbox/Grid)
-\`\`\`tsx
-// Uniform gap
-<div className="flex gap-4">16px gap between children</div>
-
-// Row and column gaps
-<div className="grid gap-x-4 gap-y-8">
-  16px horizontal gap, 32px vertical gap
+// Combining with Tailwind
+<div className="flex" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
+  <div style={{ padding: 'var(--dimension-space-around-small)' }}>Item 1</div>
+  <div style={{ padding: 'var(--dimension-space-around-small)' }}>Item 2</div>
 </div>
 \`\`\`
 
-### Space Between
-\`\`\`tsx
-// Flex/grid children spacing
-<div className="flex flex-col space-y-4">
-  16px space between children
-</div>
-\`\`\`
+## Design Principles
 
-## Best Practices
-
-- Use multiples of 4 for consistency
-- Prefer smaller spacing (2-6) for component internals
-- Use medium spacing (6-12) for section padding
-- Use large spacing (12-24) for page-level layouts
-- Maintain consistent spacing within similar components
-- Use \`gap\` instead of margin for flex/grid layouts when possible
+- **Between vs Around**: Use "between" tokens for gaps, "around" tokens for padding
+- **Semantic naming**: Token names describe relationships, not pixel values
+- **Visual hierarchy**: Larger gaps/padding = more separation/emphasis
         `,
       },
     },
@@ -106,178 +71,133 @@ The spacing system uses a numeric scale from 0-64:
 export default meta;
 type Story = StoryObj;
 
-const SpacingDemo = ({ size, pixels }: { size: string; pixels: string }) => (
-  <div className="flex items-center gap-6 border-b border-gray-100 py-3">
-    <div className="w-16 flex-shrink-0">
-      <p className="text-sm font-semibold text-gray-900">{size}</p>
-      <p className="text-xs text-gray-600">{pixels}</p>
-    </div>
-    <div className="flex items-center">
-      <div
-        className="bg-blue-500 h-8"
-        style={{ width: pixels }}
-      />
-    </div>
-  </div>
-);
-
-export const SpacingScale: Story = {
+export const SpaceBetween: Story = {
   render: () => (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-2">Spacing Scale</h2>
-      <p className="text-sm text-gray-600 mb-6">
-        All spacing values in the design system (4px base unit)
-      </p>
-
-      <div className="max-w-2xl">
-        <SpacingDemo size="0" pixels="0px" />
-        <SpacingDemo size="1" pixels="4px" />
-        <SpacingDemo size="2" pixels="8px" />
-        <SpacingDemo size="3" pixels="12px" />
-        <SpacingDemo size="4" pixels="16px" />
-        <SpacingDemo size="5" pixels="20px" />
-        <SpacingDemo size="6" pixels="24px" />
-        <SpacingDemo size="7" pixels="28px" />
-        <SpacingDemo size="8" pixels="32px" />
-        <SpacingDemo size="9" pixels="36px" />
-        <SpacingDemo size="10" pixels="40px" />
-        <SpacingDemo size="11" pixels="44px" />
-        <SpacingDemo size="12" pixels="48px" />
-        <SpacingDemo size="14" pixels="56px" />
-        <SpacingDemo size="16" pixels="64px" />
-        <SpacingDemo size="20" pixels="80px" />
-        <SpacingDemo size="24" pixels="96px" />
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Complete spacing scale from 0 to 96px.',
-      },
-    },
-  },
-};
-
-export const PaddingExamples: Story = {
-  render: () => (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 bg-[var(--color-bg-neutral-base)]">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Padding Examples</h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Common padding patterns for components
+        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
+          Space Between (Gap) Tokens
+        </h2>
+        <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
+          Used for gaps between elements in flex/grid layouts
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <p className="text-xs text-gray-600 mb-2">p-2 (8px all sides) - Compact button</p>
-          <div className="inline-block bg-blue-100 border-2 border-blue-500">
-            <div className="bg-blue-500 text-white p-2 text-sm-bold">
-              Button
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-2">p-4 (16px all sides) - Default button</p>
-          <div className="inline-block bg-blue-100 border-2 border-blue-500">
-            <div className="bg-blue-500 text-white p-4 text-base-bold">
-              Button
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-2">px-4 py-2 - Standard button padding</p>
-          <div className="inline-block bg-blue-100 border-2 border-blue-500">
-            <div className="bg-blue-500 text-white px-4 py-2 text-sm-bold">
-              Button
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-2">p-6 (24px all sides) - Card padding</p>
-          <div className="bg-blue-100 border-2 border-blue-500 max-w-md">
-            <div className="bg-white border border-gray-200 p-6 rounded-lg">
-              <h3 className="text-heading-sm mb-2">Card Title</h3>
-              <p className="text-sm text-gray-600">Card content with standard padding for comfortable spacing.</p>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-2">p-8 (32px all sides) - Section padding</p>
-          <div className="bg-blue-100 border-2 border-blue-500 max-w-md">
-            <div className="bg-white p-8">
-              <h2 className="text-heading-md mb-3">Section Title</h2>
-              <p className="text-base">Content with generous padding for major page sections.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Common padding patterns used in UI components.',
-      },
-    },
-  },
-};
-
-export const MarginExamples: Story = {
-  render: () => (
-    <div className="p-8 space-y-8">
+      {/* Coupled */}
       <div>
-        <h2 className="text-2xl font-bold mb-2">Margin Examples</h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Common margin patterns for spacing elements
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-coupled <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(4px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Tightly coupled elements like icon + text
         </p>
+        <div className="inline-flex items-center bg-[var(--color-bg-neutral-subtle)] px-4 py-2 rounded-lg" style={{ gap: 'var(--dimension-space-between-coupled)' }}>
+          <svg className="w-4 h-4 text-[var(--color-fg-neutral-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm text-[var(--color-fg-neutral-primary)]">Checkmark with label</span>
+        </div>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <p className="text-xs text-gray-600 mb-3">mb-2 (8px bottom) - Tight spacing</p>
-          <div className="bg-gray-50 p-4 rounded">
-            <h3 className="text-heading-sm mb-2">Heading</h3>
-            <p className="text-sm">Text immediately following with 8px spacing.</p>
-          </div>
+      {/* Repeating Small */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-repeating-small <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(6px)</span>
         </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-3">mb-4 (16px bottom) - Standard spacing</p>
-          <div className="bg-gray-50 p-4 rounded">
-            <h3 className="text-heading-sm mb-4">Heading</h3>
-            <p className="text-sm">Text with comfortable 16px spacing.</p>
-          </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Small repeated elements like pills or chips
+        </p>
+        <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-small)' }}>
+          {['Design', 'Development', 'Testing', 'Deployment'].map((tag) => (
+            <span
+              key={tag}
+              className="px-3 py-1 bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold rounded"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
+      </div>
 
-        <div>
-          <p className="text-xs text-gray-600 mb-3">mb-6 (24px bottom) - Generous spacing</p>
-          <div className="bg-gray-50 p-4 rounded">
-            <h2 className="text-heading-md mb-6">Section Heading</h2>
-            <p className="text-base">Content with generous spacing for clear separation.</p>
-          </div>
+      {/* Repeating Medium */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-repeating-medium <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(8px)</span>
         </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-3">mt-8 (32px top) - Section separation</p>
-          <div className="bg-gray-50 p-4 rounded">
-            <p className="text-base">Previous content...</p>
-            <h2 className="text-heading-md mt-8">New Section</h2>
-            <p className="text-base">Clear visual break with 32px top margin.</p>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-3">mx-auto - Horizontal centering</p>
-          <div className="bg-gray-50 p-4">
-            <div className="bg-blue-500 text-white px-6 py-3 rounded-lg mx-auto w-fit">
-              Centered Button
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Medium repeated elements like cards in a grid
+        </p>
+        <div className="grid grid-cols-3" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
+          {[1, 2, 3].map((num) => (
+            <div
+              key={num}
+              className="p-4 bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg"
+            >
+              <div className="text-sm font-semibold text-[var(--color-fg-neutral-primary)]">Card {num}</div>
+              <div className="text-xs text-[var(--color-fg-neutral-secondary)] mt-1">Grid item</div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Related Small */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-related-small <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(8px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Related content sections
+        </p>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
+          <div className="p-3 bg-[var(--color-bg-positive-subtle)] rounded">
+            <div className="text-sm font-semibold text-[var(--color-fg-positive-primary)]">Section A</div>
+          </div>
+          <div className="p-3 bg-[var(--color-bg-positive-subtle)] rounded">
+            <div className="text-sm font-semibold text-[var(--color-fg-positive-primary)]">Section B</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Related Medium */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-related-medium <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(16px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Clearly related but distinct sections
+        </p>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-related-medium)' }}>
+          <div className="p-4 bg-[var(--color-bg-accent-subtle)] rounded-lg border border-[var(--color-bg-accent-medium)]">
+            <div className="text-sm font-semibold text-[var(--color-fg-accent-primary)]">Major Section 1</div>
+            <div className="text-xs text-[var(--color-fg-accent-secondary)] mt-1">More breathing room</div>
+          </div>
+          <div className="p-4 bg-[var(--color-bg-accent-subtle)] rounded-lg border border-[var(--color-bg-accent-medium)]">
+            <div className="text-sm font-semibold text-[var(--color-fg-accent-primary)]">Major Section 2</div>
+            <div className="text-xs text-[var(--color-fg-accent-secondary)] mt-1">Clear visual separation</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Separated */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-separated <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(24px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Separated content sections (distinct topics)
+        </p>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-separated)' }}>
+          <div className="p-6 bg-[var(--color-bg-information-subtle)] rounded-lg">
+            <h3 className="text-lg font-bold text-[var(--color-fg-information-primary)] mb-2">Topic A</h3>
+            <p className="text-sm text-[var(--color-fg-information-secondary)]">
+              Completely separate topic with maximum spacing
+            </p>
+          </div>
+          <div className="p-6 bg-[var(--color-bg-alert-subtle)] rounded-lg">
+            <h3 className="text-lg font-bold text-[var(--color-fg-alert-primary)] mb-2">Topic B</h3>
+            <p className="text-sm text-[var(--color-fg-alert-secondary)]">
+              Distinct content requiring clear visual break
+            </p>
           </div>
         </div>
       </div>
@@ -286,78 +206,101 @@ export const MarginExamples: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Common margin patterns for element spacing and alignment.',
+        story: 'Semantic gap tokens for spacing between elements.',
       },
     },
   },
 };
 
-export const GapExamples: Story = {
+export const SpaceAround: Story = {
   render: () => (
-    <div className="p-8 space-y-8">
+    <div className="p-8 space-y-8 bg-[var(--color-bg-neutral-base)]">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Gap Examples</h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Using gap for flexbox and grid layouts
+        <h2 className="text-2xl font-bold mb-4 text-[var(--color-fg-neutral-primary)]">
+          Space Around (Padding) Tokens
+        </h2>
+        <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
+          Used for padding around content inside containers
         </p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <p className="text-xs text-gray-600 mb-3">gap-2 (8px) - Compact flex layout</p>
-          <div className="flex gap-2 bg-gray-50 p-4 rounded">
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 1</div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 2</div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 3</div>
-          </div>
+      {/* X-Small */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          around-x-small <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(8px)</span>
         </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-3">gap-4 (16px) - Standard flex layout</p>
-          <div className="flex gap-4 bg-gray-50 p-4 rounded">
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 1</div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 2</div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 3</div>
-          </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Minimal padding for pills and small buttons
+        </p>
+        <div className="inline-flex gap-2">
+          <button
+            className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] text-sm font-semibold rounded"
+            style={{ padding: 'var(--dimension-space-around-x-small)' }}
+          >
+            Compact Button
+          </button>
+          <span
+            className="bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold rounded inline-flex items-center"
+            style={{ padding: 'var(--dimension-space-around-x-small)' }}
+          >
+            Badge
+          </span>
         </div>
+      </div>
 
-        <div>
-          <p className="text-xs text-gray-600 mb-3">gap-6 (24px) - Spacious flex layout</p>
-          <div className="flex gap-6 bg-gray-50 p-4 rounded">
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 1</div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 2</div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded text-sm">Item 3</div>
-          </div>
+      {/* Small */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          around-small <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(12px)</span>
         </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Compact padding for medium buttons and inputs
+        </p>
+        <button
+          className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded-lg"
+          style={{ padding: 'var(--dimension-space-around-small)' }}
+        >
+          Standard Button
+        </button>
+      </div>
 
-        <div>
-          <p className="text-xs text-gray-600 mb-3">grid with gap-4 - Card grid</p>
-          <div className="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded">
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 1</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 2</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 3</div>
-          </div>
+      {/* Medium */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          around-medium <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(16px)</span>
         </div>
-
-        <div>
-          <p className="text-xs text-gray-600 mb-3">gap-x-4 gap-y-8 - Different horizontal/vertical gaps</p>
-          <div className="grid grid-cols-3 gap-x-4 gap-y-8 bg-gray-50 p-4 rounded">
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 1</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 2</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 3</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 4</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 5</div>
-            <div className="bg-white border border-gray-200 p-4 rounded">Card 6</div>
-          </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Standard padding for cards and containers (most common)
+        </p>
+        <div
+          className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg max-w-md"
+          style={{ padding: 'var(--dimension-space-around-medium)' }}
+        >
+          <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Event Card</h4>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
+            This card uses standard medium padding (16px) for comfortable content spacing.
+          </p>
         </div>
+      </div>
 
-        <div>
-          <p className="text-xs text-gray-600 mb-3">flex-col gap-3 - Vertical stack</p>
-          <div className="flex flex-col gap-3 bg-gray-50 p-4 rounded max-w-md">
-            <div className="bg-white border border-gray-200 p-3 rounded">List Item 1</div>
-            <div className="bg-white border border-gray-200 p-3 rounded">List Item 2</div>
-            <div className="bg-white border border-gray-200 p-3 rounded">List Item 3</div>
-          </div>
+      {/* Large */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          around-large <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(20px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Generous padding for large cards and prominent sections
+        </p>
+        <div
+          className="bg-gradient-to-br from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-information-subtle)] rounded-lg max-w-2xl"
+          style={{ padding: 'var(--dimension-space-around-large)' }}
+        >
+          <h3 className="text-xl font-bold text-[var(--color-fg-neutral-primary)] mb-3">
+            Featured Section
+          </h3>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
+            Large padding creates a spacious, premium feel for featured content and hero sections.
+          </p>
         </div>
       </div>
     </div>
@@ -365,126 +308,147 @@ export const GapExamples: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Using gap utilities for modern flexbox and grid layouts.',
+        story: 'Semantic padding tokens for spacing around content.',
       },
     },
   },
 };
 
-export const ComponentSpacing: Story = {
+export const UsageExamples: Story = {
   render: () => (
-    <div className="p-8 max-w-4xl space-y-8">
+    <div className="p-8 space-y-8 bg-[var(--color-bg-neutral-base)]">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Component Spacing Patterns</h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Real-world examples of spacing in common UI patterns
+        <h2 className="text-2xl font-bold mb-6 text-[var(--color-fg-neutral-primary)]">
+          Real-World Usage Examples
+        </h2>
+      </div>
+
+      {/* Button Group */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Button Group
+        </h3>
+        <div className="flex" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
+          <button
+            className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded"
+            style={{ padding: 'var(--dimension-space-around-small)' }}
+          >
+            Save
+          </button>
+          <button
+            className="border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)] font-semibold rounded"
+            style={{ padding: 'var(--dimension-space-around-small)' }}
+          >
+            Cancel
+          </button>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Gap: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">between-related-small</code> •
+          Padding: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">around-small</code>
         </p>
       </div>
 
-      <div className="space-y-8">
-        <div>
-          <h3 className="text-heading-sm mb-4">Form Layout</h3>
-          <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+      {/* Tag List */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Tag List
+        </h3>
+        <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-small)' }}>
+          {['React', 'TypeScript', 'Tailwind', 'Storybook', 'Design Tokens'].map((tag) => (
+            <span
+              key={tag}
+              className="bg-[var(--color-bg-accent-medium)] text-[var(--color-fg-accent-primary)] text-xs font-semibold rounded"
+              style={{ padding: 'var(--dimension-space-around-x-small)' }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Gap: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">between-repeating-small</code> •
+          Padding: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">around-x-small</code>
+        </p>
+      </div>
+
+      {/* Card Grid */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Card Grid
+        </h3>
+        <div className="grid grid-cols-2 max-w-2xl" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
+          {[1, 2].map((num) => (
+            <div
+              key={num}
+              className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg"
+              style={{ padding: 'var(--dimension-space-around-medium)' }}
+            >
+              <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Event {num}</h4>
+              <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
+                Standard card spacing
+              </p>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Gap: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">between-repeating-medium</code> •
+          Padding: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">around-medium</code>
+        </p>
+      </div>
+
+      {/* Form Layout */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Form Layout
+        </h3>
+        <div
+          className="bg-[var(--color-bg-neutral-subtle)] rounded-lg border border-[var(--color-bg-neutral-low)] max-w-md"
+          style={{ padding: 'var(--dimension-space-around-medium)' }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--dimension-space-between-related-medium)' }}>
             <div>
-              <label className="text-sm-bold block mb-1">Full Name</label>
-              <input
-                type="text"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-base"
-                placeholder="John Doe"
-              />
-            </div>
-            <div>
-              <label className="text-sm-bold block mb-1">Email</label>
+              <label className="block text-sm font-semibold text-[var(--color-fg-neutral-primary)] mb-1">
+                Email
+              </label>
               <input
                 type="email"
-                className="w-full border border-gray-300 rounded px-3 py-2 text-base"
-                placeholder="john@example.com"
+                placeholder="you@example.com"
+                className="w-full border border-[var(--color-bg-neutral-low)] rounded text-sm text-[var(--color-fg-neutral-primary)]"
+                style={{ padding: 'var(--dimension-space-around-small)' }}
               />
             </div>
             <div>
-              <label className="text-sm-bold block mb-1">Message</label>
-              <textarea
-                rows={4}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-base"
-                placeholder="Your message..."
+              <label className="block text-sm font-semibold text-[var(--color-fg-neutral-primary)] mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                className="w-full border border-[var(--color-bg-neutral-low)] rounded text-sm text-[var(--color-fg-neutral-primary)]"
+                style={{ padding: 'var(--dimension-space-around-small)' }}
               />
             </div>
           </div>
-          <p className="text-xs text-gray-600 mt-2">
-            Uses: p-6 (card), space-y-4 (fields), mb-1 (labels), px-3 py-2 (inputs)
-          </p>
         </div>
-
-        <div>
-          <h3 className="text-heading-sm mb-4">Stats Grid</h3>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <p className="text-sm text-gray-600 mb-2">Total Users</p>
-              <p className="text-heading-2xl">1,234</p>
-              <p className="text-xs text-positive-primary mt-2">+12% this month</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <p className="text-sm text-gray-600 mb-2">Revenue</p>
-              <p className="text-heading-2xl">$45K</p>
-              <p className="text-xs text-positive-primary mt-2">+8% this month</p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-lg p-6">
-              <p className="text-sm text-gray-600 mb-2">Orders</p>
-              <p className="text-heading-2xl">567</p>
-              <p className="text-xs text-alert-primary mt-2">-3% this month</p>
-            </div>
-          </div>
-          <p className="text-xs text-gray-600 mt-2">
-            Uses: gap-4 (grid), p-6 (cards), mb-2 (label), mt-2 (change indicator)
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-heading-sm mb-4">Navigation Menu</h3>
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <nav className="flex gap-1 p-2">
-              <a className="px-4 py-2 rounded bg-blue-500 text-white text-sm-bold">Dashboard</a>
-              <a className="px-4 py-2 rounded hover:bg-gray-100 text-sm-bold">Projects</a>
-              <a className="px-4 py-2 rounded hover:bg-gray-100 text-sm-bold">Team</a>
-              <a className="px-4 py-2 rounded hover:bg-gray-100 text-sm-bold">Settings</a>
-            </nav>
-          </div>
-          <p className="text-xs text-gray-600 mt-2">
-            Uses: p-2 (container), gap-1 (items), px-4 py-2 (nav items)
-          </p>
-        </div>
-
-        <div>
-          <h3 className="text-heading-sm mb-4">List with Dividers</h3>
-          <div className="bg-white border border-gray-200 rounded-lg divide-y">
-            <div className="p-4">
-              <h4 className="text-base-bold mb-1">First Item</h4>
-              <p className="text-sm text-gray-600">Description of the first item</p>
-            </div>
-            <div className="p-4">
-              <h4 className="text-base-bold mb-1">Second Item</h4>
-              <p className="text-sm text-gray-600">Description of the second item</p>
-            </div>
-            <div className="p-4">
-              <h4 className="text-base-bold mb-1">Third Item</h4>
-              <p className="text-sm text-gray-600">Description of the third item</p>
-            </div>
-          </div>
-          <p className="text-xs text-gray-600 mt-2">
-            Uses: p-4 (list items), mb-1 (title spacing)
-          </p>
-        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Form gap: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">between-related-medium</code> •
+          Input padding: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">around-small</code>
+        </p>
       </div>
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-3">Spacing Best Practices</h3>
-        <ul className="space-y-2 text-sm text-gray-700">
-          <li>• Use <code className="bg-gray-200 px-1 rounded">gap</code> instead of margins for flex/grid children</li>
-          <li>• Standard card padding is <code className="bg-gray-200 px-1 rounded">p-6</code> (24px)</li>
-          <li>• Button padding typically uses <code className="bg-gray-200 px-1 rounded">px-4 py-2</code> or <code className="bg-gray-200 px-1 rounded">px-6 py-3</code></li>
-          <li>• Use <code className="bg-gray-200 px-1 rounded">space-y-*</code> utilities for consistent vertical rhythm</li>
-          <li>• Section spacing is usually <code className="bg-gray-200 px-1 rounded">p-8</code> or larger</li>
-          <li>• Keep spacing consistent across similar components</li>
+      {/* Best Practices */}
+      <div
+        className="bg-[var(--color-bg-information-subtle)] border-l-4 border-[var(--color-bg-information-high)] rounded"
+        style={{ padding: 'var(--dimension-space-around-medium)' }}
+      >
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-information-primary)]">
+          Best Practices
+        </h3>
+        <ul className="space-y-2 text-sm text-[var(--color-fg-information-secondary)]">
+          <li>• Use "between" tokens for gaps (flexbox gap, grid gap)</li>
+          <li>• Use "around" tokens for padding inside containers</li>
+          <li>• Match the semantic meaning: "coupled" for tightly related, "separated" for distinct topics</li>
+          <li>• <code className="bg-[var(--color-bg-neutral-base)] px-2 py-1 rounded font-mono">around-medium</code> is the most common padding for cards</li>
+          <li>• Consistent spacing creates visual rhythm and improves scannability</li>
         </ul>
       </div>
     </div>
@@ -492,7 +456,103 @@ export const ComponentSpacing: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Common spacing patterns used in real UI components.',
+        story: 'Common UI patterns combining gap and padding tokens.',
+      },
+    },
+  },
+};
+
+export const AllTokens: Story = {
+  render: () => (
+    <div className="p-8 bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6 text-[var(--color-fg-neutral-primary)]">
+        Complete Token Reference
+      </h2>
+      <div className="grid grid-cols-2 gap-8">
+        {/* Between Tokens */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4 text-[var(--color-fg-neutral-primary)]">
+            Space Between (Gap)
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-coupled
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">4px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-repeating-small
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">6px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-repeating-medium
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">8px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-related-small
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">8px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-related-medium
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">16px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-separated
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">24px</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Around Tokens */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4 text-[var(--color-fg-neutral-primary)]">
+            Space Around (Padding)
+          </h3>
+          <div className="space-y-2 text-sm">
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-x-small
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">8px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-small
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">12px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-medium
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">16px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-large
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">20px</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Complete list of all spacing tokens with their values.',
       },
     },
   },

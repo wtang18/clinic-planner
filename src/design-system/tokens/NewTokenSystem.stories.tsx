@@ -417,6 +417,11 @@ export const ThemeComparison: Story = {
 
     React.useEffect(() => {
       document.documentElement.setAttribute('data-theme', theme);
+
+      // Cleanup: reset to light theme when component unmounts
+      return () => {
+        document.documentElement.setAttribute('data-theme', 'light');
+      };
     }, [theme]);
 
     return (
