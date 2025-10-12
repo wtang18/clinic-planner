@@ -45,13 +45,23 @@
 
 ## Universal Documentation Template
 
+### ⚠️ CRITICAL REQUIREMENT: Enable Docs Page
+
+**ALWAYS include `tags: ['autodocs']` in your meta configuration.**
+
+This creates the **Docs page** (gold file icon 📄) in Storybook sidebar, which is the primary way users access component documentation.
+
+**Without this tag, the comprehensive documentation you write will NOT be visible as a dedicated Docs page.**
+
+---
+
 ### Meta Configuration Structure
 
 ```typescript
 const meta: Meta<typeof Component> = {
   title: 'Design System/Components/ComponentName',
   component: Component,
-  tags: ['autodocs'],
+  tags: ['autodocs'],  // ⚠️ REQUIRED - Creates the Docs page (gold icon)
 
   argTypes: {
     // 1. CORE PROPS (required or primary)
@@ -545,21 +555,30 @@ For simple components, you can omit some sections but ALWAYS include:
 
 Before finalizing component documentation, verify:
 
+### Meta Configuration
+- [ ] **⚠️ CRITICAL: `tags: ['autodocs']` is present** (enables Docs page with gold icon)
 - [ ] Component title uses `# [Name]` format
 - [ ] Opening line starts with "Production-ready..."
+
+### Documentation Content
 - [ ] Quick Reference has 3+ key attributes
 - [ ] Features list has 5+ items with ✅
 - [ ] All tables use proper markdown format
 - [ ] Code examples use proper syntax highlighting
 - [ ] Accessibility section covers keyboard, screen reader, focus
 - [ ] Best Practices has both Do and Don't sections
+
+### Stories
 - [ ] Playground story exists with sensible defaults
 - [ ] Overview story shows all variants
-- [ ] AccessibilityDemo story exists
-- [ ] ClaudeCodeExamples story exists with 4-6 examples
+- [ ] **AccessibilityDemo story exists**
+- [ ] **ClaudeCodeExamples story exists with 4-6 examples**
 - [ ] All stories follow naming conventions
+
+### Quality
 - [ ] No redundant information between sections
 - [ ] Voice and tone is consistent with other components
+- [ ] **Verify Docs page appears in Storybook sidebar (gold file icon 📄)**
 
 ---
 
