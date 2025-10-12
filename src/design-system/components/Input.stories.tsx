@@ -5,6 +5,7 @@ import { Input } from './Input';
 const meta: Meta<typeof Input> = {
   title: 'Design System/Components/Input',
   component: Input,
+  tags: ['autodocs'],
   argTypes: {
     // Core variant props
     type: {

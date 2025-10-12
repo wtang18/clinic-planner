@@ -5,6 +5,7 @@ import { Toggle } from './Toggle';
 const meta: Meta<typeof Toggle> = {
   title: 'Design System/Components/Toggle',
   component: Toggle,
+  tags: ['autodocs'],
   argTypes: {
     // Core props
     size: {
