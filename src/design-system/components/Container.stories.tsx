@@ -6,6 +6,7 @@ import { Card } from './Card';
 const meta: Meta<typeof Container> = {
   title: 'Design System/Components/Container',
   component: Container,
+  tags: ['autodocs'],
   argTypes: {
     // Core variant props
     variant: {
@@ -469,6 +470,46 @@ export const SemanticHTML: Story = {
             </Container>
           </div>
         </div>
+      </div>
+    </div>
+  ),
+};
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">Use these natural language prompts when working with Container.</p>
+      <div className="space-y-6">
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-blue-600">📋</span> Create Container Layout</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Wrap these cards in a container with medium gap spacing"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will wrap content in Container with <code className="bg-gray-100 px-1">gap="medium"</code></p>
+        </div>
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-green-600">📏</span> Adjust Gap</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Increase spacing between items in this container"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will change gap prop to a larger value</p>
+        </div>
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-purple-600">🎨</span> Make Interactive</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Make this container clickable as a whole"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1">variant="interactive"</code> and onClick handler</p>
+        </div>
+      </div>
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Use Container to group related elements with consistent spacing</li>
+          <li>• Gap options: x-small, small, medium, large, x-large</li>
+          <li>• Interactive variant for clickable container groups</li>
+        </ul>
       </div>
     </div>
   ),

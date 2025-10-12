@@ -5,6 +5,7 @@ import { TogglePill } from './TogglePill';
 const meta: Meta<typeof TogglePill> = {
   title: 'Design System/Components/TogglePill',
   component: TogglePill,
+  tags: ['autodocs'],
   argTypes: {
     // Core variant props
     size: {
@@ -434,4 +435,37 @@ export const AccessibilityDemo: Story = {
       </div>
     );
   },
+};
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">Use these natural language prompts when working with TogglePill.</p>
+      <div className="space-y-6">
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-blue-600">🎨</span> Create Filter Pills</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Add toggle pills for Active, Completed, and Archived filters"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will create TogglePill components with selection state management</p>
+        </div>
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-green-600">📏</span> Adjust Size</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Make these filter pills smaller for the compact view"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1">size="small"</code></p>
+        </div>
+      </div>
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Use for multi-select filters and tags</li>
+          <li>• Always handle selection state properly</li>
+          <li>• Consider size based on available space</li>
+        </ul>
+      </div>
+    </div>
+  ),
 };

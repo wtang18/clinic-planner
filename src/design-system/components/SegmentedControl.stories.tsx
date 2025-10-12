@@ -5,6 +5,7 @@ import { SegmentedControl } from './SegmentedControl';
 const meta: Meta<typeof SegmentedControl> = {
   title: 'Design System/Components/SegmentedControl',
   component: SegmentedControl,
+  tags: ['autodocs'],
   argTypes: {
     // Core props
     value: {
@@ -504,4 +505,87 @@ export const AccessibilityDemo: Story = {
       </div>
     );
   },
+};
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">
+        Use these natural language prompts when working with SegmentedControl.
+      </p>
+
+      <div className="space-y-8">
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-blue-600">📋</span>
+            Create Segmented Control
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add a segmented control to switch between list, grid, and calendar views"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will create SegmentedControl with three options and onChange handler
+          </p>
+        </div>
+
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-green-600">📏</span>
+            Adjust Size
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Make the segmented control smaller for the toolbar"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">size="small"</code>
+          </p>
+        </div>
+
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-purple-600">✨</span>
+            Add Icons
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add icons to each view option - list, grid, and calendar icons"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add appropriate icons to each option in the options array
+          </p>
+        </div>
+
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <span className="text-orange-600">♿</span>
+            Improve Accessibility
+          </h3>
+          <div className="bg-white p-4 rounded border border-gray-200 mb-3">
+            <code className="text-sm text-gray-800">
+              "Add an accessible label to describe that this controls the view mode"
+            </code>
+          </div>
+          <p className="text-sm text-gray-600">
+            <strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1 rounded">aria-label="View mode selector"</code>
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Use SegmentedControl for 2-5 mutually exclusive options</li>
+          <li>• Always provide aria-label for accessibility</li>
+          <li>• Icons improve scannability - use them when space allows</li>
+          <li>• Components use semantic tokens that adapt to themes</li>
+        </ul>
+      </div>
+    </div>
+  ),
 };
