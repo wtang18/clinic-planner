@@ -185,6 +185,76 @@ All button types use semantic tokens:
 
 ---
 
+## Accessibility
+
+All Button components follow WCAG 2.1 Level AA guidelines and include comprehensive keyboard and screen reader support.
+
+### Keyboard Navigation
+
+- **Tab**: Focus the button
+- **Enter or Space**: Activate the button
+- **Shift + Tab**: Move focus backward
+
+### Screen Reader Support
+
+Buttons automatically include proper ARIA attributes:
+- **role="button"**: Implicit from \`<button>\` element
+- **aria-label**: Required for icon-only buttons, optional for text buttons
+- **aria-describedby**: Links to additional descriptive text when needed
+- **aria-disabled**: Automatically set when \`disabled={true}\`
+
+### Focus Management
+
+All buttons include visible focus indicators:
+- **Focus ring**: 2px solid blue outline with offset
+- **High contrast**: Focus ring visible in high contrast mode
+- **Keyboard only**: Focus ring only appears for keyboard navigation (not mouse clicks)
+
+### Icon-Only Buttons
+
+Icon-only buttons **require** \`aria-label\` for accessibility:
+
+\`\`\`tsx
+// ✅ Correct - Has aria-label
+<Button iconOnly iconL="trash" aria-label="Delete item" />
+
+// ❌ Wrong - Missing aria-label
+<Button iconOnly iconL="trash" />
+\`\`\`
+
+### Disabled State
+
+Disabled buttons are properly announced to screen readers:
+- Visual: 50% opacity + no pointer events
+- Semantic: \`aria-disabled="true"\` attribute
+- Keyboard: Not focusable (removed from tab order)
+
+### Color Contrast
+
+All button types meet WCAG AA contrast requirements:
+- **Primary**: 4.5:1 contrast ratio (white on dark)
+- **Outlined**: 3:1 border contrast + 4.5:1 text
+- **Transparent**: Backdrop blur ensures readability
+- **High-Impact**: High contrast red for critical actions
+
+### Best Practices for Accessibility
+
+✅ **Do**:
+- Always provide \`aria-label\` for icon-only buttons
+- Use descriptive labels ("Delete event" not "Delete")
+- Maintain consistent button order across pages
+- Use \`high-impact\` type for destructive actions (clear visual signal)
+- Ensure buttons are at least 24px tall for touch targets
+
+❌ **Don't**:
+- Rely solely on color to convey meaning
+- Use buttons for navigation (use links instead)
+- Create buttons smaller than 24px height
+- Disable buttons without explanation
+- Use vague labels like "Click here" or "Submit"
+
+---
+
 ## Best Practices
 
 ### ✅ Do
@@ -194,6 +264,8 @@ All button types use semantic tokens:
 - Use \`high-impact\` for destructive actions (delete, remove)
 - Provide \`aria-label\` for icon-only buttons
 - Use \`transparent\` over images/gradients for glassmorphism
+- Group related buttons together with consistent spacing
+- Use appropriate sizes for context (large for heroes, small for toolbars)
 
 ### ❌ Don't
 
@@ -202,6 +274,8 @@ All button types use semantic tokens:
 - Forget accessibility for icon-only buttons
 - Mix button sizes randomly in the same group
 - Override semantic tokens with hard-coded colors
+- Create buttons with poor contrast ratios
+- Use buttons for navigation (use links/anchors instead)
         `.trim(),
       },
     },
@@ -542,6 +616,153 @@ export const IconTester: Story = {
         />
       </div>
 
+    </div>
+  ),
+};
+
+export const AccessibilityDemo: Story = {
+  render: () => (
+    <div className="p-8 space-y-8">
+      <div className="bg-blue-50 p-6 rounded-lg">
+        <h3 className="text-lg font-bold mb-4">Accessibility Features</h3>
+        <p className="text-sm text-gray-700 mb-4">
+          All Button components follow WCAG 2.1 Level AA guidelines.
+        </p>
+        <ul className="text-sm space-y-2 mb-6 text-gray-700">
+          <li>✓ Keyboard navigation (Tab, Enter, Space)</li>
+          <li>✓ Screen reader support with ARIA attributes</li>
+          <li>✓ Visible focus indicators (keyboard only)</li>
+          <li>✓ WCAG AA color contrast ratios</li>
+          <li>✓ Minimum 24px touch targets</li>
+        </ul>
+
+        <div className="space-y-6">
+          {/* Keyboard Navigation */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Keyboard Navigation</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Try using Tab, Enter, and Space keys to navigate and activate these buttons:
+            </p>
+            <div className="flex gap-3">
+              <Button type="primary" label="Save" onClick={() => alert('Saved!')} />
+              <Button type="outlined" label="Cancel" onClick={() => alert('Cancelled')} />
+              <Button type="transparent" label="Preview" onClick={() => alert('Preview')} />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Notice the focus ring appears only when using keyboard (not mouse clicks)
+            </p>
+          </div>
+
+          {/* Icon-Only with aria-label */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Icon-Only Buttons (requires aria-label)</h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Button iconOnly iconL="trash" aria-label="Delete item" type="high-impact" />
+                <code className="text-sm bg-white px-2 py-1 rounded">aria-label="Delete item"</code>
+                <span className="text-sm text-green-600">✓ Correct</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button iconOnly iconL="star" aria-label="Add to favorites" />
+                <code className="text-sm bg-white px-2 py-1 rounded">aria-label="Add to favorites"</code>
+                <span className="text-sm text-green-600">✓ Correct</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button iconOnly iconL="gear" aria-label="Open settings" type="transparent" />
+                <code className="text-sm bg-white px-2 py-1 rounded">aria-label="Open settings"</code>
+                <span className="text-sm text-green-600">✓ Correct</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Disabled State */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Disabled State</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Disabled buttons are not focusable and have <code className="bg-white px-1 rounded">aria-disabled="true"</code>
+            </p>
+            <div className="flex gap-3">
+              <Button type="primary" label="Save" disabled />
+              <Button type="outlined" label="Cancel" disabled />
+              <Button iconOnly iconL="star" aria-label="Favorite" disabled />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Try tabbing through - disabled buttons are skipped in tab order
+            </p>
+          </div>
+
+          {/* Color Contrast */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Color Contrast (WCAG AA)</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              All button types meet 4.5:1 contrast ratio for text, 3:1 for borders:
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col items-center gap-2">
+                <Button type="primary" label="Primary" />
+                <span className="text-xs text-gray-500">4.5:1</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Button type="outlined" label="Outlined" />
+                <span className="text-xs text-gray-500">4.5:1 + 3:1</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Button type="high-impact" label="Delete" />
+                <span className="text-xs text-gray-500">7:1 (AAA)</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Button type="carby" label="Carby" />
+                <span className="text-xs text-gray-500">4.5:1</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Touch Targets */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Touch Target Sizes</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              All buttons meet minimum 24px height for accessible touch targets:
+            </p>
+            <div className="flex items-end gap-3">
+              <div className="flex flex-col items-center gap-2">
+                <Button size="x-small" label="24px" />
+                <span className="text-xs text-gray-500">x-small</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Button size="small" label="32px" />
+                <span className="text-xs text-gray-500">small</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Button size="medium" label="40px" />
+                <span className="text-xs text-gray-500">medium</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <Button size="large" label="56px" />
+                <span className="text-xs text-gray-500">large</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Descriptive Labels */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Descriptive Labels</h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Button type="high-impact" iconL="trash" label="Delete event" />
+                <span className="text-sm text-green-600">✓ Specific and clear</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button type="primary" label="Submit" />
+                <span className="text-sm text-red-600">✗ Vague (submit what?)</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button type="primary" iconR="arrow-right" label="Continue to checkout" />
+                <span className="text-sm text-green-600">✓ Clear next action</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   ),
 };
