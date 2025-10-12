@@ -854,3 +854,111 @@ export const ClaudeCodeExamples: Story = {
     </div>
   ),
 };
+
+export const AccessibilityDemo: Story = {
+  render: () => (
+    <div className="p-8 space-y-8">
+      <div className="bg-blue-50 p-6 rounded-lg">
+        <h3 className="text-lg font-bold mb-4">Accessibility Features</h3>
+        <p className="text-sm text-gray-700 mb-4">
+          Pill components follow WCAG 2.1 Level AA guidelines with proper color contrast and keyboard support for interactive pills.
+        </p>
+        <ul className="text-sm space-y-2 mb-6 text-gray-700">
+          <li>✓ WCAG AA color contrast ratios for all variants</li>
+          <li>✓ Keyboard navigation for interactive pills (Tab, Enter, Space)</li>
+          <li>✓ Screen reader support with proper ARIA attributes</li>
+          <li>✓ Semantic color meanings (green=positive, red=alert, yellow=attention)</li>
+          <li>✓ Text truncation with full text available to screen readers</li>
+        </ul>
+
+        <div className="space-y-6">
+          {/* Interactive Pills */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Interactive Pills (Keyboard Accessible)</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Try using Tab to focus, then Enter or Space to activate:
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Pill type="outlined" label="Clickable Tag" interactive onClick={() => alert('Clicked!')} />
+              <Pill type="info" label="Filter: Active" interactive onClick={() => alert('Filter toggled')} />
+              <Pill type="attention" label="Remove" interactive iconR="close" onClick={() => alert('Removed')} />
+            </div>
+          </div>
+
+          {/* Color Contrast */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Color Contrast (WCAG AA Compliant)</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              All pill types meet 4.5:1 contrast requirements:
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Pill type="positive" label="Success (4.5:1+)" />
+              <Pill type="alert" label="Error (4.5:1+)" />
+              <Pill type="attention" label="Warning (4.5:1+)" />
+              <Pill type="info" label="Info (4.5:1+)" />
+              <Pill type="outlined" label="Neutral (3:1+)" />
+            </div>
+          </div>
+
+          {/* Semantic Meaning */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Semantic Color Meanings</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Colors convey meaning to sighted users AND via semantic type names for screen readers:
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Pill type="positive" label="Completed" />
+                <span className="text-sm text-gray-600">→ Screen reader: "positive Completed"</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Pill type="alert" label="Failed" />
+                <span className="text-sm text-gray-600">→ Screen reader: "alert Failed"</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Pill type="attention" label="Pending" />
+                <span className="text-sm text-gray-600">→ Screen reader: "attention Pending"</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Icon Pills */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Icon-Only Pills (Requires aria-label)</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Pills with only icons must have aria-label for screen readers:
+            </p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-gray-600 mb-2">✓ Correct - Has aria-label:</p>
+                <Pill type="outlined" iconL="heart" aria-label="Favorite" interactive onClick={() => {}} />
+              </div>
+              <div>
+                <p className="text-xs text-gray-600 mb-2">✓ Correct - Has visible label:</p>
+                <Pill type="info" iconL="calendar" label="Scheduled" />
+              </div>
+            </div>
+          </div>
+
+          {/* Text Truncation */}
+          <div>
+            <h4 className="text-base font-semibold mb-3">Text Truncation Accessibility</h4>
+            <p className="text-sm text-gray-600 mb-3">
+              Truncated text is fully available to screen readers:
+            </p>
+            <div className="max-w-xs">
+              <Pill 
+                type="outlined" 
+                label="This is a very long pill label that will truncate with ellipsis" 
+                truncate 
+              />
+              <p className="text-xs text-gray-600 mt-2">
+                Screen readers read the full text even though it's visually truncated
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+};
