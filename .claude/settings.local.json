@@ -30,7 +30,10 @@
       "Bash(npx tailwindcss:*)",
       "Bash(xargs basename:*)",
       "Bash(git log:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "Bash(git stash:*)",
+      "Bash(npm run tokens:build:react-native:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

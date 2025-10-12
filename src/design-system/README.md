@@ -1,8 +1,16 @@
 # @carbon-health/design-system
 
-Carbon Health Design System - Design tokens, components, and styles for web and React Native applications.
+Carbon Health Design System - Production-ready design tokens, components, and styles for web and React Native applications.
 
-> Currently in POC phase within clinic-planner. Ready for extraction when 2nd project needs it.
+> ⭐ **Current Status:** Phase 3 Complete - React Native Ready
+>
+> 📊 **For complete status, roadmap, and next steps:** See [STATUS.md](./STATUS.md)
+>
+> - ✅ 12 production-ready React web components
+> - ✅ Complete token architecture (Primitives → Decoratives → Semantics)
+> - ✅ React Native token generation ready
+> - ✅ Comprehensive Storybook documentation
+> - ✅ WCAG 2.1 Level AA accessibility
 
 ## Installation
 
@@ -107,6 +115,15 @@ Usage: `<Button leftIcon="star" />`
 
 ## Documentation
 
+**📊 Start Here:**
+- **[STATUS.md](./STATUS.md)** - **Complete status, roadmap, and next steps**
+- **[DOCUMENTATION_GUIDELINES.md](./DOCUMENTATION_GUIDELINES.md)** - Component documentation template
+
+**React Native:**
+- [React Native Migration Guide](../../docs/REACT-NATIVE-MIGRATION-GUIDE.md) - Complete setup guide
+- [Design System Export Prep](../../docs/DESIGN-SYSTEM-EXPORT-PREP.md) - Multi-platform preparation
+
+**Technical Docs:**
 - [Style Dictionary Migration](../../docs/STYLE-DICTIONARY-MIGRATION.md) - Complete migration summary
 - [Token System Comparison](../../docs/TOKEN-SYSTEM-COMPARISON.md) - Custom script vs Style Dictionary
 - [Component Migration Guide](../../docs/COMPONENT-MIGRATION-GUIDE.md) - Migrate components to semantic tokens
