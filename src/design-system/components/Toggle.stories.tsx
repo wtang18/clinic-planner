@@ -145,12 +145,110 @@ Toggle uses semantic tokens that adapt to themes:
 - Change the label text based on the toggle state
 - Use when the change isn't immediate (use Checkbox with submit button instead)
 
-### Accessibility
+---
 
-✓ **Keyboard Navigation**: Space or Enter to toggle
-✓ **Screen Readers**: Announces as "switch" with "on"/"off" state
-✓ **Focus Indicator**: Visible focus ring for keyboard users
-✓ **ARIA Attributes**: \`role="switch"\`, \`aria-checked\`, \`aria-label\`/\`aria-labelledby\`
+## Accessibility
+
+All Toggle components follow WCAG 2.1 Level AA guidelines and include comprehensive keyboard and screen reader support.
+
+### Keyboard Navigation
+
+- **Tab**: Focus the toggle
+- **Space or Enter**: Toggle between on/off states
+- **Shift + Tab**: Move focus backward
+
+### Screen Reader Support
+
+Toggle automatically includes proper ARIA attributes:
+- **role="switch"**: Announces element as a toggle switch (not checkbox)
+- **aria-checked**: Announces current state ("on" or "off")
+- **aria-label**: Use when no visible label is present
+- **aria-labelledby**: Automatically links to visible label if provided
+- **aria-disabled**: Automatically set when \`disabled={true}\`
+
+Screen readers announce:
+- "Switch" (not "checkbox")
+- Label text
+- Current state (on/off or checked/unchecked)
+- Disabled state if applicable
+
+### Focus Management
+
+All toggles include visible focus indicators:
+- **Focus ring**: 2px solid blue outline with offset
+- **High contrast**: Focus ring visible in high contrast mode
+- **Keyboard only**: Focus ring only appears for keyboard navigation
+
+### Labels
+
+Always provide proper labeling for accessibility:
+
+\`\`\`tsx
+// ✅ Correct - Visible label
+<Toggle
+  checked={enabled}
+  onChange={setEnabled}
+  label="Enable notifications"
+/>
+
+// ✅ Correct - aria-label when no visible label
+<Toggle
+  checked={enabled}
+  onChange={setEnabled}
+  aria-label="Enable dark mode"
+/>
+
+// ❌ Wrong - No label at all
+<Toggle checked={enabled} onChange={setEnabled} />
+\`\`\`
+
+Label position is flexible:
+\`\`\`tsx
+// Label on left (common for settings)
+<Toggle label="Dark Mode" labelPosition="left" checked={dark} onChange={setDark} />
+
+// Label on right (default)
+<Toggle label="Enable" labelPosition="right" checked={enabled} onChange={setEnabled} />
+\`\`\`
+
+### Disabled State
+
+Disabled toggles are properly excluded from keyboard navigation:
+- Visual: 50% opacity + no pointer events
+- Semantic: \`aria-disabled="true"\` attribute
+- Keyboard: Not focusable (removed from tab order)
+- Screen reader: Announced as "disabled"
+
+### Color Contrast
+
+Toggle states meet WCAG AA contrast requirements:
+- **Off state**: Gray track with sufficient contrast (3:1 minimum)
+- **On state**: Blue track with 4.5:1+ contrast
+- **Thumb**: White thumb always has high contrast against track
+- **Motion indicators**: Position and animation are primary state indicators (not just color)
+
+### Touch Targets
+
+All toggles meet minimum touch target size:
+- **Small**: 32x18px track with 14px thumb (minimum for touch)
+- **Medium**: 48x28px track with 24px thumb (comfortable)
+
+### Best Practices for Accessibility
+
+✅ **Do**:
+- Always provide visible label or aria-label
+- Use labels that describe the setting, not the action (e.g., "Dark Mode" not "Toggle dark mode")
+- Use consistent label text regardless of toggle state
+- Show the effect of toggle change immediately
+- Use role="switch" (handled automatically)
+- Ensure sufficient color contrast for both states
+
+❌ **Don't**:
+- Forget to provide a label (screen readers need it)
+- Change label text based on toggle state (confusing for screen readers)
+- Use toggle for actions that require confirmation
+- Rely solely on color to indicate state (use motion/position)
+- Use toggles for more than two options
         `.trim(),
       },
     },

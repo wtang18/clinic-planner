@@ -103,6 +103,97 @@ Cards use semantic tokens and Figma elevation classes:
 
 ---
 
+## Accessibility
+
+All Card components follow WCAG 2.1 Level AA guidelines and include comprehensive keyboard and screen reader support.
+
+### Keyboard Navigation
+
+- **Tab**: Focus the interactive card
+- **Enter or Space**: Activate the interactive card (trigger onClick)
+- **Shift + Tab**: Move focus backward
+
+### Screen Reader Support
+
+Interactive cards automatically include proper ARIA attributes:
+- **role="button"**: Automatically added for interactive cards
+- **aria-label**: Required for cards without clear descriptive text
+- **aria-disabled**: Automatically set when \`disabled={true}\`
+- **tabIndex**: Interactive cards are keyboard focusable, disabled cards are not
+
+Screen readers announce:
+- Card content
+- Interactive state (button role)
+- Disabled state
+- Custom aria-label if provided
+
+### Focus Management
+
+Interactive cards include visible focus indicators:
+- **Focus ring**: 2px solid blue outline with offset
+- **High contrast**: Focus ring visible in high contrast mode
+- **Keyboard only**: Focus ring only appears for keyboard navigation
+
+### Interactive vs Non-Interactive
+
+\`\`\`tsx
+// ✅ Correct - Interactive card with onClick and clear purpose
+<Card variant="interactive" onClick={() => navigate('/event/123')} aria-label="View World Heart Day event details">
+  <h4>World Heart Day</h4>
+  <p>Sep 29 – Oct 1</p>
+</Card>
+
+// ✅ Correct - Non-interactive card for static content
+<Card variant="non-interactive">
+  <h4>Event Description</h4>
+  <p>Focus on cardiovascular health awareness.</p>
+</Card>
+
+// ❌ Wrong - Interactive card without onClick
+<Card variant="interactive">
+  <h4>Click me!</h4>
+</Card>
+\`\`\`
+
+### Disabled State
+
+Disabled interactive cards are properly excluded from keyboard navigation:
+- Visual: 50% opacity + no pointer events
+- Semantic: \`aria-disabled="true"\` attribute
+- Keyboard: Not focusable (removed from tab order)
+- Screen reader: Announced as "disabled"
+
+### Color Contrast
+
+Card backgrounds and text meet WCAG AA contrast requirements:
+- **Text**: 4.5:1 contrast ratio against background
+- **Borders/Shadows**: Sufficient contrast to distinguish from page background
+
+### Touch Targets
+
+Interactive cards meet minimum touch target size requirements:
+- **Small cards**: Minimum 32px height (meets minimum)
+- **Medium cards**: 40px+ height (comfortable)
+
+### Best Practices for Accessibility
+
+✅ **Do**:
+- Use \`variant="interactive"\` for all clickable cards
+- Provide \`onClick\` handler for interactive cards
+- Add \`aria-label\` for cards without clear descriptive text
+- Use semantic HTML (cards can render as \`<section>\` or \`<article>\`)
+- Group related content within a single card
+- Ensure adequate color contrast for card content
+
+❌ **Don't**:
+- Use interactive variant without onClick handler
+- Nest interactive cards within other interactive elements (breaks keyboard navigation)
+- Forget to add aria-label to cards with only icons or images
+- Use non-interactive variant with onClick handler
+- Rely solely on shadow/hover effects to indicate interactivity
+
+---
+
 ## Best Practices
 
 ### ✅ When to Use Cards
