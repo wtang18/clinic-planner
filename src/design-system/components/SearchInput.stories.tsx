@@ -232,3 +232,70 @@ export const FullWidth: Story = {
     );
   },
 };
+
+export const AccessibilityDemo: Story = {
+  render: () => (
+    <div className="p-8 space-y-8">
+      <div className="bg-blue-50 p-6 rounded-lg">
+        <h3 className="text-lg font-bold mb-4">Accessibility Features</h3>
+        <p className="text-sm text-gray-700 mb-4">SearchInput components are fully keyboard accessible.</p>
+        <ul className="text-sm space-y-2 mb-6 text-gray-700">
+          <li>✓ Keyboard navigation (Tab, Escape to clear)</li>
+          <li>✓ Screen reader support with aria-label</li>
+          <li>✓ Visible focus indicators</li>
+          <li>✓ WCAG AA color contrast</li>
+        </ul>
+        <div className="space-y-4 max-w-md">
+          <div>
+            <p className="text-xs text-gray-600 mb-2">✓ Correct - Has aria-label:</p>
+            <SearchInput placeholder="Search patients..." aria-label="Search patients by name" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-600 mb-2">Keyboard accessible clear button:</p>
+            <SearchInput placeholder="Try typing and pressing Escape" />
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+};
+
+export const ClaudeCodeExamples: Story = {
+  render: () => (
+    <div className="p-8 max-w-4xl bg-[var(--color-bg-neutral-base)]">
+      <h2 className="text-2xl font-bold mb-6">Working with Claude Code (AI Assistant)</h2>
+      <p className="text-gray-600 mb-8">Use these natural language prompts when working with SearchInput.</p>
+      <div className="space-y-6">
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-blue-600">🔍</span> Add Search</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Add a search input to filter the patient list"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will add SearchInput with appropriate placeholder and onChange handler</p>
+        </div>
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-green-600">📏</span> Change Size</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Make the search input larger"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1">size="large"</code></p>
+        </div>
+        <div className="border rounded-lg p-6 bg-gray-50">
+          <h3 className="text-lg font-semibold mb-3"><span className="text-orange-600">♿</span> Improve Accessibility</h3>
+          <div className="bg-white p-4 rounded border mb-3">
+            <code className="text-sm text-gray-800">"Add an accessible label to describe this search field"</code>
+          </div>
+          <p className="text-sm text-gray-600"><strong>Expected:</strong> Claude will add <code className="bg-gray-100 px-1">aria-label</code> with descriptive text</p>
+        </div>
+      </div>
+      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-semibold mb-2">💡 Pro Tips</h3>
+        <ul className="space-y-2 text-sm text-gray-700">
+          <li>• Always provide aria-label for accessibility</li>
+          <li>• Use debouncing for search queries</li>
+          <li>• SearchInput uses semantic tokens for theming</li>
+        </ul>
+      </div>
+    </div>
+  ),
+};
