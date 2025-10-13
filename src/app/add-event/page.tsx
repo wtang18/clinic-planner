@@ -345,7 +345,7 @@ function AddEventForm() {
                           name="start_month"
                           value={formData.start_month}
                           onChange={handleInputChange}
-                          className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
+                          className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                         >
                           {monthNames.map((month, index) => (
                             <option key={month} value={index + 1}>
@@ -373,7 +373,7 @@ function AddEventForm() {
                             name="start_year"
                             value={formData.start_year}
                             onChange={handleInputChange}
-                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
+                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                           >
                             {years.map((year) => (
                               <option key={year} value={year}>
@@ -409,7 +409,7 @@ function AddEventForm() {
                             name="end_month"
                             value={formData.end_month}
                             onChange={handleInputChange}
-                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
+                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                           >
                             {monthNames.map((month, index) => (
                               <option key={month} value={index + 1}>
@@ -437,7 +437,7 @@ function AddEventForm() {
                               name="end_year"
                               value={formData.end_year}
                               onChange={handleInputChange}
-                              className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus:bg-[var(--color-bg-input-low)] focus:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
+                              className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
                             >
                               {years.map((year) => (
                                 <option key={year} value={year}>

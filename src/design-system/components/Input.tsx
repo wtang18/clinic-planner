@@ -16,7 +16,7 @@ const inputContainerVariants = cva(
   // Base styles - common to all variants
   [
     "box-border flex items-center transition-all duration-200",
-    "outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--color-a11y-primary)] has-[:focus-visible]:ring-offset-2",
+    "outline-none",
     "w-full",
   ],
   {
@@ -391,6 +391,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     // State management
     const [isFocused, setIsFocused] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
+    const [showFocusRing, setShowFocusRing] = React.useState(false);
 
     // Determine current state
     const currentState = React.useMemo(() => {
@@ -404,11 +405,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     // Event handlers
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(true);
+      // Check if focus was triggered by keyboard (matches :focus-visible logic)
+      const target = e.target as HTMLInputElement;
+      setShowFocusRing(target.matches(':focus-visible'));
       onFocus?.(e);
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       setIsFocused(false);
+      setShowFocusRing(false);
       onBlur?.(e);
     };
 
@@ -456,6 +461,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               size,
               state: currentState,
             }),
+            showFocusRing && 'ring-2 ring-[var(--color-a11y-primary)] ring-offset-2',
             containerClassName
           )}
           onMouseEnter={handleMouseEnter}

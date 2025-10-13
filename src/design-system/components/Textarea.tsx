@@ -14,7 +14,7 @@ const textareaContainerVariants = cva(
   // Base styles - common to all variants
   [
     "box-border flex items-start transition-all duration-200",
-    "outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--color-a11y-primary)] has-[:focus-visible]:ring-offset-2",
+    "outline-none",
     "w-full",
   ],
   {
@@ -342,6 +342,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     // State management
     const [isFocused, setIsFocused] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
+    const [showFocusRing, setShowFocusRing] = React.useState(false);
 
     // Determine current state
     const currentState = React.useMemo(() => {
@@ -355,11 +356,15 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     // Event handlers
     const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
       setIsFocused(true);
+      // Check if focus was triggered by keyboard (matches :focus-visible logic)
+      const target = e.target as HTMLTextAreaElement;
+      setShowFocusRing(target.matches(':focus-visible'));
       onFocus?.(e);
     };
 
     const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
       setIsFocused(false);
+      setShowFocusRing(false);
       onBlur?.(e);
     };
 
@@ -398,6 +403,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
               type,
               state: currentState,
             }),
+            showFocusRing && 'ring-2 ring-[var(--color-a11y-primary)] ring-offset-2',
             containerClassName
           )}
           onMouseEnter={handleMouseEnter}

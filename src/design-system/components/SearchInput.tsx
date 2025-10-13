@@ -12,7 +12,7 @@ const searchInputVariants = cva(
     'backdrop-blur-xl backdrop-filter',
     'box-border flex items-center rounded-full',
     'transition-all duration-200',
-    'outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--color-a11y-primary)] has-[:focus-visible]:ring-offset-2',
+    'outline-none',
     'w-full',
   ],
   {
@@ -156,6 +156,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     // State management
     const [isFocused, setIsFocused] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
+    const [showFocusRing, setShowFocusRing] = React.useState(false);
 
     // Determine current state
     const currentState = React.useMemo(() => {
@@ -187,6 +188,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             size,
             state: currentState,
           }),
+          showFocusRing && 'ring-2 ring-[var(--color-a11y-primary)] ring-offset-2',
           className
         )}
         onMouseEnter={() => setIsHovered(true)}
@@ -203,8 +205,16 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           onChange={handleChange}
           placeholder={placeholder}
           disabled={disabled}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={(e) => {
+            setIsFocused(true);
+            // Check if focus was triggered by keyboard (matches :focus-visible logic)
+            const target = e.target as HTMLInputElement;
+            setShowFocusRing(target.matches(':focus-visible'));
+          }}
+          onBlur={() => {
+            setIsFocused(false);
+            setShowFocusRing(false);
+          }}
           className={cn(
             searchInputFieldVariants({ size, state: currentState }),
             'min-w-0'
