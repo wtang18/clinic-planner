@@ -40,6 +40,7 @@
     "**/*.stories.ts",
     "**/*.stories.tsx",
     ".storybook",
-    "storybook-static"
+    "storybook-static",
+    "src/design-system/tokens/build/react-native/**/*"
   ]
 }
