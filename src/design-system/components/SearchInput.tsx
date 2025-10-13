@@ -157,6 +157,31 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     const [isFocused, setIsFocused] = React.useState(false);
     const [isHovered, setIsHovered] = React.useState(false);
     const [showFocusRing, setShowFocusRing] = React.useState(false);
+    const hadKeyboardEventRef = React.useRef(false);
+    const hadMouseDownRef = React.useRef(false);
+
+    // Track keyboard/mouse interaction to determine focus-visible
+    React.useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          hadKeyboardEventRef.current = true;
+          hadMouseDownRef.current = false;
+        }
+      };
+
+      const handleMouseDown = () => {
+        hadMouseDownRef.current = true;
+        hadKeyboardEventRef.current = false;
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('mousedown', handleMouseDown);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('mousedown', handleMouseDown);
+      };
+    }, []);
 
     // Determine current state
     const currentState = React.useMemo(() => {
@@ -207,9 +232,8 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           disabled={disabled}
           onFocus={(e) => {
             setIsFocused(true);
-            // Check if focus was triggered by keyboard (matches :focus-visible logic)
-            const target = e.target as HTMLInputElement;
-            setShowFocusRing(target.matches(':focus-visible'));
+            // Show focus ring only if last interaction was keyboard (Tab key)
+            setShowFocusRing(hadKeyboardEventRef.current && !hadMouseDownRef.current);
           }}
           onBlur={() => {
             setIsFocused(false);

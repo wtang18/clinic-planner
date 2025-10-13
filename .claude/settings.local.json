@@ -33,7 +33,10 @@
       "Bash(xargs ls:*)",
       "Bash(git stash:*)",
       "Bash(npm run tokens:build:react-native:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "mcp__supabase__apply_migration",
+      "mcp__supabase__list_tables",
+      "mcp__supabase__execute_sql"
     ],
     "deny": [],
     "ask": []

@@ -2,28 +2,21 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Icon, type IconName, type IconSize } from "@/design-system/icons";
+import { Icon, type IconSize } from "@/design-system/icons";
 
-// Generate unique IDs for accessibility
-let inputIdCounter = 0;
-const generateId = (prefix: string) => {
-  inputIdCounter += 1;
-  return `${prefix}-${inputIdCounter}`;
-};
-
-// Input variant styles using cva
-const inputContainerVariants = cva(
+// Select variant styles using cva (matches Input component)
+const selectContainerVariants = cva(
   // Base styles - common to all variants
   [
     "box-border flex items-center transition-all duration-200",
     "outline-none",
     "w-full",
+    "relative",
   ],
   {
     variants: {
       type: {
         outlined: [
-          // Use transparent border + box-shadow to prevent size jumping
           "border border-solid border-transparent",
           "bg-transparent",
         ],
@@ -33,9 +26,9 @@ const inputContainerVariants = cva(
         ],
       },
       size: {
-        small: "h-8 px-3 py-1.5",
-        medium: "h-10 px-3 py-2.5",
-        large: "h-14 px-4 py-4",
+        small: "h-8",
+        medium: "h-10",
+        large: "h-14",
       },
       state: {
         default: "",
@@ -46,7 +39,7 @@ const inputContainerVariants = cva(
       },
     },
     compoundVariants: [
-      // Outlined type states (using box-shadow to prevent size jumping)
+      // Outlined type states
       {
         type: "outlined",
         state: "default",
@@ -72,7 +65,7 @@ const inputContainerVariants = cva(
         state: "disabled",
         className: "shadow-[0_0_0_1px_var(--color-bg-transparent-low)]",
       },
-      // Filled type states (no borders)
+      // Filled type states
       {
         type: "filled",
         state: "hover",
@@ -102,27 +95,25 @@ const inputContainerVariants = cva(
   }
 );
 
-const inputFieldVariants = cva(
+const selectFieldVariants = cva(
   [
     "w-full bg-transparent border-0 outline-none",
-    "font-normal",
-    "placeholder:transition-colors placeholder:duration-200",
+    "font-normal appearance-none",
+    "pr-10", // Reserve space for dropdown icon
   ],
   {
     variants: {
       size: {
-        // Body/Sm Regular: 14px / 20px line height
-        small: "text-body-sm-regular",
-        medium: "text-body-sm-regular",
-        // Body/Md Regular: 16px / 24px line height
-        large: "text-body-md-regular",
+        small: "text-body-sm-regular px-3 py-1.5",
+        medium: "text-body-sm-regular px-3 py-2.5",
+        large: "text-body-md-regular px-4 py-4",
       },
       state: {
-        default: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
-        hover: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
-        focused: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
-        error: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
-        disabled: "!text-[var(--color-fg-neutral-secondary)] placeholder:!text-[var(--color-fg-transparent-strong)] cursor-not-allowed",
+        default: "!text-[var(--color-fg-neutral-primary)]",
+        hover: "!text-[var(--color-fg-neutral-primary)]",
+        focused: "!text-[var(--color-fg-neutral-primary)]",
+        error: "!text-[var(--color-fg-neutral-primary)]",
+        disabled: "!text-[var(--color-fg-neutral-secondary)] cursor-not-allowed",
       },
     },
     defaultVariants: {
@@ -134,7 +125,6 @@ const inputFieldVariants = cva(
 
 const labelVariants = cva(
   [
-    // Label/Sm Medium: 14px / 20px line height, Medium weight 500
     "text-label-sm-medium",
     "transition-colors duration-200",
   ],
@@ -156,7 +146,6 @@ const labelVariants = cva(
 
 const helperTextVariants = cva(
   [
-    // Body/Sm Regular: 14px / 20px line height
     "text-body-sm-regular",
     "transition-colors duration-200",
   ],
@@ -176,61 +165,28 @@ const helperTextVariants = cva(
   }
 );
 
-const subtextVariants = cva(
-  [
-    "shrink-0 whitespace-nowrap",
-  ],
-  {
-    variants: {
-      size: {
-        // Body/Sm Regular: 14px / 20px line height
-        small: "text-body-sm-regular",
-        medium: "text-body-sm-regular",
-        // Body/Md Regular: 16px / 24px line height
-        large: "text-body-md-regular",
-      },
-      state: {
-        default: "!text-[var(--color-fg-neutral-tertiary)]",
-        hover: "!text-[var(--color-fg-neutral-tertiary)]",
-        focused: "!text-[var(--color-fg-neutral-tertiary)]",
-        error: "!text-[var(--color-fg-neutral-tertiary)]",
-        disabled: "!text-[var(--color-fg-neutral-disabled)]",
-      },
-    },
-    defaultVariants: {
-      size: "medium",
-      state: "default",
-    },
-  }
-);
-
-export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
-    VariantProps<typeof inputContainerVariants> {
-  // Core variant props
+export interface SelectProps
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size">,
+    VariantProps<typeof selectContainerVariants> {
   /**
-   * Visual type of the input
+   * Visual type of the select
    * - "outlined": Border with transparent background
-   * - "filled": Filled background with no border (adds border on focus/error)
+   * - "filled": Filled background with no border
    */
   type?: "outlined" | "filled";
 
   /**
    * Size variant
-   * - "small": 32px height, 12px h-padding, 6px v-padding
-   * - "medium": 40px height, 12px h-padding, 10px v-padding
-   * - "large": 56px height, 16px h-padding, 16px v-padding
    */
   size?: "small" | "medium" | "large";
 
-  // Label and helper text
   /**
-   * Label text displayed above the input
+   * Label text displayed above the select
    */
   label?: string;
 
   /**
-   * Helper text displayed below the input
+   * Helper text displayed below the select
    */
   helperText?: string;
 
@@ -244,52 +200,33 @@ export interface InputProps
    */
   errorMessage?: string;
 
-  // Icons
   /**
-   * Left icon name from Icon system
+   * Options for the select dropdown
    */
-  leftIcon?: IconName;
+  options?: Array<{ value: string | number; label: string }>;
 
-  /**
-   * Right icon name from Icon system
-   */
-  rightIcon?: IconName;
-
-  // Subtext (inside field)
-  /**
-   * Left subtext (small text inside field, e.g., "$")
-   */
-  leftSubtext?: string;
-
-  /**
-   * Right subtext (small text inside field, e.g., "%")
-   */
-  rightSubtext?: string;
-
-  // Container props
   /**
    * Class name for the wrapper div
    */
   wrapperClassName?: string;
 
   /**
-   * Class name for the input container
+   * Class name for the select container
    */
   containerClassName?: string;
 
-  // Accessibility
   /**
-   * ID for the input element
+   * ID for the select element
    */
   id?: string;
 
   /**
-   * aria-label for the input
+   * aria-label for the select
    */
   "aria-label"?: string;
 
   /**
-   * aria-describedby for the input
+   * aria-describedby for the select
    */
   "aria-describedby"?: string;
 
@@ -297,47 +234,39 @@ export interface InputProps
    * Required field
    */
   required?: boolean;
+
+  /**
+   * Children (option elements) - alternative to options prop
+   */
+  children?: React.ReactNode;
 }
 
 /**
- * Input component based on Figma design system
+ * Select component based on Input design system
  *
- * FIGMA SPECIFICATIONS:
- * - Border Radius: 8px
- * - Icon Size: 20px (small/medium), 24px (large)
- * - Gap between elements: 8px
- * - Focus border: 2px solid #6ab0ca
- * - Error border: 1px solid #b33f3b (outlined), 2px solid #b33f3b (filled on focus)
- *
- * SIZE SPECIFICATIONS:
- * - Small: Height 32px, Padding 6px 12px, Text 14px
- * - Medium: Height 40px, Padding 10px 12px, Text 14px
- * - Large: Height 56px, Padding 16px 16px, Text 16px
- *
- * STATE SPECIFICATIONS:
- * - Default: Border rgba(0,0,0,0.24), Label #676767
- * - Hover: Border rgba(0,0,0,0.36), Label #181818
- * - Focused: Border 2px #6ab0ca
- * - Error: Border #b33f3b, Label/Helper #b33f3b
- * - Disabled: Border rgba(0,0,0,0.12), Label #a4a4a4, Text #424242
+ * Matches Input component styling and behavior for consistency
  *
  * @example
- * // Basic input
- * <Input label="Email" placeholder="Enter email" />
+ * // With options prop
+ * <Select
+ *   label="Month"
+ *   options={[
+ *     { value: 1, label: 'January' },
+ *     { value: 2, label: 'February' }
+ *   ]}
+ *   value={month}
+ *   onChange={(e) => setMonth(e.target.value)}
+ * />
  *
  * @example
- * // Input with error
- * <Input label="Password" error errorMessage="Password is required" />
- *
- * @example
- * // Input with icons
- * <Input label="Search" leftIcon="search" rightIcon="close" />
- *
- * @example
- * // Input with subtext
- * <Input label="Price" leftSubtext="$" rightSubtext="USD" />
+ * // With children
+ * <Select label="Country" value={country} onChange={handleChange}>
+ *   <option value="">Select a country</option>
+ *   <option value="us">United States</option>
+ *   <option value="uk">United Kingdom</option>
+ * </Select>
  */
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   (
     {
       // Core variant props
@@ -350,19 +279,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       error = false,
       errorMessage,
 
-      // Icons
-      leftIcon,
-      rightIcon,
-
-      // Subtext
-      leftSubtext,
-      rightSubtext,
+      // Options
+      options,
 
       // Container props
       wrapperClassName,
       containerClassName,
 
-      // Input props
+      // Select props
       id: providedId,
       disabled = false,
       required = false,
@@ -378,15 +302,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onMouseEnter,
       onMouseLeave,
 
+      children,
       ...props
     },
     ref
   ) => {
-    // Generate unique IDs for accessibility using React.useId for SSR compatibility
+    // Generate unique IDs for accessibility
     const reactId = React.useId();
-    const inputId = providedId || `input-${reactId}`;
-    const helperTextId = `input-helper-${reactId}`;
-    const errorTextId = `input-error-${reactId}`;
+    const selectId = providedId || `select-${reactId}`;
+    const helperTextId = `select-helper-${reactId}`;
+    const errorTextId = `select-error-${reactId}`;
 
     // State management
     const [isFocused, setIsFocused] = React.useState(false);
@@ -428,14 +353,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     }, [disabled, error, isFocused, isHovered]);
 
     // Event handlers
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const handleFocus = (e: React.FocusEvent<HTMLSelectElement>) => {
       setIsFocused(true);
       // Show focus ring only if last interaction was keyboard (Tab key)
       setShowFocusRing(hadKeyboardEventRef.current && !hadMouseDownRef.current);
       onFocus?.(e);
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const handleBlur = (e: React.FocusEvent<HTMLSelectElement>) => {
       setIsFocused(false);
       setShowFocusRing(false);
       onBlur?.(e);
@@ -443,15 +368,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(true);
+      onMouseEnter?.(e);
     };
 
     const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
       setIsHovered(false);
+      onMouseLeave?.(e);
     };
 
-    // Icon size based on input size:
-    // - Small/Medium inputs: 20px (small icons)
-    // - Large inputs: 24px (medium icons)
+    // Icon size based on select size
     const iconSize: IconSize = size === "large" ? "medium" : "small";
 
     // Determine helper/error text to display
@@ -466,21 +391,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {/* Label */}
         {label && (
           <label
-            htmlFor={inputId}
+            htmlFor={selectId}
             className={cn(labelVariants({ state: currentState }))}
           >
             {label}
           </label>
         )}
 
-        {/* Input Container */}
+        {/* Select Container */}
         <div
           style={{
-            gap: 'var(--dimension-space-between-related-sm)',
             borderRadius: 'var(--dimension-radius-sm)',
           }}
           className={cn(
-            inputContainerVariants({
+            selectContainerVariants({
               type,
               size,
               state: currentState,
@@ -491,22 +415,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          {/* Left Icon */}
-          {leftIcon && (
-            <Icon name={leftIcon} size={iconSize} className="shrink-0" />
-          )}
-
-          {/* Left Subtext */}
-          {leftSubtext && (
-            <span className={cn(subtextVariants({ size, state: currentState }))}>
-              {leftSubtext}
-            </span>
-          )}
-
-          {/* Input Field */}
-          <input
+          {/* Select Field */}
+          <select
             ref={ref}
-            id={inputId}
+            id={selectId}
             disabled={disabled}
             required={required}
             aria-label={ariaLabel}
@@ -520,23 +432,24 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onFocus={handleFocus}
             onBlur={handleBlur}
             className={cn(
-              inputFieldVariants({ size, state: currentState }),
+              selectFieldVariants({ size, state: currentState }),
               className
             )}
             {...props}
-          />
+          >
+            {options
+              ? options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))
+              : children}
+          </select>
 
-          {/* Right Subtext */}
-          {rightSubtext && (
-            <span className={cn(subtextVariants({ size, state: currentState }))}>
-              {rightSubtext}
-            </span>
-          )}
-
-          {/* Right Icon */}
-          {rightIcon && (
-            <Icon name={rightIcon} size={iconSize} className="shrink-0" />
-          )}
+          {/* Dropdown Icon */}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Icon name="chevron-down" size={iconSize} />
+          </div>
         </div>
 
         {/* Helper Text / Error Message */}
@@ -553,6 +466,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   }
 );
 
-Input.displayName = "Input";
+Select.displayName = "Select";
 
-export { inputContainerVariants, inputFieldVariants };
+export { selectContainerVariants, selectFieldVariants };
