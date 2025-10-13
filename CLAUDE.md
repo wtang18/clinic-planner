@@ -1,0 +1,2 @@
+- When creating a new component to the design system, always refer to our documentation guideline file when generating the story file for storybook
+- when working on design system, Check STATUS.md for the current design system state and tell me what to work on next + keep the file up to date and accurate as we go

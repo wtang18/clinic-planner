@@ -34,6 +34,7 @@ Tokens for padding around elements:
 | \`--dimension-space-around-sm\` | 12px | Compact padding (medium buttons, inputs) |
 | \`--dimension-space-around-md\` | 16px | Standard padding (cards, default buttons) |
 | \`--dimension-space-around-lg\` | 20px | Generous padding (large cards, sections) |
+| \`--dimension-space-around-xl\` | 24px | Maximum padding (hero sections, page headers) |
 
 **Note**: Space Around tokens can be applied to individual sides (paddingTop, paddingRight, paddingBottom, paddingLeft) for asymmetric layouts.
 
@@ -313,6 +314,33 @@ export const SpaceAround: Story = {
           <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
             Large padding creates a spacious, premium feel for featured content and hero sections.
           </p>
+        </div>
+      </div>
+
+      {/* X-Large */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          around-x-large <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(24px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Maximum padding for hero sections, page headers, and showcase content
+        </p>
+        <div
+          className="bg-gradient-to-br from-[var(--color-bg-positive-subtle)] to-[var(--color-bg-accent-subtle)] rounded-lg max-w-2xl"
+          style={{ padding: 'var(--dimension-space-around-xl)' }}
+        >
+          <h2 className="text-2xl font-bold text-[var(--color-fg-neutral-primary)] mb-4">
+            Hero Section
+          </h2>
+          <p className="text-base text-[var(--color-fg-neutral-secondary)] mb-4">
+            Extra-large padding (24px) provides maximum breathing room for prominent hero sections and showcase content that needs to stand out.
+          </p>
+          <button
+            className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded-lg"
+            style={{ padding: 'var(--dimension-space-around-sm)' }}
+          >
+            Learn More
+          </button>
         </div>
       </div>
     </div>
@@ -725,6 +753,12 @@ export const AllTokens: Story = {
                 --dimension-space-around-lg
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">20px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-xl
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">24px</div>
             </div>
           </div>
         </div>
