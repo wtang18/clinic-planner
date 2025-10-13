@@ -85,3 +85,17 @@ export interface Category {
   color: string
   description?: string
 }
+
+// Month note interface
+export interface MonthNote {
+  id: number
+  month: number // 1-12
+  note_text: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface NewMonthNote {
+  month: number
+  note_text: string | null
+}

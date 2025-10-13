@@ -76,7 +76,7 @@ const inputContainerVariants = cva(
       {
         type: "filled",
         state: "hover",
-        className: "bg-[var(--color-bg-neutral-low)]",
+        className: "bg-[var(--color-bg-transparent-low)]",
       },
       {
         type: "filled",
@@ -118,11 +118,11 @@ const inputFieldVariants = cva(
         large: "text-body-md-regular",
       },
       state: {
-        default: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
-        hover: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
-        focused: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
-        error: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-neutral-disabled)]",
-        disabled: "!text-[var(--color-fg-neutral-secondary)] placeholder:!text-[var(--color-fg-neutral-disabled)] cursor-not-allowed",
+        default: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
+        hover: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
+        focused: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
+        error: "!text-[var(--color-fg-neutral-primary)] placeholder:!text-[var(--color-fg-transparent-strong)]",
+        disabled: "!text-[var(--color-fg-neutral-secondary)] placeholder:!text-[var(--color-fg-transparent-strong)] cursor-not-allowed",
       },
     },
     defaultVariants: {

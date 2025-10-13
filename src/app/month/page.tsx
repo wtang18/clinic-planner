@@ -13,6 +13,7 @@ import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { Icon } from '@/design-system/icons';
 import { supabase, EventIdea, OutreachAngle } from '@/lib/supabase';
 import { eventDataProcessor } from '@/lib/eventHelpers';
+import { MonthNote } from '@/components/MonthNote';
 
 const monthNames = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -427,25 +428,6 @@ function MonthViewContent() {
 
   const upcomingEvents = getEventsForMonthRange(upcomingStart.month, upcomingStart.year, upcomingEnd.month, upcomingEnd.year);
 
-  // Long-term Planning: 4-6 months ahead
-  const longTermStart = { month: upcomingEnd.month, year: upcomingEnd.year };
-  const longTermEnd = { month: selectedMonth, year: selectedYear };
-
-  // Start from month after upcoming ends
-  longTermStart.month += 1;
-  if (longTermStart.month > 12) {
-    longTermStart.month = 1;
-    longTermStart.year += 1;
-  }
-
-  // Add 3 more months (to get to 6 months total)
-  longTermEnd.month += 6;
-  while (longTermEnd.month > 12) {
-    longTermEnd.month -= 12;
-    longTermEnd.year += 1;
-  }
-
-  const longTermEvents = getEventsForMonthRange(longTermStart.month, longTermStart.year, longTermEnd.month, longTermEnd.year);
 
   return (
     <div
@@ -672,6 +654,9 @@ function MonthViewContent() {
               />
             </div>
 
+            {/* Month Note */}
+            <MonthNote month={selectedMonth} />
+
             <div className="flex flex-col gap-2 w-full">
               {thisMonthEvents.length === 0 ? (
                 <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
@@ -768,119 +753,23 @@ function MonthViewContent() {
               )}
             </div>
 
-            {/* Preparation Needed Section - Future events with prep starting this month */}
-            {prepEvents.length > 0 && (
-              <div className="flex flex-col gap-2 w-full">
-                <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
-                  Preparation Needed
-                </h3>
-                {prepEvents.map((event) => {
-                  const processedEvent = eventDataProcessor.formatEventForDisplay(
-                    event,
-                    outreachAngles,
-                    selectedYear
-                  );
-                  const materialsCount = materialsCounts[event.id] || 0;
-                  const prepLabel = formatPrepPill(event);
-                  const isPrepStart = isPrepStartingThisMonth(event);
-
-                  return (
-                    <Card
-                      key={event.id}
-                      size="small"
-                      variant="interactive"
-                      onClick={() => {
-                        const params = new URLSearchParams({
-                          return: 'month',
-                          year: selectedYear.toString(),
-                          month: selectedMonth.toString(),
-                        });
-                        router.push(`/event/${event.id}?${params.toString()}`);
-                      }}
-                    >
-                      {/* Header Block */}
-                      <div className="flex flex-col w-full">
-                        <h3 className="text-body-sm-medium !text-[var(--color-fg-neutral-primary)]">
-                          {event.title}
-                        </h3>
-                        {formatEventDate(event) && (
-                          <p className="text-body-xs-regular !text-[var(--color-fg-neutral-secondary)]">
-                            {formatEventDate(event)}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Description */}
-                      {event.description && (
-                        <p className="text-body-sm-regular !text-[var(--color-fg-neutral-primary)] w-full">
-                          {event.description}
-                        </p>
-                      )}
-
-                      {/* Outreach Angle Perspectives */}
-                      {processedEvent.processedOutreachAngles.map((angleSelection, idx) => {
-                        if (!angleSelection.notes) return null;
-
-                        return (
-                          <div key={idx} className="flex flex-col w-full">
-                            <p className="text-body-xs-medium !text-[var(--color-fg-neutral-secondary)]">
-                              {angleSelection.angle} Perspective
-                            </p>
-                            <p className="text-sm font-normal leading-5 text-[#181818]">
-                              {angleSelection.notes}
-                            </p>
-                          </div>
-                        );
-                      })}
-
-                      {/* Pills Row */}
-                      <div className="flex flex-wrap gap-1.5 w-full">
-                        {prepLabel && (
-                          <Pill
-                            type={isPrepStart ? "important-info" : "info"}
-                            size="small"
-                            label={isPrepStart ? "Prep Start" : "Prep"}
-                            subtextR={prepLabel}
-                          />
-                        )}
-                        {event.is_recurring && (
-                          <Pill
-                            type="accent"
-                            size="small"
-                            label="Yearly"
-                          />
-                        )}
-                        {materialsCount > 0 && (
-                          <Pill
-                            type="transparent"
-                            size="small"
-                            label="Materials"
-                            subtextR={materialsCount.toString()}
-                          />
-                        )}
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
           </Container>
 
-          {/* Column 2: Upcoming Events (next 3 months) */}
+          {/* Column 2: Preparation Needed */}
           <Container className="flex flex-col gap-4 h-full w-full">
             <div className="flex items-center justify-between w-full">
               <h2 className="flex-1 text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
-                Upcoming Events
+                Preparation Needed
               </h2>
             </div>
 
             <div className="flex flex-col gap-2 w-full">
-              {upcomingEvents.length === 0 ? (
+              {prepEvents.length === 0 ? (
                 <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
-                  No Upcoming Events
+                  No Preparation Needed
                 </p>
               ) : (
-                upcomingEvents.map((event) => {
+                prepEvents.map((event) => {
                   const processedEvent = eventDataProcessor.formatEventForDisplay(
                     event,
                     outreachAngles,
@@ -888,6 +777,7 @@ function MonthViewContent() {
                   );
                   const materialsCount = materialsCounts[event.id] || 0;
                   const prepLabel = formatPrepPill(event);
+                  const isPrepStarting = isPrepStartingThisMonth(event);
 
                   return (
                     <Card
@@ -942,7 +832,7 @@ function MonthViewContent() {
                       <div className="flex flex-wrap gap-1.5 w-full">
                         {prepLabel && (
                           <Pill
-                            type="info"
+                            type={isPrepStarting ? "positive" : "info"}
                             size="small"
                             label="Prep"
                             subtextR={prepLabel}
@@ -971,21 +861,21 @@ function MonthViewContent() {
             </div>
           </Container>
 
-          {/* Column 3: Long-term Planning (4-6 months ahead) */}
+          {/* Column 3: Upcoming Events (next 3 months) */}
           <Container className="flex flex-col gap-4 h-full w-full">
             <div className="flex items-center justify-between w-full">
               <h2 className="flex-1 text-body-md-bold !text-[var(--color-fg-neutral-primary)]">
-                Long-term Planning
+                Next 3 Months
               </h2>
             </div>
 
             <div className="flex flex-col gap-2 w-full">
-              {longTermEvents.length === 0 ? (
+              {upcomingEvents.length === 0 ? (
                 <p className="text-body-sm-regular !text-[var(--color-fg-neutral-secondary)]">
-                  No Long-term Events
+                  No Upcoming Events
                 </p>
               ) : (
-                longTermEvents.map((event) => {
+                upcomingEvents.map((event) => {
                   const processedEvent = eventDataProcessor.formatEventForDisplay(
                     event,
                     outreachAngles,

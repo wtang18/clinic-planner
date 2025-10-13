@@ -13,6 +13,7 @@ import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
 import { Icon } from '@/design-system/icons';
 import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase';
 import { eventDataProcessor } from '@/lib/eventHelpers';
+import { MonthNote } from '@/components/MonthNote';
 
 const quarters = [
   { id: 1, name: 'Q1', months: [1, 2, 3], monthNames: ['January', 'February', 'March'] },
@@ -595,6 +596,11 @@ function QuarterViewContent() {
                       handleAddEventForMonth(monthNumber);
                     }}
                   />
+                </div>
+
+                {/* Month Note */}
+                <div onClick={(e) => e.stopPropagation()} className="w-full">
+                  <MonthNote month={monthNumber} />
                 </div>
 
                 {/* Events Occurring This Month */}
