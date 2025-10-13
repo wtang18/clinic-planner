@@ -14,7 +14,7 @@ const textareaContainerVariants = cva(
   // Base styles - common to all variants
   [
     "box-border flex items-start transition-all duration-200",
-    "focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--color-a11y-primary)] focus-within:ring-offset-2",
+    "outline-none has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--color-a11y-primary)] has-[:focus-visible]:ring-offset-2",
     "w-full",
   ],
   {
