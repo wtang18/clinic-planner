@@ -772,7 +772,7 @@ function QuarterViewContent() {
                               <Pill
                                 type={isPrepStart ? "important-info" : "info"}
                                 size="small"
-                                label={isPrepStart ? "Prep Start" : "Prep"}
+                                label={isPrepStart ? "Start Prep" : "Prep"}
                                 subtextR={prepLabel}
                               />
                             )}

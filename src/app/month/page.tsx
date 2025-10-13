@@ -834,7 +834,7 @@ function MonthViewContent() {
                           <Pill
                             type={isPrepStarting ? "important-info" : "info"}
                             size="small"
-                            label={isPrepStarting ? "Prep Start" : "Prep"}
+                            label={isPrepStarting ? "Start Prep" : "Prep"}
                             subtextR={prepLabel}
                           />
                         )}
