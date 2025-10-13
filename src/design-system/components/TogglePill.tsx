@@ -30,7 +30,7 @@ const togglePillVariants = cva(
     "inline-flex items-center whitespace-nowrap",
     "text-label-sm-medium",
     "transition-all duration-200",
-    "focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-1",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-a11y-primary)] focus-visible:ring-offset-1",
     "cursor-pointer",
   ],
   {

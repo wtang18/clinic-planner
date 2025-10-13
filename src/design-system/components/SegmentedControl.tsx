@@ -9,7 +9,7 @@ const segmentVariants = cva(
     "box-border flex flex-col items-center justify-center px-3 py-1.5",
     "rounded-full transition-all duration-200",
     "cursor-pointer select-none",
-    "focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-2",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-a11y-primary)] focus-visible:ring-offset-2",
     "flex-1 min-w-0", // Allow segments to grow equally and prevent overflow
   ],
   {

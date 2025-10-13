@@ -23,7 +23,7 @@ const toggleTrackVariants = cva(
   [
     'relative inline-flex shrink-0 rounded-full cursor-pointer',
     'transition-colors duration-200 ease-in-out',
-    'focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-2',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-a11y-primary)] focus-visible:ring-offset-2',
   ],
   {
     variants: {
