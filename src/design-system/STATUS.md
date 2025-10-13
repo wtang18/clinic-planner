@@ -1,6 +1,6 @@
 # Design System Status & Roadmap
 
-**Last Updated:** 2025-10-11
+**Last Updated:** 2025-10-13
 **Version:** 1.0.0
 **Current Phase:** Phase 3 Complete - React Native Ready
 
@@ -182,6 +182,92 @@ npm run tokens:build:all      # Build both
 ---
 
 ## ⏳ What Needs to Be Done
+
+### Missing Components from Figma (High Priority)
+
+**Status:** 🔴 Not Yet Implemented
+
+Based on recent audit of Storybook stories (2025-10-13), the following components are referenced in stories but not yet implemented from Figma designs:
+
+#### High Priority Components
+
+**Dropdown/Menu Component**
+- **Status:** Not started
+- **Used in:** ElevationDemo.stories.tsx
+- **Description:** Dropdown menu/select component with options list
+- **Requirements:**
+  - Should use semantic tokens for styling
+  - Needs proper keyboard navigation (Arrow keys, Enter, Escape)
+  - Screen reader support (aria-haspopup, aria-expanded)
+  - Click-outside-to-close behavior
+  - Positioning logic (top, bottom, auto)
+- **Estimated Effort:** 8-12 hours (complex interaction patterns)
+
+**Modal/Dialog Component**
+- **Status:** Not started
+- **Used in:** ElevationDemo.stories.tsx
+- **Description:** Modal overlay for important messages/forms
+- **Requirements:**
+  - Portal rendering (renders outside parent DOM)
+  - Focus trap (keyboard navigation contained)
+  - Backdrop click to close (optional)
+  - ESC key to close
+  - Proper z-index management
+  - Accessibility (role="dialog", aria-modal, focus management)
+- **Estimated Effort:** 10-15 hours (complex accessibility requirements)
+
+**Tooltip Component**
+- **Status:** Not started
+- **Used in:** Implied by several component interactions
+- **Description:** Small popup for contextual help text
+- **Requirements:**
+  - Hover and focus trigger
+  - Positioning (top, bottom, left, right, auto)
+  - Delay on show/hide
+  - Accessibility (role="tooltip", aria-describedby)
+  - Portal rendering
+- **Estimated Effort:** 6-8 hours
+
+#### Medium Priority Components
+
+**Badge Component**
+- **Status:** Not started (may overlap with Pill)
+- **Description:** Small notification badge (e.g., unread count)
+- **Requirements:**
+  - Determine if distinct from existing Pill component
+  - Number or icon display
+  - Positioning (absolute overlay on other components)
+  - Semantic color variants
+- **Estimated Effort:** 2-4 hours (if different from Pill)
+
+**Alert/Banner Component**
+- **Status:** Not started (may overlap with Toast)
+- **Description:** Persistent alert banner (unlike Toast which auto-dismisses)
+- **Requirements:**
+  - Determine if distinct from existing Toast component
+  - Inline vs floating
+  - Dismissible or persistent
+  - Semantic variants (info, warning, error, success)
+- **Estimated Effort:** 3-5 hours (if different from Toast)
+
+**List/ListItem Component**
+- **Status:** Not started
+- **Description:** Structured list with consistent item styling
+- **Requirements:**
+  - Interactive and non-interactive variants
+  - Optional icons, avatars, actions
+  - Keyboard navigation in lists
+  - Accessibility (role="list", role="listitem")
+- **Estimated Effort:** 4-6 hours
+
+#### Action Items
+- [ ] Review Figma designs to confirm these components exist
+- [ ] Prioritize which components to build first based on app needs
+- [ ] Create component implementation plan
+- [ ] Follow DOCUMENTATION_GUIDELINES.md when implementing
+- [ ] Update this STATUS.md as components are completed
+
+---
 
 ### Immediate Next Steps (React Native)
 
@@ -671,6 +757,13 @@ git commit -m "chore: Update design tokens from Figma"
 
 ## 📝 Change Log
 
+### 2025-10-13 - Missing Components Documentation
+- ✅ Documented 6 missing components identified during stories audit
+- ✅ Categorized by priority (High: Dropdown, Modal, Tooltip | Medium: Badge, Alert, List)
+- ✅ Added requirements and effort estimates for each component
+- ✅ Replaced all generic buttons in story files with design system Button component
+  - Container.stories.tsx, Toast.stories.tsx, Toggle.stories.tsx, Colors.stories.tsx, NewTokenSystem.stories.tsx
+
 ### 2025-01-11 - Accessibility Enhancement: Standardized Focus Rings
 - ✅ Standardized all focus rings to use `--color-a11y-primary` token (bright blue #4578ff)
 - ✅ Updated 10 interactive components with consistent focus ring pattern
@@ -696,5 +789,5 @@ git commit -m "chore: Update design tokens from Figma"
 
 **For the most up-to-date information, always check this STATUS.md file.**
 
-**Last Updated:** 2025-10-11
-**Next Review:** When starting React Native component implementation
+**Last Updated:** 2025-10-13
+**Next Review:** When starting React Native component implementation or building missing components

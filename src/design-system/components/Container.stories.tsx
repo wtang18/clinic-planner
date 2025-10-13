@@ -2,6 +2,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Container } from './Container';
 import { Card } from './Card';
+import { Button } from './Button';
 
 const meta: Meta<typeof Container> = {
   title: 'Design System/Components/Container',
@@ -222,7 +223,7 @@ export const WithHeaderAndContent: Story = {
           {/* Header Row */}
           <div className="flex items-center justify-between w-full">
             <h2 className="text-base font-semibold">January</h2>
-            <button className="text-lg">+</button>
+            <Button type="outlined" size="small" label="+" />
           </div>
 
           {/* Content */}
@@ -291,9 +292,7 @@ export const RealWorldExamples: Story = {
         <Container>
           <div className="flex items-center justify-between w-full">
             <h2 className="text-base font-semibold">Upcoming Events</h2>
-            <button className="px-3 py-1 bg-blue-500 text-white text-sm rounded">
-              Add Event
-            </button>
+            <Button type="generative" size="small" label="Add Event" />
           </div>
 
           <div className="flex flex-col gap-2 w-full">
