@@ -36,7 +36,9 @@
       "Bash(git restore:*)",
       "mcp__supabase__apply_migration",
       "mcp__supabase__list_tables",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "Bash(npx eslint:*)",
+      "Bash(npm run lint:check:*)"
     ],
     "deny": [],
     "ask": []

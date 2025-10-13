@@ -114,8 +114,34 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
     ref
   ) => {
     const [isHovered, setIsHovered] = React.useState(false);
+    const [showFocusRing, setShowFocusRing] = React.useState(false);
+    const hadKeyboardEventRef = React.useRef(false);
+    const hadMouseDownRef = React.useRef(false);
     const isInteractive = variant === "interactive";
     const isDisabled = isInteractive && disabled;
+
+    // Track keyboard/mouse interaction to determine focus-visible
+    React.useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Tab') {
+          hadKeyboardEventRef.current = true;
+          hadMouseDownRef.current = false;
+        }
+      };
+
+      const handleMouseDown = () => {
+        hadMouseDownRef.current = true;
+        hadKeyboardEventRef.current = false;
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('mousedown', handleMouseDown);
+
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('mousedown', handleMouseDown);
+      };
+    }, []);
 
     // Gap styles using semantic tokens
     const gapStyles = {
@@ -147,11 +173,23 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
         : "cursor-pointer transition-colors duration-200" // Interactive: cursor and transition
       : ""; // Non-interactive: no interactive styles
 
-    // Focus styles for accessibility
+    // Focus styles for accessibility - only show on keyboard navigation
     const focusStyles =
-      isInteractive && !isDisabled
-        ? "focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-2"
+      isInteractive && !isDisabled && showFocusRing
+        ? "outline-none ring-2 ring-[var(--color-a11y-primary)] ring-offset-2"
+        : isInteractive && !isDisabled
+        ? "outline-none"
         : "";
+
+    const handleFocus = () => {
+      if (isInteractive && !isDisabled) {
+        setShowFocusRing(hadKeyboardEventRef.current && !hadMouseDownRef.current);
+      }
+    };
+
+    const handleBlur = () => {
+      setShowFocusRing(false);
+    };
 
     // Handle keyboard interaction for interactive containers
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -206,6 +244,8 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
         onKeyDown={handleKeyDown}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         tabIndex={isInteractive && !isDisabled ? 0 : undefined}
         role={isInteractive ? "button" : undefined}
         aria-label={ariaLabel}
