@@ -376,8 +376,9 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       onMouseLeave?.(e);
     };
 
-    // Icon size based on select size
+    // Icon size and name based on select size
     const iconSize: IconSize = size === "large" ? "medium" : "small";
+    const iconName = size === "large" ? "chevron-down" : "chevron-down-compact-small";
 
     // Determine helper/error text to display
     const displayHelperText = error && errorMessage ? errorMessage : helperText;
@@ -447,8 +448,8 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           </select>
 
           {/* Dropdown Icon */}
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <Icon name="chevron-down" size={iconSize} />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+            <Icon name={iconName} size={iconSize} />
           </div>
         </div>
 

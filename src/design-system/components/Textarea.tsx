@@ -217,6 +217,25 @@ export interface TextareaProps
    */
   resize?: "none" | "vertical" | "both";
 
+  /**
+   * Auto-resize height based on content
+   * When true, textarea grows/shrinks based on content
+   * @default false
+   */
+  autoResize?: boolean;
+
+  /**
+   * Minimum height in pixels when autoResize is enabled
+   * @default undefined (uses rows prop)
+   */
+  minHeight?: number;
+
+  /**
+   * Maximum height in pixels when autoResize is enabled
+   * @default undefined (no limit)
+   */
+  maxHeight?: number;
+
   // Container props
   /**
    * Class name for the wrapper div
@@ -300,6 +319,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       // Textarea-specific props
       rows = 3,
       resize = "vertical",
+      autoResize = false,
+      minHeight,
+      maxHeight,
 
       // Container props
       wrapperClassName,
@@ -310,6 +332,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       disabled = false,
       required = false,
       className,
+      value,
+      onChange,
 
       // Accessibility
       "aria-label": ariaLabel,
@@ -338,6 +362,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       () => generateId("textarea-error"),
       []
     );
+
+    // Internal ref for auto-resize
+    const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
 
     // State management
     const [isFocused, setIsFocused] = React.useState(false);
@@ -400,6 +427,64 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       setIsHovered(false);
     };
 
+    // Auto-resize functionality
+    const adjustHeight = React.useCallback(() => {
+      const textarea = textareaRef.current;
+      if (!textarea || !autoResize) return;
+
+      // Reset height to auto to get the correct scrollHeight
+      textarea.style.height = 'auto';
+
+      // Calculate new height
+      let newHeight = textarea.scrollHeight;
+
+      // Apply min/max constraints
+      if (minHeight !== undefined && newHeight < minHeight) {
+        newHeight = minHeight;
+      }
+      if (maxHeight !== undefined && newHeight > maxHeight) {
+        newHeight = maxHeight;
+      }
+
+      textarea.style.height = `${newHeight}px`;
+    }, [autoResize, minHeight, maxHeight]);
+
+    // Adjust height when value changes
+    React.useEffect(() => {
+      if (autoResize) {
+        adjustHeight();
+      }
+    }, [value, autoResize, adjustHeight]);
+
+    // Adjust height on mount
+    React.useEffect(() => {
+      if (autoResize) {
+        adjustHeight();
+      }
+    }, [autoResize, adjustHeight]);
+
+    // Combined ref handler
+    const handleRef = React.useCallback(
+      (node: HTMLTextAreaElement | null) => {
+        textareaRef.current = node;
+
+        // Handle forwarded ref
+        if (typeof ref === 'function') {
+          ref(node);
+        } else if (ref) {
+          ref.current = node;
+        }
+      },
+      [ref]
+    );
+
+    const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (autoResize) {
+        adjustHeight();
+      }
+      onChange?.(e);
+    };
+
     // Determine helper/error text to display
     const displayHelperText = error && errorMessage ? errorMessage : helperText;
     const helperTextIdToUse = error && errorMessage ? errorTextId : helperTextId;
@@ -435,11 +520,13 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         >
           {/* Textarea Field */}
           <textarea
-            ref={ref}
+            ref={handleRef}
             id={textareaId}
-            rows={rows}
+            rows={autoResize ? undefined : rows}
             disabled={disabled}
             required={required}
+            value={value}
+            onChange={handleChange}
             aria-label={ariaLabel}
             aria-describedby={
               displayHelperText
@@ -451,9 +538,17 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
             onFocus={handleFocus}
             onBlur={handleBlur}
             className={cn(
-              textareaFieldVariants({ state: currentState, resize }),
+              textareaFieldVariants({
+                state: currentState,
+                resize: autoResize ? "none" : resize
+              }),
+              autoResize && 'overflow-hidden',
               className
             )}
+            style={{
+              minHeight: autoResize && minHeight ? `${minHeight}px` : undefined,
+              maxHeight: autoResize && maxHeight ? `${maxHeight}px` : undefined,
+            }}
             {...props}
           />
         </div>
