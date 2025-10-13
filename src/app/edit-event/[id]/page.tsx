@@ -437,6 +437,8 @@ function EditEventForm({ params }: EditEventPageProps) {
                   value={formData.description}
                   onChange={handleInputChange}
                   type="filled"
+                  autoResize
+                  rows={3}
                 />
               </div>
 
@@ -559,6 +561,8 @@ function EditEventForm({ params }: EditEventPageProps) {
                         value={formData.angle_notes[angle.name] || ''}
                         onChange={(e) => handleAngleNotesChange(angle.name, e.target.value)}
                         type="filled"
+                        autoResize
+                        rows={3}
                       />
                     )}
                   </div>

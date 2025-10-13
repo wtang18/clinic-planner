@@ -254,7 +254,8 @@ function AddMaterialForm() {
                 }}
                 placeholder=""
                 type="filled"
-                rows={4}
+                autoResize
+                rows={3}
               />
             </div>
 
