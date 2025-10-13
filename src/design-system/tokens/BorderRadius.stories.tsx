@@ -1,4 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '@/design-system/components/Button';
+import { Card } from '@/design-system/components/Card';
+import { Input } from '@/design-system/components/Input';
+import { Pill } from '@/design-system/components/Pill';
 
 const meta: Meta = {
   title: 'Design System/Semantics/Border Radius',
@@ -143,18 +147,16 @@ export const UsageExamples: Story = {
           Buttons (radius-small)
         </h3>
         <div className="flex gap-3">
-          <button
-            className="px-4 py-2 bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-sm)' }}
-          >
-            Primary Action
-          </button>
-          <button
-            className="px-4 py-2 border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)]"
-            style={{ borderRadius: 'var(--dimension-radius-sm)' }}
-          >
-            Secondary Action
-          </button>
+          <Button
+            type="generative"
+            size="small"
+            label="Primary Action"
+          />
+          <Button
+            type="outlined"
+            size="small"
+            label="Secondary Action"
+          />
         </div>
       </div>
 
@@ -163,11 +165,11 @@ export const UsageExamples: Story = {
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
           Input Fields (radius-small)
         </h3>
-        <input
-          type="text"
+        <Input
+          type="outlined"
+          size="medium"
           placeholder="Enter your email..."
-          className="w-full max-w-md px-4 py-2 border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)]"
-          style={{ borderRadius: 'var(--dimension-radius-sm)' }}
+          className="w-full max-w-md"
         />
       </div>
 
@@ -177,20 +179,17 @@ export const UsageExamples: Story = {
           Cards (radius-medium)
         </h3>
         <div className="grid grid-cols-2 gap-4 max-w-2xl">
-          <div
-            className="p-6 bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)]"
-            style={{ borderRadius: 'var(--dimension-radius-md)' }}
-          >
-            <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">
+          <Card size="medium" variant="non-interactive">
+            <h4 className="font-semibold text-[var(--color-fg-neutral-primary)]">
               Event Card
             </h4>
             <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
               Standard card using medium radius (16px) for balanced appearance
             </p>
-          </div>
+          </Card>
           <div
             className="p-6 bg-[var(--color-bg-information-subtle)] border border-[var(--color-bg-information-medium)]"
-            style={{ borderRadius: 'var(--dimension-radius-md)' }}
+            style={{ borderRadius: 'var(--dimension-radius-md)', gap: 'var(--dimension-space-between-related-md)' }}
           >
             <h4 className="font-semibold text-[var(--color-fg-information-primary)] mb-2">
               Info Card
@@ -208,24 +207,21 @@ export const UsageExamples: Story = {
           Pills & Badges (radius-x-small)
         </h3>
         <div className="flex gap-2">
-          <span
-            className="px-3 py-1 bg-[var(--color-bg-positive-medium)] text-[var(--color-fg-positive-primary)] text-xs font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-xs)' }}
-          >
-            Active
-          </span>
-          <span
-            className="px-3 py-1 bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-xs)' }}
-          >
-            Scheduled
-          </span>
-          <span
-            className="px-3 py-1 bg-[var(--color-bg-alert-medium)] text-[var(--color-fg-alert-primary)] text-xs font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-xs)' }}
-          >
-            Cancelled
-          </span>
+          <Pill
+            type="positive"
+            size="small"
+            label="Active"
+          />
+          <Pill
+            type="info"
+            size="small"
+            label="Scheduled"
+          />
+          <Pill
+            type="alert"
+            size="small"
+            label="Cancelled"
+          />
         </div>
       </div>
 
@@ -244,12 +240,11 @@ export const UsageExamples: Story = {
           <p className="text-lg text-[var(--color-fg-neutral-secondary)] mb-6 max-w-2xl">
             Large radius (24px) creates a friendly, approachable feeling for hero sections and featured content.
           </p>
-          <button
-            className="px-6 py-3 bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-sm)' }}
-          >
-            Get Started
-          </button>
+          <Button
+            type="generative"
+            size="medium"
+            label="Get Started"
+          />
         </div>
       </div>
 

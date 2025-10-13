@@ -1,4 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from '@/design-system/components/Button';
+import { Card } from '@/design-system/components/Card';
+import { Input } from '@/design-system/components/Input';
+import { Pill } from '@/design-system/components/Pill';
 
 const meta: Meta = {
   title: 'Design System/Semantics/Spacing',
@@ -126,12 +130,12 @@ export const SpaceBetween: Story = {
         </p>
         <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-sm)' }}>
           {['Design', 'Development', 'Testing', 'Deployment'].map((tag) => (
-            <span
+            <Pill
               key={tag}
-              className="px-3 py-1 bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold rounded"
-            >
-              {tag}
-            </span>
+              type="info"
+              size="small"
+              label={tag}
+            />
           ))}
         </div>
       </div>
@@ -146,13 +150,10 @@ export const SpaceBetween: Story = {
         </p>
         <div className="grid grid-cols-3" style={{ gap: 'var(--dimension-space-between-repeating-md)' }}>
           {[1, 2, 3].map((num) => (
-            <div
-              key={num}
-              className="p-4 bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg"
-            >
+            <Card key={num} size="small" variant="non-interactive">
               <div className="text-sm font-semibold text-[var(--color-fg-neutral-primary)]">Card {num}</div>
-              <div className="text-xs text-[var(--color-fg-neutral-secondary)] mt-1">Grid item</div>
-            </div>
+              <div className="text-xs text-[var(--color-fg-neutral-secondary)]">Grid item</div>
+            </Card>
           ))}
         </div>
       </div>
@@ -274,18 +275,16 @@ export const SpaceAround: Story = {
           Minimal padding for pills and small buttons
         </p>
         <div className="inline-flex gap-2">
-          <button
-            className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] text-sm font-semibold rounded"
-            style={{ padding: 'var(--dimension-space-around-xs)' }}
-          >
-            Compact Button
-          </button>
-          <span
-            className="bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold rounded inline-flex items-center"
-            style={{ padding: 'var(--dimension-space-around-xs)' }}
-          >
-            Badge
-          </span>
+          <Button
+            type="generative"
+            size="x-small"
+            label="Compact"
+          />
+          <Pill
+            type="info"
+            size="x-small"
+            label="Badge"
+          />
         </div>
       </div>
 
@@ -297,12 +296,11 @@ export const SpaceAround: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Compact padding for medium buttons and inputs
         </p>
-        <button
-          className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded-lg"
-          style={{ padding: 'var(--dimension-space-around-sm)' }}
-        >
-          Standard Button
-        </button>
+        <Button
+          type="generative"
+          size="small"
+          label="Standard Button"
+        />
       </div>
 
       {/* Medium */}
@@ -313,15 +311,12 @@ export const SpaceAround: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Standard padding for cards and containers (most common)
         </p>
-        <div
-          className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg max-w-md"
-          style={{ padding: 'var(--dimension-space-around-md)' }}
-        >
-          <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Event Card</h4>
+        <Card size="medium" variant="non-interactive" className="max-w-md">
+          <h4 className="font-semibold text-[var(--color-fg-neutral-primary)]">Event Card</h4>
           <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
             This card uses standard medium padding (16px) for comfortable content spacing.
           </p>
-        </div>
+        </Card>
       </div>
 
       {/* Large */}
@@ -363,12 +358,11 @@ export const SpaceAround: Story = {
           <p className="text-base text-[var(--color-fg-neutral-secondary)] mb-4">
             Extra-large padding (24px) provides maximum breathing room for prominent hero sections and showcase content that needs to stand out.
           </p>
-          <button
-            className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded-lg"
-            style={{ padding: 'var(--dimension-space-around-sm)' }}
-          >
-            Learn More
-          </button>
+          <Button
+            type="generative"
+            size="small"
+            label="Learn More"
+          />
         </div>
       </div>
     </div>
@@ -567,18 +561,16 @@ export const UsageExamples: Story = {
           Button Group
         </h3>
         <div className="flex" style={{ gap: 'var(--dimension-space-between-related-sm)' }}>
-          <button
-            className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded"
-            style={{ padding: 'var(--dimension-space-around-sm)' }}
-          >
-            Save
-          </button>
-          <button
-            className="border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)] font-semibold rounded"
-            style={{ padding: 'var(--dimension-space-around-sm)' }}
-          >
-            Cancel
-          </button>
+          <Button
+            type="generative"
+            size="small"
+            label="Save"
+          />
+          <Button
+            type="outlined"
+            size="small"
+            label="Cancel"
+          />
         </div>
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
           Gap: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">between-related-small</code> •
@@ -593,13 +585,12 @@ export const UsageExamples: Story = {
         </h3>
         <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-sm)' }}>
           {['React', 'TypeScript', 'Tailwind', 'Storybook', 'Design Tokens'].map((tag) => (
-            <span
+            <Pill
               key={tag}
-              className="bg-[var(--color-bg-accent-medium)] text-[var(--color-fg-accent-primary)] text-xs font-semibold rounded"
-              style={{ padding: 'var(--dimension-space-around-xs)' }}
-            >
-              {tag}
-            </span>
+              type="accent"
+              size="small"
+              label={tag}
+            />
           ))}
         </div>
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
@@ -615,16 +606,12 @@ export const UsageExamples: Story = {
         </h3>
         <div className="grid grid-cols-2 max-w-2xl" style={{ gap: 'var(--dimension-space-between-repeating-md)' }}>
           {[1, 2].map((num) => (
-            <div
-              key={num}
-              className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg"
-              style={{ padding: 'var(--dimension-space-around-md)' }}
-            >
-              <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Event {num}</h4>
+            <Card key={num} size="medium" variant="non-interactive">
+              <h4 className="font-semibold text-[var(--color-fg-neutral-primary)]">Event {num}</h4>
               <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
                 Standard card spacing
               </p>
-            </div>
+            </Card>
           ))}
         </div>
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
@@ -638,35 +625,22 @@ export const UsageExamples: Story = {
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
           Form Layout
         </h3>
-        <div
-          className="bg-[var(--color-bg-neutral-subtle)] rounded-lg border border-[var(--color-bg-neutral-low)] max-w-md"
-          style={{ padding: 'var(--dimension-space-around-md)' }}
-        >
+        <Card size="medium" variant="non-interactive" className="max-w-md">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--dimension-space-between-related-md)' }}>
-            <div>
-              <label className="block text-sm font-semibold text-[var(--color-fg-neutral-primary)] mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                placeholder="you@example.com"
-                className="w-full border border-[var(--color-bg-neutral-low)] rounded text-sm text-[var(--color-fg-neutral-primary)]"
-                style={{ padding: 'var(--dimension-space-around-sm)' }}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-[var(--color-fg-neutral-primary)] mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                className="w-full border border-[var(--color-bg-neutral-low)] rounded text-sm text-[var(--color-fg-neutral-primary)]"
-                style={{ padding: 'var(--dimension-space-around-sm)' }}
-              />
-            </div>
+            <Input
+              type="outlined"
+              size="medium"
+              label="Email"
+              placeholder="you@example.com"
+            />
+            <Input
+              type="outlined"
+              size="medium"
+              label="Password"
+              placeholder="••••••••"
+            />
           </div>
-        </div>
+        </Card>
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
           Form gap: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">between-related-medium</code> •
           Input padding: <code className="bg-[var(--color-bg-neutral-subtle)] px-2 py-1 rounded font-mono">around-small</code>
