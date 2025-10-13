@@ -650,18 +650,18 @@ export const RealWorldExamples: Story = {
         <h3 className="text-lg font-bold mb-4">Login Form</h3>
         <div className="space-y-4">
           <Input
+            type="filled"
             leftIcon="envelope"
             label="Email"
             placeholder="Enter your email"
-            type="email"
             required
           />
           <Input
+            type="filled"
             leftIcon="lock"
             rightIcon="eye"
             label="Password"
             placeholder="Enter your password"
-            type="password"
             required
           />
         </div>

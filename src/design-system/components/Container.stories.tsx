@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Container } from './Container';
 import { Card } from './Card';
 import { Button } from './Button';
+import { Pill } from './Pill';
 
 const meta: Meta<typeof Container> = {
   title: 'Design System/Components/Container',
@@ -230,15 +231,11 @@ export const WithHeaderAndContent: Story = {
           <div className="flex flex-col gap-2 w-full">
             <Card>
               <h3 className="font-medium text-sm">Flu Shot Campaign</h3>
-              <div className="inline-flex items-center px-1.5 py-0.5 bg-gray-200 rounded text-xs">
-                Annual
-              </div>
+              <Pill type="neutral" size="x-small" label="Annual" />
             </Card>
             <Card>
               <h3 className="font-medium text-sm">COVID-19 Booster</h3>
-              <div className="inline-flex items-center px-1.5 py-0.5 bg-gray-200 rounded text-xs">
-                Seasonal
-              </div>
+              <Pill type="neutral" size="x-small" label="Seasonal" />
             </Card>
           </div>
         </Container>
@@ -299,16 +296,12 @@ export const RealWorldExamples: Story = {
             <Card variant="interactive" onClick={() => console.log('Event clicked')}>
               <h3 className="font-medium text-sm">Annual Health Fair</h3>
               <p className="text-xs text-gray-600">March 15, 2025</p>
-              <div className="inline-flex items-center px-1.5 py-0.5 bg-green-100 text-green-800 rounded text-xs">
-                Active
-              </div>
+              <Pill type="positive" size="x-small" label="Active" />
             </Card>
             <Card variant="interactive" onClick={() => console.log('Event clicked')}>
               <h3 className="font-medium text-sm">Flu Shot Campaign</h3>
               <p className="text-xs text-gray-600">Ongoing</p>
-              <div className="inline-flex items-center px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">
-                Seasonal
-              </div>
+              <Pill type="info" size="x-small" label="Seasonal" />
             </Card>
           </div>
         </Container>
