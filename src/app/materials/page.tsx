@@ -178,11 +178,11 @@ function MarketingMaterialsContent() {
   };
 
   // Get event name by ID
-  const getEventName = (eventId: number | null): string => {
+  const getEventName = React.useCallback((eventId: number | null): string => {
     if (eventId === null) return 'Any Time';
     const event = events.find(e => e.id === eventId);
     return event?.title || 'Unknown Event';
-  };
+  }, [events]);
 
   // Search handler
   const handleSearch = async (query: string) => {
@@ -208,7 +208,7 @@ function MarketingMaterialsContent() {
   };
 
   // Sort materials
-  const sortMaterials = (materialsToSort: MarketingMaterial[]): MarketingMaterial[] => {
+  const sortMaterials = React.useCallback((materialsToSort: MarketingMaterial[]): MarketingMaterial[] => {
     const sorted = [...materialsToSort];
 
     switch (sortBy) {
@@ -227,7 +227,7 @@ function MarketingMaterialsContent() {
       default:
         return sorted;
     }
-  };
+  }, [sortBy, getEventName]);
 
   // Apply filters and search
   const filteredMaterials = React.useMemo(() => {
@@ -242,7 +242,7 @@ function MarketingMaterialsContent() {
 
     // Sort
     return sortMaterials(filtered);
-  }, [materials, filterAnyTime, sortBy, events]);
+  }, [materials, filterAnyTime, sortMaterials]);
 
   // Handlers
   const handleMenuItemClick = (id: string) => {

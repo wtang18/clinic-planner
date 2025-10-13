@@ -44,60 +44,61 @@ function EditMaterialForm({ params }: EditMaterialPageProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    loadMaterialAndEvents();
-  }, [materialId]);
+    const loadMaterialAndEvents = async () => {
+      try {
+        setInitialLoading(true);
 
-  const loadMaterialAndEvents = async () => {
-    try {
-      setInitialLoading(true);
+        // Load events
+        const eventsPromise = supabase
+          .from('events_ideas')
+          .select('*')
+          .order('title');
 
-      // Load events
-      const eventsPromise = supabase
-        .from('events_ideas')
-        .select('*')
-        .order('title');
+        // Load material
+        const materialPromise = supabase
+          .from('marketing_materials')
+          .select('*')
+          .eq('id', materialId)
+          .single();
 
-      // Load material
-      const materialPromise = supabase
-        .from('marketing_materials')
-        .select('*')
-        .eq('id', materialId)
-        .single();
+        const [eventsResponse, materialResponse] = await Promise.all([
+          eventsPromise,
+          materialPromise,
+        ]);
 
-      const [eventsResponse, materialResponse] = await Promise.all([
-        eventsPromise,
-        materialPromise,
-      ]);
+        if (eventsResponse.error) {
+          console.error('Error loading events:', eventsResponse.error);
+        } else {
+          setEvents(eventsResponse.data || []);
+        }
 
-      if (eventsResponse.error) {
-        console.error('Error loading events:', eventsResponse.error);
-      } else {
-        setEvents(eventsResponse.data || []);
-      }
+        if (materialResponse.error) {
+          console.error('Error loading material:', materialResponse.error);
+          // Error state UI handles this
+          handleCancel();
+        } else {
+          setMaterial(materialResponse.data);
 
-      if (materialResponse.error) {
-        console.error('Error loading material:', materialResponse.error);
+          // Initialize form from material
+          setFormData({
+            label: materialResponse.data.label || '',
+            url: materialResponse.data.url || '',
+            event_id: materialResponse.data.event_id ? String(materialResponse.data.event_id) : '',
+            notes: materialResponse.data.notes || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error:', error);
         // Error state UI handles this
         handleCancel();
-      } else {
-        setMaterial(materialResponse.data);
-
-        // Initialize form from material
-        setFormData({
-          label: materialResponse.data.label || '',
-          url: materialResponse.data.url || '',
-          event_id: materialResponse.data.event_id ? String(materialResponse.data.event_id) : '',
-          notes: materialResponse.data.notes || '',
-        });
+      } finally {
+        setInitialLoading(false);
       }
-    } catch (error) {
-      console.error('Error:', error);
-      // Error state UI handles this
-      handleCancel();
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+    };
+
+    loadMaterialAndEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [materialId]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

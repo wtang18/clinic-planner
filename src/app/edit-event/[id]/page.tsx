@@ -56,64 +56,65 @@ function EditEventForm({ params }: EditEventPageProps) {
   const [prepType, setPrepType] = useState<'months' | 'date' | 'none'>('none');
 
   useEffect(() => {
-    loadEventAndCategories();
-  }, [eventId]);
+    const loadEventAndCategories = async () => {
+      try {
+        setInitialLoading(true);
 
-  const loadEventAndCategories = async () => {
-    try {
-      setInitialLoading(true);
+        // Load outreach angles
+        const anglesPromise = supabase
+          .from('outreach_angles')
+          .select('*')
+          .order('name');
 
-      // Load outreach angles
-      const anglesPromise = supabase
-        .from('outreach_angles')
-        .select('*')
-        .order('name');
+        // Load event
+        const eventPromise = supabase
+          .from('events_ideas')
+          .select('*')
+          .eq('id', eventId)
+          .single();
 
-      // Load event
-      const eventPromise = supabase
-        .from('events_ideas')
-        .select('*')
-        .eq('id', eventId)
-        .single();
+        const [anglesResponse, eventResponse] = await Promise.all([anglesPromise, eventPromise]);
 
-      const [anglesResponse, eventResponse] = await Promise.all([anglesPromise, eventPromise]);
-
-      if (anglesResponse.error) {
-        console.error('Error loading outreach angles:', anglesResponse.error);
-      } else {
-        setOutreachAngles(anglesResponse.data || []);
-      }
-
-      if (eventResponse.error) {
-        console.error('Error loading event:', eventResponse.error);
-        // Error state UI handles this
-        handleCancel();
-      } else {
-        setEvent(eventResponse.data);
-
-        // Initialize form from event
-        const initializedForm = initializeFormFromEvent(eventResponse.data);
-        if (initializedForm) {
-          setFormData(initializedForm);
-        }
-
-        // Set prep type based on event data
-        if (eventResponse.data.prep_start_date) {
-          setPrepType('date');
-        } else if (eventResponse.data.prep_months_needed && eventResponse.data.prep_months_needed > 0) {
-          setPrepType('months');
+        if (anglesResponse.error) {
+          console.error('Error loading outreach angles:', anglesResponse.error);
         } else {
-          setPrepType('none');
+          setOutreachAngles(anglesResponse.data || []);
         }
+
+        if (eventResponse.error) {
+          console.error('Error loading event:', eventResponse.error);
+          // Navigate back on error
+          router.push(returnView === 'annual' ? '/annual' : `/${returnView}`);
+        } else {
+          setEvent(eventResponse.data);
+
+          // Initialize form from event
+          const initializedForm = initializeFormFromEvent(eventResponse.data);
+          if (initializedForm) {
+            setFormData(initializedForm);
+          }
+
+          // Set prep type based on event data
+          if (eventResponse.data.prep_start_date) {
+            setPrepType('date');
+          } else if (eventResponse.data.prep_months_needed && eventResponse.data.prep_months_needed > 0) {
+            setPrepType('months');
+          } else {
+            setPrepType('none');
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        // Navigate back on error
+        router.push(returnView === 'annual' ? '/annual' : `/${returnView}`);
+      } finally {
+        setInitialLoading(false);
       }
-    } catch (error) {
-      console.error('Error:', error);
-      // Error state UI handles this
-      handleCancel();
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+    };
+
+    loadEventAndCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

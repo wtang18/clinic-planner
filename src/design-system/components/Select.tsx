@@ -299,8 +299,6 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       // Event handlers
       onFocus,
       onBlur,
-      onMouseEnter,
-      onMouseLeave,
 
       children,
       ...props
@@ -366,14 +364,12 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       onBlur?.(e);
     };
 
-    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseEnter = () => {
       setIsHovered(true);
-      onMouseEnter?.(e);
     };
 
-    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseLeave = () => {
       setIsHovered(false);
-      onMouseLeave?.(e);
     };
 
     // Icon size and name based on select size

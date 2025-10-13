@@ -48,47 +48,48 @@ function QuarterViewContent() {
   const [selectedYear, setSelectedYear] = React.useState(currentYear);
 
   React.useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        setLoading(true);
+        setError(null); // Clear previous errors
+
+        const [eventsResponse, anglesResponse] = await Promise.all([
+          supabase
+            .from('events_ideas')
+            .select('*')
+            .or(`start_year.eq.${selectedYear},year.eq.${selectedYear},start_year.eq.${selectedYear + 1},year.eq.${selectedYear + 1},is_recurring.eq.true`)
+            .order('start_year', { ascending: true })
+            .order('start_month', { ascending: true }),
+          supabase.from('outreach_angles').select('*')
+        ]);
+
+        if (eventsResponse.error) throw eventsResponse.error;
+        if (anglesResponse.error) throw anglesResponse.error;
+
+        setEvents(eventsResponse.data || []);
+        setOutreachAngles(anglesResponse.data || []);
+
+        // Load materials counts for all events
+        const eventIds = eventsResponse.data?.map(e => e.id) || [];
+        if (eventIds.length > 0) {
+          await loadMaterialsCounts(eventIds);
+        }
+      } catch (error) {
+        console.error('Error loading events:', error);
+        setError('Unable to load events. Please check your connection and try again.');
+        setEvents([]); // Clear stale data
+        setOutreachAngles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadEvents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
 
-  const loadEvents = async () => {
-    try {
-      setLoading(true);
-      setError(null); // Clear previous errors
-
-      const [eventsResponse, anglesResponse] = await Promise.all([
-        supabase
-          .from('events_ideas')
-          .select('*')
-          .or(`start_year.eq.${selectedYear},year.eq.${selectedYear},start_year.eq.${selectedYear + 1},year.eq.${selectedYear + 1},is_recurring.eq.true`)
-          .order('start_year', { ascending: true })
-          .order('start_month', { ascending: true }),
-        supabase.from('outreach_angles').select('*')
-      ]);
-
-      if (eventsResponse.error) throw eventsResponse.error;
-      if (anglesResponse.error) throw anglesResponse.error;
-
-      setEvents(eventsResponse.data || []);
-      setOutreachAngles(anglesResponse.data || []);
-
-      // Load materials counts for all events
-      const eventIds = eventsResponse.data?.map(e => e.id) || [];
-      if (eventIds.length > 0) {
-        await loadMaterialsCounts(eventIds);
-      }
-    } catch (error) {
-      console.error('Error loading events:', error);
-      setError('Unable to load events. Please check your connection and try again.');
-      setEvents([]); // Clear stale data
-      setOutreachAngles([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleRetry = () => {
-    loadEvents();
+    window.location.reload();
   };
 
   const loadMaterialsCounts = async (eventIds: number[]) => {

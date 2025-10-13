@@ -23,44 +23,46 @@ export function MonthNote({ month, onSave }: MonthNoteProps) {
 
   // Load note from database on mount or when month changes
   useEffect(() => {
+    const loadNote = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('month_notes')
+          .select('*')
+          .eq('month', month)
+          .single();
+
+        if (error) {
+          // If no note exists yet, that's okay
+          if (error.code === 'PGRST116') {
+            setNoteText('');
+            setSavedNoteText('');
+          } else {
+            console.error('Error loading month note:', error);
+          }
+        } else if (data) {
+          const text = data.note_text || '';
+          setNoteText(text);
+          setSavedNoteText(text);
+        }
+      } catch (error) {
+        console.error('Error loading month note:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadNote();
   }, [month]);
 
   // Exit edit mode when navigating away
   useEffect(() => {
     if (isEditing) {
-      handleCancel();
+      setNoteText(savedNoteText);
+      setIsEditing(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
-
-  const loadNote = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('month_notes')
-        .select('*')
-        .eq('month', month)
-        .single();
-
-      if (error) {
-        // If no note exists yet, that's okay
-        if (error.code === 'PGRST116') {
-          setNoteText('');
-          setSavedNoteText('');
-        } else {
-          console.error('Error loading month note:', error);
-        }
-      } else if (data) {
-        const text = data.note_text || '';
-        setNoteText(text);
-        setSavedNoteText(text);
-      }
-    } catch (error) {
-      console.error('Error loading month note:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSave = async () => {
     try {

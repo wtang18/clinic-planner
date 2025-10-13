@@ -56,45 +56,46 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
   }, [searchParams?.get('success')]);
 
   useEffect(() => {
-    loadMaterialDetails();
-  }, [materialId]);
+    const loadMaterialDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        setNotFound(false);
 
-  const loadMaterialDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      setNotFound(false);
+        console.log('Loading material with ID:', materialId);
+        const { data, error } = await supabase
+          .from('marketing_materials')
+          .select('*')
+          .eq('id', materialId)
+          .single();
 
-      console.log('Loading material with ID:', materialId);
-      const { data, error } = await supabase
-        .from('marketing_materials')
-        .select('*')
-        .eq('id', materialId)
-        .single();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        if (error.code === 'PGRST116') {
-          setNotFound(true);
+        if (error) {
+          console.error('Supabase error:', error);
+          if (error.code === 'PGRST116') {
+            setNotFound(true);
+          } else {
+            throw error;
+          }
         } else {
-          throw error;
-        }
-      } else {
-        console.log('Material loaded:', data);
-        setMaterial(data);
+          console.log('Material loaded:', data);
+          setMaterial(data);
 
-        // Load associated event if exists
-        if (data.event_id) {
-          loadEventDetails(data.event_id);
+          // Load associated event if exists
+          if (data.event_id) {
+            loadEventDetails(data.event_id);
+          }
         }
+      } catch (error: any) {
+        console.error('Error loading material:', error);
+        setError('Unable to load material details. Please try again.');
+      } finally {
+        setLoading(false);
       }
-    } catch (error: any) {
-      console.error('Error loading material:', error);
-      setError('Unable to load material details. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadMaterialDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [materialId]);
 
   const loadEventDetails = async (eventId: number) => {
     try {
@@ -223,7 +224,7 @@ function MaterialDetailContent({ params }: MaterialDetailPageProps) {
             type="primary"
             size="medium"
             label="Try Again"
-            onClick={loadMaterialDetails}
+            onClick={() => window.location.reload()}
           />
         </div>
       </div>

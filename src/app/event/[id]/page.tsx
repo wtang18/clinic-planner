@@ -148,13 +148,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.get('success')]);
 
-  useEffect(() => {
-    loadEventDetails();
-    loadOutreachAngles();
-    loadEventMaterials();
-  }, [eventId]);
-
-  const loadEventDetails = async () => {
+  const loadEventDetails = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -184,30 +178,36 @@ function EventDetailContent({ params }: EventDetailPageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventId]);
 
-  const loadOutreachAngles = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('outreach_angles')
-        .select('*')
-        .order('name');
+  useEffect(() => {
+    const loadOutreachAngles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('outreach_angles')
+          .select('*')
+          .order('name');
 
-      if (error) throw error;
-      setOutreachAngles(data || []);
-    } catch (error) {
-      console.error('Error loading outreach angles:', error);
-    }
-  };
+        if (error) throw error;
+        setOutreachAngles(data || []);
+      } catch (error) {
+        console.error('Error loading outreach angles:', error);
+      }
+    };
 
-  const loadEventMaterials = async () => {
-    try {
-      const materials = await MarketingMaterialsService.getEventMaterials(parseInt(eventId));
-      setMaterials(materials);
-    } catch (error) {
-      console.error('Error loading materials:', error);
-    }
-  };
+    const loadEventMaterials = async () => {
+      try {
+        const materials = await MarketingMaterialsService.getEventMaterials(parseInt(eventId));
+        setMaterials(materials);
+      } catch (error) {
+        console.error('Error loading materials:', error);
+      }
+    };
+
+    loadEventDetails();
+    loadOutreachAngles();
+    loadEventMaterials();
+  }, [eventId, loadEventDetails]);
 
   const handleBack = () => {
     // If returnUrl is provided (e.g., from material detail), use it

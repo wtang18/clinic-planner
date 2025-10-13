@@ -80,11 +80,7 @@ function AnnualViewContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.get('success')]);
 
-  React.useEffect(() => {
-    loadEvents();
-  }, [selectedYear]);
-
-  const loadEvents = async () => {
+  const loadEvents = React.useCallback(async () => {
     try {
       setLoading(true);
       setError(null); // Clear previous errors
@@ -112,7 +108,11 @@ function AnnualViewContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear]);
+
+  React.useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   const handleRetry = () => {
     loadEvents();

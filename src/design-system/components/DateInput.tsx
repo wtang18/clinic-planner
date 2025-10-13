@@ -293,8 +293,6 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       // Event handlers
       onFocus,
       onBlur,
-      onMouseEnter,
-      onMouseLeave,
 
       ...props
     },
@@ -359,14 +357,12 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       onBlur?.(e);
     };
 
-    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseEnter = () => {
       setIsHovered(true);
-      onMouseEnter?.(e);
     };
 
-    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseLeave = () => {
       setIsHovered(false);
-      onMouseLeave?.(e);
     };
 
     // Icon size based on input size

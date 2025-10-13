@@ -422,7 +422,8 @@ export const BicolorIcon = React.forwardRef<HTMLSpanElement, BicolorIconProps>(
       }
 
       return modifiedSvg;
-    }, [name, size, svgContent, finalContainerColor, finalSignifierColor, className, ariaLabel, ariaHidden, sizeClasses]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [svgContent, finalContainerColor, finalSignifierColor, className, ariaLabel, ariaHidden, sizeClasses]);
 
     return (
       <span
