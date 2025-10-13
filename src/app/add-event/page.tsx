@@ -6,6 +6,8 @@ import { supabase, OutreachAngle, NewEventIdea, OutreachAngleSelection } from '@
 import { Button } from '@/design-system/components/Button';
 import { Input } from '@/design-system/components/Input';
 import { Textarea } from '@/design-system/components/Textarea';
+import { Select } from '@/design-system/components/Select';
+import { DateInput } from '@/design-system/components/DateInput';
 import { Toggle } from '@/design-system/components/Toggle';
 import { TogglePill } from '@/design-system/components/TogglePill';
 import { useToast } from '@/contexts/ToastContext';
@@ -337,62 +339,34 @@ function AddEventForm() {
                   {/* Start Date Row */}
                   <div className="flex gap-3 items-end">
                     <div className="flex-1">
-                      <label className="block text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)] mb-1">
-                        {formData.is_multi_month ? 'Start Month' : formData.is_recurring ? 'Month' : 'Start Date'}
-                      </label>
-                      <div className="relative">
-                        <select
-                          name="start_month"
-                          value={formData.start_month}
-                          onChange={handleInputChange}
-                          className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
-                        >
-                          {monthNames.map((month, index) => (
-                            <option key={month} value={index + 1}>
-                              {month}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                            <path
-                              d="M5.5 7.75L10 12.25L14.5 7.75"
-                              stroke="currentColor"
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
-                      </div>
+                      <Select
+                        type="filled"
+                        label={formData.is_multi_month ? 'Start Month' : formData.is_recurring ? 'Month' : 'Start Date'}
+                        name="start_month"
+                        value={formData.start_month.toString()}
+                        onChange={handleInputChange}
+                      >
+                        {monthNames.map((month, index) => (
+                          <option key={month} value={index + 1}>
+                            {month}
+                          </option>
+                        ))}
+                      </Select>
                     </div>
                     {!formData.is_recurring && (
                       <div className="w-[120px]">
-                        <div className="relative">
-                          <select
-                            name="start_year"
-                            value={formData.start_year}
-                            onChange={handleInputChange}
-                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
-                          >
-                            {years.map((year) => (
-                              <option key={year} value={year}>
-                                {year}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M5.5 7.75L10 12.25L14.5 7.75"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
+                        <Select
+                          type="filled"
+                          name="start_year"
+                          value={formData.start_year.toString()}
+                          onChange={handleInputChange}
+                        >
+                          {years.map((year) => (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          ))}
+                        </Select>
                       </div>
                     )}
                   </div>
@@ -401,62 +375,34 @@ function AddEventForm() {
                   {formData.is_multi_month && (
                     <div className="flex gap-3 items-end">
                       <div className="flex-1">
-                        <label className="block text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)] mb-1">
-                          End Month
-                        </label>
-                        <div className="relative">
-                          <select
-                            name="end_month"
-                            value={formData.end_month}
-                            onChange={handleInputChange}
-                            className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
-                          >
-                            {monthNames.map((month, index) => (
-                              <option key={month} value={index + 1}>
-                                {month}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <path
-                                d="M5.5 7.75L10 12.25L14.5 7.75"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </div>
-                        </div>
+                        <Select
+                          type="filled"
+                          label="End Month"
+                          name="end_month"
+                          value={formData.end_month.toString()}
+                          onChange={handleInputChange}
+                        >
+                          {monthNames.map((month, index) => (
+                            <option key={month} value={index + 1}>
+                              {month}
+                            </option>
+                          ))}
+                        </Select>
                       </div>
                       {!formData.is_recurring && (
                         <div className="w-[120px]">
-                          <div className="relative">
-                            <select
-                              name="end_year"
-                              value={formData.end_year}
-                              onChange={handleInputChange}
-                              className="w-full h-10 px-3 py-2.5 bg-[var(--color-bg-transparent-subtle)] hover:bg-[var(--color-bg-neutral-low)] rounded-lg text-body-sm-regular !text-[var(--color-fg-neutral-primary)] appearance-none pr-10 transition-all duration-200 border-0 outline-none focus-visible:bg-[var(--color-bg-input-low)] focus-visible:shadow-[0_0_0_2px_var(--color-bg-input-high)]"
-                            >
-                              {years.map((year) => (
-                                <option key={year} value={year}>
-                                  {year}
-                                </option>
-                              ))}
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path
-                                  d="M5.5 7.75L10 12.25L14.5 7.75"
-                                  stroke="currentColor"
-                                  strokeWidth="1.5"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          <Select
+                            type="filled"
+                            name="end_year"
+                            value={formData.end_year.toString()}
+                            onChange={handleInputChange}
+                          >
+                            {years.map((year) => (
+                              <option key={year} value={year}>
+                                {year}
+                              </option>
+                            ))}
+                          </Select>
                         </div>
                       )}
                     </div>
@@ -523,18 +469,13 @@ function AddEventForm() {
 
                   {/* Conditional Input Fields */}
                   {prepType === 'date' && (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-body-sm-medium !text-[var(--color-fg-neutral-tertiary)]">
-                        Preparation Start Date
-                      </label>
-                      <input
-                        type="date"
-                        name="prep_start_date"
-                        value={formData.prep_start_date}
-                        onChange={handleInputChange}
-                        className="h-10 px-3 py-2.5 bg-[var(--color-bg-neutral-subtle)] rounded-lg text-sm text-fg-neutral-primary focus:bg-[#c9e6f0] outline-none transition-colors"
-                      />
-                    </div>
+                    <DateInput
+                      type="filled"
+                      label="Preparation Start Date"
+                      name="prep_start_date"
+                      value={formData.prep_start_date}
+                      onChange={handleInputChange}
+                    />
                   )}
                   {prepType === 'months' && (
                     <div className="flex flex-col gap-1">

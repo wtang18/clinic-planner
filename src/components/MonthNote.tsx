@@ -121,14 +121,6 @@ export function MonthNote({ month, onSave }: MonthNoteProps) {
     return null; // Or a loading skeleton if preferred
   }
 
-  // Calculate rows based on content - add extra row for better padding visibility
-  const calculateRows = () => {
-    if (!noteText) return 3;
-    const lineCount = noteText.split('\n').length;
-    // Add 1 extra row to ensure padding is visible and content isn't clipped
-    return Math.max(3, lineCount + 1);
-  };
-
   return (
     <div className="flex flex-col w-full" style={{ gap: 'var(--dimension-space-between-related-sm)' }}>
       {/* Textarea */}
@@ -139,8 +131,8 @@ export function MonthNote({ month, onSave }: MonthNoteProps) {
           onChange={(e) => setNoteText(e.target.value)}
           onFocus={handleFocus}
           placeholder="Add a note for this month..."
-          rows={calculateRows()}
-          resize="none"
+          autoResize
+          rows={3}
           disabled={isSaving}
           className="w-full"
         />

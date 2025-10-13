@@ -378,7 +378,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 
     // Icon size and name based on select size
     const iconSize: IconSize = size === "large" ? "medium" : "small";
-    const iconName = size === "large" ? "chevron-down" : "chevron-down-compact-small";
+    const iconName = size === "large" ? "chevron-down" : "chevron-compact-down";
 
     // Determine helper/error text to display
     const displayHelperText = error && errorMessage ? errorMessage : helperText;
