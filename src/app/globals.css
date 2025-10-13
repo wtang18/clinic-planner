@@ -76,3 +76,45 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* =============================================================================
+   ACCESSIBILITY: Focus Ring Standards
+   ============================================================================= */
+
+/**
+ * Standardized focus ring for all interactive components
+ * Uses --color-a11y-primary token for consistent, accessible focus indicators
+ *
+ * Implementation:
+ * - 2px ring thickness for visibility
+ * - 2px offset to separate from element border
+ * - Bright blue (#4578ff) for high contrast
+ * - Uses :focus-visible for keyboard-only focus (not mouse clicks)
+ *
+ * Safety fallbacks for user accessibility preferences:
+ * - High contrast mode support
+ * - Windows High Contrast Mode support
+ */
+
+@layer utilities {
+  /* Standard focus ring utility class */
+  .focus-ring-a11y {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-a11y-primary)] focus-visible:ring-offset-2;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Windows High Contrast Mode Support */
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 2px !important;
+  }
+}

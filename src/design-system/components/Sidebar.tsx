@@ -85,6 +85,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                   'flex items-center h-10 px-3 py-2 rounded-full',
                   'transition-colors duration-200',
                   'cursor-pointer select-none',
+                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-2',
                   'w-full',
                   isActive && 'bg-[var(--color-bg-transparent-low)]',
                   isHovered && 'bg-[var(--color-bg-transparent-subtle)]'

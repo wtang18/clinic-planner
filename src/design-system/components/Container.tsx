@@ -150,7 +150,7 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
     // Focus styles for accessibility
     const focusStyles =
       isInteractive && !isDisabled
-        ? "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        ? "focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-2"
         : "";
 
     // Handle keyboard interaction for interactive containers

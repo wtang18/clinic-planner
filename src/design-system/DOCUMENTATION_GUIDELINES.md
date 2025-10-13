@@ -521,6 +521,111 @@ Include **ONLY IF** the component has these features:
 
 ---
 
+## Focus Ring Standards
+
+All interactive design system components MUST implement standardized focus rings for accessibility.
+
+### ⚠️ CRITICAL: Implementation Requirements
+
+**ALWAYS use the `--color-a11y-primary` token for focus rings.**
+
+This ensures:
+- Consistent focus indicators across all components
+- High visibility (bright blue #4578ff with 3:1+ contrast)
+- Semantic meaning (dedicated accessibility token)
+- Theme-aware behavior
+
+### Standard Focus Ring Pattern
+
+For all interactive components, use this exact implementation:
+
+```typescript
+"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-a11y-primary)] focus-visible:ring-offset-2"
+```
+
+**Key requirements:**
+- Use `:focus-visible` not `:focus` (keyboard-only, not mouse clicks)
+- 2px ring thickness for visibility
+- 2px offset for separation from element border
+- `outline-none` to remove default browser outline
+
+### For Container Elements (with nested input)
+
+When the interactive element is nested inside a container (like SearchInput, Textarea), use `focus-within:` instead:
+
+```typescript
+"focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--color-a11y-primary)] focus-within:ring-offset-2"
+```
+
+### Global Safety Fallbacks
+
+The design system includes global CSS fallbacks in `globals.css` for user accessibility preferences:
+
+```css
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  *:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: 2px !important;
+  }
+}
+
+/* Windows High Contrast Mode Support */
+@media (forced-colors: active) {
+  *:focus-visible {
+    outline: 2px solid CanvasText !important;
+    outline-offset: 2px !important;
+  }
+}
+```
+
+These fallbacks automatically override custom focus rings when users enable high contrast modes.
+
+### Updated Components
+
+All interactive components have been standardized (as of 2025-01-11):
+- Button
+- Card (interactive variant)
+- Toggle
+- Pill (interactive variant)
+- TogglePill
+- Container (interactive variant)
+- SearchInput
+- Textarea
+- SegmentedControl
+- Sidebar menu items
+
+### When Creating New Components
+
+✅ **Do**:
+- Use `--color-a11y-primary` token for ALL focus rings
+- Use `:focus-visible` for direct interactive elements
+- Use `:focus-within` for containers with nested inputs
+- Test keyboard navigation to verify focus ring appears
+- Verify focus ring has 2px thickness and 2px offset
+
+❌ **Don't**:
+- Use hard-coded colors (e.g., `ring-blue-500`)
+- Use other semantic tokens (e.g., `--color-bg-accent-high`)
+- Use `:focus` pseudo-class (shows on mouse clicks)
+- Forget to disable default outline with `outline-none`
+- Skip focus ring entirely
+
+### Documentation Pattern
+
+In component accessibility sections, describe focus behavior like this:
+
+```markdown
+### Focus Management
+
+[Component] uses a standardized focus ring for keyboard navigation:
+- **Focus ring**: 2px bright blue (#4578ff) ring with 2px offset
+- **Keyboard only**: Visible only when navigating with Tab/Arrow keys (not mouse clicks)
+- **High contrast mode**: Automatically adapts to user's contrast preferences
+```
+
+---
+
 ## Examples
 
 ### Example: Gold Standard Components

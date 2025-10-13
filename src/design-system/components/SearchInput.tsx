@@ -12,6 +12,7 @@ const searchInputVariants = cva(
     'backdrop-blur-xl backdrop-filter',
     'box-border flex items-center rounded-full',
     'transition-all duration-200',
+    'focus-within:outline-none focus-within:ring-2 focus-within:ring-[var(--color-a11y-primary)] focus-within:ring-offset-2',
     'w-full',
   ],
   {

@@ -10,7 +10,7 @@ const pillVariants = cva(
   [
     "inline-flex items-center whitespace-nowrap",
     "transition-all duration-200",
-    "focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-1",
+    "focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-1",
   ],
   {
     variants: {

@@ -39,7 +39,7 @@ const cardVariants = cva(
       {
         variant: "interactive",
         disabled: false,
-        className: "cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-accent-high)] focus:ring-offset-2",
+        className: "cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-a11y-primary)] focus:ring-offset-2",
       },
     ],
     defaultVariants: {
