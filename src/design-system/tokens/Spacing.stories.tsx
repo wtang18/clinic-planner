@@ -19,11 +19,11 @@ Tokens for gaps between elements (flexbox gap, grid gap):
 | Token | Value | Use Case |
 |-------|-------|----------|
 | \`--dimension-space-between-coupled\` | 4px | Tightly coupled elements (icon + text) |
-| \`--dimension-space-between-repeating-small\` | 6px | Small repeated elements (pills, chips) |
-| \`--dimension-space-between-repeating-medium\` | 8px | Medium repeated elements (cards in grid) |
-| \`--dimension-space-between-related-small\` | 8px | Related content sections |
-| \`--dimension-space-between-related-medium\` | 16px | Clearly related but distinct sections |
-| \`--dimension-space-between-separated\` | 24px | Separated content sections |
+| \`--dimension-space-between-repeating-sm\` | 6px | Small repeated elements (pills, chips) |
+| \`--dimension-space-between-repeating-md\` | 8px | Medium repeated elements (cards in grid) |
+| \`--dimension-space-between-related-sm\` | 8px | Related content sections |
+| \`--dimension-space-between-related-md\` | 16px | Clearly related but distinct sections |
+| \`--dimension-space-between-separated-md\` | 24px | Separated content sections |
 
 ### Space Around (Padding)
 Tokens for padding around elements:
@@ -41,7 +41,7 @@ Tokens for padding around elements:
 
 \`\`\`tsx
 // Gap between elements
-<div className="flex" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
+<div className="flex" style={{ gap: 'var(--dimension-space-between-related-sm)' }}>
   <button>First</button>
   <button>Second</button>
 </div>
@@ -62,7 +62,7 @@ Tokens for padding around elements:
 </div>
 
 // Combining with Tailwind
-<div className="flex" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
+<div className="flex" style={{ gap: 'var(--dimension-space-between-repeating-md)' }}>
   <div style={{ padding: 'var(--dimension-space-around-sm)' }}>Item 1</div>
   <div style={{ padding: 'var(--dimension-space-around-sm)' }}>Item 2</div>
 </div>
@@ -119,7 +119,7 @@ export const SpaceBetween: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Small repeated elements like pills or chips
         </p>
-        <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-small)' }}>
+        <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-sm)' }}>
           {['Design', 'Development', 'Testing', 'Deployment'].map((tag) => (
             <span
               key={tag}
@@ -139,7 +139,7 @@ export const SpaceBetween: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Medium repeated elements like cards in a grid
         </p>
-        <div className="grid grid-cols-3" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
+        <div className="grid grid-cols-3" style={{ gap: 'var(--dimension-space-between-repeating-md)' }}>
           {[1, 2, 3].map((num) => (
             <div
               key={num}
@@ -160,7 +160,7 @@ export const SpaceBetween: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Related content sections
         </p>
-        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-related-sm)' }}>
           <div className="p-3 bg-[var(--color-bg-positive-subtle)] rounded">
             <div className="text-sm font-semibold text-[var(--color-fg-positive-primary)]">Section A</div>
           </div>
@@ -178,7 +178,7 @@ export const SpaceBetween: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Clearly related but distinct sections
         </p>
-        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-related-medium)' }}>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-related-md)' }}>
           <div className="p-4 bg-[var(--color-bg-accent-subtle)] rounded-lg border border-[var(--color-bg-accent-medium)]">
             <div className="text-sm font-semibold text-[var(--color-fg-accent-primary)]">Major Section 1</div>
             <div className="text-xs text-[var(--color-fg-accent-secondary)] mt-1">More breathing room</div>
@@ -198,7 +198,7 @@ export const SpaceBetween: Story = {
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
           Separated content sections (distinct topics)
         </p>
-        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-separated)' }}>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-separated-md)' }}>
           <div className="p-6 bg-[var(--color-bg-information-subtle)] rounded-lg">
             <h3 className="text-lg font-bold text-[var(--color-fg-information-primary)] mb-2">Topic A</h3>
             <p className="text-sm text-[var(--color-fg-information-secondary)]">
@@ -510,7 +510,7 @@ export const UsageExamples: Story = {
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
           Button Group
         </h3>
-        <div className="flex" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
+        <div className="flex" style={{ gap: 'var(--dimension-space-between-related-sm)' }}>
           <button
             className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded"
             style={{ padding: 'var(--dimension-space-around-sm)' }}
@@ -535,7 +535,7 @@ export const UsageExamples: Story = {
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
           Tag List
         </h3>
-        <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-small)' }}>
+        <div className="flex flex-wrap" style={{ gap: 'var(--dimension-space-between-repeating-sm)' }}>
           {['React', 'TypeScript', 'Tailwind', 'Storybook', 'Design Tokens'].map((tag) => (
             <span
               key={tag}
@@ -557,7 +557,7 @@ export const UsageExamples: Story = {
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
           Card Grid
         </h3>
-        <div className="grid grid-cols-2 max-w-2xl" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
+        <div className="grid grid-cols-2 max-w-2xl" style={{ gap: 'var(--dimension-space-between-repeating-md)' }}>
           {[1, 2].map((num) => (
             <div
               key={num}
@@ -586,7 +586,7 @@ export const UsageExamples: Story = {
           className="bg-[var(--color-bg-neutral-subtle)] rounded-lg border border-[var(--color-bg-neutral-low)] max-w-md"
           style={{ padding: 'var(--dimension-space-around-md)' }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--dimension-space-between-related-medium)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--dimension-space-between-related-md)' }}>
             <div>
               <label className="block text-sm font-semibold text-[var(--color-fg-neutral-primary)] mb-1">
                 Email
@@ -665,31 +665,31 @@ export const AllTokens: Story = {
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-between-repeating-small
+                --dimension-space-between-repeating-sm
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">6px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-between-repeating-medium
+                --dimension-space-between-repeating-md
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">8px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-between-related-small
+                --dimension-space-between-related-sm
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">8px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-between-related-medium
+                --dimension-space-between-related-md
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">16px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-between-separated
+                --dimension-space-between-separated-md
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">24px</div>
             </div>
