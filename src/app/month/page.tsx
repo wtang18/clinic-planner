@@ -832,9 +832,9 @@ function MonthViewContent() {
                       <div className="flex flex-wrap gap-1.5 w-full">
                         {prepLabel && (
                           <Pill
-                            type={isPrepStarting ? "positive" : "info"}
+                            type={isPrepStarting ? "important-info" : "info"}
                             size="small"
-                            label="Prep"
+                            label={isPrepStarting ? "Prep Start" : "Prep"}
                             subtextR={prepLabel}
                           />
                         )}
