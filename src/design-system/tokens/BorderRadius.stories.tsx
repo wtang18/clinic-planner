@@ -141,23 +141,31 @@ export const UsageExamples: Story = {
         </h2>
       </div>
 
-      {/* Buttons */}
+      {/* Pills/Badges */}
       <div>
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
-          Buttons (radius-small)
+          Pills & Badges (radius-x-small for xs size, radius-small for sm/md)
         </h3>
-        <div className="flex gap-3">
-          <Button
-            type="generative"
-            size="small"
-            label="Primary Action"
+        <div className="flex gap-2 items-center">
+          <Pill
+            type="positive"
+            size="x-small"
+            label="Tiny"
           />
-          <Button
-            type="outlined"
+          <Pill
+            type="info"
             size="small"
-            label="Secondary Action"
+            label="Small"
+          />
+          <Pill
+            type="alert"
+            size="medium"
+            label="Medium"
           />
         </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Pills use radius-xs (4px) for x-small size, radius-sm (8px) for small/medium sizes
+        </p>
       </div>
 
       {/* Input Fields */}
@@ -171,74 +179,93 @@ export const UsageExamples: Story = {
           placeholder="Enter your email..."
           className="w-full max-w-md"
         />
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Inputs use radius-sm (8px) for subtle rounding
+        </p>
       </div>
 
       {/* Cards */}
       <div>
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
-          Cards (radius-medium)
+          Cards (radius-small for small size, radius-medium for medium size)
         </h3>
         <div className="grid grid-cols-2 gap-4 max-w-2xl">
-          <Card size="medium" variant="non-interactive">
+          <Card size="small" variant="non-interactive">
             <h4 className="font-semibold text-[var(--color-fg-neutral-primary)]">
-              Event Card
+              Small Card
             </h4>
             <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
-              Standard card using medium radius (16px) for balanced appearance
+              Small cards use radius-sm (8px)
             </p>
           </Card>
-          <div
-            className="p-6 bg-[var(--color-bg-information-subtle)] border border-[var(--color-bg-information-medium)]"
-            style={{ borderRadius: 'var(--dimension-radius-md)', gap: 'var(--dimension-space-between-related-md)' }}
-          >
-            <h4 className="font-semibold text-[var(--color-fg-information-primary)] mb-2">
-              Info Card
+          <Card size="medium" variant="non-interactive">
+            <h4 className="font-semibold text-[var(--color-fg-neutral-primary)]">
+              Medium Card
             </h4>
-            <p className="text-sm text-[var(--color-fg-information-secondary)]">
-              Consistent radius creates visual harmony across card types
+            <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
+              Medium cards use radius-md (16px) for balanced appearance
             </p>
-          </div>
+          </Card>
         </div>
       </div>
 
-      {/* Pills/Badges */}
+      {/* Buttons */}
       <div>
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
-          Pills & Badges (radius-x-small)
+          Buttons (fully rounded - not using radius tokens)
         </h3>
-        <div className="flex gap-2">
-          <Pill
-            type="positive"
+        <div className="flex gap-3">
+          <Button
+            type="generative"
             size="small"
-            label="Active"
+            label="Primary"
           />
-          <Pill
-            type="info"
+          <Button
+            type="outlined"
             size="small"
-            label="Scheduled"
-          />
-          <Pill
-            type="alert"
-            size="small"
-            label="Cancelled"
+            label="Secondary"
           />
         </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Buttons use rounded-full (pill shape) instead of semantic radius tokens
+        </p>
       </div>
 
-      {/* Hero Section */}
+      {/* Large Radius Containers */}
       <div>
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
-          Hero Container (radius-large)
+          Large Containers (radius-large)
         </h3>
         <div
-          className="p-12 bg-gradient-to-br from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-information-subtle)]"
+          className="p-8 bg-gradient-to-br from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-information-subtle)]"
           style={{ borderRadius: 'var(--dimension-radius-lg)' }}
+        >
+          <h2 className="text-xl font-bold text-[var(--color-fg-neutral-primary)] mb-2">
+            Featured Section
+          </h2>
+          <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
+            Large radius (24px) creates a friendly, approachable feeling for hero sections and featured content.
+          </p>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Use radius-lg (24px) for prominent sections and large containers
+        </p>
+      </div>
+
+      {/* Extra Large Radius Containers */}
+      <div>
+        <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-neutral-primary)]">
+          Hero Sections (radius-x-large)
+        </h3>
+        <div
+          className="p-12 bg-gradient-to-br from-[var(--color-bg-positive-subtle)] to-[var(--color-bg-accent-subtle)]"
+          style={{ borderRadius: 'var(--dimension-radius-xl)' }}
         >
           <h2 className="text-3xl font-bold text-[var(--color-fg-neutral-primary)] mb-4">
             Welcome to Clinic Planner
           </h2>
           <p className="text-lg text-[var(--color-fg-neutral-secondary)] mb-6 max-w-2xl">
-            Large radius (24px) creates a friendly, approachable feeling for hero sections and featured content.
+            Extra-large radius (32px) creates maximum visual softness for hero banners and showcase areas.
           </p>
           <Button
             type="generative"
@@ -246,6 +273,9 @@ export const UsageExamples: Story = {
             label="Get Started"
           />
         </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mt-2">
+          Use radius-xl (32px) for hero sections and maximum visual impact
+        </p>
       </div>
 
       {/* Best Practices */}
