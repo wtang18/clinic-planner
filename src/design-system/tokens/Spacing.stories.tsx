@@ -30,10 +30,10 @@ Tokens for padding around elements:
 
 | Token | Value | Use Case |
 |-------|-------|----------|
-| \`--dimension-space-around-x-small\` | 8px | Minimal padding (pills, small buttons) |
-| \`--dimension-space-around-small\` | 12px | Compact padding (medium buttons, inputs) |
-| \`--dimension-space-around-medium\` | 16px | Standard padding (cards, default buttons) |
-| \`--dimension-space-around-large\` | 20px | Generous padding (large cards, sections) |
+| \`--dimension-space-around-xs\` | 8px | Minimal padding (pills, small buttons) |
+| \`--dimension-space-around-sm\` | 12px | Compact padding (medium buttons, inputs) |
+| \`--dimension-space-around-md\` | 16px | Standard padding (cards, default buttons) |
+| \`--dimension-space-around-lg\` | 20px | Generous padding (large cards, sections) |
 
 **Note**: Space Around tokens can be applied to individual sides (paddingTop, paddingRight, paddingBottom, paddingLeft) for asymmetric layouts.
 
@@ -47,24 +47,24 @@ Tokens for padding around elements:
 </div>
 
 // Padding around content
-<div style={{ padding: 'var(--dimension-space-around-medium)' }}>
+<div style={{ padding: 'var(--dimension-space-around-md)' }}>
   Card content with standard padding
 </div>
 
 // Directional padding (asymmetric)
 <div style={{
-  paddingTop: 'var(--dimension-space-around-large)',
-  paddingBottom: 'var(--dimension-space-around-large)',
-  paddingLeft: 'var(--dimension-space-around-medium)',
-  paddingRight: 'var(--dimension-space-around-medium)'
+  paddingTop: 'var(--dimension-space-around-lg)',
+  paddingBottom: 'var(--dimension-space-around-lg)',
+  paddingLeft: 'var(--dimension-space-around-md)',
+  paddingRight: 'var(--dimension-space-around-md)'
 }}>
   Card with more vertical breathing room
 </div>
 
 // Combining with Tailwind
 <div className="flex" style={{ gap: 'var(--dimension-space-between-repeating-medium)' }}>
-  <div style={{ padding: 'var(--dimension-space-around-small)' }}>Item 1</div>
-  <div style={{ padding: 'var(--dimension-space-around-small)' }}>Item 2</div>
+  <div style={{ padding: 'var(--dimension-space-around-sm)' }}>Item 1</div>
+  <div style={{ padding: 'var(--dimension-space-around-sm)' }}>Item 2</div>
 </div>
 \`\`\`
 
@@ -247,13 +247,13 @@ export const SpaceAround: Story = {
         <div className="inline-flex gap-2">
           <button
             className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] text-sm font-semibold rounded"
-            style={{ padding: 'var(--dimension-space-around-x-small)' }}
+            style={{ padding: 'var(--dimension-space-around-xs)' }}
           >
             Compact Button
           </button>
           <span
             className="bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold rounded inline-flex items-center"
-            style={{ padding: 'var(--dimension-space-around-x-small)' }}
+            style={{ padding: 'var(--dimension-space-around-xs)' }}
           >
             Badge
           </span>
@@ -270,7 +270,7 @@ export const SpaceAround: Story = {
         </p>
         <button
           className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded-lg"
-          style={{ padding: 'var(--dimension-space-around-small)' }}
+          style={{ padding: 'var(--dimension-space-around-sm)' }}
         >
           Standard Button
         </button>
@@ -286,7 +286,7 @@ export const SpaceAround: Story = {
         </p>
         <div
           className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg max-w-md"
-          style={{ padding: 'var(--dimension-space-around-medium)' }}
+          style={{ padding: 'var(--dimension-space-around-md)' }}
         >
           <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Event Card</h4>
           <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
@@ -305,7 +305,7 @@ export const SpaceAround: Story = {
         </p>
         <div
           className="bg-gradient-to-br from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-information-subtle)] rounded-lg max-w-2xl"
-          style={{ padding: 'var(--dimension-space-around-large)' }}
+          style={{ padding: 'var(--dimension-space-around-lg)' }}
         >
           <h3 className="text-xl font-bold text-[var(--color-fg-neutral-primary)] mb-3">
             Featured Section
@@ -349,10 +349,10 @@ export const DirectionalSpacing: Story = {
         <div
           className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg max-w-md"
           style={{
-            paddingTop: 'var(--dimension-space-around-large)',
-            paddingBottom: 'var(--dimension-space-around-large)',
-            paddingLeft: 'var(--dimension-space-around-medium)',
-            paddingRight: 'var(--dimension-space-around-medium)',
+            paddingTop: 'var(--dimension-space-around-lg)',
+            paddingBottom: 'var(--dimension-space-around-lg)',
+            paddingLeft: 'var(--dimension-space-around-md)',
+            paddingRight: 'var(--dimension-space-around-md)',
           }}
         >
           <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Featured Event</h4>
@@ -382,10 +382,10 @@ export const DirectionalSpacing: Story = {
         <div
           className="bg-gradient-to-b from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-neutral-base)] rounded-lg max-w-md"
           style={{
-            paddingTop: 'var(--dimension-space-around-large)',
-            paddingBottom: 'var(--dimension-space-around-small)',
-            paddingLeft: 'var(--dimension-space-around-medium)',
-            paddingRight: 'var(--dimension-space-around-medium)',
+            paddingTop: 'var(--dimension-space-around-lg)',
+            paddingBottom: 'var(--dimension-space-around-sm)',
+            paddingLeft: 'var(--dimension-space-around-md)',
+            paddingRight: 'var(--dimension-space-around-md)',
           }}
         >
           <h3 className="text-xl font-bold text-[var(--color-fg-accent-primary)] mb-2">
@@ -417,10 +417,10 @@ export const DirectionalSpacing: Story = {
         <div
           className="bg-[var(--color-bg-information-subtle)] border-l-4 border-[var(--color-bg-information-high)] rounded max-w-md"
           style={{
-            paddingTop: 'var(--dimension-space-around-medium)',
-            paddingBottom: 'var(--dimension-space-around-medium)',
-            paddingLeft: 'var(--dimension-space-around-large)',
-            paddingRight: 'var(--dimension-space-around-medium)',
+            paddingTop: 'var(--dimension-space-around-md)',
+            paddingBottom: 'var(--dimension-space-around-md)',
+            paddingLeft: 'var(--dimension-space-around-lg)',
+            paddingRight: 'var(--dimension-space-around-md)',
           }}
         >
           <h4 className="font-semibold text-[var(--color-fg-information-primary)] mb-1">Pro Tip</h4>
@@ -450,10 +450,10 @@ export const DirectionalSpacing: Story = {
         <button
           className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded"
           style={{
-            paddingTop: 'var(--dimension-space-around-x-small)',
-            paddingBottom: 'var(--dimension-space-around-x-small)',
-            paddingLeft: 'var(--dimension-space-around-medium)',
-            paddingRight: 'var(--dimension-space-around-medium)',
+            paddingTop: 'var(--dimension-space-around-xs)',
+            paddingBottom: 'var(--dimension-space-around-xs)',
+            paddingLeft: 'var(--dimension-space-around-md)',
+            paddingRight: 'var(--dimension-space-around-md)',
           }}
         >
           Call to Action
@@ -472,7 +472,7 @@ export const DirectionalSpacing: Story = {
       {/* Best Practices */}
       <div
         className="bg-[var(--color-bg-accent-subtle)] border-l-4 border-[var(--color-bg-accent-high)] rounded"
-        style={{ padding: 'var(--dimension-space-around-medium)' }}
+        style={{ padding: 'var(--dimension-space-around-md)' }}
       >
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-accent-primary)]">
           Directional Spacing Guidelines
@@ -513,13 +513,13 @@ export const UsageExamples: Story = {
         <div className="flex" style={{ gap: 'var(--dimension-space-between-related-small)' }}>
           <button
             className="bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold rounded"
-            style={{ padding: 'var(--dimension-space-around-small)' }}
+            style={{ padding: 'var(--dimension-space-around-sm)' }}
           >
             Save
           </button>
           <button
             className="border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)] font-semibold rounded"
-            style={{ padding: 'var(--dimension-space-around-small)' }}
+            style={{ padding: 'var(--dimension-space-around-sm)' }}
           >
             Cancel
           </button>
@@ -540,7 +540,7 @@ export const UsageExamples: Story = {
             <span
               key={tag}
               className="bg-[var(--color-bg-accent-medium)] text-[var(--color-fg-accent-primary)] text-xs font-semibold rounded"
-              style={{ padding: 'var(--dimension-space-around-x-small)' }}
+              style={{ padding: 'var(--dimension-space-around-xs)' }}
             >
               {tag}
             </span>
@@ -562,7 +562,7 @@ export const UsageExamples: Story = {
             <div
               key={num}
               className="bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)] rounded-lg"
-              style={{ padding: 'var(--dimension-space-around-medium)' }}
+              style={{ padding: 'var(--dimension-space-around-md)' }}
             >
               <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">Event {num}</h4>
               <p className="text-sm text-[var(--color-fg-neutral-secondary)]">
@@ -584,7 +584,7 @@ export const UsageExamples: Story = {
         </h3>
         <div
           className="bg-[var(--color-bg-neutral-subtle)] rounded-lg border border-[var(--color-bg-neutral-low)] max-w-md"
-          style={{ padding: 'var(--dimension-space-around-medium)' }}
+          style={{ padding: 'var(--dimension-space-around-md)' }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--dimension-space-between-related-medium)' }}>
             <div>
@@ -595,7 +595,7 @@ export const UsageExamples: Story = {
                 type="email"
                 placeholder="you@example.com"
                 className="w-full border border-[var(--color-bg-neutral-low)] rounded text-sm text-[var(--color-fg-neutral-primary)]"
-                style={{ padding: 'var(--dimension-space-around-small)' }}
+                style={{ padding: 'var(--dimension-space-around-sm)' }}
               />
             </div>
             <div>
@@ -606,7 +606,7 @@ export const UsageExamples: Story = {
                 type="password"
                 placeholder="••••••••"
                 className="w-full border border-[var(--color-bg-neutral-low)] rounded text-sm text-[var(--color-fg-neutral-primary)]"
-                style={{ padding: 'var(--dimension-space-around-small)' }}
+                style={{ padding: 'var(--dimension-space-around-sm)' }}
               />
             </div>
           </div>
@@ -620,7 +620,7 @@ export const UsageExamples: Story = {
       {/* Best Practices */}
       <div
         className="bg-[var(--color-bg-information-subtle)] border-l-4 border-[var(--color-bg-information-high)] rounded"
-        style={{ padding: 'var(--dimension-space-around-medium)' }}
+        style={{ padding: 'var(--dimension-space-around-md)' }}
       >
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-information-primary)]">
           Best Practices
@@ -704,25 +704,25 @@ export const AllTokens: Story = {
           <div className="space-y-2 text-sm">
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-around-x-small
+                --dimension-space-around-xs
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">8px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-around-small
+                --dimension-space-around-sm
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">12px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-around-medium
+                --dimension-space-around-md
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">16px</div>
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-around-large
+                --dimension-space-around-lg
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">20px</div>
             </div>

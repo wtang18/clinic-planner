@@ -16,22 +16,22 @@ Semantic border radius tokens for consistent rounded corners across the design s
 | Token | Value | Use Case |
 |-------|-------|----------|
 | \`--dimension-radius-none\` | 0px | No rounding (square corners) |
-| \`--dimension-radius-x-small\` | 4px | Minimal rounding for small elements |
-| \`--dimension-radius-small\` | 8px | Subtle rounding for buttons, inputs |
-| \`--dimension-radius-medium\` | 16px | Standard card rounding |
-| \`--dimension-radius-large\` | 24px | Prominent rounding for large cards |
-| \`--dimension-radius-x-large\` | 32px | Maximum rounding for hero sections |
+| \`--dimension-radius-xs\` | 4px | Minimal rounding for small elements |
+| \`--dimension-radius-sm\` | 8px | Subtle rounding for buttons, inputs |
+| \`--dimension-radius-md\` | 16px | Standard card rounding |
+| \`--dimension-radius-lg\` | 24px | Prominent rounding for large cards |
+| \`--dimension-radius-xl\` | 32px | Maximum rounding for hero sections |
 
 ## Usage
 
 \`\`\`tsx
 // Using CSS variables with Tailwind
-<div className="rounded-[var(--dimension-radius-medium)]">
+<div className="rounded-[var(--dimension-radius-md)]">
   Standard card with 16px radius
 </div>
 
 // In inline styles
-<div style={{ borderRadius: 'var(--dimension-radius-small)' }}>
+<div style={{ borderRadius: 'var(--dimension-radius-sm)' }}>
   Button with 8px radius
 </div>
 \`\`\`
@@ -92,27 +92,27 @@ export const AllRadii: Story = {
           description="No rounding - sharp corners for strict, formal elements"
         />
         <RadiusDemo
-          token="--dimension-radius-x-small"
+          token="--dimension-radius-xs"
           value="4px"
           description="Minimal rounding - badges, pills, small chips"
         />
         <RadiusDemo
-          token="--dimension-radius-small"
+          token="--dimension-radius-sm"
           value="8px"
           description="Subtle rounding - buttons, inputs, small cards"
         />
         <RadiusDemo
-          token="--dimension-radius-medium"
+          token="--dimension-radius-md"
           value="16px"
           description="Standard rounding - default cards, modals, dropdowns"
         />
         <RadiusDemo
-          token="--dimension-radius-large"
+          token="--dimension-radius-lg"
           value="24px"
           description="Prominent rounding - featured cards, large containers"
         />
         <RadiusDemo
-          token="--dimension-radius-x-large"
+          token="--dimension-radius-xl"
           value="32px"
           description="Maximum rounding - hero sections, image containers"
         />
@@ -145,13 +145,13 @@ export const UsageExamples: Story = {
         <div className="flex gap-3">
           <button
             className="px-4 py-2 bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-small)' }}
+            style={{ borderRadius: 'var(--dimension-radius-sm)' }}
           >
             Primary Action
           </button>
           <button
             className="px-4 py-2 border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)]"
-            style={{ borderRadius: 'var(--dimension-radius-small)' }}
+            style={{ borderRadius: 'var(--dimension-radius-sm)' }}
           >
             Secondary Action
           </button>
@@ -167,7 +167,7 @@ export const UsageExamples: Story = {
           type="text"
           placeholder="Enter your email..."
           className="w-full max-w-md px-4 py-2 border border-[var(--color-bg-neutral-low)] text-[var(--color-fg-neutral-primary)]"
-          style={{ borderRadius: 'var(--dimension-radius-small)' }}
+          style={{ borderRadius: 'var(--dimension-radius-sm)' }}
         />
       </div>
 
@@ -179,7 +179,7 @@ export const UsageExamples: Story = {
         <div className="grid grid-cols-2 gap-4 max-w-2xl">
           <div
             className="p-6 bg-[var(--color-bg-neutral-subtle)] border border-[var(--color-bg-neutral-low)]"
-            style={{ borderRadius: 'var(--dimension-radius-medium)' }}
+            style={{ borderRadius: 'var(--dimension-radius-md)' }}
           >
             <h4 className="font-semibold text-[var(--color-fg-neutral-primary)] mb-2">
               Event Card
@@ -190,7 +190,7 @@ export const UsageExamples: Story = {
           </div>
           <div
             className="p-6 bg-[var(--color-bg-information-subtle)] border border-[var(--color-bg-information-medium)]"
-            style={{ borderRadius: 'var(--dimension-radius-medium)' }}
+            style={{ borderRadius: 'var(--dimension-radius-md)' }}
           >
             <h4 className="font-semibold text-[var(--color-fg-information-primary)] mb-2">
               Info Card
@@ -210,19 +210,19 @@ export const UsageExamples: Story = {
         <div className="flex gap-2">
           <span
             className="px-3 py-1 bg-[var(--color-bg-positive-medium)] text-[var(--color-fg-positive-primary)] text-xs font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-x-small)' }}
+            style={{ borderRadius: 'var(--dimension-radius-xs)' }}
           >
             Active
           </span>
           <span
             className="px-3 py-1 bg-[var(--color-bg-information-medium)] text-[var(--color-fg-information-primary)] text-xs font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-x-small)' }}
+            style={{ borderRadius: 'var(--dimension-radius-xs)' }}
           >
             Scheduled
           </span>
           <span
             className="px-3 py-1 bg-[var(--color-bg-alert-medium)] text-[var(--color-fg-alert-primary)] text-xs font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-x-small)' }}
+            style={{ borderRadius: 'var(--dimension-radius-xs)' }}
           >
             Cancelled
           </span>
@@ -236,7 +236,7 @@ export const UsageExamples: Story = {
         </h3>
         <div
           className="p-12 bg-gradient-to-br from-[var(--color-bg-accent-subtle)] to-[var(--color-bg-information-subtle)]"
-          style={{ borderRadius: 'var(--dimension-radius-large)' }}
+          style={{ borderRadius: 'var(--dimension-radius-lg)' }}
         >
           <h2 className="text-3xl font-bold text-[var(--color-fg-neutral-primary)] mb-4">
             Welcome to Clinic Planner
@@ -246,7 +246,7 @@ export const UsageExamples: Story = {
           </p>
           <button
             className="px-6 py-3 bg-[var(--color-bg-positive-high)] text-[var(--color-fg-neutral-inverse-primary)] font-semibold"
-            style={{ borderRadius: 'var(--dimension-radius-small)' }}
+            style={{ borderRadius: 'var(--dimension-radius-sm)' }}
           >
             Get Started
           </button>
@@ -256,7 +256,7 @@ export const UsageExamples: Story = {
       {/* Best Practices */}
       <div
         className="p-6 bg-[var(--color-bg-accent-subtle)] border-l-4 border-[var(--color-bg-accent-high)]"
-        style={{ borderRadius: 'var(--dimension-radius-small)' }}
+        style={{ borderRadius: 'var(--dimension-radius-sm)' }}
       >
         <h3 className="text-lg font-semibold mb-3 text-[var(--color-fg-accent-primary)]">
           Best Practices
@@ -288,11 +288,11 @@ export const Comparison: Story = {
       </h2>
       <div className="grid grid-cols-3 gap-6">
         {[
-          { token: '--dimension-radius-x-small', label: 'X-Small (4px)' },
-          { token: '--dimension-radius-small', label: 'Small (8px)' },
-          { token: '--dimension-radius-medium', label: 'Medium (16px)' },
-          { token: '--dimension-radius-large', label: 'Large (24px)' },
-          { token: '--dimension-radius-x-large', label: 'X-Large (32px)' },
+          { token: '--dimension-radius-xs', label: 'X-Small (4px)' },
+          { token: '--dimension-radius-sm', label: 'Small (8px)' },
+          { token: '--dimension-radius-md', label: 'Medium (16px)' },
+          { token: '--dimension-radius-lg', label: 'Large (24px)' },
+          { token: '--dimension-radius-xl', label: 'X-Large (32px)' },
           { token: '--dimension-radius-none', label: 'None (0px)' },
         ].map(({ token, label }) => (
           <div key={token} className="text-center">
