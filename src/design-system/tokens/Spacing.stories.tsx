@@ -23,13 +23,17 @@ Tokens for gaps between elements (flexbox gap, grid gap):
 | \`--dimension-space-between-repeating-md\` | 8px | Medium repeated elements (cards in grid) |
 | \`--dimension-space-between-related-sm\` | 8px | Related content sections |
 | \`--dimension-space-between-related-md\` | 16px | Clearly related but distinct sections |
-| \`--dimension-space-between-separated-md\` | 24px | Separated content sections |
+| \`--dimension-space-between-separated-sm\` | 24px | Small separation for distinct content |
+| \`--dimension-space-between-separated-md\` | 32px | Medium separation for major sections |
 
 ### Space Around (Padding)
 Tokens for padding around elements:
 
 | Token | Value | Use Case |
 |-------|-------|----------|
+| \`--dimension-space-around-4xs\` | 2px | Micro padding (dense UI, icon buttons) |
+| \`--dimension-space-around-3xs\` | 4px | Extra-extra-small padding (compact badges) |
+| \`--dimension-space-around-2xs\` | 6px | Extra-small padding (small pills, tight containers) |
 | \`--dimension-space-around-xs\` | 8px | Minimal padding (pills, small buttons) |
 | \`--dimension-space-around-sm\` | 12px | Compact padding (medium buttons, inputs) |
 | \`--dimension-space-around-md\` | 16px | Standard padding (cards, default buttons) |
@@ -191,25 +195,49 @@ export const SpaceBetween: Story = {
         </div>
       </div>
 
-      {/* Separated */}
+      {/* Separated Small */}
       <div>
         <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
-          between-separated <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(24px)</span>
+          between-separated-small <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(24px)</span>
         </div>
         <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
-          Separated content sections (distinct topics)
+          Small separation for distinct content sections
+        </p>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-separated-sm)' }}>
+          <div className="p-6 bg-[var(--color-bg-information-subtle)] rounded-lg">
+            <h3 className="text-lg font-bold text-[var(--color-fg-information-primary)] mb-2">Section A</h3>
+            <p className="text-sm text-[var(--color-fg-information-secondary)]">
+              Distinct section with clear separation
+            </p>
+          </div>
+          <div className="p-6 bg-[var(--color-bg-positive-subtle)] rounded-lg">
+            <h3 className="text-lg font-bold text-[var(--color-fg-positive-primary)] mb-2">Section B</h3>
+            <p className="text-sm text-[var(--color-fg-positive-secondary)]">
+              Another distinct section with good breathing room
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Separated Medium */}
+      <div>
+        <div className="text-sm font-semibold mb-2 text-[var(--color-fg-neutral-primary)]">
+          between-separated-medium <span className="text-[var(--color-fg-neutral-secondary)] font-normal">(32px)</span>
+        </div>
+        <p className="text-xs text-[var(--color-fg-neutral-secondary)] mb-3">
+          Medium separation for major sections (maximum spacing)
         </p>
         <div className="flex flex-col" style={{ gap: 'var(--dimension-space-between-separated-md)' }}>
           <div className="p-6 bg-[var(--color-bg-information-subtle)] rounded-lg">
-            <h3 className="text-lg font-bold text-[var(--color-fg-information-primary)] mb-2">Topic A</h3>
+            <h3 className="text-lg font-bold text-[var(--color-fg-information-primary)] mb-2">Major Topic A</h3>
             <p className="text-sm text-[var(--color-fg-information-secondary)]">
               Completely separate topic with maximum spacing
             </p>
           </div>
           <div className="p-6 bg-[var(--color-bg-alert-subtle)] rounded-lg">
-            <h3 className="text-lg font-bold text-[var(--color-fg-alert-primary)] mb-2">Topic B</h3>
+            <h3 className="text-lg font-bold text-[var(--color-fg-alert-primary)] mb-2">Major Topic B</h3>
             <p className="text-sm text-[var(--color-fg-alert-secondary)]">
-              Distinct content requiring clear visual break
+              Distinct content requiring maximum visual break
             </p>
           </div>
         </div>
@@ -717,9 +745,15 @@ export const AllTokens: Story = {
             </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
-                --dimension-space-between-separated-md
+                --dimension-space-between-separated-sm
               </div>
               <div className="text-[var(--color-fg-neutral-primary)]">24px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-between-separated-md
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">32px</div>
             </div>
           </div>
         </div>
@@ -730,6 +764,24 @@ export const AllTokens: Story = {
             Space Around (Padding)
           </h3>
           <div className="space-y-2 text-sm">
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-4xs
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">2px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-3xs
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">4px</div>
+            </div>
+            <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
+              <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
+                --dimension-space-around-2xs
+              </div>
+              <div className="text-[var(--color-fg-neutral-primary)]">6px</div>
+            </div>
             <div className="p-3 bg-[var(--color-bg-neutral-subtle)] rounded">
               <div className="font-mono text-xs text-[var(--color-fg-neutral-secondary)] mb-1">
                 --dimension-space-around-xs
