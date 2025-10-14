@@ -127,19 +127,19 @@ export const GrayScale: Story = {
         </p>
         <div className="grid grid-cols-6 gap-4">
           <ColorSwatch name="gray-25" value="#fafafa" />
-          <ColorSwatch name="gray-50" value="#f2f2f2" />
-          <ColorSwatch name="gray-100" value="#e0e0e0" />
+          <ColorSwatch name="gray-50" value="#f1f1f1" />
+          <ColorSwatch name="gray-100" value="#e1e1e1" />
           <ColorSwatch name="gray-200" value="#d4d4d4" />
-          <ColorSwatch name="gray-300" value="#bdbdbd" />
-          <ColorSwatch name="gray-400" value="#a3a3a3" />
+          <ColorSwatch name="gray-300" value="#bcbcbc" />
+          <ColorSwatch name="gray-400" value="#a4a4a4" />
         </div>
         <div className="grid grid-cols-6 gap-4 mt-4">
-          <ColorSwatch name="gray-500" value="#8c8c8c" textColor="text-white" />
-          <ColorSwatch name="gray-600" value="#666666" textColor="text-white" />
-          <ColorSwatch name="gray-700" value="#5e5e5e" textColor="text-white" />
+          <ColorSwatch name="gray-500" value="#8b8b8b" textColor="text-white" />
+          <ColorSwatch name="gray-600" value="#676767" textColor="text-white" />
+          <ColorSwatch name="gray-700" value="#5f5f5f" textColor="text-white" />
           <ColorSwatch name="gray-800" value="#424242" textColor="text-white" />
-          <ColorSwatch name="gray-900" value="#333333" textColor="text-white" />
-          <ColorSwatch name="gray-1000" value="#171717" textColor="text-white" />
+          <ColorSwatch name="gray-900" value="#323232" textColor="text-white" />
+          <ColorSwatch name="gray-1000" value="#181818" textColor="text-white" />
         </div>
       </div>
 
@@ -168,23 +168,44 @@ export const BrandColors: Story = {
   render: () => (
     <div className="p-8 space-y-12 bg-[var(--color-bg-neutral-base)]">
       <div>
+        <h2 className="text-2xl font-bold mb-2 text-[var(--color-fg-neutral-primary)]">Cream Scale</h2>
+        <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
+          Warm neutral alternative to gray for softer UI elements
+        </p>
+        <div className="grid grid-cols-5 gap-4">
+          <ColorSwatch name="cream-50" value="#f4f0eb" />
+          <ColorSwatch name="cream-100" value="#e8e0d7" />
+          <ColorSwatch name="cream-200" value="#dbd3cb" />
+          <ColorSwatch name="cream-300" value="#c2bbb4" />
+          <ColorSwatch name="cream-400" value="#a9a39d" />
+        </div>
+        <div className="grid grid-cols-4 gap-4 mt-4">
+          <ColorSwatch name="cream-500" value="#8f8a85" textColor="text-white" />
+          <ColorSwatch name="cream-600" value="#6a6662" textColor="text-white" />
+          <ColorSwatch name="cream-700" value="#625e5b" textColor="text-white" />
+          <ColorSwatch name="cream-800" value="#44423f" textColor="text-white" />
+          <ColorSwatch name="cream-900" value="#343230" textColor="text-white" />
+        </div>
+      </div>
+
+      <div>
         <h2 className="text-2xl font-bold mb-2 text-[var(--color-fg-neutral-primary)]">Blue Scale</h2>
         <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
           Information, links, and interactive elements
         </p>
         <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="blue-50" value="#e6f2f7" />
+          <ColorSwatch name="blue-50" value="#e5f3f8" />
           <ColorSwatch name="blue-100" value="#c9e6f0" />
-          <ColorSwatch name="blue-200" value="#badeeb" />
-          <ColorSwatch name="blue-300" value="#8cc9de" />
-          <ColorSwatch name="blue-400" value="#6bb0c9" />
+          <ColorSwatch name="blue-200" value="#b9dfea" />
+          <ColorSwatch name="blue-300" value="#8bc9de" />
+          <ColorSwatch name="blue-400" value="#6ab0ca" />
         </div>
         <div className="grid grid-cols-4 gap-4 mt-4">
-          <ColorSwatch name="blue-500" value="#4d94b0" textColor="text-white" />
-          <ColorSwatch name="blue-600" value="#386b8a" textColor="text-white" />
+          <ColorSwatch name="blue-500" value="#4d93af" textColor="text-white" />
+          <ColorSwatch name="blue-600" value="#376c89" textColor="text-white" />
           <ColorSwatch name="blue-700" value="#306385" textColor="text-white" />
-          <ColorSwatch name="blue-800" value="#244559" textColor="text-white" />
-          <ColorSwatch name="blue-900" value="#1c3645" textColor="text-white" />
+          <ColorSwatch name="blue-800" value="#234658" textColor="text-white" />
+          <ColorSwatch name="blue-900" value="#1b3644" textColor="text-white" />
         </div>
       </div>
 
@@ -195,17 +216,17 @@ export const BrandColors: Story = {
         </p>
         <div className="grid grid-cols-5 gap-4">
           <ColorSwatch name="green-50" value="#e3f5eb" />
-          <ColorSwatch name="green-100" value="#ccedd9" />
-          <ColorSwatch name="green-200" value="#a8e3b3" />
-          <ColorSwatch name="green-300" value="#75cf99" />
-          <ColorSwatch name="green-400" value="#52b885" />
+          <ColorSwatch name="green-100" value="#cbedda" />
+          <ColorSwatch name="green-200" value="#a9e2b3" />
+          <ColorSwatch name="green-300" value="#76ce98" />
+          <ColorSwatch name="green-400" value="#52b784" />
         </div>
         <div className="grid grid-cols-4 gap-4 mt-4">
-          <ColorSwatch name="green-500" value="#309e6e" textColor="text-white" />
-          <ColorSwatch name="green-600" value="#24734f" textColor="text-white" />
-          <ColorSwatch name="green-700" value="#0d6b52" textColor="text-white" />
-          <ColorSwatch name="green-800" value="#174a33" textColor="text-white" />
-          <ColorSwatch name="green-900" value="#123829" textColor="text-white" />
+          <ColorSwatch name="green-500" value="#319d6d" textColor="text-white" />
+          <ColorSwatch name="green-600" value="#247450" textColor="text-white" />
+          <ColorSwatch name="green-700" value="#0e6c52" textColor="text-white" />
+          <ColorSwatch name="green-800" value="#174b34" textColor="text-white" />
+          <ColorSwatch name="green-900" value="#123928" textColor="text-white" />
         </div>
       </div>
 
@@ -215,18 +236,39 @@ export const BrandColors: Story = {
           Warnings, cautions, and attention
         </p>
         <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="yellow-50" value="#faf2cf" />
-          <ColorSwatch name="yellow-100" value="#f2e096" />
-          <ColorSwatch name="yellow-200" value="#edd466" />
-          <ColorSwatch name="yellow-300" value="#d6ba59" />
-          <ColorSwatch name="yellow-400" value="#c2a14f" />
+          <ColorSwatch name="yellow-50" value="#faf1ce" />
+          <ColorSwatch name="yellow-100" value="#f3e197" />
+          <ColorSwatch name="yellow-200" value="#eed366" />
+          <ColorSwatch name="yellow-300" value="#d7ba5a" />
+          <ColorSwatch name="yellow-400" value="#c1a14e" />
         </div>
         <div className="grid grid-cols-4 gap-4 mt-4">
-          <ColorSwatch name="yellow-500" value="#a8873d" textColor="text-white" />
-          <ColorSwatch name="yellow-600" value="#806138" textColor="text-white" />
-          <ColorSwatch name="yellow-700" value="#755933" textColor="text-white" />
-          <ColorSwatch name="yellow-800" value="#524026" textColor="text-white" />
-          <ColorSwatch name="yellow-900" value="#40301c" textColor="text-white" />
+          <ColorSwatch name="yellow-500" value="#a9863c" textColor="text-white" />
+          <ColorSwatch name="yellow-600" value="#7f6139" textColor="text-white" />
+          <ColorSwatch name="yellow-700" value="#755a34" textColor="text-white" />
+          <ColorSwatch name="yellow-800" value="#523f25" textColor="text-white" />
+          <ColorSwatch name="yellow-900" value="#3f301c" textColor="text-white" />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-2 text-[var(--color-fg-neutral-primary)]">Red Scale</h2>
+        <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
+          Softer errors and negative states
+        </p>
+        <div className="grid grid-cols-5 gap-4">
+          <ColorSwatch name="red-50" value="#fbeee9" />
+          <ColorSwatch name="red-100" value="#f7e1d8" />
+          <ColorSwatch name="red-200" value="#f0ceb7" />
+          <ColorSwatch name="red-300" value="#e7b08c" />
+          <ColorSwatch name="red-400" value="#e09361" />
+        </div>
+        <div className="grid grid-cols-4 gap-4 mt-4">
+          <ColorSwatch name="red-500" value="#bf6640" textColor="text-white" />
+          <ColorSwatch name="red-600" value="#9a5435" textColor="text-white" />
+          <ColorSwatch name="red-700" value="#904b2c" textColor="text-white" />
+          <ColorSwatch name="red-800" value="#623725" textColor="text-white" />
+          <ColorSwatch name="red-900" value="#4a2b1d" textColor="text-white" />
         </div>
       </div>
 
@@ -237,17 +279,17 @@ export const BrandColors: Story = {
         </p>
         <div className="grid grid-cols-5 gap-4">
           <ColorSwatch name="saturated-red-50" value="#fcedeb" />
-          <ColorSwatch name="saturated-red-100" value="#f7d9d6" />
-          <ColorSwatch name="saturated-red-200" value="#f5ccc4" />
-          <ColorSwatch name="saturated-red-300" value="#edada6" />
-          <ColorSwatch name="saturated-red-400" value="#e08f85" />
+          <ColorSwatch name="saturated-red-100" value="#f8dad6" />
+          <ColorSwatch name="saturated-red-200" value="#f5cbc5" />
+          <ColorSwatch name="saturated-red-300" value="#ecada5" />
+          <ColorSwatch name="saturated-red-400" value="#e18e85" />
         </div>
         <div className="grid grid-cols-4 gap-4 mt-4">
-          <ColorSwatch name="saturated-red-500" value="#d46e63" textColor="text-white" />
-          <ColorSwatch name="saturated-red-600" value="#b3403b" textColor="text-white" />
-          <ColorSwatch name="saturated-red-700" value="#b5262b" textColor="text-white" />
-          <ColorSwatch name="saturated-red-800" value="#702b29" textColor="text-white" />
-          <ColorSwatch name="saturated-red-900" value="#542421" textColor="text-white" />
+          <ColorSwatch name="saturated-red-500" value="#d36d64" textColor="text-white" />
+          <ColorSwatch name="saturated-red-600" value="#b33f3b" textColor="text-white" />
+          <ColorSwatch name="saturated-red-700" value="#b4272c" textColor="text-white" />
+          <ColorSwatch name="saturated-red-800" value="#712c28" textColor="text-white" />
+          <ColorSwatch name="saturated-red-900" value="#552320" textColor="text-white" />
         </div>
       </div>
 
@@ -257,18 +299,37 @@ export const BrandColors: Story = {
           Accents, special highlights, and premium features
         </p>
         <div className="grid grid-cols-5 gap-4">
-          <ColorSwatch name="purple-50" value="#f2f0f5" />
-          <ColorSwatch name="purple-100" value="#e8e3ed" />
-          <ColorSwatch name="purple-200" value="#decfeb" />
-          <ColorSwatch name="purple-300" value="#cfb8de" />
-          <ColorSwatch name="purple-400" value="#b39cc4" />
+          <ColorSwatch name="purple-50" value="#f3eff6" />
+          <ColorSwatch name="purple-100" value="#e9e3ee" />
+          <ColorSwatch name="purple-200" value="#ddcfeb" />
+          <ColorSwatch name="purple-300" value="#cfb7dd" />
+          <ColorSwatch name="purple-400" value="#b39cc5" />
         </div>
         <div className="grid grid-cols-4 gap-4 mt-4">
-          <ColorSwatch name="purple-500" value="#a38aba" textColor="text-white" />
-          <ColorSwatch name="purple-600" value="#755c8c" textColor="text-white" />
-          <ColorSwatch name="purple-700" value="#705782" textColor="text-white" />
-          <ColorSwatch name="purple-800" value="#4d3d59" textColor="text-white" />
-          <ColorSwatch name="purple-900" value="#3b2e45" textColor="text-white" />
+          <ColorSwatch name="purple-500" value="#a489bb" textColor="text-white" />
+          <ColorSwatch name="purple-600" value="#765c8b" textColor="text-white" />
+          <ColorSwatch name="purple-700" value="#6f5782" textColor="text-white" />
+          <ColorSwatch name="purple-800" value="#4c3c5a" textColor="text-white" />
+          <ColorSwatch name="purple-900" value="#3a2e45" textColor="text-white" />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-2 text-[var(--color-fg-neutral-primary)]">Utility Colors</h2>
+        <p className="text-sm text-[var(--color-fg-neutral-secondary)] mb-6">
+          Special-purpose colors for specific features and accessibility
+        </p>
+        <div className="grid grid-cols-2 gap-4 max-w-md">
+          <ColorSwatch name="a11y-blue" value="#4477ff" textColor="text-white" />
+          <ColorSwatch name="carby-green" value="#6bd9a1" />
+        </div>
+        <div className="mt-6 p-4 bg-[var(--color-bg-information-subtle)] rounded border border-[var(--color-bg-information-low)]">
+          <p className="text-sm text-[var(--color-fg-information-secondary)]">
+            <strong className="text-[var(--color-fg-information-primary)]">a11y-blue:</strong> Accessibility-focused blue for high contrast and WCAG compliance
+          </p>
+          <p className="text-sm text-[var(--color-fg-information-secondary)] mt-2">
+            <strong className="text-[var(--color-fg-information-primary)]">carby-green:</strong> Brand-specific green for Carby features and branding
+          </p>
         </div>
       </div>
     </div>

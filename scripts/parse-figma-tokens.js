@@ -52,8 +52,24 @@ function resolveAlias(aliasId, allVariables) {
   return `/* UNRESOLVED: ${aliasId} */`;
 }
 
+// Helper: Map font weight strings to numeric values
+function mapFontWeight(value) {
+  const weightMap = {
+    'Thin': '100',
+    'Extra Light': '200',
+    'Light': '300',
+    'Regular': '400',
+    'Medium': '500',
+    'Semi Bold': '600',
+    'Bold': '700',
+    'Extra Bold': '800',
+    'Black': '900'
+  };
+  return weightMap[value] || value;
+}
+
 // Helper: Format value based on type
-function formatValue(value, resolvedType) {
+function formatValue(value, resolvedType, variableName) {
   if (!value) return null;
 
   // Handle aliases
@@ -68,6 +84,10 @@ function formatValue(value, resolvedType) {
     case 'FLOAT':
       return `${value}px`;  // Add px for dimensions
     case 'STRING':
+      // Convert font weight names to numeric values
+      if (variableName && variableName.includes('font-weight')) {
+        return mapFontWeight(value);
+      }
       return value;
     default:
       return value;
@@ -124,7 +144,7 @@ figmaData.collections.forEach(collection => {
         if (index === tokenPath.length - 1) {
           // Last segment - set token
           current[segment] = {
-            value: formatValue(value, variable.resolvedType),
+            value: formatValue(value, variable.resolvedType, variable.name),
             type: getSDType(variable.resolvedType),
           };
 

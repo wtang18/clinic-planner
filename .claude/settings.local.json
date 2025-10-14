@@ -38,7 +38,10 @@
       "mcp__supabase__list_tables",
       "mcp__supabase__execute_sql",
       "Bash(npx eslint:*)",
-      "Bash(npm run lint:check:*)"
+      "Bash(npm run lint:check:*)",
+      "Bash(jq:*)",
+      "mcp__figma-dev-mode-mcp-server__get_screenshot",
+      "mcp__figma-dev-mode-mcp-server__get_code"
     ],
     "deny": [],
     "ask": []
