@@ -222,9 +222,19 @@ function EventDetailContent({ params }: EventDetailPageProps) {
     } else if (returnView === 'timeline' && returnMonth && returnYear) {
       router.push(`/?view=timeline&month=${returnMonth}&year=${returnYear}`);
     } else if (returnView === 'quarter') {
-      router.push(`/quarter`);
+      // Preserve quarter and year if provided
+      const params = new URLSearchParams();
+      if (returnQuarter) params.set('quarter', returnQuarter);
+      if (returnYear) params.set('year', returnYear);
+      const queryString = params.toString();
+      router.push(queryString ? `/quarter?${queryString}` : '/quarter');
     } else if (returnView === 'month') {
-      router.push(`/month`);
+      // Preserve month and year if provided
+      const params = new URLSearchParams();
+      if (returnMonth) params.set('month', returnMonth);
+      if (returnYear) params.set('year', returnYear);
+      const queryString = params.toString();
+      router.push(queryString ? `/month?${queryString}` : '/month');
     } else if (returnView === 'annual') {
       router.push(`/annual`);
     } else {

@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/design-system/components/Button';
 import { Card } from '@/design-system/components/Card';
@@ -32,6 +32,7 @@ const baseMenuItems = [
 
 function QuarterViewContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isOpen, toggle } = useSidebar();
   const [view, setView] = React.useState('quarter');
   const [events, setEvents] = React.useState<EventIdea[]>([]);
@@ -44,8 +45,16 @@ function QuarterViewContent() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1; // 1-12
   const currentQuarter = Math.ceil(currentMonth / 3);
-  const [selectedQuarter, setSelectedQuarter] = React.useState(currentQuarter);
-  const [selectedYear, setSelectedYear] = React.useState(currentYear);
+
+  // Read quarter and year from URL params, fallback to current date
+  const urlQuarter = searchParams?.get('quarter');
+  const urlYear = searchParams?.get('year');
+  const [selectedQuarter, setSelectedQuarter] = React.useState(
+    urlQuarter ? parseInt(urlQuarter) : currentQuarter
+  );
+  const [selectedYear, setSelectedYear] = React.useState(
+    urlYear ? parseInt(urlYear) : currentYear
+  );
 
   React.useEffect(() => {
     const loadEvents = async () => {
@@ -808,10 +817,28 @@ function QuarterViewContent() {
   );
 }
 
+function LoadingFallback() {
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{
+        background:
+          'linear-gradient(233.809deg, rgb(221, 207, 235) 11.432%, rgb(240, 206, 183) 84.149%), linear-gradient(90deg, rgb(241, 241, 241) 0%, rgb(241, 241, 241) 100%)',
+      }}
+    >
+      <div className="text-center">
+        <div className="text-body-lg-medium !text-[var(--color-fg-neutral-primary)]">Loading...</div>
+      </div>
+    </div>
+  );
+}
+
 export default function QuarterViewPage() {
   return (
     <SidebarProvider>
-      <QuarterViewContent />
+      <Suspense fallback={<LoadingFallback />}>
+        <QuarterViewContent />
+      </Suspense>
     </SidebarProvider>
   );
 }
