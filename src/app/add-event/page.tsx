@@ -107,7 +107,6 @@ function AddEventForm() {
         created_by: formData.created_by,
         month: formData.start_month,
         year: formData.start_year,
-        category_id: 1,
       };
 
       if (prepType === 'months' && formData.prep_months_needed > 0) {
@@ -119,7 +118,11 @@ function AddEventForm() {
       const { error } = await supabase.from('events_ideas').insert([eventData]).select().single();
 
       if (error) {
-        console.error('Error adding event:', error);
+        console.error('Error adding event - FULL:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
         toast.alert('Failed to create event', { showSubtext: true, subtext: 'Please try again' });
         setLoading(false);
       } else {
