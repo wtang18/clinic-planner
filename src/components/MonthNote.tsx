@@ -132,6 +132,10 @@ export function MonthNote({ month, onSave }: MonthNoteProps) {
           value={noteText}
           onChange={(e) => setNoteText(e.target.value)}
           onFocus={handleFocus}
+          onKeyDown={(e) => {
+            // Stop all keyboard events from bubbling to prevent container clicks
+            e.stopPropagation();
+          }}
           placeholder="Add a note for this month..."
           autoResize
           rows={3}
