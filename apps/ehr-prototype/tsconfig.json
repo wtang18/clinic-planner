@@ -1,35 +1,16 @@
 {
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "es6"],
-    "allowJs": true,
-    "skipLibCheck": true,
     "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@carbon-health/design-tokens": ["../../packages/design-tokens"],
-      "@carbon-health/design-tokens/*": ["../../packages/design-tokens/*"]
-    },
-    "target": "ES2017"
+      "@/*": ["src/*"]
+    }
   },
   "include": [
-    "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules"
