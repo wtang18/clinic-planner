@@ -1,0 +1,56 @@
+{
+  "name": "@carbon-health/design-tokens",
+  "version": "1.0.0",
+  "description": "Carbon Health Design Tokens - Generated from Figma via Style Dictionary",
+  "main": "dist/tokens.js",
+  "types": "dist/tokens.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/tokens.d.ts",
+      "default": "./dist/tokens.js"
+    },
+    "./css": "./dist/index.css",
+    "./css/*": "./dist/*.css",
+    "./react-native": "./dist/react-native/tokens.js",
+    "./react-native/*": "./dist/react-native/*"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist sd-input",
+    "tokens:parse": "node scripts/parse-figma-tokens.js",
+    "tokens:build:web": "style-dictionary build --config sd.config.js && style-dictionary build --config sd.config.light.js && style-dictionary build --config sd.config.dark.js && style-dictionary build --config sd.config.typography-large.js && node scripts/wrap-typography-media-queries.js",
+    "tokens:build:rn": "style-dictionary build --config sd.config.react-native.js && node scripts/generate-elevation-react-native.js && node scripts/generate-text-styles-react-native.js",
+    "tokens:build": "npm run tokens:parse && npm run tokens:build:web && npm run tokens:build:rn",
+    "build": "npm run tokens:build",
+    "text-styles:generate": "node scripts/generate-text-styles-core.js && node scripts/generate-text-styles-expressive.js",
+    "elevation:generate": "node scripts/generate-elevation-utilities.js",
+    "storybook": "storybook dev -p 6007",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "keywords": [
+    "design-tokens",
+    "carbon-health",
+    "style-dictionary",
+    "figma"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "style-dictionary": "^4.4.0"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": ">=0.70.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-native": {
+      "optional": true
+    }
+  }
+}

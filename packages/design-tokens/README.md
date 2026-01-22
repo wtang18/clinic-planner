@@ -1,22 +1,35 @@
 # Design Token System
 
-This directory contains the design tokens exported from Figma and the tools to generate CSS custom properties from them.
+This package contains the design tokens exported from Figma and the tools to generate CSS custom properties from them.
+
+**Full documentation:** [Token Architecture](../../docs/architecture/token-architecture.md)
 
 ## Token Architecture
 
-Our token system follows a **three-layer hierarchy**:
+The token system supports **multiple product families and themes** through a layered architecture:
 
 ```
-┌─────────────────────────────────────────────────────┐
-│  Components (use semantic tokens)                   │
-│  ↓                                                   │
-│  Semantic Tokens (contextual, mode-aware)           │
-│  ↓                                                   │
-│  Decorative Tokens (named abstractions)             │
-│  ↓                                                   │
-│  Primitive Tokens (raw values, not for direct use)  │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  Themes (product-specific overrides)                    │
+│    └── themes/pro/{ehr, billing, operations, ...}       │
+│                              ↓                          │
+│  Bases (product family semantics)                       │
+│    └── bases/pro/   (dense UI)                         │
+│    └── bases/consumer/  (generous spacing)             │
+│                              ↓                          │
+│  Decorative (named color abstractions)                  │
+│                              ↓                          │
+│  Primitives (raw values, not for direct use)            │
+└─────────────────────────────────────────────────────────┘
 ```
+
+**Key concepts:**
+- **Primitives**: Raw color/typography/dimension values shared by all products
+- **Bases**: Product family semantics (Pro = healthcare workers, Consumer = patients)
+- **Themes**: Sparse overrides for product-specific accents (EHR = teal, Billing = purple)
+- **Light/Dark**: Orthogonal axis - each base has light and dark variants
+
+See [Token Architecture](../../docs/architecture/token-architecture.md) for full details on multi-theme support.
 
 ### Layer 1: Primitives (Not for direct use)
 
@@ -38,28 +51,7 @@ Our token system follows a **three-layer hierarchy**:
 
 ---
 
-### Layer 2: Decorative (Named abstractions)
-
-**Purpose:** Human-readable names that reference primitives, used as an intermediary layer.
-
-**Collections:**
-- `Decorative: Color` - Named color abstractions (e.g., `--gray-lowest`, `--blue-mid`)
-
-**Modes:**
-- `on-light` - Colors for light theme
-- `on-dark` - Colors for dark theme
-
-**Example:**
-```css
-/* Decorative tokens reference primitives */
---gray-lowest: var(--color-gray-50);
---gray-mid: var(--color-gray-400);
---blue-high: var(--color-blue-600);
-```
-
----
-
-### Layer 3: Semantic (Use in components)
+### Layer 2: Semantic (Use in components)
 
 **Purpose:** Contextual tokens that describe intent and support theming/responsive behavior.
 
@@ -74,10 +66,12 @@ Our token system follows a **three-layer hierarchy**:
 
 **Example:**
 ```css
-/* Semantic tokens reference decorative/primitive tokens */
---color-bg-neutral-base: var(--white-solid);
---color-fg-neutral-primary: var(--gray-max);
---color-bg-positive-high: var(--green-high);
+/* Semantic tokens reference primitive tokens directly */
+--color-bg-neutral-base: var(--color-white-solid);
+--color-fg-neutral-primary: var(--color-gray-1000);
+--color-bg-positive-high: var(--color-green-600);
+--dimension-space-around-default: var(--dimension-space-200);
+--dimension-space-around-compact: var(--dimension-space-150);
 ```
 
 **Usage in components:**
@@ -142,8 +136,8 @@ git diff src/design-system/tokens/build/
 - `semantic-light.css` - Semantic tokens for light theme
 
 **JavaScript (React Native):**
-- `tokens.js` - Flat exports with resolved hex values
-- `tokens.d.ts` - TypeScript type definitions
+- `react-native/tokens.js` - Flat exports with resolved hex values
+- `react-native/tokens.d.ts` - TypeScript type definitions
 
 **Intermediate (can be regenerated):**
 - `sd-input/*.json` - Style Dictionary source files (10 files)
@@ -195,16 +189,18 @@ import '@/design-system/tokens/build/index.css';
 ### React Native (JavaScript Constants)
 
 ```tsx
-import { ColorBgNeutralBase, ColorFgNeutralPrimary } from '@/design-system/tokens/build/tokens';
+import * as tokens from '@carbon-health/design-tokens/react-native';
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: ColorBgNeutralBase,  // '#ffffff'
-    color: ColorFgNeutralPrimary,         // '#171717'
+    backgroundColor: tokens.colorBgNeutralBase,  // '#ffffff'
+    color: tokens.colorFgNeutralPrimary,         // '#171717'
   }
 });
 ```
+
+For light/dark theme support, use the `ThemeProvider` in your app (see `apps/react-native-demo/theme/`).
 
 **Key difference:**
 - **CSS**: Uses `var()` references to maintain token hierarchy
