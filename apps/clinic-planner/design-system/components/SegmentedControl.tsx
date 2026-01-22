@@ -240,7 +240,7 @@ export const SegmentedControl = React.forwardRef<
         role="radiogroup"
         aria-label={ariaLabel}
         style={{
-          padding: 'var(--dimension-space-around-3xs)',
+          padding: 'var(--dimension-space-around-nudge-4)',
         }}
         className={cn(
           "flex items-start bg-[var(--color-bg-transparent-subtle)] rounded-full",

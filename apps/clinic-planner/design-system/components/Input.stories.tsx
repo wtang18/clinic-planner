@@ -145,6 +145,8 @@ Production-ready text input with semantic token integration, icon support, and c
 
 ## Quick Reference
 
+See the **Visual Examples** story below for a quick preview of input variants.
+
 **Types**: 2 variants (outlined, filled)
 **Sizes**: 3 sizes (small, medium, large)
 **Tokens**: Uses semantic color tokens for theme support
@@ -430,6 +432,24 @@ All inputs meet minimum touch target size:
 
 export default meta;
 type Story = StoryObj<typeof Input>;
+
+// Visual Examples Story - appears first in docs
+export const VisualExamples: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#f5f5f5', borderRadius: '8px', maxWidth: '400px' }}>
+      <Input type="outlined" size="medium" placeholder="Outlined input" showLabel label="Email" />
+      <Input type="filled" size="medium" placeholder="Filled input" showLabel label="Username" />
+      <Input type="outlined" size="medium" placeholder="Error state" showLabel label="Password" error errorMessage="Password is required" />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Quick visual reference showing input types and states.',
+      },
+    },
+  },
+};
 
 export const Playground: Story = {
   args: {

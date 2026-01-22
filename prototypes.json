@@ -1,0 +1,44 @@
+{
+  "prototypes": [
+    {
+      "id": "clinic-planner",
+      "name": "Clinic Planner",
+      "description": "Quarterly event planning tool for clinic operations",
+      "status": "active",
+      "port": 4000,
+      "path": "apps/clinic-planner",
+      "figmaUrl": null,
+      "supabaseProject": "clinic-planner-prod"
+    },
+    {
+      "id": "react-native-demo",
+      "name": "React Native Demo",
+      "description": "Mobile prototype demonstrating design system on React Native",
+      "status": "active",
+      "port": 19001,
+      "path": "apps/react-native-demo",
+      "figmaUrl": null,
+      "supabaseProject": "clinic-planner-prod"
+    },
+    {
+      "id": "prototype-index",
+      "name": "Prototype Index",
+      "description": "Dashboard for navigating all Carbon Health prototypes",
+      "status": "active",
+      "port": 4001,
+      "path": "apps/prototype-index",
+      "figmaUrl": null,
+      "supabaseProject": null
+    },
+    {
+      "id": "ehr-prototype",
+      "name": "EHR Prototype",
+      "description": "Electronic Health Records prototype scaffold",
+      "status": "scaffold",
+      "port": 4002,
+      "path": "apps/ehr-prototype",
+      "figmaUrl": null,
+      "supabaseProject": null
+    }
+  ]
+}

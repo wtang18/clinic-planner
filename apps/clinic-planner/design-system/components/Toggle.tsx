@@ -197,7 +197,7 @@ export const Toggle = React.forwardRef<HTMLButtonElement, ToggleProps>(
         disabled={disabled}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        style={{ padding: 'var(--dimension-space-around-4xs)' }}
+        style={{ padding: 'var(--dimension-space-around-nudge-2)' }}
         className={cn(
           toggleTrackVariants({ size, checked, disabled }),
           !label && className

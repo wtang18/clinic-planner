@@ -24,7 +24,7 @@ Semantic border radius tokens for consistent rounded corners across the design s
 | \`--dimension-radius-sm\` | 8px | Subtle rounding for buttons, inputs |
 | \`--dimension-radius-md\` | 16px | Standard card rounding |
 | \`--dimension-radius-lg\` | 24px | Prominent rounding for large cards |
-| \`--dimension-radius-xl\` | 32px | Maximum rounding for hero sections |
+| \`--dimension-radius-full\` | 999px | Fully rounded (pills, toggles, badges) |
 
 ## Usage
 
@@ -116,9 +116,9 @@ export const AllRadii: Story = {
           description="Prominent rounding - featured cards, large containers"
         />
         <RadiusDemo
-          token="--dimension-radius-xl"
-          value="32px"
-          description="Maximum rounding - hero sections, image containers"
+          token="--dimension-radius-full"
+          value="999px"
+          description="Fully rounded - pills, toggles, badges, segmented controls"
         />
       </div>
     </div>
@@ -126,7 +126,7 @@ export const AllRadii: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Complete scale of border radius tokens from none (0px) to x-large (32px).',
+        story: 'Complete scale of border radius tokens from none (0px) to full (999px).',
       },
     },
   },

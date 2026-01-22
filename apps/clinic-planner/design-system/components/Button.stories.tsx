@@ -92,6 +92,8 @@ Production-ready button component with semantic token integration and comprehens
 
 ## Quick Reference
 
+See the **Visual Examples** story below for a quick preview of button variants.
+
 **Types**: 9 variants (primary, outlined, solid, transparent, generative, high-impact, no-fill, subtle, carby)
 **Sizes**: 5 sizes (x-small, small, medium, large, large-floating)
 **Tokens**: Uses semantic color tokens for theme support
@@ -284,6 +286,26 @@ All button types meet WCAG AA contrast requirements:
 
 export default meta;
 type Story = StoryObj<typeof Button>;
+
+// Visual Examples Story - appears first in docs
+export const VisualExamples: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', padding: '16px', background: '#f5f5f5', borderRadius: '8px' }}>
+      <Button type="primary" size="medium" label="Primary" />
+      <Button type="outlined" size="medium" label="Outlined" />
+      <Button type="solid" size="medium" label="Solid" />
+      <Button type="transparent" size="medium" label="Transparent" />
+      <Button type="generative" size="medium" label="Generative" />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Quick visual reference showing the main button variants.',
+      },
+    },
+  },
+};
 
 export const Playground: Story = {
   args: {

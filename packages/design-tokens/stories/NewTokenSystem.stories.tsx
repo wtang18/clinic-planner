@@ -11,25 +11,30 @@ const meta: Meta = {
         component: `
 # Design Token System
 
-A production-ready design token system with **834 tokens** organized in a three-layer hierarchy, built with Style Dictionary v4 and exported across 11 CSS files + 2 JS/TS exports.
+A production-ready design token system with **834 tokens** organized in a **streamlined two-layer hierarchy**, built with Style Dictionary v4 and exported across 11 CSS files + 2 JS/TS exports.
 
-## Three-Layer Architecture
+## Two-Layer Architecture
 
 \`\`\`
 Components
     ↓
-Semantic Tokens (--color-bg-*, --color-fg-*)
+Semantic Tokens (--color-bg-*, --dimension-space-around-*, etc.)
     ↓
-Decorative Tokens (--green-low, --gray-highest)
-    ↓
-Primitive Tokens (--color-green-200, #a8e3b3)
+Primitive Tokens (--color-green-600, --dimension-space-200, etc.)
 \`\`\`
 
-### Why Three Layers?
+### Why Two Layers?
 
-1. **Primitives** - Raw color values from design (110 color tokens)
-2. **Decoratives** - Named aliases that invert between light/dark themes
-3. **Semantics** - Context-based tokens for UI components (always use these!)
+1. **Primitives** - Raw values from design (color scales, spacing scales, typography values)
+2. **Semantics** - Context-based tokens that reference primitives directly (always use these!)
+
+**Benefits:**
+- Simpler mental model with fewer layers
+- Easier to trace token values back to source
+- More predictable updates when changing primitives
+- Decorative tokens still exist for special use cases but are not required
+
+**Note:** Previously used a 3-layer system (Primitives → Decoratives → Semantics), but we've streamlined to 2 layers for better maintainability.
 
 ## Token Categories
 
@@ -44,8 +49,9 @@ Primitive Tokens (--color-green-200, #a8e3b3)
 - **Font families**: \`--font-global-sans\` (Inter), \`--font-global-mono\` (monospace)
 
 ### Dimensions (40 tokens)
-- **Spacing**: \`--dimension-space-*\` (4px to 96px scale)
-- **Border Radius**: \`--dimension-radius-*\` (0px to 32px scale)
+- **Space Around (Padding)**: \`--dimension-space-around-*\` (none, nudge-2/4/6, tight, compact, default, spacious)
+- **Space Between (Gaps)**: \`--dimension-space-between-*\` (coupled, repeating, related, separated)
+- **Border Radius**: \`--dimension-radius-*\` (none, xs, sm, md, lg, full)
 - **Elevation**: \`--dimension-elevation-*\` (box-shadow presets)
 
 ## Generated Files
@@ -60,9 +66,9 @@ Primitive Tokens (--color-green-200, #a8e3b3)
 - \`decorative-dark.css\` - 74 dark theme aliases (inverted)
 
 ### Semantics (5 files, 506 tokens)
-- \`semantic-color-light.css\` - 114 light theme colors
-- \`semantic-color-dark.css\` - 114 dark theme colors
-- \`semantic-dimensions.css\` - 16 spacing/radius tokens
+- \`semantic-color-light.css\` - 114 light theme colors (references primitives directly)
+- \`semantic-color-dark.css\` - 114 dark theme colors (references primitives directly)
+- \`semantic-dimensions.css\` - 16 spacing/radius tokens (space-around, space-between, radius)
 - \`semantic-typography-small.css\` - 131 tokens (default + mobile)
 - \`semantic-typography-large.css\` - 131 tokens (desktop)
 
@@ -115,12 +121,12 @@ The token system is generated in 6 steps:
 \`\`\`tsx
 // ❌ Bad - bypasses semantic layer, breaks theming
 <div className="bg-[var(--color-gray-50)]">
-  <p className="text-[var(--color-gray-900)]">...</p>
+  <p className="text-[var(--color-gray-1000)]">...</p>
 </div>
 
-// ❌ Bad - decorative tokens can change meaning between themes
-<div className="bg-[var(--gray-lowest)]">
-  <p className="text-[var(--gray-highest)]">...</p>
+// ❌ Bad - hard-coded values defeat the purpose of tokens
+<div style={{ backgroundColor: '#f5f5f5', color: '#171717' }}>
+  <p>...</p>
 </div>
 \`\`\`
 

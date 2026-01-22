@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Toast, type ToastProps } from '@/design-system/components/Toast';
-import type { IconName } from '@/design-system/icons';
+import type { IconName } from '@carbon-health/design-icons';
 
 /**
  * Toast options for customizing toast behavior and content

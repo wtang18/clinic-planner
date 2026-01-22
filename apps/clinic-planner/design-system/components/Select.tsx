@@ -2,7 +2,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Icon, type IconSize } from "@/design-system/icons";
+import { Icon, type IconSize } from "@carbon-health/design-icons";
 
 // Select variant styles using cva (matches Input component)
 const selectContainerVariants = cva(

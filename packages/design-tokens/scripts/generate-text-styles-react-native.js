@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Read typography tokens
-const typographyTokens = require('../src/design-system/figma-export/typography-core-figma-export.json');
+const typographyTokens = require('../figma-export/typography-core-figma-export.json');
 
 /**
  * Map font weight names to React Native font family names
@@ -189,7 +189,7 @@ export function makeResponsive(
 `;
 
 // Write TypeScript file
-const outputPath = path.join(__dirname, '../src/design-system/tokens/build/react-native');
+const outputPath = path.join(__dirname, '../dist/react-native');
 if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }
@@ -228,7 +228,7 @@ export const fontConfig = {
     ios: {},
     android: {},
   },
-  assets: ['./src/design-system/assets/fonts'],
+  assets: ['./assets/fonts'],
 };
 `;
 

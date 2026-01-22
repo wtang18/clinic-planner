@@ -2,7 +2,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { Icon, type IconName, type IconSize } from "@/design-system/icons";
+import { Icon, type IconName, type IconSize } from "@carbon-health/design-icons";
 
 // Generate unique IDs for accessibility
 let inputIdCounter = 0;

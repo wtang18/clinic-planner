@@ -410,7 +410,7 @@ function EventDetailContent({ params }: EventDetailPageProps) {
         className="flex flex-col flex-1"
         style={{
           gap: 'var(--dimension-space-between-separated-sm)',
-          padding: 'var(--dimension-space-around-xl)'
+          padding: 'var(--dimension-space-around-spacious)'
         }}
       >
         {/* Navbar */}

@@ -645,4 +645,4 @@ import { tokens } from '@/design-system/tokens/build/react-native/tokens';
 4. Gradually migrate more complex components
 5. Set up Storybook for React Native (optional but recommended)
 
-For questions or issues, refer to the main [DOCUMENTATION_GUIDELINES.md](../src/design-system/DOCUMENTATION_GUIDELINES.md).
+For questions or issues, refer to the main [DOCUMENTATION_GUIDELINES.md](../../apps/clinic-planner/design-system/DOCUMENTATION_GUIDELINES.md).

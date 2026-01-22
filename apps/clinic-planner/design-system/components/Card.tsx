@@ -141,12 +141,12 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const dimensionStyles: React.CSSProperties = size === "small"
       ? {
           borderRadius: 'var(--dimension-radius-sm)',
-          padding: 'var(--dimension-space-around-sm)',
+          padding: 'var(--dimension-space-around-compact)',
           gap: 'var(--dimension-space-between-related-sm)',
         }
       : {
           borderRadius: 'var(--dimension-radius-md)',
-          padding: 'var(--dimension-space-around-md)',
+          padding: 'var(--dimension-space-around-default)',
           gap: 'var(--dimension-space-between-related-md)',
         };
 

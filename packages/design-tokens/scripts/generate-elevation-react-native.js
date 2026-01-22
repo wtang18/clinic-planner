@@ -206,7 +206,7 @@ export function customElevation(shadowHeight: number, shadowOpacity: number = 0.
 `;
 
 // Write TypeScript file
-const outputPath = path.join(__dirname, '../src/design-system/tokens/build/react-native');
+const outputPath = path.join(__dirname, '../dist/react-native');
 if (!fs.existsSync(outputPath)) {
   fs.mkdirSync(outputPath, { recursive: true });
 }

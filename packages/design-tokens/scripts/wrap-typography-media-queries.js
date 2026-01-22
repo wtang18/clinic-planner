@@ -9,7 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const buildDir = path.join(__dirname, '../src/design-system/tokens/build');
+const buildDir = path.join(__dirname, '../dist');
 
 // Files to wrap in media queries
 const files = [

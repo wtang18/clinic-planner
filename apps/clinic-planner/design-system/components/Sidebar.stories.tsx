@@ -98,12 +98,12 @@ interface MenuItem {
 \`\`\`tsx
 // Container
 background: var(--color-bg-transparent-inverse-low)
-borderRadius: var(--dimension-radius-lg)      // 24px
-padding: var(--dimension-space-around-md)      // 16px
+borderRadius: var(--dimension-radius-lg)           // 24px
+padding: var(--dimension-space-around-default)     // 16px
 gap: var(--dimension-space-between-separated-md)
 
 // Menu Items
-gap: var(--dimension-space-around-sm)          // 12px between items
+gap: var(--dimension-space-around-compact)         // 12px between items
 
 // Active State
 background: var(--color-bg-transparent-low)    // rgba(0,0,0,0.12)

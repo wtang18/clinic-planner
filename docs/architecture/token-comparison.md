@@ -15,7 +15,7 @@ After evaluating both approaches, we chose **Style Dictionary** because:
 
 While the custom script was simpler for web-only, Style Dictionary's multi-platform support is critical for our product portfolio.
 
-**See:** [docs/STYLE-DICTIONARY-MIGRATION.md](./STYLE-DICTIONARY-MIGRATION.md) for migration details.
+**See:** [Style Dictionary Migration](../archive/2024-10-style-dictionary-migration.md) for migration details.
 
 ---
 
@@ -262,7 +262,7 @@ We successfully migrated to **Style Dictionary** with:
 
 ## Questions?
 
-- **Migration details?** See [docs/STYLE-DICTIONARY-MIGRATION.md](./STYLE-DICTIONARY-MIGRATION.md)
-- **How to use tokens?** See [src/design-system/README.md](../src/design-system/README.md)
-- **Component migration?** See [docs/COMPONENT-MIGRATION-GUIDE.md](./COMPONENT-MIGRATION-GUIDE.md)
-- **Package extraction?** See [docs/PACKAGE-EXTRACTION-GUIDE.md](./PACKAGE-EXTRACTION-GUIDE.md)
+- **Migration details?** See [Style Dictionary Migration](../archive/2024-10-style-dictionary-migration.md)
+- **How to use tokens?** See [Token Architecture](./token-architecture.md)
+- **Component migration?** See [Component Migration Guide](../guides/component-migration.md)
+- **Package extraction?** See [Package Extraction Guide](../guides/package-extraction.md)

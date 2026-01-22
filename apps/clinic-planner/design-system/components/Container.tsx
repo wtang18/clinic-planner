@@ -154,7 +154,7 @@ export const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
     const baseStyles = "box-border flex flex-col items-start";
     const baseInlineStyles = {
       borderRadius: 'var(--dimension-radius-md)',
-      padding: 'var(--dimension-space-around-md)',
+      padding: 'var(--dimension-space-around-default)',
     };
 
     // Background color based on state

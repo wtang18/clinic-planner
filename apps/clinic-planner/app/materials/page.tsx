@@ -10,7 +10,7 @@ import { SearchInput } from '@/design-system/components/SearchInput';
 import { Pill } from '@/design-system/components/Pill';
 import { Sidebar } from '@/design-system/components/Sidebar';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
-import { Icon } from '@/design-system/icons';
+import { Icon } from '@carbon-health/design-icons';
 import { MarketingMaterialsService } from '@/lib/marketingMaterials';
 import { MarketingMaterial, EventIdea, supabase } from '@/lib/supabase';
 import { useToast } from '@/contexts/ToastContext';

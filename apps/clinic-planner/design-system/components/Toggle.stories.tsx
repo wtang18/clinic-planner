@@ -64,6 +64,8 @@ Production-ready toggle/switch component with semantic token integration and smo
 
 ## Quick Reference
 
+See the **Visual Examples** story below for a quick preview of toggle states and sizes.
+
 **Sizes**: 2 sizes (small, medium)
 **States**: On/Off with hover and disabled states
 **Tokens**: Uses semantic input and transparent tokens for theme support
@@ -258,6 +260,33 @@ All toggles meet minimum touch target size:
 
 export default meta;
 type Story = StoryObj<typeof Toggle>;
+
+// Visual Examples Story - appears first in docs
+export const VisualExamples: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', background: '#f5f5f5', borderRadius: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '14px', color: 'var(--color-fg-neutral-secondary)' }}>Off:</span>
+        <Toggle size="medium" checked={false} onChange={() => {}} aria-label="Off example" />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '14px', color: 'var(--color-fg-neutral-secondary)' }}>On:</span>
+        <Toggle size="medium" checked={true} onChange={() => {}} aria-label="On example" />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '14px', color: 'var(--color-fg-neutral-secondary)' }}>Small:</span>
+        <Toggle size="small" checked={true} onChange={() => {}} aria-label="Small example" />
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Quick visual reference showing toggle states and sizes.',
+      },
+    },
+  },
+};
 
 // Wrapper component for controlled state in Playground
 const ControlledToggle = (args: any) => {

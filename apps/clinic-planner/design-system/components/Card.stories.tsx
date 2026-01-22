@@ -51,6 +51,8 @@ Production-ready card container with semantic token integration and flexible lay
 
 ## Quick Reference
 
+See the **Visual Examples** story below for a quick preview of card variants.
+
 **Variants**: 2 types (interactive, non-interactive)
 **Sizes**: 2 sizes (small, medium)
 **Tokens**: Uses semantic elevation and neutral tokens for theme support
@@ -228,6 +230,29 @@ Interactive cards meet minimum touch target size requirements:
 
 export default meta;
 type Story = StoryObj<typeof Card>;
+
+// Visual Examples Story - appears first in docs
+export const VisualExamples: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', padding: '16px', background: '#f5f5f5', borderRadius: '8px' }}>
+      <Card variant="interactive" size="medium" style={{ width: '200px' }}>
+        <div style={{ fontWeight: 600, marginBottom: '8px' }}>Medium Card</div>
+        <div style={{ fontSize: '14px', color: 'var(--color-fg-neutral-secondary)' }}>Interactive with shadow elevation</div>
+      </Card>
+      <Card variant="non-interactive" size="small" style={{ width: '180px' }}>
+        <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>Small Card</div>
+        <div style={{ fontSize: '13px', color: 'var(--color-fg-neutral-secondary)' }}>Compact variant</div>
+      </Card>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Quick visual reference showing card variants and sizes.',
+      },
+    },
+  },
+};
 
 export const Playground: Story = {
   args: {

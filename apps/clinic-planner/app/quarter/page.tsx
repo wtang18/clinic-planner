@@ -10,7 +10,7 @@ import { Pill } from '@/design-system/components/Pill';
 import { SegmentedControl } from '@/design-system/components/SegmentedControl';
 import { Sidebar } from '@/design-system/components/Sidebar';
 import { SidebarProvider, useSidebar } from '@/contexts/SidebarContext';
-import { Icon } from '@/design-system/icons';
+import { Icon } from '@carbon-health/design-icons';
 import { supabase, EventIdea, OutreachAngle, MarketingMaterial } from '@/lib/supabase';
 import { eventDataProcessor } from '@/lib/eventHelpers';
 import { MonthNote } from '@/components/MonthNote';

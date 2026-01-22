@@ -1,25 +1,26 @@
 /**
- * Style Dictionary Configuration - Light Theme
+ * Style Dictionary Configuration - Light Theme (Pro Base)
  *
  * Generates light theme color tokens (decorative + semantic)
+ * for the Pro product family base.
  */
 
 module.exports = {
   source: [
-    'src/design-system/tokens/sd-input/primitives-color-ramp.json',
-    'src/design-system/tokens/sd-input/decorative-color-on-light.json',
-    'src/design-system/tokens/sd-input/semantic-color-on-light.json'
+    'sd-input/primitives/color-ramp.json',
+    'sd-input/decorative/color-on-light.json',
+    'sd-input/bases/pro/semantic-color-light.json'
   ],
 
   platforms: {
     css: {
       transformGroup: 'css',
-      buildPath: 'src/design-system/tokens/build/',
+      buildPath: 'dist/',
       files: [
         {
           destination: 'decorative-light.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('decorative-color-on-light'),
+          filter: (token) => token.filePath.includes('decorative/color-on-light'),
           options: {
             outputReferences: true,
             selector: ':root'
@@ -28,7 +29,7 @@ module.exports = {
         {
           destination: 'semantic-color-light.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic-color-on-light'),
+          filter: (token) => token.filePath.includes('bases/pro/semantic-color-light'),
           options: {
             outputReferences: true,
             selector: ':root'

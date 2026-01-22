@@ -438,8 +438,8 @@ object DesignTokens {
 ## 📞 Support
 
 For questions or issues during export/migration:
-1. Check [REACT-NATIVE-MIGRATION-GUIDE.md](./REACT-NATIVE-MIGRATION-GUIDE.md)
-2. Review [DOCUMENTATION_GUIDELINES.md](../src/design-system/DOCUMENTATION_GUIDELINES.md)
+1. Check [React Native Setup Guide](./react-native-setup.md)
+2. Review [DOCUMENTATION_GUIDELINES.md](../../apps/clinic-planner/design-system/DOCUMENTATION_GUIDELINES.md)
 3. Check component Storybook docs for usage examples
 4. Refer to Style Dictionary documentation for custom transforms
 

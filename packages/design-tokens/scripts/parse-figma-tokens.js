@@ -6,19 +6,37 @@
  * Converts design-tokens-variables-full.json (Figma export) into
  * Style Dictionary compatible JSON format.
  *
+ * Output Structure (2025):
+ * - primitives/     - Raw values (shared by all)
+ * - decorative/     - Named color abstractions
+ * - bases/pro/      - Pro product family semantics (from Figma)
+ *
+ * Manual folders (not touched by this script):
+ * - bases/consumer/ - Consumer product family
+ * - themes/         - Product-specific overrides
+ *
  * Usage: node scripts/parse-figma-tokens.js
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const FIGMA_JSON = path.join(__dirname, '../src/design-system/tokens/design-tokens-variables-full.json');
-const OUTPUT_DIR = path.join(__dirname, '../src/design-system/tokens/sd-input');
+const FIGMA_JSON = path.join(__dirname, '../tokens/design-tokens-variables-full.json');
+const OUTPUT_DIR = path.join(__dirname, '../sd-input');
 
-// Ensure output directory exists
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-}
+// Subdirectories for organized output
+const SUBDIRS = {
+  primitives: path.join(OUTPUT_DIR, 'primitives'),
+  decorative: path.join(OUTPUT_DIR, 'decorative'),
+  'bases/pro': path.join(OUTPUT_DIR, 'bases/pro'),
+};
+
+// Ensure output directories exist
+Object.values(SUBDIRS).forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 console.log('📖 Reading Figma tokens...');
 const figmaData = JSON.parse(fs.readFileSync(FIGMA_JSON, 'utf8'));
@@ -108,6 +126,30 @@ function getSDType(resolvedType) {
   }
 }
 
+// Helper: Determine output path based on file name
+function getOutputPath(fileName) {
+  if (fileName.startsWith('primitives-')) {
+    // primitives-color-ramp.json → primitives/color-ramp.json
+    const newName = fileName.replace('primitives-', '');
+    return path.join(SUBDIRS.primitives, newName);
+  } else if (fileName.startsWith('decorative-')) {
+    // decorative-color-on-light.json → decorative/color-on-light.json
+    const newName = fileName.replace('decorative-', '');
+    return path.join(SUBDIRS.decorative, newName);
+  } else if (fileName.startsWith('semantic-')) {
+    // semantic-color-on-light.json → bases/pro/semantic-color-light.json
+    // Normalize naming: remove "on-" and "-viewport" suffixes
+    let newName = fileName
+      .replace('-on-light', '-light')
+      .replace('-on-dark', '-dark')
+      .replace('-small-viewport', '-small')
+      .replace('-large-viewport', '-large');
+    return path.join(SUBDIRS['bases/pro'], newName);
+  }
+  // Fallback to root sd-input
+  return path.join(OUTPUT_DIR, fileName);
+}
+
 // Process each collection
 const outputFiles = {};
 
@@ -190,13 +232,18 @@ if (outputFiles['primitives-typography.json']) {
   }
 }
 
-// Write output files
+// Write output files to organized structure
 console.log('\n📝 Writing Style Dictionary input files...\n');
 Object.entries(outputFiles).forEach(([fileName, content]) => {
-  const filePath = path.join(OUTPUT_DIR, fileName);
+  const filePath = getOutputPath(fileName);
+  const displayPath = path.relative(OUTPUT_DIR, filePath);
   fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf8');
-  console.log(`   ✅ ${fileName}`);
+  console.log(`   ✅ ${displayPath}`);
 });
 
 console.log('\n✨ Figma tokens parsed successfully!\n');
-console.log('💡 Next step: npm run tokens:build\n');
+console.log('📁 Output structure:');
+console.log('   primitives/     - Raw color/typography/dimension values');
+console.log('   decorative/     - Named color abstractions (light/dark)');
+console.log('   bases/pro/      - Pro product semantics (light/dark)');
+console.log('\n💡 Next step: npm run tokens:build\n');

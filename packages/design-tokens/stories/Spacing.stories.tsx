@@ -35,14 +35,16 @@ Tokens for padding around elements:
 
 | Token | Value | Use Case |
 |-------|-------|----------|
-| \`--dimension-space-around-4xs\` | 2px | Micro padding (dense UI, icon buttons) |
-| \`--dimension-space-around-3xs\` | 4px | Extra-extra-small padding (compact badges) |
-| \`--dimension-space-around-2xs\` | 6px | Extra-small padding (small pills, tight containers) |
-| \`--dimension-space-around-xs\` | 8px | Minimal padding (pills, small buttons) |
-| \`--dimension-space-around-sm\` | 12px | Compact padding (medium buttons, inputs) |
-| \`--dimension-space-around-md\` | 16px | Standard padding (cards, default buttons) |
-| \`--dimension-space-around-lg\` | 20px | Generous padding (large cards, sections) |
-| \`--dimension-space-around-xl\` | 24px | Maximum padding (hero sections, page headers) |
+| \`--dimension-space-around-none\` | 0px | No padding |
+| \`--dimension-space-around-nudge-2\` | 2px | Micro padding (toggle track, dense UI) |
+| \`--dimension-space-around-nudge-4\` | 4px | Extra-small padding (segmented control container) |
+| \`--dimension-space-around-nudge-6\` | 6px | Small nudge padding (compact badges) |
+| \`--dimension-space-around-tight\` | 8px | Tight padding (pills, small buttons) |
+| \`--dimension-space-around-tight-plus\` | 10px | Slightly more than tight |
+| \`--dimension-space-around-compact\` | 12px | Compact padding (small cards, medium buttons) |
+| \`--dimension-space-around-default\` | 16px | Standard padding (cards, containers) |
+| \`--dimension-space-around-default-plus\` | 20px | Slightly more than default |
+| \`--dimension-space-around-spacious\` | 24px | Spacious padding (hero sections, page layouts) |
 
 **Note**: Space Around tokens can be applied to individual sides (paddingTop, paddingRight, paddingBottom, paddingLeft) for asymmetric layouts.
 
@@ -56,24 +58,24 @@ Tokens for padding around elements:
 </div>
 
 // Padding around content
-<div style={{ padding: 'var(--dimension-space-around-md)' }}>
+<div style={{ padding: 'var(--dimension-space-around-default)' }}>
   Card content with standard padding
 </div>
 
 // Directional padding (asymmetric)
 <div style={{
-  paddingTop: 'var(--dimension-space-around-lg)',
-  paddingBottom: 'var(--dimension-space-around-lg)',
-  paddingLeft: 'var(--dimension-space-around-md)',
-  paddingRight: 'var(--dimension-space-around-md)'
+  paddingTop: 'var(--dimension-space-around-default-plus)',
+  paddingBottom: 'var(--dimension-space-around-default-plus)',
+  paddingLeft: 'var(--dimension-space-around-default)',
+  paddingRight: 'var(--dimension-space-around-default)'
 }}>
   Card with more vertical breathing room
 </div>
 
 // Combining with Tailwind
 <div className="flex" style={{ gap: 'var(--dimension-space-between-repeating-md)' }}>
-  <div style={{ padding: 'var(--dimension-space-around-sm)' }}>Item 1</div>
-  <div style={{ padding: 'var(--dimension-space-around-sm)' }}>Item 2</div>
+  <div style={{ padding: 'var(--dimension-space-around-compact)' }}>Item 1</div>
+  <div style={{ padding: 'var(--dimension-space-around-compact)' }}>Item 2</div>
 </div>
 \`\`\`
 

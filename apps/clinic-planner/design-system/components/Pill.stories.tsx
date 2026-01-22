@@ -121,6 +121,9 @@ const meta: Meta<typeof Pill> = {
 Production-ready pill/badge component with semantic token integration and comprehensive variant support.
 
 ## Quick Reference
+
+See the **Visual Examples** story below for a quick preview of pill variants.
+
 **Types**: 12 variants (transparent, outlined, subtle-outlined, positive, attention, alert, alert-emphasis, info, info-emphasis, accent, accent-emphasis, no-fill, carby)
 **Sizes**: 3 sizes (x-small, small, medium)
 **Tokens**: Uses semantic color tokens for theme support
@@ -280,6 +283,27 @@ Pills can be interactive (clickable) with hover/disabled states:
 
 export default meta;
 type Story = StoryObj<typeof Pill>;
+
+// Visual Examples Story - appears first in docs
+export const VisualExamples: Story = {
+  render: () => (
+    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '16px', background: '#f5f5f5', borderRadius: '8px', alignItems: 'center' }}>
+      <Pill type="positive" size="medium" label="Positive" />
+      <Pill type="attention" size="medium" label="Attention" />
+      <Pill type="alert" size="medium" label="Alert" />
+      <Pill type="info" size="medium" label="Info" />
+      <Pill type="accent" size="medium" label="Accent" />
+      <Pill type="outlined" size="small" label="Outlined" />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Quick visual reference showing the main pill variants.',
+      },
+    },
+  },
+};
 
 export const Playground: Story = {
   args: {

@@ -1,5 +1,5 @@
 import type { Preview } from "@storybook/react";
-import '../src/app/globals.css'; // Import your Tailwind CSS
+import '../app/globals.css'; // Import your Tailwind CSS
 
 // Load Inter font for Storybook
 if (typeof document !== 'undefined') {
@@ -23,6 +23,23 @@ const preview: Preview = {
         order: [],
         locales: 'en-US',
       },
+    },
+    backgrounds: {
+      default: 'light-gray',
+      values: [
+        {
+          name: 'light-gray',
+          value: '#f5f5f5',
+        },
+        {
+          name: 'white',
+          value: '#ffffff',
+        },
+        {
+          name: 'dark-gray',
+          value: '#424242',
+        },
+      ],
     },
   },
 };

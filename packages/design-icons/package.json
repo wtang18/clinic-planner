@@ -1,0 +1,40 @@
+{
+  "name": "@carbon-health/design-icons",
+  "version": "1.0.0",
+  "description": "Carbon Health Design Icons - Lucide-based icon system",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./Icon": "./Icon.tsx",
+    "./BicolorIcon": "./BicolorIcon.tsx",
+    "./icon-map": "./icon-map.ts",
+    "./bicolor-icon-map": "./bicolor-icon-map.ts",
+    "./icon-names": "./icon-names.ts",
+    "./utils": "./utils.ts",
+    "./icon-map.rn": "./icon-map.rn.ts",
+    "./bicolor-icon-map.rn": "./bicolor-icon-map.rn.ts"
+  },
+  "scripts": {
+    "generate:icon-map": "node scripts/generate-icon-map.js",
+    "generate:bicolor-icon-map": "node scripts/generate-bicolor-icon-map.js",
+    "generate:icon-types": "node scripts/generate-icon-types.js",
+    "generate:rn-icon-map": "node scripts/generate-rn-icon-map.js",
+    "generate:rn-bicolor-icon-map": "node scripts/generate-rn-bicolor-icon-map.js",
+    "generate:all": "npm run generate:icon-map && npm run generate:bicolor-icon-map && npm run generate:icon-types && npm run generate:rn-icon-map && npm run generate:rn-bicolor-icon-map",
+    "fix-svg-colors": "node scripts/fix-svg-colors.js"
+  },
+  "keywords": [
+    "icons",
+    "carbon-health",
+    "lucide",
+    "react"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "peerDependencies": {
+    "lucide-react": ">=0.300.0",
+    "react": ">=18.0.0"
+  }
+}

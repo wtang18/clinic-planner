@@ -2,7 +2,7 @@
 import React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
-import { Icon, type IconSize, type IconName } from '@/design-system/icons';
+import { Icon, type IconSize, type IconName } from '@carbon-health/design-icons';
 
 // Button variant styles using cva
 const buttonVariants = cva(

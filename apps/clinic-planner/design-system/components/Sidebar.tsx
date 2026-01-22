@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Icon } from '@/design-system/icons';
+import { Icon } from '@carbon-health/design-icons';
 
 export interface MenuItem {
   id: string;
@@ -65,12 +65,12 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
         )}
         style={{
           borderRadius: 'var(--dimension-radius-lg)',
-          padding: 'var(--dimension-space-around-md)',
+          padding: 'var(--dimension-space-around-default)',
           gap: 'var(--dimension-space-between-separated-md)',
         }}
       >
         {/* Menu Section */}
-        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-around-sm)' }}>
+        <div className="flex flex-col" style={{ gap: 'var(--dimension-space-around-compact)' }}>
           {menuItems.map((item) => {
             const isActive = item.active;
             const isHovered = hoveredId === item.id && !isActive;
@@ -90,7 +90,7 @@ export const Sidebar = React.forwardRef<HTMLDivElement, SidebarProps>(
                   isActive && 'bg-[var(--color-bg-transparent-low)]',
                   isHovered && 'bg-[var(--color-bg-transparent-subtle)]'
                 )}
-                style={{ gap: 'var(--dimension-space-around-sm)' }}
+                style={{ gap: 'var(--dimension-space-around-compact)' }}
               >
                 {/* Icon */}
                 <div className="flex items-center justify-center shrink-0">

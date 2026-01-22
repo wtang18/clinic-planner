@@ -1,8 +1,8 @@
 'use client';
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { BicolorIcon, type BicolorIconName } from '@/design-system/icons';
-import { Icon, type IconName } from '@/design-system/icons';
+import { BicolorIcon, type BicolorIconName } from '@carbon-health/design-icons';
+import { Icon, type IconName } from '@carbon-health/design-icons';
 import { Button } from './Button';
 
 export type ToastType = 'positive' | 'alert' | 'attention' | 'info' | 'icon' | 'no-icon';
@@ -158,8 +158,8 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         ref={ref}
         style={{
           gap: 'var(--dimension-space-between-related-md)',
-          paddingInline: 'var(--dimension-space-around-md)',
-          paddingBlock: 'var(--dimension-space-around-sm)',
+          paddingInline: 'var(--dimension-space-around-default)',
+          paddingBlock: 'var(--dimension-space-around-compact)',
           borderRadius: 'var(--dimension-radius-md)',
         }}
         className={cn(
@@ -205,7 +205,7 @@ export const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
         {/* Right section: CTA + Close */}
         <div
           className="flex items-center justify-end shrink-0"
-          style={{ gap: 'var(--dimension-space-around-sm)' }}
+          style={{ gap: 'var(--dimension-space-around-compact)' }}
         >
           {/* CTA button using Button component with transparent type */}
           {showCta && (

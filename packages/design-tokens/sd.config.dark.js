@@ -1,25 +1,26 @@
 /**
- * Style Dictionary Configuration - Dark Theme
+ * Style Dictionary Configuration - Dark Theme (Pro Base)
  *
  * Generates dark theme color tokens (decorative + semantic)
+ * for the Pro product family base.
  */
 
 module.exports = {
   source: [
-    'src/design-system/tokens/sd-input/primitives-color-ramp.json',
-    'src/design-system/tokens/sd-input/decorative-color-on-dark.json',
-    'src/design-system/tokens/sd-input/semantic-color-on-dark.json'
+    'sd-input/primitives/color-ramp.json',
+    'sd-input/decorative/color-on-dark.json',
+    'sd-input/bases/pro/semantic-color-dark.json'
   ],
 
   platforms: {
     css: {
       transformGroup: 'css',
-      buildPath: 'src/design-system/tokens/build/',
+      buildPath: 'dist/',
       files: [
         {
           destination: 'decorative-dark.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('decorative-color-on-dark'),
+          filter: (token) => token.filePath.includes('decorative/color-on-dark'),
           options: {
             outputReferences: true,
             selector: '[data-theme="dark"]'
@@ -28,7 +29,7 @@ module.exports = {
         {
           destination: 'semantic-color-dark.css',
           format: 'css/variables',
-          filter: (token) => token.filePath.includes('semantic-color-on-dark'),
+          filter: (token) => token.filePath.includes('bases/pro/semantic-color-dark'),
           options: {
             outputReferences: true,
             selector: '[data-theme="dark"]'

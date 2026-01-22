@@ -3,8 +3,8 @@
 /**
  * Generate Core Text Style Utilities from Figma Export
  *
- * Reads: src/design-system/figma-export/typography-core-figma-export.json
- * Outputs: src/design-system/tokens/build/text-styles-core.css
+ * Reads: figma-export/typography-core-figma-export.json
+ * Outputs: dist/text-styles-core.css
  *
  * Strategy:
  * - Core styles use NON-expressive tokens (e.g., text-font-family-display, not display-expressive)
@@ -16,8 +16,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Paths
-const INPUT_FILE = path.join(__dirname, '../src/design-system/figma-export/typography-core-figma-export.json');
-const OUTPUT_FILE = path.join(__dirname, '../src/design-system/tokens/build/text-styles-core.css');
+const INPUT_FILE = path.join(__dirname, '../figma-export/typography-core-figma-export.json');
+const OUTPUT_FILE = path.join(__dirname, '../dist/text-styles-core.css');
 
 // Read Figma export
 const figmaData = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf8'));

@@ -20,6 +20,8 @@ Production-ready toast notification system with semantic token integration, auto
 
 ## Quick Reference
 
+See the **Visual Examples** story below for a quick preview of toast variants.
+
 **Types**: 6 variants (positive, alert, attention, info, icon, no-icon)
 **Auto-dismiss**: Configurable 5-second auto-close with manual override
 **Tokens**: Uses semantic color tokens for theme support
@@ -314,6 +316,24 @@ All toast variants meet WCAG AA contrast requirements:
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+// Visual Examples Story - appears first in docs
+export const VisualExamples: Story = {
+  render: () => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', background: '#f5f5f5', borderRadius: '8px', maxWidth: '480px' }}>
+      <Toast type="positive" title="Success" showSubtext subtext="Your changes have been saved" showClose onClose={() => {}} />
+      <Toast type="alert" title="Error" showSubtext subtext="Something went wrong" showClose onClose={() => {}} />
+      <Toast type="info" title="Information" showSubtext subtext="You have 3 new messages" showCta ctaLabel="View" onCtaClick={() => {}} showClose onClose={() => {}} />
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Quick visual reference showing toast variants with different content.',
+      },
+    },
+  },
+};
 
 /**
  * Default positive toast with all features enabled.

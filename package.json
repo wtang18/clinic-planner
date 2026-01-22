@@ -1,73 +1,36 @@
 {
-  "name": "clinic-planner",
+  "name": "carbon-prototypes",
   "version": "1.0.0",
-  "main": "index.js",
+  "private": true,
+  "description": "Carbon Health Design Prototypes Monorepo",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "type-check": "tsc --noEmit",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "generate-icon-map": "node src/design-system/icons/generate-icon-map.js",
-    "generate-bicolor-icon-map": "node src/design-system/icons/generate-bicolor-icon-map.js",
-    "tokens:parse": "node scripts/parse-figma-tokens.js",
-    "tokens:build": "npm run tokens:parse && style-dictionary build --config sd.config.js && style-dictionary build --config sd.config.light.js && style-dictionary build --config sd.config.dark.js && style-dictionary build --config sd.config.typography-large.js && node scripts/wrap-typography-media-queries.js",
-    "tokens:build:react-native": "npm run tokens:parse && style-dictionary build --config sd.config.react-native.js && node scripts/generate-elevation-react-native.js && node scripts/generate-text-styles-react-native.js",
-    "tokens:build:all": "npm run tokens:build && npm run tokens:build:react-native",
-    "tokens:clean": "rm -rf src/design-system/tokens/build src/design-system/tokens/sd-input",
-    "text-styles:generate": "node scripts/generate-text-styles-core.js && node scripts/generate-text-styles-expressive.js",
-    "text-styles:generate:all": "npm run text-styles:generate",
-    "elevation:generate": "node scripts/generate-elevation-utilities.js"
+    "dev": "npm run dev --workspace=clinic-planner",
+    "dev:clinic-planner": "npm run dev --workspace=clinic-planner",
+    "dev:index": "npm run dev --workspace=prototype-index",
+    "dev:ehr": "npm run dev --workspace=ehr-prototype",
+    "dev:rn": "npm run start --workspace=react-native-demo",
+    "build": "npm run build --workspace=clinic-planner",
+    "build:tokens": "npm run build --workspace=@carbon-health/design-tokens",
+    "build:icons": "npm run generate:all --workspace=@carbon-health/design-icons",
+    "storybook": "npm run storybook --workspace=clinic-planner",
+    "storybook:tokens": "npm run storybook --workspace=@carbon-health/design-tokens",
+    "lint": "npm run lint --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/*/.next packages/*/dist"
   },
-  "keywords": [],
+  "keywords": [
+    "carbon-health",
+    "design-system",
+    "prototypes",
+    "monorepo"
+  ],
   "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "@headlessui/react": "^2.2.8",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@supabase/supabase-js": "^2.57.4",
-    "@types/node": "^24.5.2",
-    "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.544.0",
-    "next": "^15.5.3",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^3.4.17",
-    "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.9.2"
-  },
+  "license": "UNLICENSED",
   "devDependencies": {
-    "@chromatic-com/storybook": "^4.1.1",
-    "@storybook/addon-a11y": "^9.1.9",
-    "@storybook/addon-docs": "^9.1.9",
-    "@storybook/addon-onboarding": "^9.1.9",
-    "@storybook/addon-vitest": "^9.1.9",
-    "@storybook/nextjs-vite": "^9.1.9",
-    "@vitest/browser": "^3.2.4",
-    "@vitest/coverage-v8": "^3.2.4",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.35.0",
-    "eslint-config-next": "^15.5.3",
-    "eslint-plugin-storybook": "^9.1.9",
-    "ignore-loader": "^0.1.2",
-    "playwright": "^1.55.1",
-    "postcss": "^8.5.6",
-    "raw-loader": "^4.0.2",
-    "storybook": "^9.1.9",
-    "style-dictionary": "^4.4.0",
-    "vitest": "^3.2.4"
-  },
-  "eslintConfig": {
-    "extends": [
-      "plugin:storybook/recommended"
-    ]
+    "typescript": "^5.9.2"
   }
 }

@@ -6,7 +6,7 @@
  * Reads semantic elevation tokens and generates CSS utility classes
  * that bundle multiple box-shadow layers into single classes.
  *
- * Output: src/design-system/tokens/build/elevation-utilities.css
+ * Output: dist/elevation-utilities.css
  *
  * Strategy:
  * - Each elevation level (xs, sm, md, lg, xl, 2xl, inner) becomes a utility class
@@ -18,8 +18,8 @@ const fs = require('fs');
 const path = require('path');
 
 // Paths
-const INPUT_FILE = path.join(__dirname, '../src/design-system/tokens/sd-input/semantic-elevation.json');
-const OUTPUT_FILE = path.join(__dirname, '../src/design-system/tokens/build/elevation-utilities.css');
+const INPUT_FILE = path.join(__dirname, '../sd-input/semantic-elevation.json');
+const OUTPUT_FILE = path.join(__dirname, '../dist/elevation-utilities.css');
 
 // Read semantic elevation tokens
 const elevationData = JSON.parse(fs.readFileSync(INPUT_FILE, 'utf8'));

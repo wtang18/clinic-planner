@@ -80,14 +80,27 @@ Colors are organized by intent with background (bg) and foreground (fg) variants
 
 ## Relationship to Primitives
 
-Semantic tokens reference primitive colors from the **Primitives/Colors** story:
+Semantic tokens **reference primitive colors directly** (not decorative tokens). This provides a clearer, more maintainable token hierarchy:
 
+**Token Architecture:**
+\`\`\`
+Semantic Tokens → Primitive Tokens
+\`\`\`
+
+**Examples:**
 | Semantic Token | References Primitive |
 |----------------|---------------------|
-| \\\`--color-bg-alert-subtle\\\` | \\\`saturated-red-50\\\` |
-| \\\`--color-bg-positive-high\\\` | \\\`green-600\\\` |
-| \\\`--color-bg-information-subtle\\\` | \\\`blue-50\\\` |
-| \\\`--color-fg-neutral-primary\\\` | \\\`gray-900\\\` |
+| \\\`--color-bg-neutral-base\\\` | \\\`--color-white-solid\\\` |
+| \\\`--color-bg-alert-subtle\\\` | \\\`--color-saturated-red-50\\\` |
+| \\\`--color-bg-positive-high\\\` | \\\`--color-green-600\\\` |
+| \\\`--color-bg-information-subtle\\\` | \\\`--color-blue-50\\\` |
+| \\\`--color-fg-neutral-primary\\\` | \\\`--color-gray-1000\\\` |
+
+**Benefits of this approach:**
+- Fewer layers = simpler mental model
+- Easier to trace token values
+- More predictable updates when changing primitives
+- Decorative tokens still exist for special use cases but are not required for semantic tokens
 
 See **Primitives/Colors** for the complete list of base color values.
         `,

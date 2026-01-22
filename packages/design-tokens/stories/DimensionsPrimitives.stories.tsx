@@ -15,7 +15,7 @@ Raw dimension values that serve as the foundation for all spacing and sizing in 
 
 Primitive tokens are the lowest-level design tokens in our system. They represent raw, reusable values that are referenced by semantic tokens. Think of them as the "atoms" of our design system.
 
-**Important**: In most cases, you should use semantic tokens (like \`--dimension-space-around-md\` or \`--dimension-space-between-related-md\`) instead of primitives. Only use primitive tokens when:
+**Important**: In most cases, you should use semantic tokens (like \`--dimension-space-around-default\` or \`--dimension-space-between-related-md\`) instead of primitives. Only use primitive tokens when:
 - Creating new semantic tokens
 - Handling edge cases not covered by semantic tokens
 - Building foundation-level components
@@ -67,7 +67,7 @@ Negative dimensions are used for overlapping elements and negative margins.
 </div>
 
 // ✅ Use semantic tokens instead
-<div style={{ padding: 'var(--dimension-space-around-medium)' }}>
+<div style={{ padding: 'var(--dimension-space-around-default)' }}>
   Content
 </div>
 
@@ -454,7 +454,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-4xs
+                  --dimension-space-around-nudge-2
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -467,7 +467,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-3xs
+                  --dimension-space-around-nudge-4
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -480,7 +480,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-2xs
+                  --dimension-space-around-nudge-6
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -493,7 +493,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-xs
+                  --dimension-space-around-tight
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -506,7 +506,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-sm
+                  --dimension-space-around-compact
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -519,7 +519,7 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-md
+                  --dimension-space-around-default
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
@@ -532,13 +532,26 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-space-around-lg
+                  --dimension-space-around-default-plus
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
                 </span>
                 <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
                   --dimension-space-250 (20px)
+                </span>
+              </div>
+            </div>
+            <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
+                  --dimension-space-around-spacious
+                </span>
+                <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
+                  uses
+                </span>
+                <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
+                  --dimension-space-300 (24px)
                 </span>
               </div>
             </div>
@@ -618,13 +631,13 @@ export const SemanticTokenMapping: Story = {
             <div className="p-4 bg-[var(--color-bg-neutral-subtle)] rounded border border-[var(--color-bg-neutral-low)]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-mono text-[var(--color-fg-neutral-primary)]">
-                  --dimension-radius-xl
+                  --dimension-radius-full
                 </span>
                 <span className="text-xs text-[var(--color-fg-neutral-secondary)]">
                   uses
                 </span>
                 <span className="text-sm font-mono text-[var(--color-fg-information-primary)]">
-                  --dimension-space-400 (32px)
+                  999px (fully rounded)
                 </span>
               </div>
             </div>
