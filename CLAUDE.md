@@ -58,7 +58,27 @@ npm run storybook:tokens       # Run tokens Storybook
 # From specific app
 cd apps/clinic-planner && npm run dev
 cd apps/react-native-demo && npm run start
+cd apps/ehr-prototype && npm run web
 ```
+
+## Testing (EHR Prototype)
+
+The EHR prototype has a Vitest test infrastructure with browser API mocks.
+
+```bash
+cd apps/ehr-prototype
+
+npm test              # Watch mode
+npm run test:run      # Single run
+npm run test:coverage # With coverage report
+npm run test:ui       # Interactive UI
+npm run test:e2e      # Playwright E2E tests
+```
+
+**After making changes to EHR prototype:**
+- Run `npm run test:run` to verify nothing is broken
+- When adding new hooks or complex logic, add corresponding tests
+- See `/apps/ehr-prototype/docs/TEST_ROADMAP.md` for priorities and guidelines
 
 ## Documentation Map
 
@@ -70,6 +90,7 @@ cd apps/react-native-demo && npm run start
 | Check design system status | `/apps/clinic-planner/design-system/STATUS.md` |
 | Set up React Native | `/docs/guides/react-native-setup.md` |
 | Migrate components | `/docs/guides/component-migration.md` |
+| EHR prototype testing | `/apps/ehr-prototype/docs/TEST_ROADMAP.md` |
 
 ### Predictable Paths
 
@@ -97,3 +118,4 @@ Documentation follows these patterns:
 - DO NOT modify Supabase configuration or data without explicit permission
 - When working on design system, keep STATUS.md updated
 - Each prototype should have its entry in `prototypes.json`
+- When working on EHR prototype, run tests after changes: `cd apps/ehr-prototype && npm run test:run`
