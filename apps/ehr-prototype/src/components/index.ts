@@ -126,5 +126,24 @@ export { VitalsSection } from './overview/VitalsSection';
 // Left Pane System
 // ============================================================================
 
-export { LeftPaneContainer, PaneHeader, PaneContent } from './LeftPane';
-export type { LeftPaneContainerProps, PaneHeaderProps, PaneContentProps } from './LeftPane';
+export {
+  LeftPaneContainer,
+  PaneHeader,
+  PaneContent,
+  AIDrawerView,
+  AIContextHeader,
+  SuggestionsSection,
+  ConversationHistory,
+} from './LeftPane';
+export type {
+  LeftPaneContainerProps,
+  PaneHeaderProps,
+  PaneContentProps,
+  AIDrawerViewProps,
+  AIContextHeaderProps,
+  ContextScope,
+  SuggestionsSectionProps,
+  ConversationHistoryProps,
+  ConversationMessage,
+  MessageType,
+} from './LeftPane';

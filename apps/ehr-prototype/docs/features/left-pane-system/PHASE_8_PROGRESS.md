@@ -1,7 +1,7 @@
 # Phase 8: Left Pane System — Progress Tracker
 
 **Last Updated:** 2026-02-06
-**Status:** In Progress (3/10 chunks complete)
+**Status:** In Progress (4/10 chunks complete)
 
 ---
 
@@ -12,7 +12,7 @@
 | **8.0** | Documentation updates | ✅ Complete | ☑ | Cross-references added to AI_CONTROL_SURFACE_V2, BOTTOM_BAR_SYSTEM, TRANSCRIPTION_MODULE, README |
 | **8.1** | Left pane state & types | ✅ Complete | ☑ | types.ts, reducer.ts, selectors.ts, useLeftPane.tsx |
 | **8.2** | Left pane container | ✅ Complete | ☑ | LeftPaneContainer, PaneHeader, PaneContent with placeholders |
-| **8.3** | AI drawer view | 🔲 Not Started | ☐ | Context header, suggestions, conversation history |
+| **8.3** | AI drawer view | ✅ Complete | ☑ | AIContextHeader, SuggestionsSection, ConversationHistory, AIDrawerView |
 | **8.4** | AI drawer footer | 🔲 Not Started | ☐ | Quick actions, input row, filtering logic |
 | **8.5** | Transcription drawer view | 🔲 Not Started | ☐ | Transcript, view indicator pill, controls |
 | **8.6** | Settings modal & activity log | 🔲 Not Started | ☐ | Full-screen modals for both |
@@ -33,7 +33,7 @@
 - [x] 🎙 icon conditional on transcription session for current patient
 - [x] Active view icon shows indicator
 - [x] Pane collapse/expand; always re-expands to Menu
-- [ ] AI drawer: suggestions, conversation, quick actions render
+- [x] AI drawer: suggestions, conversation render (quick actions in 8.4)
 - [ ] Quick actions filtered by active suggestions
 - [ ] Conversation: user right, AI left, system centered
 - [ ] Follow-up actions only on latest AI response
@@ -93,6 +93,11 @@ Track files touched during implementation:
 | `src/components/LeftPane/PaneHeader.tsx` | 8.2 | View icons + collapse button |
 | `src/components/LeftPane/PaneContent.tsx` | 8.2 | Content switcher with MenuPane pass-through |
 | `src/components/LeftPane/index.ts` | 8.2 | Barrel exports |
+| `src/components/LeftPane/AIDrawer/AIContextHeader.tsx` | 8.3 | Floating context header with blur backdrop |
+| `src/components/LeftPane/AIDrawer/SuggestionsSection.tsx` | 8.3 | Collapsible suggestions section, reuses SuggestionList |
+| `src/components/LeftPane/AIDrawer/ConversationHistory.tsx` | 8.3 | User/AI/system message thread with auto-scroll |
+| `src/components/LeftPane/AIDrawer/AIDrawerView.tsx` | 8.3 | Main AI drawer container with empty states |
+| `src/components/LeftPane/AIDrawer/index.ts` | 8.3 | Barrel exports for AIDrawer |
 
 ### Modified Files
 
@@ -103,7 +108,10 @@ Track files touched during implementation:
 | `docs/features/bottom-bar-system/TRANSCRIPTION_MODULE.md` | 8.0 | Added session scope update notice |
 | `docs/README.md` | 8.0 | Added Bottom Bar and Left Pane system sections |
 | `src/hooks/index.ts` | 8.1 | Added left pane hook exports |
-| `src/components/index.ts` | 8.2 | Added LeftPane component exports |
+| `src/components/index.ts` | 8.2, 8.3 | Added LeftPane and AIDrawer component exports |
+| `src/components/LeftPane/PaneContent.tsx` | 8.3 | Added AIDrawerView integration, removed placeholder |
+| `src/components/LeftPane/LeftPaneContainer.tsx` | 8.3 | Added aiDrawerProps and aiDrawerFooter pass-through |
+| `src/components/LeftPane/index.ts` | 8.3 | Added AIDrawer exports |
 
 ---
 
@@ -114,9 +122,9 @@ Track which existing components were reused vs. new creation:
 | Need | Existing Component | Reused? | Notes |
 |---|---|---|---|
 | View toggle icons | IconButton | ☑ | Used for collapse button; custom ViewIcon for view toggles |
-| Suggestion display | SuggestionCard? | ☐ | Chunk 8.3 |
-| AI response renderer | ResponseDisplay? | ☐ | Chunk 8.3 |
-| Context banner | ContextBanner? | ☐ | Chunk 8.3 |
+| Suggestion display | SuggestionList | ☑ | Reused in SuggestionsSection, variant="default" |
+| AI response renderer | — | ☑ | Created new ConversationHistory with AIMessage/UserMessage |
+| Context header | — | ☑ | Created new AIContextHeader (different from palette ContextBanner) |
 | Quick action chips | QuickAction? | ☐ | Chunk 8.4 |
 | AI text input | AIInput? | ☐ | Chunk 8.4 |
 | Transcript segments | TranscriptSegment? | ☐ | Chunk 8.5 |

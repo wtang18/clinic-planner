@@ -2,14 +2,16 @@
  * PaneContent Component
  *
  * Content switcher that renders the appropriate view based on activeView.
- * Menu view renders the existing MenuPane, AI and Transcript views are placeholders
- * for chunks 8.3 and 8.5.
+ * Menu view renders the existing MenuPane, AI drawer renders the full AI view,
+ * Transcript view is a placeholder for chunk 8.5.
  */
 
 import React from 'react';
-import { Sparkles, Mic } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { MenuPane } from '../layout/MenuPane';
 import type { MenuPaneProps } from '../layout/MenuPane';
+import { AIDrawerView } from './AIDrawer';
+import type { AIDrawerViewProps } from './AIDrawer';
 import { colors, spaceAround, typography } from '../../styles/foundations';
 import type { PaneView } from '../../state/leftPane';
 
@@ -22,6 +24,10 @@ export interface PaneContentProps {
   activeView: PaneView;
   /** Props to pass through to MenuPane */
   menuPaneProps?: Omit<MenuPaneProps, 'style'>;
+  /** Props to pass through to AIDrawerView */
+  aiDrawerProps?: Omit<AIDrawerViewProps, 'style' | 'children'>;
+  /** Footer component for AI drawer (quick actions + input from 8.4) */
+  aiDrawerFooter?: React.ReactNode;
 }
 
 // ============================================================================
@@ -87,14 +93,6 @@ const PlaceholderView: React.FC<PlaceholderViewProps> = ({
   );
 };
 
-const AIDrawerPlaceholder: React.FC = () => (
-  <PlaceholderView
-    icon={<Sparkles size={24} />}
-    title="AI Drawer"
-    description="Coming in Chunk 8.3"
-  />
-);
-
 const TranscriptDrawerPlaceholder: React.FC = () => (
   <PlaceholderView
     icon={<Mic size={24} />}
@@ -110,6 +108,8 @@ const TranscriptDrawerPlaceholder: React.FC = () => (
 export const PaneContent: React.FC<PaneContentProps> = ({
   activeView,
   menuPaneProps,
+  aiDrawerProps,
+  aiDrawerFooter,
 }) => {
   const containerStyle: React.CSSProperties = {
     flex: 1,
@@ -123,7 +123,11 @@ export const PaneContent: React.FC<PaneContentProps> = ({
       case 'menu':
         return <MenuPane {...menuPaneProps} style={{ flex: 1 }} />;
       case 'ai':
-        return <AIDrawerPlaceholder />;
+        return (
+          <AIDrawerView {...aiDrawerProps} style={{ flex: 1 }}>
+            {aiDrawerFooter}
+          </AIDrawerView>
+        );
       case 'transcript':
         return <TranscriptDrawerPlaceholder />;
       default:

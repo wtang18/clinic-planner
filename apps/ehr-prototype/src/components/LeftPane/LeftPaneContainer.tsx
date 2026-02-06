@@ -18,6 +18,7 @@ import { IconButton } from '../primitives/IconButton';
 import { useLeftPane } from '../../hooks/useLeftPane';
 import { colors, transitions, spaceAround } from '../../styles/foundations';
 import type { MenuPaneProps } from '../layout/MenuPane';
+import type { AIDrawerViewProps } from './AIDrawer';
 
 // ============================================================================
 // Types
@@ -26,6 +27,10 @@ import type { MenuPaneProps } from '../layout/MenuPane';
 export interface LeftPaneContainerProps {
   /** Props to pass through to MenuPane when in menu view */
   menuPaneProps?: Omit<MenuPaneProps, 'style'>;
+  /** Props to pass through to AIDrawerView when in AI view */
+  aiDrawerProps?: Omit<AIDrawerViewProps, 'style' | 'children'>;
+  /** Footer component for AI drawer (quick actions + input) */
+  aiDrawerFooter?: React.ReactNode;
   /** Whether a transcription session exists for current patient */
   hasTranscriptionSession?: boolean;
   /** Pane width when expanded */
@@ -73,6 +78,8 @@ const CollapsedPaneTab: React.FC<CollapsedPaneTabProps> = ({ onExpand }) => {
 
 export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
   menuPaneProps,
+  aiDrawerProps,
+  aiDrawerFooter,
   hasTranscriptionSession = false,
   width = 280,
   style,
@@ -129,7 +136,12 @@ export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
       </div>
 
       {/* Content area */}
-      <PaneContent activeView={activeView} menuPaneProps={menuPaneProps} />
+      <PaneContent
+        activeView={activeView}
+        menuPaneProps={menuPaneProps}
+        aiDrawerProps={aiDrawerProps}
+        aiDrawerFooter={aiDrawerFooter}
+      />
     </div>
   );
 };

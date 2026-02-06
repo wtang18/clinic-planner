@@ -12,3 +12,20 @@ export type { PaneHeaderProps } from './PaneHeader';
 
 export { PaneContent } from './PaneContent';
 export type { PaneContentProps } from './PaneContent';
+
+// AI Drawer components
+export {
+  AIDrawerView,
+  AIContextHeader,
+  SuggestionsSection,
+  ConversationHistory,
+} from './AIDrawer';
+export type {
+  AIDrawerViewProps,
+  AIContextHeaderProps,
+  ContextScope,
+  SuggestionsSectionProps,
+  ConversationHistoryProps,
+  ConversationMessage,
+  MessageType,
+} from './AIDrawer';
