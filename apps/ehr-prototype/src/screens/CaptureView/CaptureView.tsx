@@ -26,6 +26,7 @@ import {
 
 import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
 import { MenuPane } from '../../components/layout/MenuPane';
+import { LeftPaneContainer } from '../../components/LeftPane';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
@@ -681,16 +682,38 @@ export const CaptureView: React.FC = () => {
 
       <AdaptiveLayout
         menuPane={
-          <MenuPane
-            patientWorkspaces={patientWorkspaces}
-            selectedItemId={selectedNavItem}
-            selectedToDoFilter={todoViewState ? `${todoViewState.categoryId}/${todoViewState.filterId}` : undefined}
-            onNavItemSelect={handleNavItemSelect}
-            onToDoFilterSelect={handleToDoFilterSelect}
-            onPatientSelect={handlePatientSelect}
-            onTabClick={handleTabClick}
-            onTabClose={handleTabClose}
-            onWorkspaceClose={handleWorkspaceClose}
+          <LeftPaneContainer
+            menuPaneProps={{
+              patientWorkspaces,
+              selectedItemId: selectedNavItem,
+              selectedToDoFilter: todoViewState ? `${todoViewState.categoryId}/${todoViewState.filterId}` : undefined,
+              onNavItemSelect: handleNavItemSelect,
+              onToDoFilterSelect: handleToDoFilterSelect,
+              onPatientSelect: handlePatientSelect,
+              onTabClick: handleTabClick,
+              onTabClose: handleTabClose,
+              onWorkspaceClose: handleWorkspaceClose,
+            }}
+            hasTranscriptionSession={transcriptionStatus !== 'idle'}
+            onViewChange={actions.switchView}
+            onCollapse={actions.collapse}
+            transcriptionDrawerProps={{
+              patientName: patientOverviewData.name,
+              patientInitials: patient.demographics.firstName[0] + patient.demographics.lastName[0],
+              status: transcriptionStatus,
+              segments: [], // TODO: Wire up real transcript segments
+              onToggleRecording: handleTranscriptionToggle,
+              onPause: () => {},
+              onResume: () => {},
+            }}
+            aiDrawerProps={{
+              scope: 'encounter',
+              patientName: patientOverviewData.name,
+              encounterLabel: state.context.visit?.chiefComplaint || encounter?.type,
+              suggestions: activeSuggestions,
+              onSuggestionAccept: handleSuggestionAccept,
+              onSuggestionDismiss: handleSuggestionDismiss,
+            }}
           />
         }
         overviewPane={
