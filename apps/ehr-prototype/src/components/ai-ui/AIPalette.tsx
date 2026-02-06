@@ -460,8 +460,8 @@ export const AIPalette: React.FC<AIPaletteProps> = ({
 
       {/* Content */}
       <div style={contentStyle}>
-        {/* Quick Actions - hidden when showing more suggestions */}
-        {quickActions.length > 0 && !showMoreSuggestions && (
+        {/* Quick Actions */}
+        {quickActions.length > 0 && (
           <div
             style={quickActionsContainerStyle}
             className="ai-palette-quick-actions"

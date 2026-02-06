@@ -100,9 +100,9 @@ export const AvatarContainer: React.FC<AvatarContainerProps> = ({
   const isMicro = tier === 'mini';
   const isPalette = tier === 'palette';
 
-  // Badge removed - waveform indicates recording status
-  // (Mini mode uses separate MiniContent component which keeps its badge)
-  const showBadge = false;
+  // Show badge for paused/error states in bar mode only
+  // Palette mode shows status in the timer/controls area instead
+  const showBadge = !isPalette && (status === 'paused' || status === 'error');
 
   // Name crossfade: hide during transitions to avoid visual collision
   // In palette mode, name visible only in idle-palette state (not transitioning)
