@@ -147,6 +147,7 @@ Track any issues encountered or decisions made during implementation:
 - Chunks marked "Manual review" in PHASE_8_PROMPTS.md should be run one at a time
 - Always run the reuse audit before creating new components
 - Update this tracker after each chunk completes
+- See [INTEGRATION_PLAN.md](../INTEGRATION_PLAN.md) for the overall integration approach and workflow priorities
 
 ---
 

@@ -44,6 +44,12 @@
 | [Voice Input](./features/left-pane-system/VOICE_INPUT.md) | Voice input for AI (Phase 9) |
 | [Future Enhancements](./features/left-pane-system/FUTURE_ENHANCEMENTS.md) | Vision items deferred from prototype |
 
+### Integration
+
+| Document | Description |
+|----------|-------------|
+| [Integration Plan](./features/INTEGRATION_PLAN.md) | Bottom Bar + Left Pane integration approach, workflow priorities |
+
 ---
 
 ## Documentation Structure
