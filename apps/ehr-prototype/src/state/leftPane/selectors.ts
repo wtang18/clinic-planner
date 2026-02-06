@@ -56,13 +56,14 @@ export function deriveBottomBarVisibility(
   inEncounter: boolean
 ): BottomBarVisibility {
   // When pane is collapsed, everything shows in bottom bar
-  // (modules de-escalate to resting tiers on collapse)
+  // (modules de-escalate to resting tier 'bar' on collapse)
   if (!paneState.isExpanded) {
     const txVisible = transcriptionTier !== null && hasTranscriptionSession && inEncounter;
     return {
       ai: {
         visible: true,
-        tier: aiTier === 'drawer' ? 'mini' as Exclude<TierState, 'drawer'> : aiTier as Exclude<TierState, 'drawer'>,
+        // If somehow still at drawer, fall back to bar (resting tier)
+        tier: aiTier === 'drawer' ? 'bar' as Exclude<TierState, 'drawer'> : aiTier as Exclude<TierState, 'drawer'>,
       },
       transcription: {
         visible: txVisible,

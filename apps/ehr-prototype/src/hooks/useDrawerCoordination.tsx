@@ -5,12 +5,19 @@
  * When a module moves to drawer tier (left pane), it's hidden from the bottom bar.
  * When a module leaves drawer tier, it de-escalates to its resting tier in the bottom bar.
  *
+ * Tier behavior:
+ * - `bar`: Default/resting state for both modules in bottom bar
+ * - `palette`: Expanded state (one at a time) - other module auto-compresses to `mini`
+ * - `mini`: Compressed state - ONLY used when other module is at `palette`
+ * - `drawer`: Module is in left pane, completely hidden from bottom bar
+ *
  * Key behaviors:
- * - Switching to AI view → AI tier becomes 'drawer', hidden from bottom bar
- * - Switching to transcript view → Transcription tier becomes 'drawer', hidden from bottom bar
- * - Leaving drawer view → Module de-escalates to resting tier (AI→minibar, TM→bar)
- * - Collapsing pane → Active drawer module de-escalates to resting tier
- * - Escalating from palette → Module moves to drawer in left pane
+ * - Menu view (or collapsed) → Both modules at `bar`, either can expand to `palette`
+ * - Switching to AI view → AI tier becomes `drawer` (hidden), TM stays at `bar`
+ * - Switching to transcript view → TM tier becomes `drawer` (hidden), AI stays at `bar`
+ * - Leaving drawer view → Module de-escalates to `bar`
+ * - Collapsing pane → Active drawer module de-escalates to `bar`
+ * - Escalating from palette → Module moves to `drawer` in left pane
  *
  * @see DRAWER_COORDINATION.md for full specification
  */
@@ -63,11 +70,16 @@ export interface UseDrawerCoordinationReturn {
 // Constants
 // ============================================================================
 
-/** Resting tier for AI module (de-escalation target) */
-const AI_RESTING_TIER: TierState = 'mini';
-
-/** Resting tier for transcription module (de-escalation target) */
-const TM_RESTING_TIER: TierState = 'bar';
+/**
+ * Resting tier for both modules (de-escalation target).
+ *
+ * Tier behavior:
+ * - `bar`: Default state for both modules in bottom bar
+ * - `palette`: Expanded state (one at a time) - other module auto-compresses to `mini`
+ * - `mini`: Compressed state - ONLY used when other module is at `palette`
+ * - `drawer`: Module is in left pane, hidden from bottom bar
+ */
+const RESTING_TIER: TierState = 'bar';
 
 // ============================================================================
 // Hook
@@ -103,11 +115,11 @@ export function useDrawerCoordination(): UseDrawerCoordinationReturn {
 
       // Handle de-escalation from current view
       if (currentView === 'ai' && view !== 'ai') {
-        // Leaving AI drawer → de-escalate to minibar
-        barActions.setAITier(AI_RESTING_TIER);
+        // Leaving AI drawer → de-escalate to bar (resting tier)
+        barActions.setAITier(RESTING_TIER);
       } else if (currentView === 'transcript' && view !== 'transcript') {
-        // Leaving transcript drawer → de-escalate to bar
-        barActions.setTranscriptionTier(TM_RESTING_TIER);
+        // Leaving transcript drawer → de-escalate to bar (resting tier)
+        barActions.setTranscriptionTier(RESTING_TIER);
       }
 
       // Handle escalation to new view
@@ -127,16 +139,16 @@ export function useDrawerCoordination(): UseDrawerCoordinationReturn {
 
   /**
    * Collapse the pane with coordination:
-   * - De-escalate active drawer module to resting tier
+   * - De-escalate active drawer module to resting tier (bar)
    */
   const collapse = useCallback(() => {
     const currentView = paneState.activeView;
 
-    // De-escalate any drawer module
+    // De-escalate any drawer module to bar
     if (currentView === 'ai') {
-      barActions.setAITier(AI_RESTING_TIER);
+      barActions.setAITier(RESTING_TIER);
     } else if (currentView === 'transcript') {
-      barActions.setTranscriptionTier(TM_RESTING_TIER);
+      barActions.setTranscriptionTier(RESTING_TIER);
     }
 
     paneActions.collapse();
