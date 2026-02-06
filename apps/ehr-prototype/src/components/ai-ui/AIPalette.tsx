@@ -1,14 +1,18 @@
 /**
  * AIPalette Component
  *
- * Expanded state of the AI assistant with:
- * - Patient context header
- * - Quick actions (context-aware)
- * - Suggestions/alerts
- * - AI input for questions
+ * Expanded state of the AI assistant (morphs from minibar).
+ * NO header - follows reference design with:
+ * - Dismissible context banner at top
+ * - Quick actions row
+ * - Content area (scrollable)
+ * - AI input area (sticky bottom)
+ *
+ * Uses glassmorphic dark styling to match minibar.
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
   Sparkles,
@@ -23,33 +27,35 @@ import {
   List,
   ListOrdered,
   Calendar,
-  Send,
-  Maximize2,
+  CornerDownRight,
+  ChevronDown,
+  GripHorizontal,
+  Plus,
 } from 'lucide-react';
 import type { Alert, Suggestion } from '../../types/suggestions';
 import type { AIContext, QuickAction } from '../../hooks/useAIAssistant';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, glass } from '../../styles/foundations';
 import { AlertCard } from './AlertCard';
 import { SuggestionList } from '../suggestions/SuggestionList';
-import { Button } from '../primitives/Button';
-import { IconButton } from '../primitives/IconButton';
-import { SectionTitle } from '../primitives/SectionTitle';
+import { AIInputArea } from './AIInputArea';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface AIPaletteProps {
-  /** Whether the palette is visible */
-  isOpen: boolean;
+  /** Whether the palette is visible (for standalone use) */
+  isOpen?: boolean;
   /** Called to close the palette */
-  onClose: () => void;
+  onClose?: () => void;
   /** Called to expand to full drawer */
   onExpandToDrawer?: () => void;
   /** Current patient name */
   patientName?: string;
   /** Current visit type */
   visitType?: string;
+  /** The specific element being focused on (e.g., "Lisinopril 10mg", "Diabetes Type 2") */
+  contextTarget?: string;
   /** Current context */
   context?: AIContext;
   /** Quick actions for current context */
@@ -72,6 +78,10 @@ export interface AIPaletteProps {
   onAskQuestion?: (question: string) => void;
   /** Whether AI is processing */
   isLoading?: boolean;
+  /** Whether the context bar is dismissed */
+  isContextDismissed?: boolean;
+  /** Called when context is dismissed */
+  onContextDismiss?: () => void;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID */
@@ -112,15 +122,213 @@ const getQuickActionIcon = (iconName: string, size = 16) => {
 };
 
 // ============================================================================
+// Drag Handle Component
+// ============================================================================
+
+interface DragHandleProps {
+  onClose?: () => void;
+}
+
+const DragHandle: React.FC<DragHandleProps> = ({ onClose }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onClose}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        padding: `${spaceAround.tight}px 0`,
+        border: 'none',
+        backgroundColor: 'transparent',
+        cursor: 'pointer',
+        transition: 'all 150ms ease',
+      }}
+      title="Close palette"
+    >
+      <motion.div
+        animate={{ opacity: isHovered ? 0.8 : 0.4 }}
+        transition={{ duration: 0.15 }}
+      >
+        {isHovered ? (
+          <ChevronDown size={16} style={{ color: colors.fg.neutral.inversePrimary }} />
+        ) : (
+          <GripHorizontal size={16} style={{ color: colors.fg.neutral.inversePrimary }} />
+        )}
+      </motion.div>
+    </button>
+  );
+};
+
+// ============================================================================
+// Context Banner Component
+// ============================================================================
+
+interface ContextBannerProps {
+  patientName?: string;
+  visitType?: string;
+  /** The specific element being focused on (e.g., "Lisinopril 10mg", "Diabetes Type 2") */
+  contextTarget?: string;
+  onDismiss?: () => void;
+  onAddContext?: () => void;
+  isEmpty?: boolean;
+}
+
+const ContextBanner: React.FC<ContextBannerProps> = ({
+  patientName,
+  visitType,
+  contextTarget,
+  onDismiss,
+  onAddContext,
+  isEmpty = false,
+}) => {
+  // If we have a context target, show it prominently; otherwise fall back to patient/visit
+  const contextText = contextTarget || [patientName, visitType].filter(Boolean).join(' · ');
+
+  // Show placeholder when no context
+  if (isEmpty || !contextText) {
+    return (
+      <motion.button
+        type="button"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.15 }}
+        onClick={onAddContext}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+          backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          border: '1px dashed rgba(255, 255, 255, 0.2)',
+          borderRadius: borderRadius.md,
+          margin: `0 ${spaceAround.compact}px`,
+          marginBottom: spaceBetween.separatedSm,
+          cursor: 'pointer',
+          transition: 'all 150ms ease',
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.3)';
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        }}
+      >
+        <Plus
+          size={14}
+          style={{
+            marginRight: spaceBetween.relatedCompact,
+            color: colors.fg.neutral.inversePrimary,
+            opacity: 0.5,
+          }}
+        />
+        <span
+          style={{
+            fontSize: 13,
+            fontFamily: typography.fontFamily.sans,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.fg.neutral.inversePrimary,
+            opacity: 0.5,
+          }}
+        >
+          Add context...
+        </span>
+      </motion.button>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.15 }}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        borderRadius: borderRadius.md,
+        margin: `0 ${spaceAround.compact}px`,
+        marginBottom: spaceBetween.separatedSm, // 24px gap after context (between different sections)
+      }}
+    >
+      <CornerDownRight
+        size={14}
+        style={{
+          marginRight: spaceBetween.relatedCompact,
+          color: colors.fg.neutral.inversePrimary,
+          opacity: 0.6,
+        }}
+      />
+      <span
+        style={{
+          flex: 1,
+          fontSize: 13,
+          fontFamily: typography.fontFamily.sans,
+          fontWeight: typography.fontWeight.medium,
+          color: colors.fg.neutral.inversePrimary,
+          opacity: 0.8,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {contextText}
+      </span>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          title="Remove context"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 24,
+            height: 24,
+            borderRadius: borderRadius.sm,
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: colors.fg.neutral.inversePrimary,
+            opacity: 0.5,
+            cursor: 'pointer',
+            transition: 'all 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            (e.currentTarget as HTMLElement).style.opacity = '0.8';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
+            (e.currentTarget as HTMLElement).style.opacity = '0.5';
+          }}
+        >
+          <X size={16} />
+        </button>
+      )}
+    </motion.div>
+  );
+};
+
+// ============================================================================
 // Component
 // ============================================================================
 
 export const AIPalette: React.FC<AIPaletteProps> = ({
-  isOpen,
+  isOpen = true,
   onClose,
   onExpandToDrawer,
   patientName,
   visitType,
+  contextTarget,
   context = 'none',
   quickActions = [],
   alerts = [],
@@ -132,104 +340,69 @@ export const AIPalette: React.FC<AIPaletteProps> = ({
   onQuickActionClick,
   onAskQuestion,
   isLoading = false,
+  isContextDismissed = false,
+  onContextDismiss,
   style,
   testID,
 }) => {
   const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const unacknowledgedAlerts = alerts.filter(a => !a.acknowledgedAt);
   const criticalAlerts = unacknowledgedAlerts.filter(a => a.severity === 'critical');
-  const activeSuggestions = suggestions.filter(s => s.status === 'active');
+  // Use suggestions directly - already filtered by useActiveSuggestions() in parent
+  const activeSuggestions = suggestions;
 
-  // Focus input when palette opens
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      const timer = setTimeout(() => inputRef.current?.focus(), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputValue.trim() && onAskQuestion) {
-      onAskQuestion(inputValue.trim());
+  const handleSubmit = (value: string) => {
+    if (value.trim() && onAskQuestion) {
+      onAskQuestion(value.trim());
       setInputValue('');
     }
   };
 
   if (!isOpen) return null;
 
-  // Styles
+  // Show context only if we have context info and it isn't dismissed
+  const showContext = (patientName || visitType || contextTarget) && !isContextDismissed;
+
+  // Container uses glassmorphic dark styling (same as minibar)
   const containerStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: 80, // Above the minibar
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: 'min(480px, calc(100% - 32px))',
-    maxHeight: 'min(400px, 60vh)',
-    backgroundColor: colors.bg.neutral.base,
-    borderRadius: borderRadius.lg,
-    boxShadow: shadows.xl,
     display: 'flex',
     flexDirection: 'column',
+    width: '100%',
+    height: '100%',
+    borderRadius: borderRadius.lg,
     overflow: 'hidden',
-    zIndex: 1000,
-    animation: 'paletteSlideIn 200ms cubic-bezier(0.4, 0, 0.2, 1)',
     ...style,
   };
 
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
-    flexShrink: 0,
-  };
-
-  const headerLeftStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.relatedCompact,
-  };
-
-  const headerRightStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.repeating,
-  };
-
-  const titleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.relatedCompact,
-    fontSize: 14,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.fg.neutral.primary,
-    margin: 0,
-  };
-
-  const contextStyle: React.CSSProperties = {
-    fontSize: 12,
-    color: colors.fg.neutral.secondary,
-    marginLeft: spaceBetween.repeating,
-  };
-
   const contentStyle: React.CSSProperties = {
-    flex: 1,
-    overflowY: 'auto',
-    padding: spaceAround.default,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spaceBetween.relatedCompact,
+    padding: spaceAround.compact,
+    paddingTop: showContext ? 0 : spaceAround.compact,
+    paddingBottom: spaceBetween.repeating, // Reduce gap before input (8px instead of 12px)
+    // No scroll - content hugs. Individual text blocks scroll internally if needed.
   };
 
   const sectionStyle: React.CSSProperties = {
-    marginBottom: spaceAround.default,
+    marginBottom: spaceBetween.separatedSm, // 24px between different sections
   };
 
   const quickActionsContainerStyle: React.CSSProperties = {
     display: 'flex',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: spaceBetween.relatedCompact,
+    marginBottom: spaceBetween.separatedSm, // 24px to next section
+    // Extend to edges for full-bleed scrolling
+    marginLeft: -spaceAround.compact,
+    marginRight: -spaceAround.compact,
+    paddingLeft: spaceAround.compact,
+    paddingRight: spaceAround.compact,
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    scrollbarWidth: 'none', // Firefox
+    msOverflowStyle: 'none', // IE/Edge
   };
 
   const quickActionButtonStyle: React.CSSProperties = {
@@ -237,91 +410,137 @@ export const AIPalette: React.FC<AIPaletteProps> = ({
     alignItems: 'center',
     gap: spaceBetween.coupled,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    backgroundColor: colors.bg.neutral.subtle,
-    border: `1px solid ${colors.border.neutral.low}`,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
     borderRadius: borderRadius.md,
     fontSize: 13,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
-    color: colors.fg.neutral.primary,
+    color: colors.fg.neutral.inversePrimary,
     cursor: 'pointer',
-    transition: `all 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
+    transition: 'all 150ms ease',
   };
 
-  const inputContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.relatedCompact,
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    borderTop: `1px solid ${colors.border.neutral.low}`,
-    backgroundColor: colors.bg.neutral.subtle,
-    flexShrink: 0,
-  };
-
-  const inputStyle: React.CSSProperties = {
-    flex: 1,
-    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    backgroundColor: colors.bg.neutral.base,
-    border: `1px solid ${colors.border.neutral.low}`,
-    borderRadius: borderRadius.md,
-    fontSize: 14,
+  const sectionTitleStyle: React.CSSProperties = {
+    fontSize: 11,
     fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.primary,
-    outline: 'none',
-    transition: `all 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.fg.neutral.inversePrimary,
+    opacity: 0.5,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    marginBottom: spaceBetween.relatedCompact,
   };
 
   return (
     <div style={containerStyle} data-testid={testID}>
-      {/* Header */}
-      <div style={headerStyle}>
-        <div style={headerLeftStyle}>
-          <h3 style={titleStyle}>
-            <span style={{ display: 'flex', color: colors.fg.generative.spotReadable }}>
-              <Sparkles size={18} />
-            </span>
-            AI Assistant
-          </h3>
-          {patientName && (
-            <span style={contextStyle}>
-              {patientName}
-              {visitType && ` · ${visitType}`}
-            </span>
-          )}
-        </div>
-        <div style={headerRightStyle}>
-          {onExpandToDrawer && (
-            <IconButton
-              icon={<Maximize2 size={16} />}
-              label="Expand to full view"
-              variant="ghost"
-              size="sm"
-              onClick={onExpandToDrawer}
-            />
-          )}
-          <IconButton
-            icon={<X size={18} />}
-            label="Close"
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
+      {/* Drag Handle at top */}
+      <DragHandle onClose={onClose} />
+
+      {/* Context Banner (dismissible, or placeholder if none) */}
+      <AnimatePresence>
+        {isContextDismissed ? (
+          <ContextBanner
+            isEmpty={true}
+            onAddContext={() => {
+              // In a real app, this would open a context picker
+              // For now, just dismiss to restore original context
+              onContextDismiss?.();
+            }}
           />
-        </div>
-      </div>
+        ) : (
+          <ContextBanner
+            patientName={patientName}
+            visitType={visitType}
+            contextTarget={contextTarget}
+            onDismiss={onContextDismiss}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Content */}
       <div style={contentStyle}>
-        {/* Critical Alerts (always first) */}
+        {/* Quick Actions - hidden when showing more suggestions */}
+        {quickActions.length > 0 && !showMoreSuggestions && (
+          <div
+            style={quickActionsContainerStyle}
+            className="ai-palette-quick-actions"
+          >
+            {quickActions.slice(0, 5).map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                style={{ ...quickActionButtonStyle, flexShrink: 0 }}
+                onClick={() => onQuickActionClick?.(action.id)}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                }}
+              >
+                <span style={{ display: 'flex', color: colors.fg.neutral.inversePrimary }}>
+                  {getQuickActionIcon(action.icon)}
+                </span>
+                {action.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Critical Alerts - no section header */}
         {criticalAlerts.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating }}>
+            {criticalAlerts.map(alert => (
+              <AlertCard
+                key={alert.id}
+                alert={alert}
+                onAcknowledge={() => onAlertAcknowledge?.(alert.id)}
+                onAction={(actionId) => onAlertAction?.(alert.id, actionId)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Suggestions - show 1 at a time, with section header */}
+        {activeSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
           <div style={sectionStyle}>
-            <SectionTitle
-              title="Critical Alerts"
-              icon={<AlertTriangle size={14} />}
-              iconColor={colors.fg.alert.secondary}
-              size="sm"
+            <div style={sectionTitleStyle}>Suggestions</div>
+            <SuggestionList
+              suggestions={activeSuggestions.slice(0, 1)}
+              maxVisible={1}
+              onAccept={onSuggestionAccept}
+              onDismiss={onSuggestionDismiss}
+              variant="compact"
             />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating }}>
-              {criticalAlerts.map(alert => (
+            {activeSuggestions.length > 1 && (
+              <span
+                style={{
+                  display: 'block',
+                  paddingTop: spaceBetween.repeating,
+                  fontSize: 12,
+                  fontFamily: typography.fontFamily.sans,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.fg.neutral.inversePrimary,
+                  opacity: 0.5,
+                  textAlign: 'center',
+                }}
+              >
+                +{activeSuggestions.length - 1} more
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Other Alerts - no section header */}
+        {unacknowledgedAlerts.filter(a => a.severity !== 'critical').length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating }}>
+            {unacknowledgedAlerts
+              .filter(a => a.severity !== 'critical')
+              .slice(0, 2)
+              .map(alert => (
                 <AlertCard
                   key={alert.id}
                   alert={alert}
@@ -329,132 +548,26 @@ export const AIPalette: React.FC<AIPaletteProps> = ({
                   onAction={(actionId) => onAlertAction?.(alert.id, actionId)}
                 />
               ))}
-            </div>
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        {quickActions.length > 0 && (
-          <div style={sectionStyle}>
-            <SectionTitle
-              title="Quick Actions"
-              size="sm"
-            />
-            <div style={quickActionsContainerStyle}>
-              {quickActions.map((action) => (
-                <button
-                  key={action.id}
-                  type="button"
-                  style={quickActionButtonStyle}
-                  onClick={() => onQuickActionClick?.(action.id)}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = colors.bg.neutral.medium;
-                    (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = colors.bg.neutral.subtle;
-                    (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
-                  }}
-                >
-                  <span style={{ display: 'flex', color: colors.fg.accent.primary }}>
-                    {getQuickActionIcon(action.icon)}
-                  </span>
-                  {action.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Suggestions */}
-        {activeSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
-          <div style={sectionStyle}>
-            <SectionTitle
-              title="Suggestions"
-              icon={<Sparkles size={14} />}
-              iconColor={colors.fg.generative.spotReadable}
-              size="sm"
-            />
-            <SuggestionList
-              suggestions={activeSuggestions.slice(0, 3)}
-              maxVisible={3}
-              onAccept={onSuggestionAccept}
-              onDismiss={onSuggestionDismiss}
-              variant="compact"
-            />
-          </div>
-        )}
-
-        {/* Other Alerts */}
-        {unacknowledgedAlerts.filter(a => a.severity !== 'critical').length > 0 && (
-          <div style={sectionStyle}>
-            <SectionTitle
-              title="Alerts"
-              icon={<AlertTriangle size={14} />}
-              iconColor={colors.fg.attention.secondary}
-              size="sm"
-            />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating }}>
-              {unacknowledgedAlerts
-                .filter(a => a.severity !== 'critical')
-                .slice(0, 2)
-                .map(alert => (
-                  <AlertCard
-                    key={alert.id}
-                    alert={alert}
-                    onAcknowledge={() => onAlertAcknowledge?.(alert.id)}
-                    onAction={(actionId) => onAlertAction?.(alert.id, actionId)}
-                  />
-                ))}
-            </div>
           </div>
         )}
       </div>
 
-      {/* Input */}
+      {/* Input Area (sticky bottom) */}
       {onAskQuestion && (
-        <form style={inputContainerStyle} onSubmit={handleSubmit}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask AI..."
-            style={inputStyle}
-            disabled={isLoading}
-            onFocus={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = colors.border.accent.low;
-              (e.currentTarget as HTMLElement).style.boxShadow = `0 0 0 3px ${colors.border.accent.low}20`;
-            }}
-            onBlur={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = colors.border.neutral.low;
-              (e.currentTarget as HTMLElement).style.boxShadow = 'none';
-            }}
-          />
-          <IconButton
-            icon={<Send size={16} />}
-            label="Send"
-            variant="ghost"
-            size="sm"
-            onClick={() => handleSubmit(new Event('submit') as any)}
-            disabled={!inputValue.trim() || isLoading}
-          />
-        </form>
+        <AIInputArea
+          value={inputValue}
+          onChange={setInputValue}
+          onSend={handleSubmit}
+          onOpenDrawer={onExpandToDrawer}
+          disabled={isLoading}
+          showDrawerButton={!!onExpandToDrawer}
+        />
       )}
 
-      {/* Animations */}
+      {/* Hide scrollbar for webkit browsers */}
       <style>{`
-        @keyframes paletteSlideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-50%) translateY(16px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
+        .ai-palette-quick-actions::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>

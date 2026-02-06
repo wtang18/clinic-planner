@@ -104,3 +104,45 @@ export {
   useCanAddressGap,
 } from './useCareGaps';
 export type { CareGapActions } from './useCareGaps';
+
+// Layout Hooks
+export {
+  useBreakpoint,
+  useMinBreakpoint,
+  useMaxBreakpoint,
+  BREAKPOINTS,
+} from './useBreakpoint';
+export type { Breakpoint, BreakpointConfig, BreakpointState } from './useBreakpoint';
+
+// Navigation Hooks
+export { useToDoNavigation } from './useToDoNavigation';
+export type { ToDoNavigationState, ToDoNavigationContext } from './useToDoNavigation';
+
+// AI Assistant Hooks
+export { useAIAssistant } from './useAIAssistant';
+export type {
+  AIAssistantMode,
+  AIContext,
+  QuickAction,
+  AIAssistantState,
+  AIAssistantActions,
+} from './useAIAssistant';
+
+// Bottom Bar Hooks
+export {
+  BottomBarProvider,
+  BottomBarContext,
+  useBottomBar,
+  useTranscription,
+  useTierControls,
+  useDemoTranscription,
+} from './useBottomBar';
+export type {
+  BottomBarProviderProps,
+  BottomBarActions,
+  UseBottomBarReturn,
+  UseTranscriptionReturn,
+  UseTierControlsReturn,
+} from './useBottomBar';
+
+// Note: useSynchronizedTransition removed - using CSS Grid transitions instead

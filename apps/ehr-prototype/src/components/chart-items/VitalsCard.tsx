@@ -5,11 +5,13 @@
  */
 
 import React from 'react';
+import { Heart, ArrowUp, ArrowDown } from 'lucide-react';
 import type { VitalsItem, VitalMeasurement, VitalType } from '../../types/chart-items';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
-import { getCategoryColor } from '../../styles/utils';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { Card } from '../primitives/Card';
 import { Badge } from '../primitives/Badge';
+import { CardIconContainer } from '../primitives/CardIconContainer';
+import { AbnormalFlag } from '../primitives/AbnormalFlag';
 
 // ============================================================================
 // Types
@@ -31,30 +33,6 @@ export interface VitalsCardProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const HeartIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const ArrowUpIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="12" y1="19" x2="12" y2="5" />
-    <polyline points="5,12 12,5 19,12" />
-  </svg>
-);
-
-const ArrowDownIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <polyline points="19,12 12,19 5,12" />
-  </svg>
-);
 
 // ============================================================================
 // Constants
@@ -87,77 +65,55 @@ const VitalDisplay: React.FC<VitalDisplayProps> = ({ measurement, compact, trend
   const config = VITAL_CONFIG[measurement.type] || { label: measurement.type, unit: measurement.unit };
   const isAbnormal = measurement.flag && measurement.flag !== 'normal';
   const isCritical = measurement.flag === 'critical';
-  const isHigh = measurement.flag === 'high' || (measurement.flag === 'critical' && measurement.value > 0);
-  const isLow = measurement.flag === 'low';
-
-  const flagColor = isCritical
-    ? colors.status.error
-    : isAbnormal
-    ? colors.status.warning
-    : colors.neutral[700];
 
   const flagBgColor = isCritical
-    ? colors.status.errorLight
+    ? colors.bg.alert.subtle
     : isAbnormal
-    ? colors.status.warningLight
-    : colors.neutral[50];
+    ? colors.bg.attention.subtle
+    : colors.bg.neutral.min;
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: compact ? 'row' : 'column',
     alignItems: compact ? 'center' : 'flex-start',
-    gap: compact ? spacing[2] : spacing[1],
-    padding: compact ? spacing[2] : spacing[3],
+    gap: compact ? spaceBetween.repeating : spaceBetween.coupled,
+    padding: compact ? spaceAround.tight : spaceAround.compact,
     backgroundColor: flagBgColor,
-    borderRadius: radii.md,
+    borderRadius: borderRadius.sm,
     minWidth: compact ? 'auto' : '80px',
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    fontSize: 12,
+    color: colors.fg.neutral.spotReadable,
     fontWeight: typography.fontWeight.medium,
   };
 
   const valueContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
-  };
-
-  const valueStyle: React.CSSProperties = {
-    fontSize: compact ? typography.fontSize.sm[0] : typography.fontSize.lg[0],
-    fontWeight: typography.fontWeight.semibold,
-    color: flagColor,
-    fontFamily: typography.fontFamily.mono,
-  };
-
-  const unitStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[400],
+    gap: spaceBetween.coupled,
   };
 
   const trendIconStyle: React.CSSProperties = {
-    width: '12px',
-    height: '12px',
     display: 'flex',
-    color: trend === 'up' ? colors.status.error : trend === 'down' ? colors.status.success : colors.neutral[400],
+    color: trend === 'up' ? colors.fg.alert.secondary : trend === 'down' ? colors.fg.positive.secondary : colors.fg.neutral.disabled,
   };
 
   return (
     <div style={containerStyle}>
       <span style={labelStyle}>{config.label}</span>
       <div style={valueContainerStyle}>
-        {isAbnormal && (
-          <span style={{ width: '14px', height: '14px', display: 'flex', color: flagColor }}>
-            {isHigh ? <ArrowUpIcon /> : isLow ? <ArrowDownIcon /> : null}
-          </span>
-        )}
-        <span style={valueStyle}>{measurement.value}</span>
-        <span style={unitStyle}>{config.unit}</span>
+        <AbnormalFlag
+          flag={measurement.flag}
+          value={measurement.value}
+          unit={config.unit}
+          size={compact ? 'sm' : 'md'}
+          style={{ fontFamily: typography.fontFamily.mono, fontWeight: typography.fontWeight.semibold }}
+        />
         {trend && trend !== 'stable' && (
           <span style={trendIconStyle}>
-            {trend === 'up' ? <ArrowUpIcon /> : <ArrowDownIcon />}
+            {trend === 'up' ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
           </span>
         )}
       </div>
@@ -178,7 +134,6 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
   onSelect,
   style,
 }) => {
-  const categoryColors = getCategoryColor('vitals');
   const isCompact = variant === 'compact';
   const { data } = vitals;
 
@@ -200,13 +155,12 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
     position: 'relative',
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[3],
-    padding: isCompact ? spacing[3] : spacing[4],
-    borderLeft: `3px solid ${hasCritical ? colors.status.error : hasAbnormal ? colors.status.warning : categoryColors.border}`,
+    gap: spaceBetween.relatedCompact,
+    padding: isCompact ? spaceAround.compact : spaceAround.default,
     cursor: onSelect ? 'pointer' : 'default',
     transition: `all ${transitions.fast}`,
     ...(selected && {
-      backgroundColor: colors.primary[50],
+      backgroundColor: colors.bg.accent.subtle,
     }),
     ...style,
   };
@@ -214,19 +168,7 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[3],
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: isCompact ? '32px' : '40px',
-    height: isCompact ? '32px' : '40px',
-    backgroundColor: hasCritical ? colors.status.errorLight : hasAbnormal ? colors.status.warningLight : categoryColors.lightBg,
-    borderRadius: radii.lg,
-    color: hasCritical ? colors.status.error : hasAbnormal ? colors.status.warning : categoryColors.icon,
-    flexShrink: 0,
+    gap: spaceBetween.relatedCompact,
   };
 
   const headerContentStyle: React.CSSProperties = {
@@ -234,31 +176,31 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   const titleContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: isCompact ? typography.fontSize.sm[0] : typography.fontSize.base[0],
+    fontSize: isCompact ? 14 : 16,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const timeStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    fontSize: 12,
+    color: colors.fg.neutral.spotReadable,
   };
 
   const vitalsGridStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: isCompact ? 'repeat(auto-fill, minmax(100px, 1fr))' : 'repeat(auto-fill, minmax(90px, 1fr))',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   // Blood pressure combined display
@@ -269,35 +211,35 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
     const bpCritical = bpSystolic.flag === 'critical' || bpDiastolic.flag === 'critical';
 
     const bpColor = bpCritical
-      ? colors.status.error
+      ? colors.fg.alert.secondary
       : bpAbnormal
-      ? colors.status.warning
-      : colors.neutral[700];
+      ? colors.fg.attention.secondary
+      : colors.fg.neutral.secondary;
 
     const bpBgColor = bpCritical
-      ? colors.status.errorLight
+      ? colors.bg.alert.subtle
       : bpAbnormal
-      ? colors.status.warningLight
-      : colors.neutral[50];
+      ? colors.bg.attention.subtle
+      : colors.bg.neutral.min;
 
     return (
       <div style={{
         display: 'flex',
         flexDirection: isCompact ? 'row' : 'column',
         alignItems: isCompact ? 'center' : 'flex-start',
-        gap: isCompact ? spacing[2] : spacing[1],
-        padding: isCompact ? spacing[2] : spacing[3],
+        gap: isCompact ? spaceBetween.repeating : spaceBetween.coupled,
+        padding: isCompact ? spaceAround.tight : spaceAround.compact,
         backgroundColor: bpBgColor,
-        borderRadius: radii.md,
+        borderRadius: borderRadius.sm,
         minWidth: isCompact ? 'auto' : '100px',
       }}>
         <span style={{
-          fontSize: typography.fontSize.xs[0],
-          color: colors.neutral[500],
+          fontSize: 12,
+          color: colors.fg.neutral.spotReadable,
           fontWeight: typography.fontWeight.medium,
         }}>BP</span>
         <span style={{
-          fontSize: isCompact ? typography.fontSize.sm[0] : typography.fontSize.lg[0],
+          fontSize: isCompact ? 14 : 18,
           fontWeight: typography.fontWeight.semibold,
           color: bpColor,
           fontFamily: typography.fontFamily.mono,
@@ -305,8 +247,8 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
           {bpSystolic.value}/{bpDiastolic.value}
         </span>
         <span style={{
-          fontSize: typography.fontSize.xs[0],
-          color: colors.neutral[400],
+          fontSize: 12,
+          color: colors.fg.neutral.disabled,
         }}>mmHg</span>
       </div>
     );
@@ -323,11 +265,9 @@ export const VitalsCard: React.FC<VitalsCardProps> = ({
       <div style={containerStyle}>
         {/* Header */}
         <div style={headerStyle}>
-          <div style={iconContainerStyle}>
-            <div style={{ width: isCompact ? '16px' : '20px', height: isCompact ? '16px' : '20px' }}>
-              <HeartIcon />
-            </div>
-          </div>
+          <CardIconContainer color={hasCritical ? 'alert' : 'default'} size={isCompact ? 'md' : 'lg'}>
+            <Heart size={isCompact ? 16 : 20} />
+          </CardIconContainer>
 
           <div style={headerContentStyle}>
             <div style={titleContainerStyle}>

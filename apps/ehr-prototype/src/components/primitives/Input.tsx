@@ -5,7 +5,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { colors, radii, spacing, typography, transitions, shadows } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -28,21 +28,21 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 // Styles
 // ============================================================================
 
-const sizeStyles: Record<'sm' | 'md' | 'lg', { height: string; fontSize: string; padding: string }> = {
+const sizeStyles: Record<'sm' | 'md' | 'lg', { height: string; fontSize: number; padding: number }> = {
   sm: {
     height: '32px',
-    fontSize: typography.fontSize.sm[0],
-    padding: spacing[2],
+    fontSize: 14,
+    padding: spaceAround.tight,
   },
   md: {
     height: '40px',
-    fontSize: typography.fontSize.base[0],
-    padding: spacing[3],
+    fontSize: 16,
+    padding: spaceAround.compact,
   },
   lg: {
     height: '48px',
-    fontSize: typography.fontSize.lg[0],
-    padding: spacing[4],
+    fontSize: 18,
+    padding: spaceAround.default,
   },
 };
 
@@ -79,14 +79,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       width: '100%',
       height: sizeStyle.height,
       padding: sizeStyle.padding,
-      paddingLeft: leftIcon ? `calc(${sizeStyle.padding} + 24px)` : sizeStyle.padding,
-      paddingRight: rightIcon ? `calc(${sizeStyle.padding} + 24px)` : sizeStyle.padding,
+      paddingLeft: leftIcon ? sizeStyle.padding + 24 : sizeStyle.padding,
+      paddingRight: rightIcon ? sizeStyle.padding + 24 : sizeStyle.padding,
       fontSize: sizeStyle.fontSize,
       fontFamily: typography.fontFamily.sans,
-      color: disabled ? colors.neutral[400] : colors.neutral[900],
-      backgroundColor: disabled ? colors.neutral[100] : colors.neutral[0],
-      border: `1px solid ${hasError ? colors.status.error : isFocused ? colors.primary[500] : colors.neutral[300]}`,
-      borderRadius: radii.md,
+      color: disabled ? colors.fg.neutral.disabled : colors.fg.neutral.primary,
+      backgroundColor: disabled ? colors.bg.neutral.subtle : colors.bg.neutral.base,
+      border: `1px solid ${hasError ? colors.fg.alert.secondary : isFocused ? colors.fg.accent.primary : colors.border.neutral.medium}`,
+      borderRadius: borderRadius.sm,
       outline: 'none',
       transition: `all ${transitions.fast}`,
       boxShadow: isFocused ? (hasError ? shadows.focusError : shadows.focus) : 'none',
@@ -97,7 +97,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       position: 'absolute',
       top: '50%',
       transform: 'translateY(-50%)',
-      color: colors.neutral[400],
+      color: colors.fg.neutral.disabled,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -105,7 +105,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     };
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.coupled }}>
         <div style={wrapperStyle}>
           {leftIcon && (
             <span style={{ ...iconStyle, left: sizeStyle.padding }}>{leftIcon}</span>
@@ -135,8 +135,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <span
             id={`${props.id}-error`}
             style={{
-              color: colors.status.error,
-              fontSize: typography.fontSize.sm[0],
+              color: colors.fg.alert.secondary,
+              fontSize: 14,
               fontFamily: typography.fontFamily.sans,
             }}
             role="alert"

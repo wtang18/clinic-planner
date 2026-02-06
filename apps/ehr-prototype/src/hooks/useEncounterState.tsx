@@ -47,6 +47,126 @@ export const EncounterStoreProvider: React.FC<EncounterStoreProviderProps> = ({
       : createStore({ initialState });
   }
 
+  // Expose test hooks on window in development mode
+  React.useEffect(() => {
+    if (devMode && typeof window !== 'undefined' && storeRef.current) {
+      const store = storeRef.current;
+      const win = window as unknown as Record<string, unknown>;
+
+      // Get current encounter state
+      win.__TEST_GET_ENCOUNTER_STATE__ = () => store.getState();
+
+      // Inject a task - creates a new task in the store
+      win.__TEST_INJECT_TASK__ = (taskInput: {
+        id: string;
+        type: string;
+        status: string;
+        displayTitle?: string;
+        displayStatus?: string;
+        priority?: string;
+        trigger?: { action?: string; itemId?: string };
+        result?: unknown;
+        error?: string;
+        progress?: number;
+      }) => {
+        // Create a full BackgroundTask object
+        const task: import('../types').BackgroundTask = {
+          id: taskInput.id,
+          type: taskInput.type as import('../types').TaskType,
+          status: taskInput.status as import('../types').TaskStatus,
+          displayTitle: taskInput.displayTitle || taskInput.type,
+          displayStatus: taskInput.displayStatus || taskInput.status,
+          priority: (taskInput.priority as import('../types').Priority) || 'normal',
+          trigger: {
+            action: taskInput.trigger?.action || 'test-inject',
+            itemId: taskInput.trigger?.itemId,
+          },
+          result: taskInput.result,
+          error: taskInput.error,
+          progress: taskInput.progress,
+          createdAt: new Date(),
+        };
+        store.dispatch({
+          type: 'TASK_CREATED',
+          payload: { task },
+        });
+      };
+
+      // Inject a chart item - creates a new item in the store
+      win.__TEST_INJECT_ITEM__ = (itemInput: {
+        id: string;
+        category: string;
+        displayText: string;
+        status?: string;
+        _meta?: { aiGenerated?: boolean; requiresReview?: boolean };
+      }) => {
+        // Build a minimal item - use unknown casting to bypass strict type checks
+        // This is for testing only and won't be used in production
+        const item = {
+          id: itemInput.id,
+          category: itemInput.category,
+          displayText: itemInput.displayText,
+          status: itemInput.status || 'confirmed',
+          source: { type: 'manual' },
+          createdAt: new Date(),
+          tags: [],
+          linkedDiagnoses: [],
+          linkedEncounters: [],
+          _meta: {
+            aiGenerated: itemInput._meta?.aiGenerated ?? false,
+            requiresReview: itemInput._meta?.requiresReview ?? false,
+            confidence: 1,
+            syncStatus: 'local' as const,
+          },
+        } as unknown as import('../types').ChartItem;
+        const source: import('../types').ItemSource = { type: 'manual' };
+        store.dispatch({
+          type: 'ITEM_ADDED',
+          payload: { item, source },
+        });
+      };
+
+      // Clear all items
+      win.__TEST_CLEAR_ITEMS__ = () => {
+        const state = store.getState();
+        Object.keys(state.entities.items).forEach((id) => {
+          store.dispatch({ type: 'ITEM_DELETED', payload: { id } });
+        });
+      };
+
+      // Set encounter ready for sign-off
+      win.__TEST_SET_ENCOUNTER_READY__ = () => {
+        // Complete all pending tasks and confirm all items
+        const state = store.getState();
+        Object.values(state.entities.tasks).forEach((task) => {
+          if (task.status === 'pending-review' || task.status === 'processing') {
+            store.dispatch({
+              type: 'TASK_COMPLETED',
+              payload: { id: task.id, result: { status: 'auto-completed' } },
+            });
+          }
+        });
+        Object.values(state.entities.items).forEach((item) => {
+          if (item.status === 'pending-review') {
+            store.dispatch({
+              type: 'ITEM_CONFIRMED',
+              payload: { id: item.id },
+            });
+          }
+        });
+      };
+
+      // Cleanup
+      return () => {
+        delete win.__TEST_GET_ENCOUNTER_STATE__;
+        delete win.__TEST_INJECT_TASK__;
+        delete win.__TEST_INJECT_ITEM__;
+        delete win.__TEST_CLEAR_ITEMS__;
+        delete win.__TEST_SET_ENCOUNTER_READY__;
+      };
+    }
+  }, [devMode]);
+
   return (
     <StoreContext.Provider value={storeRef.current}>
       {children}
@@ -73,12 +193,10 @@ export function useStore(): Store {
 }
 
 /**
- * Main hook for accessing encounter state and dispatch
+ * Main hook for accessing encounter state
+ * Returns just the state; use useDispatch() for dispatch.
  */
-export function useEncounterState(): {
-  state: EncounterState;
-  dispatch: (action: EncounterAction) => void;
-} {
+export function useEncounterState(): EncounterState {
   const store = useStore();
   const [state, setState] = React.useState(store.getState);
 
@@ -94,10 +212,7 @@ export function useEncounterState(): {
     return unsubscribe;
   }, [store]);
 
-  return {
-    state,
-    dispatch: store.dispatch,
-  };
+  return state;
 }
 
 /**

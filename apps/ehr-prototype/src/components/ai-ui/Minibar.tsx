@@ -5,11 +5,13 @@
  */
 
 import React from 'react';
+import { Mic, MicOff, AlertTriangle, Cloud, CloudOff, RefreshCw, ChevronUp, List, Sparkles } from 'lucide-react';
 import type { TranscriptionStatus } from '../../types/transcription';
 import type { SyncStatus } from '../../types/common';
-import { colors, spacing, typography, radii, shadows, transitions, zIndex } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions, zIndex } from '../../styles/foundations';
 import { Badge } from '../primitives/Badge';
 import { IconButton } from '../primitives/IconButton';
+import { PatientIndicator } from './PatientIndicator';
 
 // ============================================================================
 // Types
@@ -30,79 +32,19 @@ export interface MinibarProps {
   onOpenPalette: () => void;
   /** Called when task pane should open */
   onOpenTaskPane: () => void;
+  /** Called when AI drawer should toggle */
+  onOpenAIDrawer?: () => void;
   /** Whether transcription is available */
   transcriptionEnabled?: boolean;
+  /** Patient name for the indicator */
+  patientName?: string;
+  /** Patient initials for the indicator */
+  patientInitials?: string;
+  /** Called when patient indicator is clicked */
+  onPatientClick?: () => void;
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const MicIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const MicOffIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="1" y1="1" x2="23" y2="23" />
-    <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
-    <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const AlertIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
-const CloudIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
-  </svg>
-);
-
-const CloudOffIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="1" y1="1" x2="23" y2="23" />
-    <path d="M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3" />
-  </svg>
-);
-
-const RefreshIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="23,4 23,10 17,10" />
-    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-  </svg>
-);
-
-const ChevronUpIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="18,15 12,9 6,15" />
-  </svg>
-);
-
-const ListIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="8" y1="6" x2="21" y2="6" />
-    <line x1="8" y1="12" x2="21" y2="12" />
-    <line x1="8" y1="18" x2="21" y2="18" />
-    <line x1="3" y1="6" x2="3.01" y2="6" />
-    <line x1="3" y1="12" x2="3.01" y2="12" />
-    <line x1="3" y1="18" x2="3.01" y2="18" />
-  </svg>
-);
 
 // ============================================================================
 // Component
@@ -116,7 +58,11 @@ export const Minibar: React.FC<MinibarProps> = ({
   onTranscriptionToggle,
   onOpenPalette,
   onOpenTaskPane,
+  onOpenAIDrawer,
   transcriptionEnabled = true,
+  patientName,
+  patientInitials,
+  onPatientClick,
   style,
 }) => {
   const isRecording = transcriptionStatus === 'recording';
@@ -129,9 +75,9 @@ export const Minibar: React.FC<MinibarProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${spacing[2]} ${spacing[4]}`,
-    backgroundColor: colors.neutral[900],
-    borderRadius: radii.lg,
+    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
+    backgroundColor: colors.fg.neutral.primary,
+    borderRadius: borderRadius.sm,
     boxShadow: shadows.lg,
     ...style,
   };
@@ -139,28 +85,28 @@ export const Minibar: React.FC<MinibarProps> = ({
   const leftSectionStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
   };
 
   const rightSectionStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   const statusGroupStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    padding: `${spacing[1]} ${spacing[2]}`,
-    backgroundColor: colors.neutral[800],
-    borderRadius: radii.md,
+    gap: spaceBetween.repeating,
+    padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
+    backgroundColor: colors.fg.neutral.primary,
+    borderRadius: borderRadius.sm,
   };
 
   const dividerStyle: React.CSSProperties = {
     width: '1px',
     height: '24px',
-    backgroundColor: colors.neutral[700],
+    backgroundColor: colors.fg.neutral.secondary,
   };
 
   // Transcription button styles
@@ -170,17 +116,17 @@ export const Minibar: React.FC<MinibarProps> = ({
     justifyContent: 'center',
     width: '36px',
     height: '36px',
-    borderRadius: radii.full,
+    borderRadius: borderRadius.full,
     border: 'none',
     cursor: transcriptionEnabled ? 'pointer' : 'not-allowed',
     opacity: transcriptionEnabled ? 1 : 0.5,
     transition: `all ${transitions.fast}`,
     backgroundColor: isRecording
-      ? colors.status.error
+      ? colors.fg.alert.secondary
       : hasError
-      ? colors.status.errorLight
-      : colors.neutral[700],
-    color: isRecording || hasError ? colors.neutral[0] : colors.neutral[300],
+      ? colors.bg.alert.subtle
+      : colors.fg.neutral.secondary,
+    color: isRecording || hasError ? colors.bg.neutral.base : colors.border.neutral.medium,
   };
 
   const pulseStyle: React.CSSProperties = isRecording
@@ -191,15 +137,15 @@ export const Minibar: React.FC<MinibarProps> = ({
 
   // Sync status
   const getSyncIcon = () => {
-    if (isSyncing) return <RefreshIcon />;
-    if (isSyncError) return <CloudOffIcon />;
-    return <CloudIcon />;
+    if (isSyncing) return <RefreshCw size={14} />;
+    if (isSyncError) return <CloudOff size={14} />;
+    return <Cloud size={14} />;
   };
 
   const getSyncColor = () => {
-    if (isSyncing) return colors.status.info;
-    if (isSyncError) return colors.status.error;
-    return colors.status.success;
+    if (isSyncing) return colors.fg.information.secondary;
+    if (isSyncError) return colors.fg.alert.secondary;
+    return colors.fg.positive.secondary;
   };
 
   return (
@@ -220,17 +166,16 @@ export const Minibar: React.FC<MinibarProps> = ({
               : 'Start recording'
           }
         >
-          <span style={{ width: '20px', height: '20px', display: 'flex' }}>
-            {hasError ? <MicOffIcon /> : <MicIcon />}
-          </span>
+          {hasError ? <MicOff size={20} /> : <Mic size={20} />}
         </button>
 
         {/* Recording status */}
         {isRecording && (
           <span
             style={{
-              fontSize: typography.fontSize.xs[0],
-              color: colors.status.error,
+              fontSize: 12,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.alert.secondary,
               fontWeight: typography.fontWeight.medium,
             }}
           >
@@ -240,8 +185,9 @@ export const Minibar: React.FC<MinibarProps> = ({
         {isProcessing && (
           <span
             style={{
-              fontSize: typography.fontSize.xs[0],
-              color: colors.status.info,
+              fontSize: 12,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.information.secondary,
             }}
           >
             Processing...
@@ -259,13 +205,11 @@ export const Minibar: React.FC<MinibarProps> = ({
         >
           <span
             style={{
-              width: '16px',
-              height: '16px',
               display: 'flex',
-              color: pendingReviewCount > 0 ? colors.status.warning : colors.neutral[500],
+              color: pendingReviewCount > 0 ? colors.fg.attention.secondary : colors.fg.neutral.spotReadable,
             }}
           >
-            <ListIcon />
+            <List size={16} />
           </span>
           {pendingReviewCount > 0 && (
             <Badge variant="warning" size="sm" count={pendingReviewCount} />
@@ -273,8 +217,9 @@ export const Minibar: React.FC<MinibarProps> = ({
           {pendingReviewCount === 0 && (
             <span
               style={{
-                fontSize: typography.fontSize.xs[0],
-                color: colors.neutral[500],
+                fontSize: 12,
+                fontFamily: typography.fontFamily.sans,
+                color: colors.fg.neutral.spotReadable,
               }}
             >
               No tasks
@@ -287,30 +232,41 @@ export const Minibar: React.FC<MinibarProps> = ({
           <div style={statusGroupStyle}>
             <span
               style={{
-                width: '16px',
-                height: '16px',
                 display: 'flex',
-                color: colors.status.error,
+                color: colors.fg.alert.secondary,
               }}
             >
-              <AlertIcon />
+              <AlertTriangle size={16} />
             </span>
             <Badge variant="error" size="sm" count={alertCount} />
           </div>
         )}
       </div>
 
-      {/* Right section: Sync + Expand */}
+      {/* Center section: Patient indicator */}
+      {patientName && (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div style={dividerStyle} />
+          <PatientIndicator
+            name={patientName}
+            initials={patientInitials}
+            isRecording={isRecording}
+            onClick={onPatientClick}
+          />
+        </div>
+      )}
+
+      {/* Right section: Sync + AI + Expand */}
       <div style={rightSectionStyle}>
         {/* Sync status */}
         <span
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: spacing[1],
-            padding: `${spacing[1]} ${spacing[2]}`,
-            backgroundColor: colors.neutral[800],
-            borderRadius: radii.md,
+            gap: spaceBetween.coupled,
+            padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
+            backgroundColor: colors.fg.neutral.primary,
+            borderRadius: borderRadius.sm,
           }}
           title={
             isSyncing
@@ -322,8 +278,6 @@ export const Minibar: React.FC<MinibarProps> = ({
         >
           <span
             style={{
-              width: '14px',
-              height: '14px',
               display: 'flex',
               color: getSyncColor(),
               animation: isSyncing ? 'spin 1s linear infinite' : 'none',
@@ -333,14 +287,26 @@ export const Minibar: React.FC<MinibarProps> = ({
           </span>
         </span>
 
+        {/* AI drawer toggle */}
+        {onOpenAIDrawer && (
+          <IconButton
+            icon={<Sparkles size={18} />}
+            label="Open AI assistant"
+            variant="ghost"
+            size="md"
+            onClick={onOpenAIDrawer}
+            style={{ color: colors.fg.neutral.disabled }}
+          />
+        )}
+
         {/* Expand to palette */}
         <IconButton
-          icon={<ChevronUpIcon />}
+          icon={<ChevronUp size={18} />}
           label="Open AI palette"
           variant="ghost"
           size="md"
           onClick={onOpenPalette}
-          style={{ color: colors.neutral[400] }}
+          style={{ color: colors.fg.neutral.disabled }}
         />
       </div>
 

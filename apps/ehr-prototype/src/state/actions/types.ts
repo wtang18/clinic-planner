@@ -46,6 +46,7 @@ export type ChartItemAction =
   | { type: 'ITEM_CANCELLED'; payload: { id: string; reason?: string } }
   | { type: 'ITEM_DX_LINKED'; payload: { itemId: string; dxId: string } }
   | { type: 'ITEM_DX_UNLINKED'; payload: { itemId: string; dxId: string } }
+  | { type: 'ITEM_DELETED'; payload: { id: string } }
   | { type: 'ITEM_SENT'; payload: { id: string; destination: string; method: string } }
   | { type: 'ITEMS_BATCH_SENT'; payload: { ids: string[]; destination: string } }
   | { type: 'ITEM_RESULT_RECEIVED'; payload: { id: string; result: unknown } };
@@ -157,7 +158,8 @@ export type SessionAction =
         visit?: VisitMeta;
       };
     }
-  | { type: 'ENCOUNTER_CLOSED'; payload: { save: boolean } };
+  | { type: 'ENCOUNTER_CLOSED'; payload: { save: boolean } }
+  | { type: 'ENCOUNTER_SIGNED'; payload: { signedAt: Date; signedBy?: string } };
 
 // ============================================================================
 // Collaboration Actions
@@ -205,6 +207,7 @@ export const CHART_ITEM_ACTION_TYPES = [
   'ITEM_UPDATED',
   'ITEM_CONFIRMED',
   'ITEM_CANCELLED',
+  'ITEM_DELETED',
   'ITEM_DX_LINKED',
   'ITEM_DX_UNLINKED',
   'ITEM_SENT',
@@ -248,6 +251,7 @@ export const SESSION_ACTION_TYPES = [
   'TRANSCRIPTION_SEGMENT_RECEIVED',
   'ENCOUNTER_OPENED',
   'ENCOUNTER_CLOSED',
+  'ENCOUNTER_SIGNED',
 ] as const;
 
 export const COLLABORATION_ACTION_TYPES = [

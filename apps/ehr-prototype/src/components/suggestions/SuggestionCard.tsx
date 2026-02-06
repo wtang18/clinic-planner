@@ -5,13 +5,16 @@
  */
 
 import React from 'react';
+import { Mic, Sparkles, Heart, ClipboardList, Check, Pencil, X } from 'lucide-react';
 import type { Suggestion, SuggestionContent } from '../../types/suggestions';
 import type { ChartItem } from '../../types/chart-items';
-import { colors, spacing, typography, radii, shadows, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
 import { getConfidenceColor, getConfidenceLabel, getCategoryColor } from '../../styles/utils';
+import { formatTimeAgo } from '../../utils/formatTimeAgo';
 import { Card } from '../primitives/Card';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
+import { ActionGroup } from '../primitives/ActionGroup';
 
 // ============================================================================
 // Types
@@ -38,68 +41,18 @@ export interface SuggestionCardProps {
 // Icons
 // ============================================================================
 
-const MicIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const AIIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-    <path d="M2 17l10 5 10-5" />
-    <path d="M2 12l10 5 10-5" />
-  </svg>
-);
-
-const HeartIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const ClipboardIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="20,6 9,17 4,12" />
-  </svg>
-);
-
-const EditIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const getSourceIcon = (source: Suggestion['source']): React.ReactNode => {
+const getSourceIcon = (source: Suggestion['source'], size = 20): React.ReactNode => {
   switch (source) {
     case 'transcription':
-      return <MicIcon />;
+      return <Mic size={size} />;
     case 'ai-analysis':
-      return <AIIcon />;
+      return <Sparkles size={size} />;
     case 'care-gap':
-      return <HeartIcon />;
+      return <Heart size={size} />;
     case 'cds':
-      return <ClipboardIcon />;
+      return <ClipboardList size={size} />;
     default:
-      return <AIIcon />;
+      return <Sparkles size={size} />;
   }
 };
 
@@ -126,11 +79,11 @@ const getSourceLabel = (source: Suggestion['source']): string => {
 
 const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) => {
   const previewStyle: React.CSSProperties = {
-    padding: spacing[3],
-    backgroundColor: colors.neutral[50],
-    borderRadius: radii.md,
-    fontSize: typography.fontSize.sm[0],
-    lineHeight: typography.fontSize.sm[1].lineHeight,
+    padding: spaceAround.compact,
+    backgroundColor: colors.bg.neutral.min,
+    borderRadius: borderRadius.sm,
+    fontSize: 14,
+    lineHeight: '20px',
   };
 
   switch (content.type) {
@@ -142,8 +95,8 @@ const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) =
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: spacing[2],
-            marginBottom: spacing[2],
+            gap: spaceBetween.repeating,
+            marginBottom: spaceAround.tight,
           }}>
             <Badge
               variant="default"
@@ -154,12 +107,12 @@ const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) =
             </Badge>
           </div>
           {template.displayText && (
-            <div style={{ color: colors.neutral[900], fontWeight: typography.fontWeight.medium }}>
+            <div style={{ color: colors.fg.neutral.primary, fontWeight: typography.fontWeight.medium }}>
               {template.displayText}
             </div>
           )}
           {template.displaySubtext && (
-            <div style={{ color: colors.neutral[600], marginTop: spacing[1] }}>
+            <div style={{ color: colors.fg.neutral.secondary, marginTop: spaceAround.nudge4 }}>
               {template.displaySubtext}
             </div>
           )}
@@ -170,9 +123,9 @@ const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) =
       return (
         <div style={previewStyle}>
           <div style={{
-            fontSize: typography.fontSize.xs[0],
-            color: colors.neutral[500],
-            marginBottom: spacing[2],
+            fontSize: 12,
+            color: colors.fg.neutral.spotReadable,
+            marginBottom: spaceAround.tight,
           }}>
             Suggested diagnoses to link:
           </div>
@@ -181,14 +134,14 @@ const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) =
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: `${spacing[1]} 0`,
-              borderBottom: index < content.suggestedDx.length - 1 ? `1px solid ${colors.neutral[200]}` : 'none',
+              padding: `${spaceAround.nudge4}px 0`,
+              borderBottom: index < content.suggestedDx.length - 1 ? `1px solid ${colors.border.neutral.low}` : 'none',
             }}>
-              <span style={{ color: colors.neutral[900] }}>
-                {dx.description} <span style={{ color: colors.neutral[500] }}>({dx.icdCode})</span>
+              <span style={{ color: colors.fg.neutral.primary }}>
+                {dx.description} <span style={{ color: colors.fg.neutral.spotReadable }}>({dx.icdCode})</span>
               </span>
               <span style={{
-                fontSize: typography.fontSize.xs[0],
+                fontSize: 12,
                 color: getConfidenceColor(dx.confidence),
               }}>
                 {Math.round(dx.confidence * 100)}%
@@ -201,26 +154,26 @@ const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) =
       return (
         <div style={previewStyle}>
           <div style={{
-            fontSize: typography.fontSize.xs[0],
-            color: colors.neutral[500],
-            marginBottom: spacing[2],
+            fontSize: 12,
+            color: colors.fg.neutral.spotReadable,
+            marginBottom: spaceAround.tight,
           }}>
             Suggested correction for <strong>{content.field}</strong>:
           </div>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: spacing[2],
+            gap: spaceBetween.repeating,
           }}>
             <span style={{
               textDecoration: 'line-through',
-              color: colors.neutral[400],
+              color: colors.fg.neutral.disabled,
             }}>
               {String(content.currentValue)}
             </span>
-            <span style={{ color: colors.neutral[400] }}>→</span>
+            <span style={{ color: colors.fg.neutral.disabled }}>→</span>
             <span style={{
-              color: colors.status.success,
+              color: colors.fg.positive.secondary,
               fontWeight: typography.fontWeight.medium,
             }}>
               {String(content.suggestedValue)}
@@ -231,11 +184,11 @@ const ContentPreview: React.FC<{ content: SuggestionContent }> = ({ content }) =
     case 'care-gap-action':
       return (
         <div style={previewStyle}>
-          <Badge variant="warning" size="sm" style={{ marginBottom: spacing[2] }}>
+          <Badge variant="warning" size="sm" style={{ marginBottom: spaceAround.tight }}>
             Care Gap Action
           </Badge>
           {content.actionTemplate.displayText && (
-            <div style={{ color: colors.neutral[900] }}>
+            <div style={{ color: colors.fg.neutral.primary }}>
               {content.actionTemplate.displayText}
             </div>
           )}
@@ -267,9 +220,9 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[4],
-    padding: spacing[4],
-    borderLeft: `3px solid ${colors.ai.suggestion}`,
+    gap: spaceBetween.related,
+    padding: spaceAround.default,
+    backgroundColor: colors.bg.neutral.base,
     ...style,
   };
 
@@ -277,91 +230,78 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
     display: 'flex',
     alignItems: 'flex-start',
     justifyContent: 'space-between',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
   };
 
   const headerLeftStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   const sourceIconStyle: React.CSSProperties = {
-    width: '20px',
-    height: '20px',
     display: 'flex',
-    color: colors.ai.suggestion,
+    color: colors.fg.neutral.secondary,
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.base[0],
+    fontSize: 16,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const subtextStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
-    color: colors.neutral[600],
-    marginTop: spacing[1],
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
+    marginTop: spaceAround.nudge4,
   };
 
   const metaStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[3],
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    gap: spaceBetween.relatedCompact,
+    fontSize: 12,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.spotReadable,
   };
 
   const confidenceStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
-  };
-
-  const confidenceDotStyle: React.CSSProperties = {
-    width: '8px',
-    height: '8px',
-    borderRadius: radii.full,
-    backgroundColor: confidenceColor,
+    gap: spaceBetween.coupled,
   };
 
   const reasoningStyle: React.CSSProperties = {
-    padding: spacing[3],
-    backgroundColor: colors.neutral[50],
-    borderRadius: radii.md,
-    fontSize: typography.fontSize.sm[0],
-    color: colors.neutral[600],
+    padding: spaceAround.compact,
+    backgroundColor: colors.bg.neutral.min,
+    borderRadius: borderRadius.sm,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
     fontStyle: 'italic',
-    borderLeft: `2px solid ${colors.neutral[300]}`,
   };
 
   const transcriptStyle: React.CSSProperties = {
-    padding: spacing[3],
-    backgroundColor: colors.ai.suggestionLight,
-    borderRadius: radii.md,
-    fontSize: typography.fontSize.sm[0],
-    color: colors.neutral[700],
+    padding: spaceAround.compact,
+    backgroundColor: colors.bg.positive.subtle,
+    borderRadius: borderRadius.sm,
+    fontSize: 14,
+    color: colors.fg.neutral.secondary,
     fontFamily: typography.fontFamily.mono,
   };
 
-  const actionsStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
-    paddingTop: spacing[3],
-    borderTop: `1px solid ${colors.neutral[200]}`,
-  };
 
   const dismissOptionsStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    marginTop: spacing[2],
-    padding: spacing[2],
-    backgroundColor: colors.neutral[50],
-    borderRadius: radii.md,
+    gap: spaceBetween.repeating,
+    marginTop: spaceAround.tight,
+    padding: spaceAround.tight,
+    backgroundColor: colors.bg.neutral.min,
+    borderRadius: borderRadius.sm,
   };
 
   const dismissReasons = [
@@ -371,14 +311,14 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   ];
 
   return (
-    <Card variant="outlined" padding="none">
+    <Card variant="outlined" padding="none" data-testid={`suggestion-card-${suggestion.id}`}>
       <div style={containerStyle}>
         {/* Header */}
         <div style={headerStyle}>
           <div>
             <div style={headerLeftStyle}>
               <span style={sourceIconStyle}>
-                {getSourceIcon(suggestion.source)}
+                {getSourceIcon(suggestion.source, 20)}
               </span>
               <p style={titleStyle}>{suggestion.displayText}</p>
             </div>
@@ -393,7 +333,6 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
         <div style={metaStyle}>
           <span>{getSourceLabel(suggestion.source)}</span>
           <span style={confidenceStyle}>
-            <span style={confidenceDotStyle} />
             {confidenceLabel} ({Math.round(suggestion.confidence * 100)}%)
           </span>
           <span>{formatTimeAgo(suggestion.createdAt)}</span>
@@ -413,14 +352,14 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
         {showTranscript && transcriptExcerpt && (
           <div style={transcriptStyle}>
             <div style={{
-              fontSize: typography.fontSize.xs[0],
-              color: colors.neutral[500],
-              marginBottom: spacing[1],
+              fontSize: 12,
+              color: colors.fg.neutral.spotReadable,
+              marginBottom: spaceAround.nudge4,
               display: 'flex',
               alignItems: 'center',
-              gap: spacing[1],
+              gap: spaceBetween.coupled,
             }}>
-              <span style={{ width: '12px', height: '12px', display: 'flex' }}><MicIcon /></span>
+              <Mic size={12} />
               From transcript:
             </div>
             "{transcriptExcerpt}"
@@ -428,37 +367,41 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
         )}
 
         {/* Actions */}
-        <div style={actionsStyle}>
+        <ActionGroup layout="space-between" style={{ paddingTop: spaceAround.compact }}>
+          <ActionGroup>
+            <Button
+              data-testid="card-accept-btn"
+              variant="primary"
+              size="sm"
+              leftIcon={<Check size={14} />}
+              onClick={onAccept}
+            >
+              Accept
+            </Button>
+            <Button
+              data-testid="card-modify-btn"
+              variant="secondary"
+              size="sm"
+              leftIcon={<Pencil size={14} />}
+              onClick={() => onAcceptWithChanges({})}
+            >
+              Accept with changes
+            </Button>
+          </ActionGroup>
           <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<CheckIcon />}
-            onClick={onAccept}
-          >
-            Accept
-          </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            leftIcon={<EditIcon />}
-            onClick={() => onAcceptWithChanges({})}
-          >
-            Accept with changes
-          </Button>
-          <div style={{ flex: 1 }} />
-          <Button
+            data-testid="card-dismiss-btn"
             variant="ghost"
             size="sm"
             onClick={() => setShowDismissOptions(!showDismissOptions)}
           >
             Dismiss
           </Button>
-        </div>
+        </ActionGroup>
 
         {/* Dismiss options */}
         {showDismissOptions && (
           <div style={dismissOptionsStyle}>
-            <span style={{ fontSize: typography.fontSize.xs[0], color: colors.neutral[500] }}>
+            <span style={{ fontSize: 12, color: colors.fg.neutral.spotReadable }}>
               Reason:
             </span>
             {dismissReasons.map((reason) => (
@@ -484,25 +427,5 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
     </Card>
   );
 };
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function formatTimeAgo(date: Date): string {
-  if (!(date instanceof Date)) {
-    date = new Date(date);
-  }
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-
-  if (diffSeconds < 60) return 'Just now';
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return date.toLocaleDateString();
-}
 
 SuggestionCard.displayName = 'SuggestionCard';

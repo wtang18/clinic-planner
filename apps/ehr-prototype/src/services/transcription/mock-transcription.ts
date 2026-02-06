@@ -186,7 +186,7 @@ export function createMockTranscriptionService(
   transcriptionConfig?: Partial<TranscriptionConfig>
 ): TranscriptionService {
   const config = { ...DEFAULT_TRANSCRIPTION_CONFIG, ...transcriptionConfig };
-  let status: TranscriptSegment['speaker'] extends string ? string : never = 'idle';
+  let status: string = 'idle';
   const segments: TranscriptSegment[] = [];
   const eventHandlers = new Set<TranscriptionEventHandler>();
   let playbackTimeouts: ReturnType<typeof setTimeout>[] = [];

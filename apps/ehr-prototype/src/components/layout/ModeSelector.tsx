@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
+import { Mic, Brain, FileCheck } from 'lucide-react';
 import type { Mode } from '../../state/types';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, typography, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -41,36 +42,14 @@ const MODES: { mode: Mode; label: string; description: string }[] = [
 // Icons
 // ============================================================================
 
-const getModeIcon = (mode: Mode): React.ReactNode => {
-  const iconStyle = { width: '100%', height: '100%' };
-
+const getModeIcon = (mode: Mode, size: number): React.ReactNode => {
   switch (mode) {
     case 'capture':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-          <line x1="12" y1="19" x2="12" y2="23" />
-          <line x1="8" y1="23" x2="16" y2="23" />
-        </svg>
-      );
+      return <Mic size={size} />;
     case 'process':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-        </svg>
-      );
+      return <Brain size={size} />;
     case 'review':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14,2 14,8 20,8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <polyline points="10,9 9,9 8,9" />
-        </svg>
-      );
+      return <FileCheck size={size} />;
     default:
       return null;
   }
@@ -105,32 +84,39 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
     }
   };
 
+  // Glassmorphic pill container (44px height)
   const containerStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    backgroundColor: colors.neutral[100],
-    borderRadius: radii.lg,
-    padding: spacing[1],
+    height: GLASS_BUTTON_HEIGHT,
+    ...glass.button,
+    borderRadius: GLASS_BUTTON_RADIUS,
+    padding: spaceAround.nudge4,
     ...style,
   };
+
+  // Inner segment buttons (36px to fit within 44px container)
+  const innerButtonHeight = GLASS_BUTTON_HEIGHT - 8;
+  const innerButtonRadius = (GLASS_BUTTON_HEIGHT - 8) / 2;
 
   const buttonStyle = (mode: Mode, isActive: boolean, isHovered: boolean): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    padding: `${spacing[2]} ${spacing[4]}`,
-    backgroundColor: isActive ? colors.neutral[0] : 'transparent',
+    gap: spaceBetween.repeating,
+    padding: `0 ${spaceAround.default}px`,
+    height: innerButtonHeight,
+    backgroundColor: isActive ? colors.bg.neutral.base : 'transparent',
     border: 'none',
-    borderRadius: radii.md,
+    borderRadius: innerButtonRadius,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: typography.fontSize.sm[0],
-    fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.normal,
-    color: isActive ? colors.neutral[900] : colors.neutral[600],
+    fontSize: 14,
+    fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
+    color: isActive ? colors.fg.neutral.primary : colors.fg.neutral.secondary,
     transition: `all ${transitions.fast}`,
     boxShadow: isActive ? '0 1px 3px 0 rgb(0 0 0 / 0.1)' : 'none',
     opacity: disabled ? 0.5 : 1,
     ...(isHovered && !isActive && !disabled && {
-      backgroundColor: colors.neutral[200],
+      backgroundColor: 'rgba(0, 0, 0, 0.04)',
     }),
   });
 
@@ -158,8 +144,9 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             disabled={disabled}
+            data-testid={`mode-${mode}`}
           >
-            <span style={iconStyle}>{getModeIcon(mode)}</span>
+            <span style={iconStyle}>{getModeIcon(mode, 16)}</span>
             <span>{label}</span>
           </button>
         );

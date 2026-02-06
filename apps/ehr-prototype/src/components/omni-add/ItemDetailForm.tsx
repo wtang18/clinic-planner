@@ -6,8 +6,7 @@
 
 import React from 'react';
 import type { ChartItem, ItemCategory } from '../../types/chart-items';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
-import { getCategoryColor } from '../../styles/utils';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { Input } from '../primitives/Input';
 import { Button } from '../primitives/Button';
 
@@ -175,7 +174,6 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
   style,
 }) => {
   const fields = FORM_FIELDS[category] || [];
-  const categoryColors = getCategoryColor(category);
 
   // Initialize form state with defaults
   const [formData, setFormData] = React.useState<Record<string, string | number>>(() => {
@@ -203,55 +201,55 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[4],
+    gap: spaceBetween.related,
     ...style,
   };
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    paddingBottom: spacing[3],
-    borderBottom: `1px solid ${colors.neutral[200]}`,
+    gap: spaceBetween.repeating,
+    paddingBottom: spaceAround.compact,
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
+    fontSize: 14,
     fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const subtitleStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    fontSize: 12,
+    color: colors.fg.neutral.spotReadable,
   };
 
   const fieldsContainerStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
   };
 
   const fieldStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[1],
+    gap: spaceBetween.coupled,
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
+    fontSize: 12,
     fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[600],
+    color: colors.fg.neutral.secondary,
   };
 
   const selectStyle: React.CSSProperties = {
-    padding: `${spacing[2]} ${spacing[3]}`,
-    fontSize: typography.fontSize.sm[0],
-    border: `1px solid ${colors.neutral[300]}`,
-    borderRadius: radii.md,
-    backgroundColor: colors.neutral[0],
-    color: colors.neutral[900],
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    fontSize: 14,
+    border: `1px solid ${colors.border.neutral.medium}`,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.bg.neutral.base,
+    color: colors.fg.neutral.primary,
     cursor: 'pointer',
     transition: `border-color ${transitions.fast}`,
     outline: 'none',
@@ -261,34 +259,25 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
   const actionsStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'flex-end',
-    gap: spacing[2],
-    paddingTop: spacing[3],
-    borderTop: `1px solid ${colors.neutral[200]}`,
+    gap: spaceBetween.repeating,
+    paddingTop: spaceAround.compact,
   };
 
   // If no fields for this category, show simplified form
   if (fields.length === 0) {
     return (
-      <div style={containerStyle}>
+      <div style={containerStyle} data-testid="item-detail-form">
         <div style={headerStyle}>
-          <span
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: radii.full,
-              backgroundColor: categoryColors.icon,
-            }}
-          />
           <p style={titleStyle}>{initialData.displayText}</p>
         </div>
-        <p style={{ fontSize: typography.fontSize.sm[0], color: colors.neutral[600] }}>
+        <p style={{ fontSize: 14, color: colors.fg.neutral.secondary }}>
           No additional details required for this item type.
         </p>
         <div style={actionsStyle}>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
+          <Button variant="ghost" size="sm" onClick={onCancel} data-testid="item-form-cancel">
             Cancel
           </Button>
-          <Button variant="primary" size="sm" onClick={() => onSubmit(initialData)}>
+          <Button variant="primary" size="sm" onClick={() => onSubmit(initialData)} data-testid="add-item-btn">
             Add Item
           </Button>
         </div>
@@ -297,17 +286,9 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
   }
 
   return (
-    <form style={containerStyle} onSubmit={handleSubmit}>
+    <form style={containerStyle} onSubmit={handleSubmit} data-testid="item-detail-form">
       {/* Header */}
       <div style={headerStyle}>
-        <span
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: radii.full,
-            backgroundColor: categoryColors.icon,
-          }}
-        />
         <div>
           <p style={titleStyle}>{initialData.displayText}</p>
           <span style={subtitleStyle}>{getCategoryLabel(category)}</span>
@@ -320,7 +301,7 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
           <div key={field.name} style={fieldStyle}>
             <label style={labelStyle}>
               {field.label}
-              {field.required && <span style={{ color: colors.status.error }}> *</span>}
+              {field.required && <span style={{ color: colors.fg.alert.secondary }}> *</span>}
             </label>
             {field.type === 'select' ? (
               <select
@@ -328,6 +309,7 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
                 value={String(formData[field.name] || '')}
                 onChange={e => handleChange(field.name, e.target.value)}
                 required={field.required}
+                data-testid={`field-${field.name}`}
               >
                 <option value="">Select...</option>
                 {field.options?.map(opt => (
@@ -343,6 +325,7 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
                 onChange={(e) => handleChange(field.name, field.type === 'number' ? Number(e.target.value) : e.target.value)}
                 placeholder={field.placeholder}
                 size="sm"
+                data-testid={`field-${field.name}`}
               />
             )}
           </div>
@@ -351,10 +334,10 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
 
       {/* Actions */}
       <div style={actionsStyle}>
-        <Button variant="ghost" size="sm" onClick={onCancel} type="button">
+        <Button variant="ghost" size="sm" onClick={onCancel} type="button" data-testid="item-form-cancel">
           Cancel
         </Button>
-        <Button variant="primary" size="sm" type="submit">
+        <Button variant="primary" size="sm" type="submit" data-testid="add-item-btn">
           Add Item
         </Button>
       </div>

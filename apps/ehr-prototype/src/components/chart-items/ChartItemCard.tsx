@@ -5,12 +5,26 @@
  */
 
 import React from 'react';
+import {
+  Pencil,
+  Trash2,
+  Sparkles,
+  Pill,
+  FlaskConical,
+  Activity,
+  HeartPulse,
+  ScanLine,
+  CircleDot,
+  AlertTriangle,
+  FileText,
+} from 'lucide-react';
 import type { ChartItem, Tag } from '../../types/chart-items';
-import { colors, spacing, typography, shadows, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
 import { getCategoryColor, getTagColor } from '../../styles/utils';
 import { Card } from '../primitives/Card';
 import { Badge } from '../primitives/Badge';
 import { IconButton } from '../primitives/IconButton';
+import { CardIconContainer } from '../primitives/CardIconContainer';
 
 // ============================================================================
 // Types
@@ -36,102 +50,28 @@ export interface ChartItemCardProps {
 }
 
 // ============================================================================
-// Icons (Simple SVG components)
+// Icons
 // ============================================================================
 
-const EditIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-  </svg>
-);
-
-const TrashIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="3,6 5,6 21,6" />
-    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-  </svg>
-);
-
-const AIIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-    <path d="M2 17l10 5 10-5" />
-    <path d="M2 12l10 5 10-5" />
-  </svg>
-);
-
 // Category icons
-const getCategoryIcon = (category: ChartItem['category']): React.ReactNode => {
-  const iconStyle = { width: '100%', height: '100%' };
-
+const getCategoryIcon = (category: ChartItem['category'], size: number): React.ReactNode => {
   switch (category) {
     case 'medication':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M10.5 20.5L3.5 13.5a4.95 4.95 0 0 1 7-7l7 7a4.95 4.95 0 0 1-7 7z" />
-          <path d="M8.5 8.5l7 7" />
-        </svg>
-      );
+      return <Pill size={size} />;
     case 'lab':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M9 3h6v5.5l3 5.5v4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-4l3-5.5V3z" />
-          <path d="M9 3h6" />
-        </svg>
-      );
+      return <FlaskConical size={size} />;
     case 'diagnosis':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-        </svg>
-      );
+      return <Activity size={size} />;
     case 'vitals':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      );
+      return <HeartPulse size={size} />;
     case 'imaging':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18" />
-          <line x1="7" y1="2" x2="7" y2="22" />
-          <line x1="17" y1="2" x2="17" y2="22" />
-          <line x1="2" y1="12" x2="22" y2="12" />
-          <line x1="2" y1="7" x2="7" y2="7" />
-          <line x1="2" y1="17" x2="7" y2="17" />
-          <line x1="17" y1="17" x2="22" y2="17" />
-          <line x1="17" y1="7" x2="22" y2="7" />
-        </svg>
-      );
+      return <ScanLine size={size} />;
     case 'procedure':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-          <line x1="9" y1="9" x2="9.01" y2="9" />
-          <line x1="15" y1="9" x2="15.01" y2="9" />
-        </svg>
-      );
+      return <CircleDot size={size} />;
     case 'allergy':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-      );
+      return <AlertTriangle size={size} />;
     default:
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14,2 14,8 20,8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <polyline points="10,9 9,9 8,9" />
-        </svg>
-      );
+      return <FileText size={size} />;
   }
 };
 
@@ -147,13 +87,13 @@ const TagDisplay: React.FC<{ tag: Tag }> = ({ tag }) => {
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        padding: `${spacing[0.5]} ${spacing[2]}`,
+        padding: `${spaceAround.nudge2}px ${spaceAround.tight}px`,
         backgroundColor: tagColors.bgColor,
         color: tagColors.color,
-        fontSize: typography.fontSize.xs[0],
-        lineHeight: typography.fontSize.xs[1].lineHeight,
+        fontSize: 12,
+        lineHeight: '16px',
         fontWeight: typography.fontWeight.medium,
-        borderRadius: radii.full,
+        borderRadius: borderRadius.xs,
         whiteSpace: 'nowrap',
       }}
     >
@@ -184,28 +124,15 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     position: 'relative',
     display: 'flex',
     alignItems: isCompact ? 'center' : 'flex-start',
-    gap: spacing[3],
-    padding: isCompact ? spacing[3] : spacing[4],
-    borderLeft: `3px solid ${categoryColors.border}`,
+    gap: spaceBetween.relatedCompact,
+    padding: isCompact ? spaceAround.compact : spaceAround.default,
     cursor: onSelect ? 'pointer' : 'default',
     transition: `all ${transitions.fast}`,
     ...(selected && {
-      backgroundColor: colors.primary[50],
+      backgroundColor: colors.bg.accent.subtle,
       boxShadow: shadows.focus,
     }),
     ...style,
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: isCompact ? '32px' : '40px',
-    height: isCompact ? '32px' : '40px',
-    backgroundColor: categoryColors.lightBg,
-    borderRadius: radii.lg,
-    color: categoryColors.icon,
-    flexShrink: 0,
   };
 
   const contentStyle: React.CSSProperties = {
@@ -213,21 +140,22 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: isCompact ? spacing[1] : spacing[2],
+    gap: isCompact ? spaceBetween.coupled : spaceBetween.repeating,
   };
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
     flexWrap: 'wrap',
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: isCompact ? typography.fontSize.sm[0] : typography.fontSize.base[0],
-    lineHeight: isCompact ? typography.fontSize.sm[1].lineHeight : typography.fontSize.base[1].lineHeight,
+    fontSize: isCompact ? 14 : 16,
+    lineHeight: isCompact ? '20px' : '24px',
+    fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -235,9 +163,10 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
   };
 
   const subtextStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    lineHeight: typography.fontSize.xs[1].lineHeight,
-    color: colors.neutral[500],
+    fontSize: 12,
+    lineHeight: '16px',
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.spotReadable,
     margin: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -247,27 +176,28 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
   const tagsContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: spacing[1],
-    marginTop: isCompact ? 0 : spacing[2],
+    gap: spaceBetween.coupled,
+    marginTop: isCompact ? 0 : spaceAround.tight,
   };
 
   const actionsStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
+    gap: spaceBetween.coupled,
     flexShrink: 0,
   };
 
   const aiIndicatorStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
-    color: colors.ai.suggestion,
-    fontSize: typography.fontSize.xs[0],
+    gap: spaceBetween.coupled,
+    color: colors.fg.generative.spotReadable,
+    fontSize: 12,
   };
 
   return (
     <Card
+      data-testid={`chart-item-card-${item.id}`}
       variant={selected ? 'elevated' : 'default'}
       padding="none"
       interactive={!!onSelect}
@@ -277,11 +207,9 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     >
       <div style={containerStyle}>
         {/* Category Icon */}
-        <div style={iconContainerStyle}>
-          <div style={{ width: isCompact ? '16px' : '20px', height: isCompact ? '16px' : '20px' }}>
-            {getCategoryIcon(item.category)}
-          </div>
-        </div>
+        <CardIconContainer color="default" size={isCompact ? 'md' : 'lg'}>
+          {getCategoryIcon(item.category, isCompact ? 16 : 20)}
+        </CardIconContainer>
 
         {/* Content */}
         <div style={contentStyle}>
@@ -289,9 +217,7 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
             <p style={titleStyle}>{item.displayText}</p>
             {isAIGenerated && (
               <div style={aiIndicatorStyle}>
-                <span style={{ width: '14px', height: '14px', display: 'flex' }}>
-                  <AIIcon />
-                </span>
+                <Sparkles size={14} />
                 {!isCompact && (
                   <span>AI</span>
                 )}
@@ -314,8 +240,8 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
               ))}
               {isCompact && item.tags.length > 3 && (
                 <span style={{
-                  fontSize: typography.fontSize.xs[0],
-                  color: colors.neutral[500],
+                  fontSize: 12,
+                  color: colors.fg.neutral.spotReadable,
                   alignSelf: 'center',
                 }}>
                   +{item.tags.length - 3} more
@@ -330,7 +256,8 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
           <div style={actionsStyle}>
             {onEdit && (
               <IconButton
-                icon={<EditIcon />}
+                data-testid="edit-btn"
+                icon={<Pencil size={14} />}
                 label="Edit item"
                 variant="ghost"
                 size="sm"
@@ -342,7 +269,8 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
             )}
             {onDelete && (
               <IconButton
-                icon={<TrashIcon />}
+                data-testid="delete-btn"
+                icon={<Trash2 size={14} />}
                 label="Delete item"
                 variant="danger"
                 size="sm"

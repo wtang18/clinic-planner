@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
+import { Heart, ChevronRight } from 'lucide-react';
 import type { CareGapInstance } from '../../types/care-gaps';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { Badge } from '../primitives/Badge';
 
 // ============================================================================
@@ -23,22 +24,6 @@ export interface CareGapSummaryProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const HeartIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="9,18 15,12 9,6" />
-  </svg>
-);
 
 // ============================================================================
 // Component
@@ -66,66 +51,56 @@ export const CareGapSummary: React.FC<CareGapSummaryProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[3],
-    padding: `${spacing[2]} ${spacing[3]}`,
-    backgroundColor: totalOpen > 0 ? colors.status.warningLight : colors.neutral[100],
-    borderRadius: radii.lg,
+    gap: spaceBetween.relatedCompact,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    backgroundColor: totalOpen > 0 ? colors.bg.attention.subtle : colors.bg.neutral.subtle,
+    borderRadius: borderRadius.sm,
     cursor: 'pointer',
     transition: `all ${transitions.fast}`,
     ...style,
   };
 
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '24px',
-    height: '24px',
-    color: totalOpen > 0 ? colors.status.warning : colors.neutral[400],
-  };
+  const iconColor = totalOpen > 0 ? colors.fg.attention.secondary : colors.fg.neutral.disabled;
 
   const contentStyle: React.CSSProperties = {
     flex: 1,
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
+    fontSize: 14,
     fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[700],
+    color: colors.fg.neutral.secondary,
   };
 
   const dotsContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
+    gap: spaceBetween.coupled,
   };
 
   const dotStyle = (color: string, count: number): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[0.5],
+    gap: spaceBetween.coupled,
   });
 
   const priorityDotStyle = (color: string): React.CSSProperties => ({
     width: '8px',
     height: '8px',
-    borderRadius: radii.full,
+    borderRadius: borderRadius.full,
     backgroundColor: color,
   });
 
   const countStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[600],
+    fontSize: 12,
+    color: colors.fg.neutral.secondary,
     fontWeight: typography.fontWeight.medium,
   };
 
   const chevronStyle: React.CSSProperties = {
-    width: '16px',
-    height: '16px',
-    color: colors.neutral[400],
     transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)',
     transition: `transform ${transitions.fast}`,
   };
@@ -140,15 +115,11 @@ export const CareGapSummary: React.FC<CareGapSummaryProps> = ({
         tabIndex={0}
         onKeyDown={(e) => e.key === 'Enter' && onClick()}
       >
-        <div style={iconContainerStyle}>
-          <HeartIcon />
-        </div>
-        <span style={{ ...labelStyle, color: colors.neutral[500] }}>
+        <Heart size={24} color={iconColor} />
+        <span style={{ ...labelStyle, color: colors.fg.neutral.spotReadable }}>
           No open care gaps
         </span>
-        <span style={chevronStyle}>
-          <ChevronRightIcon />
-        </span>
+        <ChevronRight size={16} color={colors.fg.neutral.disabled} style={chevronStyle} />
       </div>
     );
   }
@@ -162,9 +133,7 @@ export const CareGapSummary: React.FC<CareGapSummaryProps> = ({
       onKeyDown={(e) => e.key === 'Enter' && onClick()}
     >
       {/* Icon */}
-      <div style={iconContainerStyle}>
-        <HeartIcon />
-      </div>
+      <Heart size={24} color={iconColor} />
 
       {/* Content */}
       <div style={contentStyle}>
@@ -176,20 +145,20 @@ export const CareGapSummary: React.FC<CareGapSummaryProps> = ({
         {/* Priority breakdown */}
         <div style={dotsContainerStyle}>
           {criticalCount > 0 && (
-            <div style={dotStyle(colors.status.error, criticalCount)}>
-              <span style={priorityDotStyle(colors.status.error)} />
+            <div style={dotStyle(colors.fg.alert.secondary, criticalCount)}>
+              <span style={priorityDotStyle(colors.fg.alert.secondary)} />
               <span style={countStyle}>{criticalCount}</span>
             </div>
           )}
           {importantCount > 0 && (
-            <div style={dotStyle(colors.status.warning, importantCount)}>
-              <span style={priorityDotStyle(colors.status.warning)} />
+            <div style={dotStyle(colors.fg.attention.secondary, importantCount)}>
+              <span style={priorityDotStyle(colors.fg.attention.secondary)} />
               <span style={countStyle}>{importantCount}</span>
             </div>
           )}
           {routineCount > 0 && (
-            <div style={dotStyle(colors.status.success, routineCount)}>
-              <span style={priorityDotStyle(colors.status.success)} />
+            <div style={dotStyle(colors.fg.positive.secondary, routineCount)}>
+              <span style={priorityDotStyle(colors.fg.positive.secondary)} />
               <span style={countStyle}>{routineCount}</span>
             </div>
           )}
@@ -204,9 +173,7 @@ export const CareGapSummary: React.FC<CareGapSummaryProps> = ({
       </div>
 
       {/* Chevron */}
-      <span style={chevronStyle}>
-        <ChevronRightIcon />
-      </span>
+      <ChevronRight size={16} color={colors.fg.neutral.disabled} style={chevronStyle} />
     </div>
   );
 };

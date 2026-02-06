@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introduction" />
+
+# EHR Prototype Component Library
+
+A clinical UI component system designed for AI-assisted chart documentation. This library provides the building blocks for an EHR (Electronic Health Record) encounter flow.
+
+## Architecture
+
+The component system is organized into layers:
+
+### Design Tokens
+Foundational values for colors, typography, spacing, and layout. All components reference these tokens for consistency.
+
+- **Colors** - Primary, neutral, status, clinical category, AI, and care gap palettes
+- **Typography** - Font sizes, weights, families, and clinical patterns
+- **Spacing** - Consistent margin/padding scale with clinical layout patterns
+- **Status Indicators** - Color semantics for clinical states and AI confidence
+
+### Primitives
+Low-level UI building blocks that compose into complex components:
+
+- **Button** - Primary, secondary, ghost, danger variants with loading state
+- **Badge** - Status indicators with dot, count, and text modes
+- **Card** - Container with default, outlined, elevated variants
+- **Input** - Text fields with icon support and validation
+- **IconButton** - Icon-only buttons for compact actions
+- **Tag** - Clinical tags for status, source, alerts, categories
+- **Spinner** - Loading indicator in multiple sizes
+
+### Chart Items
+Clinical data display components for different chart item categories:
+
+- **ChartItemCard** - Generic card for any chart item type
+- **MedicationCard** - Specialized medication display with prescribing actions
+- **LabCard** - Lab results with abnormal/critical highlighting
+- **DiagnosisCard** - Diagnosis display with ICD codes and linked items
+- **VitalsCard** - Vitals grid with flag indicators
+
+### Suggestions
+AI-powered suggestion components:
+
+- **SuggestionChip** - Compact inline suggestion with accept/dismiss
+- **SuggestionCard** - Detailed suggestion with reasoning and transcript context
+
+### Tasks
+Background task management:
+
+- **TaskCard** - Task status display with progress, actions, and error states
+
+### OmniAdd
+Chart item entry system:
+
+- **OmniAddBar** - Primary input mechanism for adding items
+- **CategorySelector** - Category selection with keyboard shortcuts
+
+### Care Gaps
+Preventive care gap tracking:
+
+- **CareGapCard** - Individual care gap with priority and actions
+
+## Key Patterns
+
+### Clinical Status Flow
+Items flow through statuses: Draft -> Pending Review -> Confirmed -> Ordered -> Completed
+
+### AI Confidence Indicators
+- High confidence (above 80%): Green dot
+- Medium confidence (60-80%): Yellow dot
+- Low confidence (below 60%): Red dot
+
+### Category Colors
+Each clinical category has a consistent color identity:
+- Medication: Purple
+- Lab: Cyan
+- Diagnosis: Orange
+- Vitals: Pink
+- Imaging: Teal
+- Procedure: Slate
+- Allergy: Red
+
+## Usage
+
+Components are designed for React Native Web via the `react-native-web` bridge. They use inline styles and StyleSheet for cross-platform compatibility.
+
+```tsx
+import { Button } from './components/primitives/Button';
+import { MedicationCard } from './components/chart-items/MedicationCard';
+import { Badge } from './components/primitives/Badge';
+```

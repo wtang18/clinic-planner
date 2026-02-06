@@ -44,7 +44,7 @@ export interface RecordingStatusGroupProps {
 // ============================================================================
 
 const INDICATOR_SIZE = 16;
-const DOT_SIZE = 8;
+const DOT_SIZE = 6;
 
 // Brighter, more saturated red for visibility
 const RECORDING_DOT_COLOR = '#EF4444';
@@ -63,6 +63,11 @@ function formatDuration(seconds: number): string {
 // Recording Dot Component
 // ============================================================================
 
+/**
+ * Pulsing recording dot for palette mode
+ * Animation matches micro mode StatusBadge: scale, opacity, and glow
+ * Note: Bar mode doesn't show indicator (waveform from ContentContainer handles it)
+ */
 const RecordingDot: React.FC = () => (
   <motion.span
     style={{
@@ -72,8 +77,13 @@ const RecordingDot: React.FC = () => (
       backgroundColor: RECORDING_DOT_COLOR,
     }}
     animate={{
-      scale: [1, 1.2, 1],
-      opacity: [0.9, 1, 0.9],
+      scale: [1, 1.25, 1],
+      opacity: [1, 0.75, 1],
+      boxShadow: [
+        '0 0 0 0 rgba(239, 68, 68, 0)',
+        '0 0 6px 3px rgba(239, 68, 68, 0.4)',
+        '0 0 0 0 rgba(239, 68, 68, 0)',
+      ],
     }}
     transition={{
       duration: 1.2,
@@ -154,8 +164,7 @@ export const RecordingStatusGroup: React.FC<RecordingStatusGroupProps> = ({
       }}
       data-testid={testID}
     >
-      {/* Status indicator (recording dot or pause icon) - only in palette mode
-          In bar mode, the waveform in ContentContainer serves as the recording indicator */}
+      {/* Status indicator - ONLY in palette mode (bar mode uses waveform from ContentContainer) */}
       {showIndicator && variant === 'palette' && (
         <motion.span
           initial={{ opacity: 0, scale: 0.8 }}

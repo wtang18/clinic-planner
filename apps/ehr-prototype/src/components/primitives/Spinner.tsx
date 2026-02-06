@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { colors } from '../../styles/tokens';
+import { colors } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -34,7 +34,7 @@ const sizes = {
 
 export const Spinner: React.FC<SpinnerProps> = ({
   size = 'md',
-  color = colors.primary[600],
+  color = colors.fg.accent.primary,
 }) => {
   const dimension = sizes[size];
 

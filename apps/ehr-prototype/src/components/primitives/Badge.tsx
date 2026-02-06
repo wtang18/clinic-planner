@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { colors, radii, spacing, typography } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -24,6 +24,8 @@ export interface BadgeProps {
   children?: React.ReactNode;
   /** Custom styles */
   style?: React.CSSProperties;
+  /** Test ID for E2E testing */
+  'data-testid'?: string;
 }
 
 // ============================================================================
@@ -35,47 +37,47 @@ const variantColors: Record<
   { bg: string; text: string; dot: string }
 > = {
   default: {
-    bg: colors.neutral[100],
-    text: colors.neutral[700],
-    dot: colors.neutral[500],
+    bg: colors.bg.neutral.subtle,
+    text: colors.fg.neutral.secondary,
+    dot: colors.fg.neutral.spotReadable,
   },
   success: {
-    bg: colors.status.successLight,
-    text: colors.status.successDark,
-    dot: colors.status.success,
+    bg: colors.bg.positive.subtle,
+    text: colors.fg.positive.primary,
+    dot: colors.fg.positive.secondary,
   },
   warning: {
-    bg: colors.status.warningLight,
-    text: colors.status.warningDark,
-    dot: colors.status.warning,
+    bg: colors.bg.attention.subtle,
+    text: colors.fg.attention.primary,
+    dot: colors.fg.attention.secondary,
   },
   error: {
-    bg: colors.status.errorLight,
-    text: colors.status.errorDark,
-    dot: colors.status.error,
+    bg: colors.bg.alert.subtle,
+    text: colors.fg.alert.primary,
+    dot: colors.fg.alert.secondary,
   },
   info: {
-    bg: colors.status.infoLight,
-    text: colors.status.infoDark,
-    dot: colors.status.info,
+    bg: colors.bg.information.subtle,
+    text: colors.fg.information.primary,
+    dot: colors.fg.information.secondary,
   },
   ai: {
-    bg: colors.ai.suggestionLight,
-    text: colors.ai.suggestionDark,
-    dot: colors.ai.suggestion,
+    bg: colors.bg.positive.subtle,
+    text: colors.bg.generative.high,
+    dot: colors.fg.generative.spotReadable,
   },
 };
 
 const sizeStyles: Record<'sm' | 'md', React.CSSProperties> = {
   sm: {
-    padding: `${spacing[0.5]} ${spacing[1.5]}`,
-    fontSize: typography.fontSize.xs[0],
-    lineHeight: typography.fontSize.xs[1].lineHeight,
+    padding: `${spaceAround.nudge2}px ${spaceAround.nudge6}px`,
+    fontSize: 12,
+    lineHeight: '20px',
   },
   md: {
-    padding: `${spacing[1]} ${spacing[2]}`,
-    fontSize: typography.fontSize.sm[0],
-    lineHeight: typography.fontSize.sm[1].lineHeight,
+    padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
+    fontSize: 14,
+    lineHeight: '20px',
   },
 };
 
@@ -90,6 +92,7 @@ export const Badge: React.FC<BadgeProps> = ({
   count,
   children,
   style,
+  'data-testid': testId,
 }) => {
   const colorSet = variantColors[variant];
 
@@ -104,13 +107,13 @@ export const Badge: React.FC<BadgeProps> = ({
           justifyContent: 'center',
           minWidth: size === 'sm' ? '18px' : '22px',
           height: size === 'sm' ? '18px' : '22px',
-          padding: `0 ${spacing[1]}`,
+          padding: `0 ${spaceAround.nudge4}px`,
           backgroundColor: colorSet.bg,
           color: colorSet.text,
-          fontSize: typography.fontSize.xs[0],
+          fontSize: 12,
           fontWeight: typography.fontWeight.medium,
           fontFamily: typography.fontFamily.sans,
-          borderRadius: radii.full,
+          borderRadius: borderRadius.full,
         }}
       >
         {displayCount}
@@ -127,7 +130,7 @@ export const Badge: React.FC<BadgeProps> = ({
           width: size === 'sm' ? '6px' : '8px',
           height: size === 'sm' ? '6px' : '8px',
           backgroundColor: colorSet.dot,
-          borderRadius: radii.full,
+          borderRadius: borderRadius.full,
         }}
         role="status"
         aria-label={`${variant} status`}
@@ -141,16 +144,17 @@ export const Badge: React.FC<BadgeProps> = ({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: spacing[1],
+        gap: spaceBetween.coupled,
         backgroundColor: colorSet.bg,
         color: colorSet.text,
         fontFamily: typography.fontFamily.sans,
         fontWeight: typography.fontWeight.medium,
-        borderRadius: radii.full,
+        borderRadius: borderRadius.sm,
         whiteSpace: 'nowrap',
         ...sizeStyles[size],
         ...style,
       }}
+      data-testid={testId}
     >
       {children}
     </span>

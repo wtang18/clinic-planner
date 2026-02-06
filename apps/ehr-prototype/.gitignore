@@ -31,3 +31,10 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+
+# Storybook
+storybook-static/
+
+# Playwright
+playwright-report/
+test-results/

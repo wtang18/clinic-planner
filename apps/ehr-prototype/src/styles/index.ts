@@ -1,14 +1,14 @@
 /**
  * Styles
  *
- * Exports all design tokens, theme, and styling utilities.
+ * Exports all design foundations, theme, and styling utilities.
  */
 
-// Design tokens
-export * from './tokens';
+// Foundations (canonical tokens)
+export * from './foundations';
 
 // Theme
 export * from './theme';
 
-// Utilities
-export * from './utils';
+// Global common styles + helpers
+export { commonStyles, layout, padding, margin, withOpacity } from './global';

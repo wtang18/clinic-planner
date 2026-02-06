@@ -5,10 +5,12 @@
  */
 
 import React from 'react';
+import { X, Sparkles } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { SuggestionChip } from './SuggestionChip';
 import { Button } from '../primitives/Button';
+import { EmptyState } from '../primitives/EmptyState';
 
 // ============================================================================
 // Types
@@ -32,24 +34,6 @@ export interface SuggestionListProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const XIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const SparklesIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-    <circle cx="12" cy="12" r="4" />
-  </svg>
-);
 
 // ============================================================================
 // Component
@@ -104,33 +88,19 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
   // Empty state
   if (activeSuggestions.length === 0) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing[4],
-        color: colors.neutral[400],
-        fontSize: typography.fontSize.sm[0],
-        ...style,
-      }}>
-        <span style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing[2],
-        }}>
-          <span style={{ width: '16px', height: '16px', display: 'flex' }}>
-            <SparklesIcon />
-          </span>
-          No suggestions
-        </span>
-      </div>
+      <EmptyState
+        icon={<Sparkles size={32} />}
+        title="No suggestions"
+        size="sm"
+        style={style}
+      />
     );
   }
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
     ...style,
   };
 
@@ -138,38 +108,40 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing[2],
+    marginBottom: spaceAround.tight,
   };
 
   const titleStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    fontSize: typography.fontSize.sm[0],
+    gap: spaceBetween.repeating,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
-    color: colors.ai.suggestion,
+    color: colors.fg.generative.spotReadable,
   };
 
   const chipsContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexWrap: 'wrap',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   const compactListStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[1],
+    gap: spaceBetween.coupled,
   };
 
   const compactItemStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${spacing[2]} ${spacing[3]}`,
-    backgroundColor: colors.ai.suggestionLight,
-    borderRadius: radii.md,
-    fontSize: typography.fontSize.sm[0],
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    backgroundColor: colors.bg.positive.subtle,
+    borderRadius: borderRadius.sm,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
     transition: `all ${transitions.fast}`,
   };
 
@@ -183,23 +155,22 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: `${spacing[1.5]} ${spacing[3]}`,
-    backgroundColor: colors.neutral[100],
-    borderRadius: radii.full,
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[600],
+    padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
+    backgroundColor: colors.bg.neutral.subtle,
+    borderRadius: borderRadius.sm,
+    fontSize: 12,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
     cursor: 'pointer',
     transition: `all ${transitions.fast}`,
   };
 
   return (
-    <div style={containerStyle}>
+    <div data-testid="suggestion-list" style={containerStyle}>
       {/* Header */}
       <div style={headerStyle}>
         <div style={titleStyle}>
-          <span style={{ width: '16px', height: '16px', display: 'flex' }}>
-            <SparklesIcon />
-          </span>
+          <Sparkles size={16} />
           {activeSuggestions.length} suggestion{activeSuggestions.length !== 1 ? 's' : ''}
         </div>
         {onClearAll && activeSuggestions.length > 0 && (
@@ -207,7 +178,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
             variant="ghost"
             size="sm"
             onClick={onClearAll}
-            style={{ color: colors.neutral[500] }}
+            style={{ color: colors.fg.neutral.spotReadable }}
           >
             Clear all
           </Button>
@@ -234,6 +205,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
           {/* More indicator */}
           {!expanded && hiddenCount > 0 && (
             <div
+              data-testid="show-more-btn"
               style={moreIndicatorStyle}
               onClick={() => setExpanded(true)}
               role="button"
@@ -273,22 +245,22 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: spacing[2],
+                gap: spaceBetween.repeating,
                 minWidth: 0,
                 flex: 1,
               }}>
                 <span style={{
                   width: '8px',
                   height: '8px',
-                  borderRadius: radii.full,
-                  backgroundColor: colors.ai.suggestion,
+                  borderRadius: borderRadius.full,
+                  backgroundColor: colors.fg.generative.spotReadable,
                   flexShrink: 0,
                 }} />
                 <span style={{
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  color: colors.neutral[700],
+                  color: colors.fg.neutral.secondary,
                 }}>
                   {suggestion.displayText}
                 </span>
@@ -296,14 +268,14 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: spacing[1],
+                gap: spaceBetween.coupled,
                 flexShrink: 0,
               }}>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleAccept(suggestion.id)}
-                  style={{ color: colors.status.success }}
+                  style={{ color: colors.fg.positive.secondary }}
                 >
                   Accept
                 </Button>
@@ -311,11 +283,9 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => handleDismiss(suggestion.id)}
-                  style={{ color: colors.neutral[500] }}
+                  style={{ color: colors.fg.neutral.spotReadable }}
                 >
-                  <span style={{ width: '14px', height: '14px', display: 'flex' }}>
-                    <XIcon />
-                  </span>
+                  <X size={14} />
                 </Button>
               </div>
             </div>
@@ -329,7 +299,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
               onClick={() => setExpanded(true)}
               style={{
                 alignSelf: 'flex-start',
-                color: colors.neutral[500],
+                color: colors.fg.neutral.spotReadable,
               }}
             >
               Show {hiddenCount} more
@@ -344,7 +314,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
               onClick={() => setExpanded(false)}
               style={{
                 alignSelf: 'flex-start',
-                color: colors.neutral[500],
+                color: colors.fg.neutral.spotReadable,
               }}
             >
               Show less

@@ -35,9 +35,8 @@ import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
 import { Minibar } from '../../components/ai-ui/Minibar';
 import { Palette } from '../../components/ai-ui/Palette';
-import { TranscriptionPill } from '../../components/ai-ui/TranscriptionPill';
-import { AIMinibar, type AIMinibarContent } from '../../components/ai-ui/AIMinibar';
-import { AIPalette } from '../../components/ai-ui/AIPalette';
+import { AIControlSurface, type AIControlMode } from '../../components/ai-ui/AIControlSurface';
+import { type AIMinibarContent } from '../../components/ai-ui/AIMinibar';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
@@ -99,6 +98,7 @@ export const CaptureView: React.FC = () => {
   const [todoViewState, setTodoViewState] = useState<ToDoViewState | null>(null);
   const [selectedNavItem, setSelectedNavItem] = useState<string>('');
   const [todoSearchQuery, setTodoSearchQuery] = useState<string>('');
+  const [isContextDismissed, setIsContextDismissed] = useState(false);
 
   // Track recording duration
   useEffect(() => {
@@ -932,24 +932,7 @@ export const CaptureView: React.FC = () => {
             onClose={() => setIsAIDrawerOpen(false)}
           />
         }
-        transcriptionPill={
-          <TranscriptionPill
-            status={transcriptionStatus}
-            patientName={patientOverviewData.name}
-            patientInitials={patient.demographics.firstName[0] + patient.demographics.lastName[0]}
-            duration={recordingDuration}
-            isEnabled={true}
-            isMinimized={aiState.mode === 'palette'}
-            onToggle={handleTranscriptionToggle}
-            onStop={() => handleTranscriptionToggle()}
-            onClick={() => {
-              if (aiState.mode === 'palette') {
-                aiActions.closeToPill();
-              }
-            }}
-          />
-        }
-        aiMinibar={(() => {
+        aiControlSurface={(() => {
           // Enrich To-Do context content with navigation callbacks
           let enrichedContent = aiState.content;
           if (aiState.content.type === 'todo-context') {
@@ -976,41 +959,8 @@ export const CaptureView: React.FC = () => {
             };
           }
 
-          return (
-            <AIMinibar
-              content={enrichedContent}
-              isPaletteOpen={aiState.mode === 'palette'}
-              onExpandPalette={aiActions.togglePalette}
-              onExpandDrawer={() => setIsAIDrawerOpen(true)}
-              onSuggestionClick={(id) => {
-                aiActions.togglePalette();
-              }}
-              onCareGapClick={(id) => {
-                aiActions.togglePalette();
-              }}
-            />
-          );
-        })()}
-      />
-
-      {/* AI Palette (tri-state expanded view) */}
-      {aiState.mode === 'palette' && (
-        <AIPalette
-          isOpen={true}
-          onClose={() => aiActions.closeToPill()}
-          onExpandToDrawer={() => {
-            aiActions.closeToPill();
-            setIsAIDrawerOpen(true);
-          }}
-          patientName={patientOverviewData.name}
-          visitType={state.context.visit?.chiefComplaint || encounter?.type}
-          context={aiState.context}
-          quickActions={aiActions.getQuickActions()}
-          suggestions={activeSuggestions}
-          onSuggestionAccept={handleSuggestionAccept}
-          onSuggestionDismiss={handleSuggestionDismiss}
-          onQuickActionClick={(actionId) => {
-            // Handle quick actions based on context and action ID
+          // Handle quick action clicks
+          const handleQuickActionClick = (actionId: string) => {
             switch (actionId) {
               case 'next-item':
                 const nextItem = todoNav.navigateToNext();
@@ -1030,10 +980,8 @@ export const CaptureView: React.FC = () => {
               case 'whats-urgent':
               case 'prioritize':
               case 'summarize-day':
-                // These would trigger AI operations - for now just close palette
                 console.log('AI action:', actionId);
                 aiActions.setLoading(true, 'Processing...');
-                // Simulate AI response
                 setTimeout(() => {
                   aiActions.setLoading(false);
                   aiActions.closeToPill();
@@ -1046,18 +994,58 @@ export const CaptureView: React.FC = () => {
               default:
                 console.log('Quick action clicked:', actionId);
             }
-          }}
-          onAskQuestion={(question) => {
+          };
+
+          // Handle AI question submission
+          const handleAskQuestion = (question: string) => {
             console.log('AI question:', question);
             aiActions.setLoading(true, 'Thinking...');
-            // Simulate AI response
             setTimeout(() => {
               aiActions.setLoading(false);
             }, 2000);
-          }}
-          isLoading={aiState.isLoading}
-        />
-      )}
+          };
+
+          return (
+            <AIControlSurface
+              // Mode control
+              mode={aiState.mode as AIControlMode}
+              onModeChange={(mode) => {
+                if (mode === 'minibar') aiActions.closeToPill();
+                else if (mode === 'palette') aiActions.togglePalette();
+                else if (mode === 'drawer') setIsAIDrawerOpen(true);
+              }}
+
+              // Transcription props
+              transcriptionStatus={transcriptionStatus}
+              patientName={patientOverviewData.name}
+              patientInitials={patient.demographics.firstName[0] + patient.demographics.lastName[0]}
+              recordingDuration={recordingDuration}
+              transcriptionEnabled={true}
+              onTranscriptionToggle={handleTranscriptionToggle}
+              onTranscriptionStop={() => handleTranscriptionToggle()}
+
+              // Minibar props
+              minibarContent={enrichedContent}
+              onSuggestionClick={() => aiActions.togglePalette()}
+              onCareGapClick={() => aiActions.togglePalette()}
+
+              // Palette props
+              aiContext={aiState.context}
+              quickActions={aiActions.getQuickActions()}
+              suggestions={activeSuggestions}
+              visitType={state.context.visit?.chiefComplaint || encounter?.type}
+              onSuggestionAccept={handleSuggestionAccept}
+              onSuggestionDismiss={handleSuggestionDismiss}
+              onQuickActionClick={handleQuickActionClick}
+              onAskQuestion={handleAskQuestion}
+              isAILoading={aiState.isLoading}
+              onExpandToDrawer={() => setIsAIDrawerOpen(true)}
+              isContextDismissed={isContextDismissed}
+              onContextDismiss={() => setIsContextDismissed(!isContextDismissed)}
+            />
+          );
+        })()}
+      />
 
       {/* Legacy Palette overlay (fallback) */}
       {isPaletteOpen && aiState.mode !== 'palette' && (

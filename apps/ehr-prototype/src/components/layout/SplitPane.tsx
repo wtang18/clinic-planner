@@ -5,7 +5,8 @@
  */
 
 import React from 'react';
-import { colors, spacing, transitions } from '../../styles/tokens';
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { colors, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -33,34 +34,6 @@ export interface SplitPaneProps {
 }
 
 // ============================================================================
-// Icons
-// ============================================================================
-
-const ChevronLeftIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="15,18 9,12 15,6" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="9,18 15,12 9,6" />
-  </svg>
-);
-
-const ChevronUpIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="18,15 12,9 6,15" />
-  </svg>
-);
-
-const ChevronDownIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="6,9 12,15 18,9" />
-  </svg>
-);
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -84,7 +57,6 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
 
   const isHorizontal = orientation === 'horizontal';
 
-  // Handle drag
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -105,7 +77,6 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
         newSplit = ((e.clientY - rect.top) / rect.height) * 100;
       }
 
-      // Clamp to min/max values
       newSplit = Math.max(minLeft, Math.min(100 - minRight, newSplit));
 
       setSplit(newSplit);
@@ -125,7 +96,6 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
     };
   }, [isDragging, isHorizontal, minLeft, minRight, onSplitChange]);
 
-  // Collapse handlers
   const handleCollapseLeft = () => {
     setIsLeftCollapsed(!isLeftCollapsed);
     setIsRightCollapsed(false);
@@ -136,7 +106,6 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
     setIsLeftCollapsed(false);
   };
 
-  // Calculate actual sizes
   const getLeftSize = () => {
     if (isLeftCollapsed) return '0%';
     if (isRightCollapsed) return '100%';
@@ -149,7 +118,6 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
     return `${100 - split}%`;
   };
 
-  // Styles
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: isHorizontal ? 'row' : 'column',
@@ -177,7 +145,7 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
     position: 'relative',
     [isHorizontal ? 'width' : 'height']: '8px',
     [isHorizontal ? 'height' : 'width']: '100%',
-    backgroundColor: isDragging || isHovered ? colors.primary[100] : colors.neutral[200],
+    backgroundColor: isDragging || isHovered ? colors.bg.accent.subtle : colors.border.neutral.low,
     cursor: isHorizontal ? 'col-resize' : 'row-resize',
     flexShrink: 0,
     display: 'flex',
@@ -199,7 +167,7 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
     width: '4px',
     height: '4px',
     borderRadius: '50%',
-    backgroundColor: colors.neutral[400],
+    backgroundColor: colors.fg.neutral.disabled,
   };
 
   const collapseButtonStyle: React.CSSProperties = {
@@ -209,8 +177,8 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
     justifyContent: 'center',
     width: '20px',
     height: '20px',
-    backgroundColor: colors.neutral[0],
-    border: `1px solid ${colors.neutral[300]}`,
+    backgroundColor: colors.bg.neutral.base,
+    border: `1px solid ${colors.border.neutral.medium}`,
     borderRadius: '50%',
     cursor: 'pointer',
     boxShadow: '0 1px 3px rgb(0 0 0 / 0.1)',
@@ -223,26 +191,22 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
 
   return (
     <div ref={containerRef} style={containerStyle}>
-      {/* Left/Top pane */}
       <div style={leftPaneStyle}>
         {!isLeftCollapsed && left}
       </div>
 
-      {/* Divider */}
       <div
         style={dividerStyle}
         onMouseDown={handleMouseDown}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Grip indicator */}
         <div style={dividerGripStyle}>
           <div style={gripDotStyle} />
           <div style={gripDotStyle} />
           <div style={gripDotStyle} />
         </div>
 
-        {/* Collapse buttons */}
         {canCollapseLeft && !isRightCollapsed && (
           <button
             type="button"
@@ -253,13 +217,11 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
             onClick={handleCollapseLeft}
             title={isLeftCollapsed ? 'Expand left pane' : 'Collapse left pane'}
           >
-            <span style={{ width: '12px', height: '12px', display: 'flex' }}>
-              {isHorizontal ? (
-                isLeftCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />
-              ) : (
-                isLeftCollapsed ? <ChevronDownIcon /> : <ChevronUpIcon />
-              )}
-            </span>
+            {isHorizontal ? (
+              isLeftCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />
+            ) : (
+              isLeftCollapsed ? <ChevronDown size={12} /> : <ChevronUp size={12} />
+            )}
           </button>
         )}
 
@@ -273,23 +235,19 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
             onClick={handleCollapseRight}
             title={isRightCollapsed ? 'Expand right pane' : 'Collapse right pane'}
           >
-            <span style={{ width: '12px', height: '12px', display: 'flex' }}>
-              {isHorizontal ? (
-                isRightCollapsed ? <ChevronLeftIcon /> : <ChevronRightIcon />
-              ) : (
-                isRightCollapsed ? <ChevronUpIcon /> : <ChevronDownIcon />
-              )}
-            </span>
+            {isHorizontal ? (
+              isRightCollapsed ? <ChevronLeft size={12} /> : <ChevronRight size={12} />
+            ) : (
+              isRightCollapsed ? <ChevronUp size={12} /> : <ChevronDown size={12} />
+            )}
           </button>
         )}
       </div>
 
-      {/* Right/Bottom pane */}
       <div style={rightPaneStyle}>
         {!isRightCollapsed && right}
       </div>
 
-      {/* Overlay during drag to prevent iframe issues */}
       {isDragging && (
         <div
           style={{

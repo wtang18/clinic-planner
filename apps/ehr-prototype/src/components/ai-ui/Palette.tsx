@@ -5,13 +5,16 @@
  */
 
 import React from 'react';
+import { X, FileText, Sparkles, Zap, AlertTriangle } from 'lucide-react';
 import type { Alert, Suggestion } from '../../types/suggestions';
-import { colors, spacing, typography, radii, shadows, transitions, zIndex } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, typography } from '../../styles/foundations';
 import { AlertCard } from './AlertCard';
 import { SuggestionList } from '../suggestions/SuggestionList';
 import { Button } from '../primitives/Button';
+import { EmptyState } from '../primitives/EmptyState';
 import { IconButton } from '../primitives/IconButton';
-import { Card } from '../primitives/Card';
+import { SectionTitle } from '../primitives/SectionTitle';
+import { Modal } from '../primitives/Modal';
 
 // ============================================================================
 // Types
@@ -43,47 +46,6 @@ export interface PaletteProps {
 }
 
 // ============================================================================
-// Icons
-// ============================================================================
-
-const XIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const FileTextIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14,2 14,8 20,8" />
-    <line x1="16" y1="13" x2="8" y2="13" />
-    <line x1="16" y1="17" x2="8" y2="17" />
-  </svg>
-);
-
-const AlertTriangleIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
-const SparklesIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
-    <circle cx="12" cy="12" r="4" />
-  </svg>
-);
-
-const ZapIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polygon points="13,2 3,14 12,14 11,22 21,10 12,10" />
-  </svg>
-);
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -105,35 +67,8 @@ export const Palette: React.FC<PaletteProps> = ({
   const activeSuggestions = suggestions.filter(s => s.status === 'active');
 
   // Container styles
-  const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    opacity: isOpen ? 1 : 0,
-    visibility: isOpen ? 'visible' : 'hidden',
-    transition: `opacity ${transitions.base}, visibility ${transitions.base}`,
-    zIndex: zIndex.overlay,
-  };
-
-  const paletteStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: spacing[16],
-    left: '50%',
-    transform: isOpen ? 'translate(-50%, 0)' : 'translate(-50%, 100%)',
-    width: '100%',
-    maxWidth: '600px',
-    maxHeight: '70vh',
-    backgroundColor: colors.neutral[0],
-    borderRadius: `${radii.xl} ${radii.xl} 0 0`,
-    boxShadow: shadows.xl,
-    transition: `transform ${transitions.slow}`,
-    zIndex: zIndex.modal,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
+  const modalContentStyle: React.CSSProperties = {
+    bottom: 64,
     ...style,
   };
 
@@ -141,71 +76,56 @@ export const Palette: React.FC<PaletteProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${spacing[4]} ${spacing[5]}`,
-    borderBottom: `1px solid ${colors.neutral[200]}`,
+    padding: `${spaceAround.default}px ${spaceAround.defaultPlus}px`,
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
     flexShrink: 0,
   };
 
   const titleStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    fontSize: typography.fontSize.base[0],
+    gap: spaceBetween.repeating,
+    fontSize: 16,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const contentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    padding: spacing[4],
+    padding: spaceAround.default,
   };
 
   const sectionStyle: React.CSSProperties = {
-    marginBottom: spacing[6],
-  };
-
-  const sectionTitleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
-    fontSize: typography.fontSize.sm[0],
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[700],
-    marginBottom: spacing[3],
+    marginBottom: spaceAround.spacious,
   };
 
   const quickActionsStyle: React.CSSProperties = {
     display: 'flex',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
     flexWrap: 'wrap',
   };
 
-  const emptyStateStyle: React.CSSProperties = {
-    textAlign: 'center',
-    padding: spacing[6],
-    color: colors.neutral[500],
-    fontSize: typography.fontSize.sm[0],
-  };
-
   return (
-    <>
-      {/* Overlay */}
-      <div style={overlayStyle} onClick={onClose} />
-
-      {/* Palette panel */}
-      <div style={paletteStyle}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      position="bottom"
+      size="md"
+      closeOnBackdropClick={true}
+      style={modalContentStyle}
+    >
         {/* Header */}
         <div style={headerStyle}>
           <h2 style={titleStyle}>
-            <span style={{ width: '20px', height: '20px', display: 'flex', color: colors.ai.suggestion }}>
-              <SparklesIcon />
+            <span style={{ display: 'flex', color: colors.fg.generative.spotReadable }}>
+              <Sparkles size={20} />
             </span>
             AI Assistant
           </h2>
           <IconButton
-            icon={<XIcon />}
+            icon={<X size={18} />}
             label="Close palette"
             variant="ghost"
             size="md"
@@ -218,13 +138,12 @@ export const Palette: React.FC<PaletteProps> = ({
           {/* Critical Alerts (always shown first) */}
           {criticalAlerts.length > 0 && (
             <div style={sectionStyle}>
-              <div style={sectionTitleStyle}>
-                <span style={{ width: '16px', height: '16px', display: 'flex', color: colors.status.error }}>
-                  <AlertTriangleIcon />
-                </span>
-                Critical Alerts
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              <SectionTitle
+                title="Critical Alerts"
+                icon={<AlertTriangle size={16} />}
+                iconColor={colors.fg.alert.secondary}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating }}>
                 {criticalAlerts.map(alert => (
                   <AlertCard
                     key={alert.id}
@@ -240,13 +159,12 @@ export const Palette: React.FC<PaletteProps> = ({
           {/* Other Alerts */}
           {unacknowledgedAlerts.filter(a => a.severity !== 'critical').length > 0 && (
             <div style={sectionStyle}>
-              <div style={sectionTitleStyle}>
-                <span style={{ width: '16px', height: '16px', display: 'flex', color: colors.status.warning }}>
-                  <AlertTriangleIcon />
-                </span>
-                Alerts
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              <SectionTitle
+                title="Alerts"
+                icon={<AlertTriangle size={16} />}
+                iconColor={colors.fg.attention.secondary}
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating }}>
                 {unacknowledgedAlerts
                   .filter(a => a.severity !== 'critical')
                   .map(alert => (
@@ -264,12 +182,11 @@ export const Palette: React.FC<PaletteProps> = ({
           {/* Suggestions */}
           {activeSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
             <div style={sectionStyle}>
-              <div style={sectionTitleStyle}>
-                <span style={{ width: '16px', height: '16px', display: 'flex', color: colors.ai.suggestion }}>
-                  <SparklesIcon />
-                </span>
-                Suggestions
-              </div>
+              <SectionTitle
+                title="Suggestions"
+                icon={<Sparkles size={16} />}
+                iconColor={colors.fg.generative.spotReadable}
+              />
               <SuggestionList
                 suggestions={activeSuggestions}
                 maxVisible={10}
@@ -283,18 +200,17 @@ export const Palette: React.FC<PaletteProps> = ({
           {/* Quick Actions */}
           {(onGenerateNote || onCheckInteractions) && (
             <div style={sectionStyle}>
-              <div style={sectionTitleStyle}>
-                <span style={{ width: '16px', height: '16px', display: 'flex', color: colors.primary[600] }}>
-                  <ZapIcon />
-                </span>
-                Quick Actions
-              </div>
+              <SectionTitle
+                title="Quick Actions"
+                icon={<Zap size={16} />}
+                iconColor={colors.fg.accent.primary}
+              />
               <div style={quickActionsStyle}>
                 {onGenerateNote && (
                   <Button
                     variant="secondary"
                     size="md"
-                    leftIcon={<FileTextIcon />}
+                    leftIcon={<FileText size={16} />}
                     onClick={onGenerateNote}
                   >
                     Generate Note
@@ -304,7 +220,7 @@ export const Palette: React.FC<PaletteProps> = ({
                   <Button
                     variant="secondary"
                     size="md"
-                    leftIcon={<AlertTriangleIcon />}
+                    leftIcon={<AlertTriangle size={16} />}
                     onClick={onCheckInteractions}
                   >
                     Check Interactions
@@ -319,28 +235,15 @@ export const Palette: React.FC<PaletteProps> = ({
             activeSuggestions.length === 0 &&
             !onGenerateNote &&
             !onCheckInteractions && (
-              <div style={emptyStateStyle}>
-                <span style={{
-                  display: 'block',
-                  width: '48px',
-                  height: '48px',
-                  margin: '0 auto',
-                  marginBottom: spacing[3],
-                  color: colors.neutral[300],
-                }}>
-                  <SparklesIcon />
-                </span>
-                <p style={{ margin: 0 }}>
-                  No alerts or suggestions right now.
-                </p>
-                <p style={{ margin: 0, marginTop: spacing[1], color: colors.neutral[400] }}>
-                  AI assistance will appear here as you work.
-                </p>
-              </div>
+              <EmptyState
+                icon={<Sparkles size={48} />}
+                title="No alerts or suggestions right now."
+                description="AI assistance will appear here as you work."
+                size="lg"
+              />
             )}
         </div>
-      </div>
-    </>
+    </Modal>
   );
 };
 

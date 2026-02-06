@@ -1,174 +1,79 @@
 /**
  * Styling Utilities
  *
- * Helper functions for working with design tokens in components.
+ * Helper functions for applying design tokens in EHR components.
+ * Uses canonical foundations + EHR-specific domain mappings.
  */
 
 import type { ItemCategory, ItemStatus, Tag } from '../types/chart-items';
 import type { Priority } from '../types/common';
-import { colors } from './tokens';
+import { colors } from './foundations/colors';
 
 // ============================================================================
-// Category Colors
+// Category Colors (EHR-specific domain mapping)
 // ============================================================================
 
-/**
- * Color set for a category
- */
 export interface CategoryColors {
-  /** Background color */
   bg: string;
-  /** Text color */
   text: string;
-  /** Border color */
   border: string;
-  /** Icon color */
   icon: string;
-  /** Light background for badges */
   lightBg: string;
 }
 
 /**
- * Get colors for a chart item category
+ * Get colors for a chart item category.
+ * Returns monochrome values for all categories.
  */
-export function getCategoryColor(category: ItemCategory): CategoryColors {
-  switch (category) {
-    case 'medication':
-      return {
-        bg: colors.clinical.medicationLight,
-        text: colors.clinical.medicationDark,
-        border: colors.clinical.medication,
-        icon: colors.clinical.medication,
-        lightBg: colors.clinical.medicationLight,
-      };
-
-    case 'lab':
-      return {
-        bg: colors.clinical.labLight,
-        text: colors.clinical.labDark,
-        border: colors.clinical.lab,
-        icon: colors.clinical.lab,
-        lightBg: colors.clinical.labLight,
-      };
-
-    case 'diagnosis':
-      return {
-        bg: colors.clinical.diagnosisLight,
-        text: colors.clinical.diagnosisDark,
-        border: colors.clinical.diagnosis,
-        icon: colors.clinical.diagnosis,
-        lightBg: colors.clinical.diagnosisLight,
-      };
-
-    case 'vitals':
-      return {
-        bg: colors.clinical.vitalLight,
-        text: colors.clinical.vitalDark,
-        border: colors.clinical.vital,
-        icon: colors.clinical.vital,
-        lightBg: colors.clinical.vitalLight,
-      };
-
-    case 'imaging':
-      return {
-        bg: colors.clinical.imagingLight,
-        text: colors.clinical.imagingDark,
-        border: colors.clinical.imaging,
-        icon: colors.clinical.imaging,
-        lightBg: colors.clinical.imagingLight,
-      };
-
-    case 'procedure':
-      return {
-        bg: colors.clinical.procedureLight,
-        text: colors.clinical.procedureDark,
-        border: colors.clinical.procedure,
-        icon: colors.clinical.procedure,
-        lightBg: colors.clinical.procedureLight,
-      };
-
-    case 'allergy':
-      return {
-        bg: colors.clinical.allergyLight,
-        text: colors.clinical.allergyDark,
-        border: colors.clinical.allergy,
-        icon: colors.clinical.allergy,
-        lightBg: colors.clinical.allergyLight,
-      };
-
-    case 'referral':
-      return {
-        bg: colors.clinical.referralLight,
-        text: colors.clinical.referralDark,
-        border: colors.clinical.referral,
-        icon: colors.clinical.referral,
-        lightBg: colors.clinical.referralLight,
-      };
-
-    // Narrative categories
-    case 'chief-complaint':
-    case 'hpi':
-    case 'ros':
-    case 'physical-exam':
-    case 'plan':
-    case 'note':
-    case 'instruction':
-    default:
-      return {
-        bg: colors.neutral[100],
-        text: colors.neutral[700],
-        border: colors.neutral[300],
-        icon: colors.neutral[500],
-        lightBg: colors.neutral[50],
-      };
-  }
+export function getCategoryColor(_category: ItemCategory): CategoryColors {
+  return {
+    bg: colors.bg.neutral.subtle,
+    text: colors.fg.neutral.secondary,
+    border: colors.border.neutral.low,
+    icon: colors.fg.neutral.spotReadable,
+    lightBg: colors.bg.neutral.min,
+  };
 }
 
 // ============================================================================
 // Status Colors
 // ============================================================================
 
-/**
- * Get color for an item status
- */
 export function getStatusColor(status: ItemStatus): string {
   switch (status) {
     case 'draft':
-      return colors.neutral[400];
+      return colors.fg.neutral.spotReadable;
     case 'pending-review':
-      return colors.status.warning;
+      return colors.fg.attention.secondary;
     case 'confirmed':
-      return colors.status.success;
+      return colors.fg.positive.secondary;
     case 'ordered':
-      return colors.status.info;
+      return colors.fg.information.secondary;
     case 'completed':
-      return colors.status.success;
+      return colors.fg.positive.secondary;
     case 'cancelled':
-      return colors.neutral[400];
+      return colors.fg.neutral.spotReadable;
     default:
-      return colors.neutral[500];
+      return colors.fg.neutral.secondary;
   }
 }
 
-/**
- * Get background color for an item status
- */
 export function getStatusBgColor(status: ItemStatus): string {
   switch (status) {
     case 'draft':
-      return colors.neutral[100];
+      return colors.bg.neutral.subtle;
     case 'pending-review':
-      return colors.status.warningLight;
+      return colors.bg.attention.subtle;
     case 'confirmed':
-      return colors.status.successLight;
+      return colors.bg.positive.subtle;
     case 'ordered':
-      return colors.status.infoLight;
+      return colors.bg.information.subtle;
     case 'completed':
-      return colors.status.successLight;
+      return colors.bg.positive.subtle;
     case 'cancelled':
-      return colors.neutral[100];
+      return colors.bg.neutral.subtle;
     default:
-      return colors.neutral[100];
+      return colors.bg.neutral.subtle;
   }
 }
 
@@ -176,22 +81,16 @@ export function getStatusBgColor(status: ItemStatus): string {
 // Confidence Colors
 // ============================================================================
 
-/**
- * Get color based on confidence score (0-1)
- */
 export function getConfidenceColor(confidence: number): string {
   if (confidence >= 0.8) {
-    return colors.ai.confidence.high;
+    return colors.fg.positive.secondary;
   }
   if (confidence >= 0.6) {
-    return colors.ai.confidence.medium;
+    return colors.fg.attention.secondary;
   }
-  return colors.ai.confidence.low;
+  return colors.fg.alert.secondary;
 }
 
-/**
- * Get confidence level label
- */
 export function getConfidenceLabel(confidence: number): string {
   if (confidence >= 0.8) {
     return 'High confidence';
@@ -206,9 +105,6 @@ export function getConfidenceLabel(confidence: number): string {
 // Priority Styles
 // ============================================================================
 
-/**
- * Styles for a priority level
- */
 export interface PriorityStyles {
   color: string;
   bgColor: string;
@@ -216,43 +112,40 @@ export interface PriorityStyles {
   label: string;
 }
 
-/**
- * Get styles for a priority level
- */
 export function getPriorityStyles(priority: Priority): PriorityStyles {
   switch (priority) {
     case 'urgent':
       return {
-        color: colors.status.error,
-        bgColor: colors.status.errorLight,
+        color: colors.fg.alert.secondary,
+        bgColor: colors.bg.alert.subtle,
         icon: '🔴',
         label: 'Urgent',
       };
     case 'high':
       return {
-        color: colors.status.warning,
-        bgColor: colors.status.warningLight,
+        color: colors.fg.attention.secondary,
+        bgColor: colors.bg.attention.subtle,
         icon: '🟠',
         label: 'High',
       };
     case 'medium':
       return {
-        color: colors.status.info,
-        bgColor: colors.status.infoLight,
+        color: colors.fg.information.secondary,
+        bgColor: colors.bg.information.subtle,
         icon: '🟡',
         label: 'Medium',
       };
     case 'low':
       return {
-        color: colors.status.success,
-        bgColor: colors.status.successLight,
+        color: colors.fg.positive.secondary,
+        bgColor: colors.bg.positive.subtle,
         icon: '🟢',
         label: 'Low',
       };
     default:
       return {
-        color: colors.neutral[500],
-        bgColor: colors.neutral[100],
+        color: colors.fg.neutral.secondary,
+        bgColor: colors.bg.neutral.subtle,
         icon: '⚪',
         label: 'Normal',
       };
@@ -263,89 +156,63 @@ export function getPriorityStyles(priority: Priority): PriorityStyles {
 // Care Gap Colors
 // ============================================================================
 
-/**
- * Get colors for care gap priority
- */
 export function getCareGapPriorityColor(priority: 'routine' | 'important' | 'critical'): {
   color: string;
   bgColor: string;
 } {
-  switch (priority) {
-    case 'critical':
-      return {
-        color: colors.careGap.critical,
-        bgColor: colors.careGap.criticalLight,
-      };
-    case 'important':
-      return {
-        color: colors.careGap.important,
-        bgColor: colors.careGap.importantLight,
-      };
-    case 'routine':
-      return {
-        color: colors.careGap.routine,
-        bgColor: colors.careGap.routineLight,
-      };
-    default:
-      return {
-        color: colors.neutral[500],
-        bgColor: colors.neutral[100],
-      };
+  if (priority === 'critical') {
+    return { color: colors.fg.alert.secondary, bgColor: colors.bg.alert.subtle };
   }
+  return { color: colors.fg.neutral.secondary, bgColor: colors.bg.neutral.subtle };
 }
 
 // ============================================================================
 // Tag Colors
 // ============================================================================
 
-/**
- * Get colors for a tag
- */
 export function getTagColor(tag: Tag): { color: string; bgColor: string } {
-  // Use custom color if provided
   if (tag.color) {
     return {
       color: tag.color,
-      bgColor: `${tag.color}20`, // 20 is alpha hex
+      bgColor: `${tag.color}20`,
     };
   }
 
-  // Default colors based on tag type
   switch (tag.type) {
     case 'status':
       return {
-        color: colors.status.info,
-        bgColor: colors.status.infoLight,
+        color: colors.fg.information.secondary,
+        bgColor: colors.bg.information.subtle,
       };
     case 'source':
       return {
-        color: colors.neutral[600],
-        bgColor: colors.neutral[100],
+        color: colors.fg.neutral.secondary,
+        bgColor: colors.bg.neutral.subtle,
       };
     case 'alert':
       return {
-        color: colors.status.error,
-        bgColor: colors.status.errorLight,
+        color: colors.fg.alert.secondary,
+        bgColor: colors.bg.alert.subtle,
       };
     case 'category':
       return {
-        color: colors.primary[600],
-        bgColor: colors.primary[100],
+        color: colors.fg.accent.secondary,
+        bgColor: colors.bg.accent.subtle,
       };
     case 'ai':
       return {
-        color: colors.ai.suggestion,
-        bgColor: colors.ai.suggestionLight,
+        color: colors.fg.generative.spotReadable,
+        bgColor: colors.bg.positive.subtle,
       };
     case 'workflow':
       return {
-        color: colors.status.success,
-        bgColor: colors.status.successLight,
+        color: colors.fg.positive.secondary,
+        bgColor: colors.bg.positive.subtle,
       };
     default:
       return {
-        color: colors.neutral[600],
-        bgColor: colors.neutral[100],
+        color: colors.fg.neutral.secondary,
+        bgColor: colors.bg.neutral.subtle,
       };
   }
 }
@@ -354,9 +221,6 @@ export function getTagColor(tag: Tag): { color: string; bgColor: string } {
 // Responsive Helpers
 // ============================================================================
 
-/**
- * Breakpoint values
- */
 export const breakpoints = {
   sm: '640px',
   md: '768px',
@@ -365,48 +229,13 @@ export const breakpoints = {
   '2xl': '1536px',
 } as const;
 
-/**
- * Create a media query string
- */
 export function mediaQuery(breakpoint: keyof typeof breakpoints): string {
   return `@media (min-width: ${breakpoints[breakpoint]})`;
 }
 
-/**
- * Check if we're on a mobile-sized screen
- * Note: This is a simple check and should be used with caution
- */
 export function isMobileWidth(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
   return window.innerWidth < parseInt(breakpoints.md);
-}
-
-// ============================================================================
-// CSS Variable Helpers
-// ============================================================================
-
-/**
- * Generate CSS custom properties from tokens
- */
-export function generateCSSVariables(): Record<string, string> {
-  const vars: Record<string, string> = {};
-
-  // Colors
-  Object.entries(colors).forEach(([category, values]) => {
-    if (typeof values === 'object') {
-      Object.entries(values).forEach(([key, value]) => {
-        if (typeof value === 'string') {
-          vars[`--color-${category}-${key}`] = value;
-        } else if (typeof value === 'object') {
-          Object.entries(value).forEach(([subKey, subValue]) => {
-            vars[`--color-${category}-${key}-${subKey}`] = subValue as string;
-          });
-        }
-      });
-    }
-  });
-
-  return vars;
 }

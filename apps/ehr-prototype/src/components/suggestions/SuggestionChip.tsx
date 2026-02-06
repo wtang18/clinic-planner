@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
+import { Check, X, Mic, Sparkles, Heart, ClipboardList } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, transitions, typography } from '../../styles/foundations';
 import { getConfidenceColor } from '../../styles/utils';
 import { IconButton } from '../primitives/IconButton';
 
@@ -31,61 +32,18 @@ export interface SuggestionChipProps {
 // Icons
 // ============================================================================
 
-const CheckIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="20,6 9,17 4,12" />
-  </svg>
-);
-
-const XIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const MicIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-    <line x1="12" y1="19" x2="12" y2="23" />
-    <line x1="8" y1="23" x2="16" y2="23" />
-  </svg>
-);
-
-const AIIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M12 2L2 7l10 5 10-5-10-5z" />
-    <path d="M2 17l10 5 10-5" />
-    <path d="M2 12l10 5 10-5" />
-  </svg>
-);
-
-const HeartIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const ClipboardIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-  </svg>
-);
-
 const getSourceIcon = (source: Suggestion['source']): React.ReactNode => {
   switch (source) {
     case 'transcription':
-      return <MicIcon />;
+      return <Mic size={14} />;
     case 'ai-analysis':
-      return <AIIcon />;
+      return <Sparkles size={14} />;
     case 'care-gap':
-      return <HeartIcon />;
+      return <Heart size={14} />;
     case 'cds':
-      return <ClipboardIcon />;
+      return <ClipboardList size={14} />;
     default:
-      return <AIIcon />;
+      return <Sparkles size={14} />;
   }
 };
 
@@ -121,56 +79,49 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: spacing[2],
-    padding: `${spacing[1.5]} ${spacing[3]}`,
-    backgroundColor: colors.ai.suggestionLight,
-    borderRadius: radii.full,
-    border: `1px solid ${colors.ai.suggestion}40`,
+    gap: spaceBetween.repeating,
+    padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
+    backgroundColor: 'rgba(128, 128, 128, 0.06)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    borderRadius: borderRadius.sm,
+    border: '1px solid rgba(0, 0, 0, 0.04)',
     transition: `all ${transitions.fast}`,
     opacity,
     cursor: 'pointer',
     ...(isHovered && {
-      backgroundColor: `${colors.ai.suggestion}20`,
-      boxShadow: `0 0 0 2px ${colors.ai.suggestion}30`,
+      backgroundColor: 'rgba(128, 128, 128, 0.12)',
     }),
     ...style,
   };
 
   const sourceIconStyle: React.CSSProperties = {
-    width: '14px',
-    height: '14px',
     display: 'flex',
-    color: colors.ai.suggestion,
+    color: colors.fg.neutral.spotReadable,
     flexShrink: 0,
   };
 
   const textStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
-    lineHeight: typography.fontSize.sm[1].lineHeight,
-    color: colors.neutral[700],
+    fontSize: 14,
+    lineHeight: '20px',
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
     maxWidth: '200px',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   };
 
-  const confidenceIndicatorStyle: React.CSSProperties = {
-    width: '8px',
-    height: '8px',
-    borderRadius: radii.full,
-    backgroundColor: confidenceColor,
-    flexShrink: 0,
-  };
-
   const actionsStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
-    marginLeft: spacing[1],
+    gap: spaceBetween.coupled,
+    marginLeft: spaceAround.nudge4,
   };
 
   return (
     <div
+      data-testid={`suggestion-chip-${suggestion.id}`}
       style={containerStyle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -189,19 +140,14 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
         {getSourceIcon(suggestion.source)}
       </span>
 
-      {/* Confidence indicator */}
-      <span
-        style={confidenceIndicatorStyle}
-        title={`${Math.round(suggestion.confidence * 100)}% confidence`}
-      />
-
       {/* Text */}
       <span style={textStyle}>{suggestion.displayText}</span>
 
       {/* Actions */}
       <div style={actionsStyle}>
         <IconButton
-          icon={<CheckIcon />}
+          data-testid="chip-accept-btn"
+          icon={<Check size={14} />}
           label="Accept suggestion"
           variant="ghost"
           size="sm"
@@ -209,10 +155,11 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
             e.stopPropagation();
             onAccept();
           }}
-          style={{ color: colors.status.success }}
+          style={{ color: colors.fg.positive.secondary }}
         />
         <IconButton
-          icon={<XIcon />}
+          data-testid="chip-dismiss-btn"
+          icon={<X size={14} />}
           label="Dismiss suggestion"
           variant="ghost"
           size="sm"
@@ -220,7 +167,7 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
             e.stopPropagation();
             onDismiss();
           }}
-          style={{ color: colors.neutral[500] }}
+          style={{ color: colors.fg.neutral.spotReadable }}
         />
       </div>
     </div>

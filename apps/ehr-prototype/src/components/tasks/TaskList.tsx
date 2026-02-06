@@ -5,11 +5,13 @@
  */
 
 import React from 'react';
+import { Check, Inbox } from 'lucide-react';
 import type { BackgroundTask, TaskStatus } from '../../types/suggestions';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 import { TaskCard } from './TaskCard';
 import { Button } from '../primitives/Button';
-import { Badge } from '../primitives/Badge';
+import { CollapsibleGroup } from '../primitives/CollapsibleGroup';
+import { EmptyState } from '../primitives/EmptyState';
 
 // ============================================================================
 // Types
@@ -33,35 +35,6 @@ export interface TaskListProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const ChevronDownIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="6,9 12,15 18,9" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="9,18 15,12 9,6" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="20,6 9,17 4,12" />
-  </svg>
-);
-
-const InboxIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="22,12 16,12 14,15 10,15 8,12 2,12" />
-    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
-  </svg>
-);
 
 // ============================================================================
 // Types for grouping
@@ -159,72 +132,27 @@ export const TaskList: React.FC<TaskListProps> = ({
   // Empty state
   if (tasks.length === 0) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing[8],
-        color: colors.neutral[400],
-        ...style,
-      }}>
-        <span style={{
-          width: '48px',
-          height: '48px',
-          display: 'flex',
-          marginBottom: spacing[3],
-        }}>
-          <InboxIcon />
-        </span>
-        <span style={{
-          fontSize: typography.fontSize.sm[0],
-          textAlign: 'center',
-        }}>
-          No background tasks
-        </span>
-      </div>
+      <EmptyState
+        icon={<Inbox size={48} />}
+        title="No background tasks"
+        size="lg"
+        style={style}
+      />
     );
   }
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[4],
+    gap: spaceBetween.related,
     ...style,
-  };
-
-  const groupHeaderStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: `${spacing[2]} ${spacing[3]}`,
-    backgroundColor: colors.neutral[50],
-    borderRadius: radii.md,
-    cursor: 'pointer',
-    userSelect: 'none',
-    transition: `background-color ${transitions.fast}`,
-  };
-
-  const groupTitleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
-    fontSize: typography.fontSize.sm[0],
-    fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[700],
-  };
-
-  const groupActionsStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
   };
 
   const taskListStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[2],
-    paddingLeft: spacing[2],
+    gap: spaceBetween.repeating,
+    paddingLeft: spaceAround.tight,
   };
 
   return (
@@ -234,51 +162,22 @@ export const TaskList: React.FC<TaskListProps> = ({
         const readyTasks = group.tasks.filter(t => t.status === 'ready');
         const showBatchApprove = onBatchApprove && readyTasks.length > 1;
 
-        return (
-          <div key={group.key}>
-            {/* Group Header */}
-            {groupBy !== 'none' && (
-              <div
-                style={groupHeaderStyle}
-                onClick={() => toggleGroup(group.key)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && toggleGroup(group.key)}
-              >
-                <div style={groupTitleStyle}>
-                  <span style={{
-                    width: '16px',
-                    height: '16px',
-                    display: 'flex',
-                    color: colors.neutral[500],
-                    transform: group.collapsed ? 'rotate(0deg)' : 'rotate(0deg)',
-                    transition: `transform ${transitions.fast}`,
-                  }}>
-                    {group.collapsed ? <ChevronRightIcon /> : <ChevronDownIcon />}
-                  </span>
-                  <span>{group.label}</span>
-                  <Badge variant={group.badgeVariant} size="sm">
-                    {group.tasks.length}
-                  </Badge>
-                </div>
+        const batchApproveButton = showBatchApprove && !group.collapsed ? (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="primary"
+              size="sm"
+              leftIcon={<Check size={16} />}
+              onClick={() => onBatchApprove(readyTasks.map(t => t.id))}
+            >
+              Send All ({readyTasks.length})
+            </Button>
+          </div>
+        ) : undefined;
 
-                <div style={groupActionsStyle} onClick={(e) => e.stopPropagation()}>
-                  {showBatchApprove && !group.collapsed && (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      leftIcon={<CheckIcon />}
-                      onClick={() => onBatchApprove(readyTasks.map(t => t.id))}
-                    >
-                      Send All ({readyTasks.length})
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Task List */}
-            {!group.collapsed && (
+        if (groupBy === 'none') {
+          return (
+            <div key={group.key}>
               <div style={taskListStyle}>
                 {group.tasks.map((task) => (
                   <TaskCard
@@ -292,20 +191,45 @@ export const TaskList: React.FC<TaskListProps> = ({
                   />
                 ))}
               </div>
-            )}
+            </div>
+          );
+        }
+
+        return (
+          <CollapsibleGroup
+            key={group.key}
+            title={group.label}
+            isCollapsed={group.collapsed}
+            onToggle={() => toggleGroup(group.key)}
+            badge={{ label: group.tasks.length, variant: group.badgeVariant }}
+            trailing={batchApproveButton}
+          >
+            <div style={taskListStyle}>
+              {group.tasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  compact
+                  onApprove={() => onApprove(task.id)}
+                  onReject={(reason) => onReject(task.id, reason)}
+                  onRetry={onRetry ? () => onRetry(task.id) : undefined}
+                  onCancel={onCancel ? () => onCancel(task.id) : undefined}
+                />
+              ))}
+            </div>
 
             {/* Empty group state */}
-            {!group.collapsed && group.tasks.length === 0 && (
+            {group.tasks.length === 0 && (
               <div style={{
-                padding: spacing[4],
+                padding: spaceAround.default,
                 textAlign: 'center',
-                color: colors.neutral[400],
-                fontSize: typography.fontSize.xs[0],
+                color: colors.fg.neutral.disabled,
+                fontSize: 12,
               }}>
                 No tasks in this group
               </div>
             )}
-          </div>
+          </CollapsibleGroup>
         );
       })}
     </div>

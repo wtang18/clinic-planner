@@ -47,24 +47,55 @@ export { noteGenerationService } from './ai/note-generation';
 export * from './transcription';
 
 // ============================================================================
-// Convenience Functions
+// Side Effects & Notifications
 // ============================================================================
 
-/**
- * Initialize all services with a store
- *
- * @param store - The state store
- * @param config - Optional configuration overrides
- * @returns The AI manager instance
- */
-export function initializeServices(
-  store: Store,
-  config?: Partial<AIServicesConfig>
-): AIManager {
-  const manager = getAIManager();
-  manager.initialize(store, config);
-  return manager;
-}
+export type {
+  SideEffectHandler,
+} from './side-effect-handlers';
+
+export {
+  itemAddedHandler,
+  suggestionAcceptedHandler,
+  modeChangedHandler,
+  taskCompletedHandler,
+  itemConfirmedHandler,
+  cleanupExpiredSuggestionsHandler,
+  DEFAULT_SIDE_EFFECT_HANDLERS,
+  createSideEffectRunner,
+} from './side-effect-handlers';
+
+export type {
+  NotificationManager,
+  NotificationHandler,
+  DismissHandler,
+  NotificationManagerConfig,
+} from './notification-manager';
+
+export {
+  createNotificationManager,
+  getNotificationManager,
+  createNotification,
+  successNotification,
+  errorNotification,
+  warningNotification,
+  infoNotification,
+} from './notification-manager';
+
+// ============================================================================
+// Service Initialization
+// ============================================================================
+
+export type {
+  InitializationResult,
+  InitializationConfig,
+  AuditLogEntry,
+} from './initialization';
+
+export {
+  initializeServices,
+  initializeDevServices,
+} from './initialization';
 
 /**
  * Shutdown all services

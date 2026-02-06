@@ -1,30 +1,11 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+/**
+ * EHR Prototype Entry Point
+ *
+ * This file serves as the entry point for Expo.
+ * The actual app implementation is in src/App.tsx.
+ */
 
-export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>EHR Prototype</Text>
-      <Text style={styles.subtitle}>Phase 1: Foundation</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
-}
+import { App } from './src/App';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-});
+// Re-export the App component as default for Expo
+export default App;

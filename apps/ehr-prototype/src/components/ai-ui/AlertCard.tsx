@@ -5,10 +5,14 @@
  */
 
 import React from 'react';
+import { AlertTriangle, AlertCircle, Info } from 'lucide-react';
 import type { Alert } from '../../types/suggestions';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
+import { formatTimeAgo } from '../../utils/formatTimeAgo';
 import { Card } from '../primitives/Card';
 import { Button } from '../primitives/Button';
+import { CardIconContainer, type CardIconColor } from '../primitives/CardIconContainer';
+import { ActionGroup } from '../primitives/ActionGroup';
 
 // ============================================================================
 // Types
@@ -26,42 +30,6 @@ export interface AlertCardProps {
 }
 
 // ============================================================================
-// Icons
-// ============================================================================
-
-const getSeverityIcon = (severity: Alert['severity']): React.ReactNode => {
-  const iconStyle = { width: '100%', height: '100%' };
-
-  switch (severity) {
-    case 'critical':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-          <line x1="12" y1="9" x2="12" y2="13" />
-          <line x1="12" y1="17" x2="12.01" y2="17" />
-        </svg>
-      );
-    case 'warning':
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-      );
-    case 'info':
-    default:
-      return (
-        <svg style={iconStyle} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="16" x2="12" y2="12" />
-          <line x1="12" y1="8" x2="12.01" y2="8" />
-        </svg>
-      );
-  }
-};
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -74,12 +42,15 @@ export const AlertCard: React.FC<AlertCardProps> = ({
   const severityConfig = getSeverityConfig(alert.severity);
   const isAcknowledged = !!alert.acknowledgedAt;
 
+  const severityToColor: CardIconColor = alert.severity === 'critical' ? 'alert'
+    : alert.severity === 'warning' ? 'attention'
+    : 'default';
+
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[3],
-    padding: spacing[4],
-    borderLeft: `4px solid ${severityConfig.color}`,
+    gap: spaceBetween.relatedCompact,
+    padding: spaceAround.default,
     backgroundColor: severityConfig.bgColor,
     opacity: isAcknowledged ? 0.7 : 1,
     ...style,
@@ -88,19 +59,7 @@ export const AlertCard: React.FC<AlertCardProps> = ({
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'flex-start',
-    gap: spacing[3],
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '32px',
-    height: '32px',
-    backgroundColor: severityConfig.color,
-    borderRadius: radii.full,
-    color: colors.neutral[0],
-    flexShrink: 0,
+    gap: spaceBetween.relatedCompact,
   };
 
   const contentStyle: React.CSSProperties = {
@@ -109,32 +68,37 @@ export const AlertCard: React.FC<AlertCardProps> = ({
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
+    fontSize: 14,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: severityConfig.titleColor,
     margin: 0,
-    marginBottom: spacing[1],
+    marginBottom: spaceAround.nudge4,
   };
 
   const messageStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
-    color: colors.neutral[700],
+    fontSize: 14,
+    color: colors.fg.neutral.secondary,
     margin: 0,
-    lineHeight: typography.fontSize.sm[1].lineHeight,
+    lineHeight: '20px',
   };
 
   const timeStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
-    marginTop: spacing[2],
+    fontSize: 12,
+    color: colors.fg.neutral.spotReadable,
+    marginTop: spaceAround.tight,
   };
 
-  const actionsStyle: React.CSSProperties = {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: spacing[2],
-    paddingTop: spacing[3],
-    borderTop: `1px solid ${colors.neutral[200]}`,
+
+  const getSeverityIcon = () => {
+    switch (alert.severity) {
+      case 'critical':
+        return <AlertTriangle size={18} />;
+      case 'warning':
+        return <AlertCircle size={18} />;
+      case 'info':
+      default:
+        return <Info size={18} />;
+    }
   };
 
   return (
@@ -142,11 +106,9 @@ export const AlertCard: React.FC<AlertCardProps> = ({
       <div style={containerStyle}>
         {/* Header */}
         <div style={headerStyle}>
-          <div style={iconContainerStyle}>
-            <span style={{ width: '18px', height: '18px', display: 'flex' }}>
-              {getSeverityIcon(alert.severity)}
-            </span>
-          </div>
+          <CardIconContainer color={severityToColor} filled={false} size="md">
+            {getSeverityIcon()}
+          </CardIconContainer>
           <div style={contentStyle}>
             <p style={titleStyle}>{alert.title}</p>
             <p style={messageStyle}>{alert.message}</p>
@@ -156,7 +118,7 @@ export const AlertCard: React.FC<AlertCardProps> = ({
 
         {/* Actions */}
         {alert.actions.length > 0 && !isAcknowledged && (
-          <div style={actionsStyle}>
+          <ActionGroup style={{ flexWrap: 'wrap', paddingTop: spaceAround.compact }}>
             {alert.actions.map((action, index) => (
               <Button
                 key={index}
@@ -176,14 +138,14 @@ export const AlertCard: React.FC<AlertCardProps> = ({
                 Acknowledge
               </Button>
             )}
-          </div>
+          </ActionGroup>
         )}
 
         {/* Acknowledged state */}
         {isAcknowledged && (
           <div style={{
-            fontSize: typography.fontSize.xs[0],
-            color: colors.neutral[500],
+            fontSize: 12,
+            color: colors.fg.neutral.spotReadable,
           }}>
             Acknowledged{' '}
             {alert.acknowledgedAt && formatTimeAgo(alert.acknowledgedAt)}
@@ -199,7 +161,8 @@ export const AlertCard: React.FC<AlertCardProps> = ({
 // ============================================================================
 
 interface SeverityConfig {
-  color: string;
+  iconColor: string;
+  titleColor: string;
   bgColor: string;
 }
 
@@ -207,19 +170,22 @@ function getSeverityConfig(severity: Alert['severity']): SeverityConfig {
   switch (severity) {
     case 'critical':
       return {
-        color: colors.status.error,
-        bgColor: colors.status.errorLight,
+        iconColor: colors.fg.alert.secondary,
+        titleColor: colors.fg.neutral.primary,
+        bgColor: colors.bg.alert.subtle,
       };
     case 'warning':
       return {
-        color: colors.status.warning,
-        bgColor: colors.status.warningLight,
+        iconColor: colors.fg.attention.secondary,
+        titleColor: colors.fg.attention.secondary,
+        bgColor: colors.bg.neutral.base,
       };
     case 'info':
     default:
       return {
-        color: colors.status.info,
-        bgColor: colors.status.infoLight,
+        iconColor: colors.fg.information.secondary,
+        titleColor: colors.fg.neutral.primary,
+        bgColor: colors.bg.neutral.base,
       };
   }
 }
@@ -233,22 +199,6 @@ function getButtonVariant(style: 'primary' | 'secondary' | 'danger'): 'primary' 
     default:
       return 'secondary';
   }
-}
-
-function formatTimeAgo(date: Date): string {
-  if (!(date instanceof Date)) {
-    date = new Date(date);
-  }
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-
-  if (diffSeconds < 60) return 'Just now';
-  if (diffMinutes < 60) return `${diffMinutes}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  return date.toLocaleDateString();
 }
 
 AlertCard.displayName = 'AlertCard';

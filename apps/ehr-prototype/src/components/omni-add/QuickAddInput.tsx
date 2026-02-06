@@ -5,9 +5,9 @@
  */
 
 import React from 'react';
+import { Search } from 'lucide-react';
 import type { ChartItem, ItemCategory } from '../../types/chart-items';
-import { colors, spacing, typography, radii, shadows, transitions, zIndex } from '../../styles/tokens';
-import { getCategoryColor } from '../../styles/utils';
+import { colors, spaceAround, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
 import { Input } from '../primitives/Input';
 import { Spinner } from '../primitives/Spinner';
 
@@ -119,7 +119,6 @@ export const QuickAddInput: React.FC<QuickAddInputProps> = ({
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const categoryColors = getCategoryColor(category);
   const defaultPlaceholder = `Search ${getCategoryLabel(category)}...`;
 
   // Debounced search
@@ -177,61 +176,65 @@ export const QuickAddInput: React.FC<QuickAddInputProps> = ({
   };
 
   const dropdownStyle: React.CSSProperties = {
-    marginTop: spacing[2],
-    backgroundColor: colors.neutral[0],
-    border: `1px solid ${colors.neutral[200]}`,
-    borderRadius: radii.lg,
+    marginTop: spaceAround.tight,
+    backgroundColor: colors.bg.neutral.base,
+    border: `1px solid ${colors.border.neutral.low}`,
+    borderRadius: borderRadius.sm,
     boxShadow: shadows.lg,
     maxHeight: '300px',
     overflowY: 'auto',
   };
 
   const sectionTitleStyle: React.CSSProperties = {
-    padding: `${spacing[2]} ${spacing[3]}`,
-    fontSize: typography.fontSize.xs[0],
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    fontSize: 12,
+    fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[500],
+    color: colors.fg.neutral.spotReadable,
     textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
-    backgroundColor: colors.neutral[50],
-    borderBottom: `1px solid ${colors.neutral[200]}`,
+    letterSpacing: 0.5,
+    backgroundColor: colors.bg.neutral.min,
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
   };
 
   const resultItemStyle = (isSelected: boolean): React.CSSProperties => ({
     display: 'flex',
     flexDirection: 'column',
-    padding: `${spacing[2]} ${spacing[3]}`,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
     cursor: 'pointer',
-    backgroundColor: isSelected ? colors.neutral[100] : 'transparent',
+    backgroundColor: isSelected ? colors.bg.neutral.subtle : 'transparent',
     transition: `background-color ${transitions.fast}`,
   });
 
   const resultTextStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.sm[0],
-    color: colors.neutral[900],
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.primary,
   };
 
   const resultSubtextStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    fontSize: 12,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.spotReadable,
   };
 
   const emptyStateStyle: React.CSSProperties = {
-    padding: spacing[4],
+    padding: spaceAround.default,
     textAlign: 'center',
-    color: colors.neutral[500],
-    fontSize: typography.fontSize.sm[0],
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.spotReadable,
+    fontSize: 14,
   };
 
   const loadingStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing[4],
+    padding: spaceAround.default,
   };
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} data-testid="quick-add-input">
       {/* Search input */}
       <Input
         ref={inputRef}
@@ -240,19 +243,14 @@ export const QuickAddInput: React.FC<QuickAddInputProps> = ({
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder || defaultPlaceholder}
         size="md"
-        leftIcon={
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        }
+        leftIcon={<Search size={16} />}
         rightIcon={isLoading ? <Spinner size="sm" /> : undefined}
         onKeyDown={handleKeyDown}
-        style={{ borderColor: categoryColors.border }}
+        data-testid="omni-add-search"
       />
 
       {/* Results dropdown */}
-      <div style={dropdownStyle}>
+      <div style={dropdownStyle} data-testid="search-dropdown">
         {/* Recent items */}
         {recentItems.length > 0 && !query && (
           <>
@@ -263,6 +261,7 @@ export const QuickAddInput: React.FC<QuickAddInputProps> = ({
                 style={resultItemStyle(selectedIndex === index)}
                 onClick={() => onSelect(item)}
                 onMouseEnter={() => setSelectedIndex(index)}
+                data-testid={`recent-item-${index}`}
               >
                 <span style={resultTextStyle}>{item.displayText}</span>
               </div>
@@ -284,6 +283,7 @@ export const QuickAddInput: React.FC<QuickAddInputProps> = ({
                   style={resultItemStyle(selectedIndex === actualIndex)}
                   onClick={() => onSelect(result.template)}
                   onMouseEnter={() => setSelectedIndex(actualIndex)}
+                  data-testid={`search-result-${index}`}
                 >
                   <span style={resultTextStyle}>{result.displayText}</span>
                   {result.displaySubtext && (
@@ -305,7 +305,7 @@ export const QuickAddInput: React.FC<QuickAddInputProps> = ({
         {/* Empty state */}
         {!isLoading && query && results.length === 0 && (
           <div style={emptyStateStyle}>
-            No results for "{query}"
+            No results for &ldquo;{query}&rdquo;
           </div>
         )}
       </div>

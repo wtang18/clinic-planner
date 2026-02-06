@@ -5,7 +5,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { colors, radii, spacing, transitions, typography } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
 import { Spinner } from './Spinner';
 
 // ============================================================================
@@ -39,10 +39,10 @@ const baseStyles: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: spacing[2],
+  gap: spaceBetween.repeating,
   fontFamily: typography.fontFamily.sans,
   fontWeight: typography.fontWeight.medium,
-  borderRadius: radii.md,
+  borderRadius: borderRadius.full,
   border: 'none',
   cursor: 'pointer',
   transition: `all ${transitions.fast}`,
@@ -52,18 +52,18 @@ const baseStyles: React.CSSProperties = {
 const sizeStyles: Record<'sm' | 'md' | 'lg', React.CSSProperties> = {
   sm: {
     height: '32px',
-    padding: `0 ${spacing[3]}`,
-    fontSize: typography.fontSize.sm[0],
+    padding: `0 ${spaceAround.compact}px`,
+    fontSize: 14,
   },
   md: {
     height: '40px',
-    padding: `0 ${spacing[4]}`,
-    fontSize: typography.fontSize.base[0],
+    padding: `0 ${spaceAround.default}px`,
+    fontSize: 16,
   },
   lg: {
     height: '48px',
-    padding: `0 ${spacing[6]}`,
-    fontSize: typography.fontSize.lg[0],
+    padding: `0 ${spaceAround.spacious}px`,
+    fontSize: 18,
   },
 };
 
@@ -73,58 +73,62 @@ const variantStyles: Record<
 > = {
   primary: {
     base: {
-      backgroundColor: colors.primary[600],
-      color: colors.neutral[0],
+      backgroundColor: colors.fg.accent.primary,
+      color: colors.bg.neutral.base,
     },
     hover: {
-      backgroundColor: colors.primary[700],
+      backgroundColor: colors.fg.accent.secondary,
     },
     disabled: {
-      backgroundColor: colors.neutral[200],
-      color: colors.neutral[400],
+      backgroundColor: colors.border.neutral.low,
+      color: colors.fg.neutral.disabled,
       cursor: 'not-allowed',
     },
   },
   secondary: {
     base: {
-      backgroundColor: colors.neutral[0],
-      color: colors.neutral[700],
-      border: `1px solid ${colors.neutral[300]}`,
+      backgroundColor: 'rgba(128, 128, 128, 0.08)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      color: colors.fg.neutral.secondary,
+      border: '1px solid rgba(0, 0, 0, 0.06)',
     },
     hover: {
-      backgroundColor: colors.neutral[50],
-      borderColor: colors.neutral[400],
+      backgroundColor: 'rgba(128, 128, 128, 0.14)',
+      borderColor: 'rgba(0, 0, 0, 0.09)',
     },
     disabled: {
-      backgroundColor: colors.neutral[100],
-      color: colors.neutral[400],
+      backgroundColor: colors.bg.neutral.subtle,
+      color: colors.fg.neutral.disabled,
       cursor: 'not-allowed',
     },
   },
   ghost: {
     base: {
-      backgroundColor: 'transparent',
-      color: colors.neutral[700],
+      backgroundColor: 'rgba(128, 128, 128, 0.04)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      color: colors.fg.neutral.secondary,
     },
     hover: {
-      backgroundColor: colors.neutral[100],
+      backgroundColor: 'rgba(128, 128, 128, 0.10)',
     },
     disabled: {
-      color: colors.neutral[400],
+      color: colors.fg.neutral.disabled,
       cursor: 'not-allowed',
     },
   },
   danger: {
     base: {
-      backgroundColor: colors.status.error,
-      color: colors.neutral[0],
+      backgroundColor: colors.fg.alert.secondary,
+      color: colors.bg.neutral.base,
     },
     hover: {
-      backgroundColor: colors.status.errorDark,
+      backgroundColor: colors.fg.alert.primary,
     },
     disabled: {
-      backgroundColor: colors.neutral[200],
-      color: colors.neutral[400],
+      backgroundColor: colors.border.neutral.low,
+      color: colors.fg.neutral.disabled,
       cursor: 'not-allowed',
     },
   },
@@ -191,9 +195,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           <Spinner size="sm" color="currentColor" />
         ) : (
           <>
-            {leftIcon && <span style={{ display: 'flex' }}>{leftIcon}</span>}
+            {leftIcon && (
+              <span style={{ display: 'flex', alignItems: 'center', width: { sm: 14, md: 16, lg: 18 }[size], height: { sm: 14, md: 16, lg: 18 }[size], flexShrink: 0 }}>
+                {leftIcon}
+              </span>
+            )}
             {children}
-            {rightIcon && <span style={{ display: 'flex' }}>{rightIcon}</span>}
+            {rightIcon && (
+              <span style={{ display: 'flex', alignItems: 'center', width: { sm: 14, md: 16, lg: 18 }[size], height: { sm: 14, md: 16, lg: 18 }[size], flexShrink: 0 }}>
+                {rightIcon}
+              </span>
+            )}
           </>
         )}
       </button>

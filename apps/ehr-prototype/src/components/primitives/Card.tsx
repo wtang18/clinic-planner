@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { colors, radii, spacing, shadows, transitions } from '../../styles/tokens';
+import { colors, spaceAround, borderRadius, shadows, transitions } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -28,32 +28,34 @@ export interface CardProps {
   style?: React.CSSProperties;
   /** Additional class name */
   className?: string;
+  /** Test ID for E2E testing */
+  'data-testid'?: string;
 }
 
 // ============================================================================
 // Styles
 // ============================================================================
 
-const paddingStyles: Record<'none' | 'sm' | 'md' | 'lg', string> = {
-  none: '0',
-  sm: spacing[3],
-  md: spacing[4],
-  lg: spacing[6],
+const paddingStyles: Record<'none' | 'sm' | 'md' | 'lg', number> = {
+  none: 0,
+  sm: spaceAround.compact,
+  md: spaceAround.default,
+  lg: spaceAround.spacious,
 };
 
 const variantStyles: Record<'default' | 'outlined' | 'elevated', React.CSSProperties> = {
   default: {
-    backgroundColor: colors.neutral[0],
-    border: `1px solid ${colors.neutral[200]}`,
-    boxShadow: 'none',
+    backgroundColor: colors.bg.neutral.base,
+    border: '1px solid rgba(0, 0, 0, 0.04)',
+    boxShadow: shadows.xs,
   },
   outlined: {
     backgroundColor: 'transparent',
-    border: `1px solid ${colors.neutral[300]}`,
+    border: `1px solid ${colors.border.neutral.medium}`,
     boxShadow: 'none',
   },
   elevated: {
-    backgroundColor: colors.neutral[0],
+    backgroundColor: colors.bg.neutral.base,
     border: 'none',
     boxShadow: shadows.md,
   },
@@ -72,6 +74,7 @@ export const Card: React.FC<CardProps> = ({
   onClick,
   style,
   className,
+  'data-testid': testId,
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
@@ -80,19 +83,19 @@ export const Card: React.FC<CardProps> = ({
   const computedStyle: React.CSSProperties = {
     position: 'relative',
     padding: paddingStyles[padding],
-    borderRadius: radii.lg,
+    borderRadius: borderRadius.sm,
     transition: `all ${transitions.fast}`,
     ...variantStyles[variant],
     ...(selected ? {
-      borderColor: colors.primary[500],
-      boxShadow: `0 0 0 2px ${colors.primary[200]}`,
+      borderColor: colors.fg.accent.primary,
+      boxShadow: `0 0 0 2px ${colors.border.accent.low}`,
     } : {}),
     ...(isClickable ? {
       cursor: 'pointer',
     } : {}),
     ...(isClickable && isHovered ? {
-      backgroundColor: colors.neutral[50],
-      borderColor: colors.neutral[300],
+      backgroundColor: colors.bg.neutral.min,
+      borderColor: colors.border.neutral.medium,
     } : {}),
     ...style,
   };
@@ -115,6 +118,7 @@ export const Card: React.FC<CardProps> = ({
       style={computedStyle}
       className={className}
       aria-pressed={isClickable ? selected : undefined}
+      data-testid={testId}
     >
       {children}
     </div>

@@ -87,132 +87,38 @@ export function generatePatient(
 }
 
 // ============================================================================
-// Pre-built Patient Templates (matching visit scenarios)
+// Re-exports from Central Patient Registry
 // ============================================================================
 
-/**
- * UC Cough patient - 42yo F with HTN, DM, presenting with cough
- */
-export const PATIENT_UC_COUGH: PatientContext = {
-  id: 'pt-uc-001',
-  mrn: '12345678',
-  demographics: {
-    firstName: 'Lauren',
-    lastName: 'Svendsen',
-    dateOfBirth: new Date('1983-06-15'),
-    age: 42,
-    gender: 'female',
-    pronouns: 'she/her',
-  },
-  insurance: {
-    primary: {
-      payerId: 'SELF',
-      payerName: 'Self Pay',
-      memberId: 'N/A',
-    },
-  },
-  clinicalSummary: {
-    problemList: [
-      { description: 'Essential hypertension', icdCode: 'I10', status: 'active' },
-      { description: 'Type 2 diabetes mellitus', icdCode: 'E11.9', status: 'active' },
-      { description: 'Hypothyroidism', icdCode: 'E03.9', status: 'active' },
-      { description: 'Prediabetes', icdCode: 'R73.03', status: 'active' },
-      { description: 'High cholesterol', icdCode: 'E78.00', status: 'active' },
-      { description: 'Family history of breast cancer', icdCode: 'Z80.3', status: 'active' },
-    ],
-    medications: [
-      { name: 'Metformin', dosage: '500mg', frequency: 'BID', status: 'active' },
-      { name: 'Lisinopril', dosage: '10mg', frequency: 'daily', status: 'active' },
-      { name: 'Tylenol Extra Strength', dosage: '500mg', frequency: 'PRN', status: 'active' },
-    ],
-    allergies: [
-      { allergen: 'Penicillin', reaction: 'Rash', severity: 'mild' },
-      { allergen: 'Sulfa', reaction: 'Anaphylaxis', severity: 'severe' },
-    ],
-    recentEncounters: [
-      {
-        date: new Date('2024-02-27'),
-        type: 'Urgent Care',
-        chiefComplaint: 'Pinky finger injury',
-        provider: 'Dr. Smith',
-      },
-    ],
-  },
-};
+// Import from the central patient data registry
+export {
+  PATIENT_LAUREN_SVENDSEN as PATIENT_UC_COUGH,
+  PATIENT_ROBERT_MARTINEZ as PATIENT_PC_DIABETES,
+  PATIENT_REGISTRY,
+  getPatientByMrn,
+  getPatientById,
+  getAllPatients,
+} from '../../scenarios/patientData';
 
-/**
- * PC Diabetes patient - 58yo M with DM, HTN, hyperlipidemia
- */
-export const PATIENT_PC_DIABETES: PatientContext = {
-  id: 'pt-pc-001',
-  mrn: '87654321',
-  demographics: {
-    firstName: 'Robert',
-    lastName: 'Martinez',
-    dateOfBirth: new Date('1967-03-22'),
-    age: 58,
-    gender: 'male',
-  },
-  insurance: {
-    primary: {
-      payerId: 'BCBS',
-      payerName: 'Blue Cross Blue Shield',
-      memberId: 'XYZ123456',
-      groupNumber: 'GRP001',
-      planType: 'PPO',
-    },
-  },
-  clinicalSummary: {
-    problemList: [
-      { description: 'Type 2 diabetes mellitus', icdCode: 'E11.9', status: 'active', onsetDate: new Date('2018-05-01') },
-      { description: 'Essential hypertension', icdCode: 'I10', status: 'active', onsetDate: new Date('2015-01-15') },
-      { description: 'Hyperlipidemia', icdCode: 'E78.5', status: 'active' },
-      { description: 'Obesity', icdCode: 'E66.9', status: 'active' },
-    ],
-    medications: [
-      { name: 'Metformin', dosage: '1000mg', frequency: 'BID', status: 'active' },
-      { name: 'Lisinopril', dosage: '20mg', frequency: 'daily', status: 'active' },
-      { name: 'Atorvastatin', dosage: '40mg', frequency: 'daily', status: 'active' },
-    ],
-    allergies: [],
-    recentEncounters: [
-      {
-        date: new Date('2024-07-15'),
-        type: 'Follow-up',
-        chiefComplaint: 'Diabetes follow-up',
-        provider: 'Dr. Johnson',
-      },
-    ],
-  },
-};
+// For backwards compatibility with existing code
+import {
+  PATIENT_LAUREN_SVENDSEN,
+  PATIENT_ROBERT_MARTINEZ,
+  PATIENT_DANTE_P,
+} from '../../scenarios/patientData';
 
 /**
  * Healthy adult - 30yo with no significant history
+ * Note: Dante P. is now the "healthy-ish" adult template
  */
-export const PATIENT_HEALTHY_ADULT: PatientContext = {
-  id: 'pt-healthy-001',
-  mrn: '11111111',
-  demographics: {
-    firstName: 'Emily',
-    lastName: 'Chen',
-    dateOfBirth: new Date('1994-08-20'),
-    age: 30,
-    gender: 'female',
-  },
-  clinicalSummary: {
-    problemList: [],
-    medications: [],
-    allergies: [],
-    recentEncounters: [],
-  },
-};
+export const PATIENT_HEALTHY_ADULT: PatientContext = PATIENT_DANTE_P;
 
 /**
- * Geriatric patient - 75yo with multiple comorbidities
+ * Geriatric patient - keeping original definition as it's not in To-Do
  */
 export const PATIENT_GERIATRIC: PatientContext = {
   id: 'pt-geriatric-001',
-  mrn: '99999999',
+  mrn: '10101010',
   demographics: {
     firstName: 'Margaret',
     lastName: 'Wilson',
@@ -245,8 +151,8 @@ export const PATIENT_GERIATRIC: PatientContext = {
  * Patient templates export
  */
 export const PATIENT_TEMPLATES = {
-  ucCough: PATIENT_UC_COUGH,
-  pcDiabetes: PATIENT_PC_DIABETES,
+  ucCough: PATIENT_LAUREN_SVENDSEN,
+  pcDiabetes: PATIENT_ROBERT_MARTINEZ,
   healthyAdult: PATIENT_HEALTHY_ADULT,
   geriatric: PATIENT_GERIATRIC,
 } as const;

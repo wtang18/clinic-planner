@@ -6,9 +6,11 @@
  */
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, X, FileText, Mail, Inbox, Heart, Stethoscope, LayoutGrid, Mic, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, X, FileText, Mail, Inbox, Heart, Stethoscope, LayoutGrid } from 'lucide-react';
 import { colors, borderRadius, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
 import type { WorkspaceTab, WorkspaceTabType } from '../../context/WorkspaceContext';
+import { TranscriptionIndicator, recordingStatusToIndicator } from '../sidebar/TranscriptionIndicator';
+import type { RecordingStatus as BottomBarRecordingStatus } from '../../state/bottomBar/types';
 
 // ============================================================================
 // Types
@@ -20,8 +22,8 @@ export interface PatientTask {
   type: 'urgent' | 'routine' | 'signoff';
 }
 
-/** Recording status for a patient workspace */
-export type RecordingStatus = 'recording' | 'complete' | 'none';
+/** Recording status for a patient workspace (simplified for patient-level display) */
+export type RecordingStatus = 'recording' | 'paused' | 'processing' | 'complete' | 'none';
 
 export interface PatientWorkspaceItemProps {
   /** Patient name */
@@ -42,8 +44,14 @@ export interface PatientWorkspaceItemProps {
   isSelected?: boolean;
   /** Initial expanded state */
   defaultExpanded?: boolean;
-  /** Recording status for this patient's encounter */
+  /** Recording status for this patient's encounter (patient-level summary) */
   recordingStatus?: RecordingStatus;
+  /**
+   * Recording status by tab ID (for encounter-level indicators).
+   * Map of tabId -> RecordingStatus from bottomBar state.
+   * Used to show indicators on visit tabs.
+   */
+  tabRecordingStatuses?: Record<string, BottomBarRecordingStatus>;
   /** Called when patient header is clicked */
   onPatientClick?: () => void;
   /** Called when a task is clicked (legacy) */
@@ -77,6 +85,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
   isSelected = false,
   defaultExpanded = false,
   recordingStatus = 'none',
+  tabRecordingStatuses = {},
   onPatientClick,
   onTaskClick,
   onTabClick,
@@ -241,15 +250,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
   };
 
   return (
-    <>
-      {/* CSS animation for recording pulse */}
-      <style>{`
-        @keyframes recordingPulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-      `}</style>
-      <div style={containerStyle} data-testid={testID}>
+    <div style={containerStyle} data-testid={testID}>
       <div
         style={headerStyle}
         onClick={handleHeaderClick}
@@ -267,33 +268,12 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
       >
         <span style={avatarStyle}>{displayInitials}</span>
         <span style={nameStyle}>{name}</span>
-        {/* Recording status indicator */}
-        {recordingStatus === 'recording' && (
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colors.fg.alert.secondary,
-              animation: 'recordingPulse 1.5s ease-in-out infinite',
-            }}
-            title="Recording active"
-          >
-            <Mic size={14} />
-          </span>
-        )}
-        {recordingStatus === 'complete' && (
-          <span
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: colors.fg.positive.secondary,
-            }}
-            title="Transcription complete"
-          >
-            <Check size={14} />
-          </span>
+        {/* Recording status indicator - uses TranscriptionIndicator for consistency */}
+        {recordingStatus !== 'none' && (
+          <TranscriptionIndicator
+            status={recordingStatus === 'complete' ? 'complete' : recordingStatus}
+            size="sm"
+          />
         )}
         {/* Close workspace button - shown on hover */}
         {isHovered && onWorkspaceClose && (
@@ -363,6 +343,13 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
               >
                 {tab.label}
               </span>
+              {/* Recording indicator for visit tabs */}
+              {tab.type === 'visit' && tabRecordingStatuses[tab.id] && (
+                <TranscriptionIndicator
+                  status={recordingStatusToIndicator(tabRecordingStatuses[tab.id])}
+                  size="sm"
+                />
+              )}
               {/* Close button (not for overview tab) */}
               {tab.type !== 'overview' && isTabHovered && (
                 <div
@@ -447,7 +434,6 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
         )}
       </div>
     </div>
-    </>
   );
 };
 

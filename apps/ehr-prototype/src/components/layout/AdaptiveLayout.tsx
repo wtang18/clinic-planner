@@ -35,6 +35,8 @@ export interface AdaptiveLayoutProps {
   transcriptionPill?: React.ReactNode;
   /** AI minibar (right side of bottom bar) */
   aiMinibar?: React.ReactNode;
+  /** Unified AI control surface (replaces transcriptionPill + aiMinibar with morphing) */
+  aiControlSurface?: React.ReactNode;
   /** Custom header content for overview section */
   overviewHeaderContent?: React.ReactNode;
   /** Custom header content for canvas section (contextual controls like ModeSelector) */
@@ -97,6 +99,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   minibar,
   transcriptionPill,
   aiMinibar,
+  aiControlSurface,
   overviewHeaderContent,
   canvasHeaderContent,
   patientIdentity,
@@ -126,6 +129,17 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
     if (Platform.OS !== 'web') return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore shortcuts when typing in input fields
+      const target = e.target as HTMLElement;
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        // Only allow Escape to close drawer while typing
+        if (e.key === 'Escape' && aiDrawerOpen) {
+          e.preventDefault();
+          closeAIDrawer();
+        }
+        return; // Ignore other shortcuts while typing
+      }
+
       // Cmd+\ to toggle menu
       if (e.metaKey && e.key === '\\') {
         e.preventDefault();
@@ -300,6 +314,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   };
 
   // New dual control surface container
+  // Uses 25/75 split: TranscriptionPill (~25%, max 200px) + AIMinibar (~75%, flex-grow)
   const dualControlSurfaceStyle: React.CSSProperties = {
     position: 'fixed',
     bottom: 16,
@@ -307,7 +322,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
     transform: 'translateX(-50%)',
     zIndex: zIndexTokens.docked,
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-end', // Align to bottom for palette expansion
     justifyContent: 'center',
     gap: 12,
     maxWidth: 800,
@@ -417,8 +432,11 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
         </aside>
       )}
 
-      {/* Dual Control Surface (new) - TranscriptionPill + AIMinibar */}
-      {(transcriptionPill || aiMinibar) && (
+      {/* AI Control Surface (unified morphing component) - preferred */}
+      {aiControlSurface}
+
+      {/* Legacy Dual Control Surface - for backwards compatibility */}
+      {!aiControlSurface && (transcriptionPill || aiMinibar) && (
         <div style={dualControlSurfaceStyle} data-testid="control-surface-container">
           {transcriptionPill}
           {aiMinibar}

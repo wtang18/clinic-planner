@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { colors, radii, spacing, typography, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import type { TagType } from '../../types/chart-items';
 import { getTagColor } from '../../styles/utils';
 
@@ -65,31 +65,29 @@ export const Tag: React.FC<TagProps> = ({
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        gap: spacing[1],
-        padding: `${spacing[0.5]} ${spacing[2]}`,
+        gap: spaceBetween.coupled,
+        padding: `${spaceAround.nudge2}px ${spaceAround.tight}px`,
         backgroundColor: colorSet.bgColor,
         color: colorSet.color,
-        fontSize: typography.fontSize.xs[0],
+        fontSize: 12,
         fontWeight: typography.fontWeight.medium,
         fontFamily: typography.fontFamily.sans,
-        borderRadius: radii.base,
+        borderRadius: borderRadius.xs,
         whiteSpace: 'nowrap',
         cursor: isClickable ? 'pointer' : 'default',
         transition: `all ${transitions.fast}`,
         opacity: isHovered && isClickable ? 0.8 : 1,
       }}
     >
-      {/* Type indicator icon */}
       {type === 'ai' && (
-        <span style={{ fontSize: '10px' }}>✨</span>
+        <span style={{ fontSize: '10px' }}>&#x2728;</span>
       )}
       {type === 'alert' && (
-        <span style={{ fontSize: '10px' }}>⚠️</span>
+        <span style={{ fontSize: '10px' }}>&#x26A0;&#xFE0F;</span>
       )}
 
       {label}
 
-      {/* Remove button */}
       {removable && (
         <button
           type="button"
@@ -101,10 +99,10 @@ export const Tag: React.FC<TagProps> = ({
             width: '14px',
             height: '14px',
             padding: 0,
-            marginLeft: spacing[1],
+            marginLeft: spaceAround.nudge4,
             backgroundColor: 'transparent',
             border: 'none',
-            borderRadius: radii.full,
+            borderRadius: borderRadius.full,
             color: colorSet.color,
             cursor: 'pointer',
             opacity: 0.7,

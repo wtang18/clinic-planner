@@ -5,11 +5,15 @@
  */
 
 import React from 'react';
+import { Activity, Clock, Link } from 'lucide-react';
 import type { ChartItem, DiagnosisItem } from '../../types/chart-items';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
-import { getCategoryColor } from '../../styles/utils';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { Card } from '../primitives/Card';
 import { Badge } from '../primitives/Badge';
+import { StatusBadge } from '../primitives/StatusBadge';
+import { CardIconContainer } from '../primitives/CardIconContainer';
+import { ListItemRow } from '../primitives/ListItemRow';
+import { MetadataRow } from '../primitives/MetadataRow';
 
 // ============================================================================
 // Types
@@ -33,30 +37,6 @@ export interface DiagnosisCardProps {
 }
 
 // ============================================================================
-// Icons
-// ============================================================================
-
-const DiagnosisIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-  </svg>
-);
-
-const ChronicIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12,6 12,12 16,14" />
-  </svg>
-);
-
-const LinkIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-  </svg>
-);
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -69,7 +49,6 @@ export const DiagnosisCard: React.FC<DiagnosisCardProps> = ({
   onEdit,
   style,
 }) => {
-  const categoryColors = getCategoryColor('diagnosis');
   const isCompact = variant === 'compact';
   const { data } = diagnosis;
 
@@ -80,27 +59,14 @@ export const DiagnosisCard: React.FC<DiagnosisCardProps> = ({
     position: 'relative',
     display: 'flex',
     flexDirection: isCompact ? 'row' : 'column',
-    gap: spacing[3],
-    padding: isCompact ? spacing[3] : spacing[4],
-    borderLeft: `3px solid ${categoryColors.border}`,
+    gap: spaceBetween.relatedCompact,
+    padding: isCompact ? spaceAround.compact : spaceAround.default,
     cursor: onSelect ? 'pointer' : 'default',
     transition: `all ${transitions.fast}`,
     ...(selected && {
-      backgroundColor: colors.primary[50],
+      backgroundColor: colors.bg.accent.subtle,
     }),
     ...style,
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: isCompact ? '32px' : '40px',
-    height: isCompact ? '32px' : '40px',
-    backgroundColor: categoryColors.lightBg,
-    borderRadius: radii.lg,
-    color: categoryColors.icon,
-    flexShrink: 0,
   };
 
   const contentStyle: React.CSSProperties = {
@@ -108,71 +74,53 @@ export const DiagnosisCard: React.FC<DiagnosisCardProps> = ({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[1],
+    gap: spaceBetween.coupled,
   };
 
   const headerRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
   };
 
   const titleContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
     minWidth: 0,
     flex: 1,
     flexWrap: 'wrap',
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: isCompact ? typography.fontSize.sm[0] : typography.fontSize.base[0],
-    lineHeight: isCompact ? typography.fontSize.sm[1].lineHeight : typography.fontSize.base[1].lineHeight,
+    fontSize: isCompact ? 14 : 16,
+    lineHeight: isCompact ? '20px' : '24px',
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const icdCodeStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
+    fontSize: 12,
     fontFamily: typography.fontFamily.mono,
-    color: colors.neutral[500],
-    backgroundColor: colors.neutral[100],
-    padding: `${spacing[0.5]} ${spacing[2]}`,
-    borderRadius: radii.base,
-  };
-
-  const metaStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[3],
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    color: colors.fg.neutral.spotReadable,
+    backgroundColor: colors.bg.neutral.subtle,
+    padding: `${spaceAround.nudge2}px ${spaceAround.tight}px`,
+    borderRadius: borderRadius.xs,
   };
 
   const linkedItemsStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
-    color: colors.neutral[500],
-    fontSize: typography.fontSize.xs[0],
+    gap: spaceBetween.coupled,
+    color: colors.fg.neutral.spotReadable,
+    fontSize: 12,
   };
 
   const linkedItemsListStyle: React.CSSProperties = {
-    marginTop: spacing[3],
-    paddingTop: spacing[3],
-    borderTop: `1px solid ${colors.neutral[200]}`,
-  };
-
-  const linkedItemRowStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
-    padding: `${spacing[1]} 0`,
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[600],
+    marginTop: spaceAround.compact,
+    paddingTop: spaceAround.compact,
   };
 
   return (
@@ -185,11 +133,12 @@ export const DiagnosisCard: React.FC<DiagnosisCardProps> = ({
     >
       <div style={containerStyle}>
         {/* Icon */}
-        <div style={iconContainerStyle}>
-          <div style={{ width: isCompact ? '16px' : '20px', height: isCompact ? '16px' : '20px' }}>
-            {isChronic ? <ChronicIcon /> : <DiagnosisIcon />}
-          </div>
-        </div>
+        <CardIconContainer color="default" size={isCompact ? 'md' : 'lg'}>
+          {isChronic
+            ? <Clock size={isCompact ? 16 : 20} />
+            : <Activity size={isCompact ? 16 : 20} />
+          }
+        </CardIconContainer>
 
         {/* Content */}
         <div style={contentStyle}>
@@ -203,41 +152,41 @@ export const DiagnosisCard: React.FC<DiagnosisCardProps> = ({
               {isChronic && (
                 <Badge variant="warning" size="sm">Chronic</Badge>
               )}
-              {data.clinicalStatus === 'resolved' && (
-                <Badge variant="success" size="sm">Resolved</Badge>
+              {data.clinicalStatus && (
+                <StatusBadge status={data.clinicalStatus} />
               )}
             </div>
           </div>
 
           {/* Meta info */}
-          <div style={metaStyle}>
-            <span style={{ textTransform: 'capitalize' }}>{data.type}</span>
-            {data.onsetDate && (
-              <span>Onset: {formatDate(data.onsetDate)}</span>
-            )}
-            {linkedItems.length > 0 && (
-              <div style={linkedItemsStyle}>
-                <span style={{ width: '12px', height: '12px', display: 'flex' }}>
-                  <LinkIcon />
-                </span>
-                <span>{linkedItems.length} linked</span>
-              </div>
-            )}
-          </div>
+          <MetadataRow
+            items={[
+              { value: <span style={{ textTransform: 'capitalize' }}>{data.type}</span> },
+              ...(data.onsetDate ? [{ label: 'Onset', value: formatDate(data.onsetDate) }] : []),
+              ...(linkedItems.length > 0 ? [{
+                icon: <Link size={12} />,
+                value: `${linkedItems.length} linked`,
+              }] : []),
+            ]}
+          />
 
           {/* Linked items (expanded view) */}
           {!isCompact && linkedItems.length > 0 && (
             <div style={linkedItemsListStyle}>
               <div style={{
-                fontSize: typography.fontSize.xs[0],
+                fontSize: 12,
                 fontWeight: typography.fontWeight.medium,
-                color: colors.neutral[600],
-                marginBottom: spacing[2],
+                color: colors.fg.neutral.secondary,
+                marginBottom: spaceAround.tight,
               }}>
                 Linked Items
               </div>
               {linkedItems.slice(0, 5).map((item) => (
-                <div key={item.id} style={linkedItemRowStyle}>
+                <ListItemRow
+                  key={item.id}
+                  compact
+                  style={{ fontSize: 12, color: colors.fg.neutral.secondary }}
+                >
                   <Badge
                     variant="default"
                     size="sm"
@@ -245,13 +194,13 @@ export const DiagnosisCard: React.FC<DiagnosisCardProps> = ({
                     {getCategoryLabel(item.category)}
                   </Badge>
                   <span>{item.displayText}</span>
-                </div>
+                </ListItemRow>
               ))}
               {linkedItems.length > 5 && (
                 <div style={{
-                  fontSize: typography.fontSize.xs[0],
-                  color: colors.neutral[400],
-                  paddingTop: spacing[1],
+                  fontSize: 12,
+                  color: colors.fg.neutral.disabled,
+                  paddingTop: spaceAround.nudge4,
                 }}>
                   + {linkedItems.length - 5} more
                 </div>

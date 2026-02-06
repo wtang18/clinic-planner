@@ -72,22 +72,24 @@ export interface Suggestion {
   id: string;
   type: SuggestionType;
   status: SuggestionStatus;
-  
+
   content: SuggestionContent;
-  
+
   source: SuggestionSource;
   relatedItemId?: string;      // If suggestion relates to existing item
   sourceSegmentId?: string;    // If from transcription
-  
+
   confidence: number;          // 0-1
   reasoning?: string;          // Why AI suggested this
-  
+
   createdAt: Date;
   expiresAt?: Date;            // TTL for ephemeral suggestions
   actedAt?: Date;              // When accepted/dismissed
-  
+
   displayText: string;
   displaySubtext?: string;
+  /** Definitive short label for actions (e.g., "CBC" instead of "Order CBC with differential") */
+  actionLabel?: string;
 }
 
 // ============================================================================

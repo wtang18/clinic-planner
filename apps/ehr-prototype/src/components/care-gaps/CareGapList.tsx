@@ -5,10 +5,12 @@
  */
 
 import React from 'react';
+import { Heart } from 'lucide-react';
 import type { CareGapInstance, CareGapCategory, CareGapExclusionReason } from '../../types/care-gaps';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius } from '../../styles/foundations';
 import { CareGapCard, type ClosureAction } from './CareGapCard';
-import { Badge } from '../primitives/Badge';
+import { CollapsibleGroup } from '../primitives/CollapsibleGroup';
+import { EmptyState } from '../primitives/EmptyState';
 
 // ============================================================================
 // Types
@@ -28,28 +30,6 @@ export interface CareGapListProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const ChevronDownIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="6,9 12,15 18,9" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="9,18 15,12 9,6" />
-  </svg>
-);
-
-const HeartIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
 
 // ============================================================================
 // Types for grouping
@@ -124,7 +104,7 @@ export const CareGapList: React.FC<CareGapListProps> = ({
         key: cat,
         label: formatCategory(cat),
         gaps: sortByDueDate(catGaps),
-        color: colors.neutral[500],
+        color: colors.fg.neutral.spotReadable,
       }));
     }
 
@@ -154,121 +134,62 @@ export const CareGapList: React.FC<CareGapListProps> = ({
   // Empty state
   if (gaps.length === 0) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: spacing[8],
-        color: colors.neutral[400],
-        ...style,
-      }}>
-        <span style={{
-          width: '48px',
-          height: '48px',
-          display: 'flex',
-          marginBottom: spacing[3],
-        }}>
-          <HeartIcon />
-        </span>
-        <span style={{
-          fontSize: typography.fontSize.sm[0],
-          textAlign: 'center',
-        }}>
-          No care gaps
-        </span>
-      </div>
+      <EmptyState
+        icon={<Heart size={48} />}
+        title="No care gaps"
+        size="lg"
+        style={style}
+      />
     );
   }
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[4],
+    gap: spaceBetween.related,
     ...style,
-  };
-
-  const groupHeaderStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: `${spacing[2]} ${spacing[3]}`,
-    backgroundColor: colors.neutral[50],
-    borderRadius: radii.md,
-    cursor: 'pointer',
-    userSelect: 'none',
-    transition: `background-color ${transitions.fast}`,
-  };
-
-  const groupTitleStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
-    fontSize: typography.fontSize.sm[0],
-    fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[700],
   };
 
   const gapListStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[2],
-    paddingLeft: spacing[2],
+    gap: spaceBetween.repeating,
+    paddingLeft: spaceAround.tight,
   };
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} data-testid="care-gap-panel">
       {groups.map((group) => (
-        <div key={group.key}>
-          {/* Group Header */}
-          <div
-            style={groupHeaderStyle}
-            onClick={() => toggleGroup(group.key)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && toggleGroup(group.key)}
-          >
-            <div style={groupTitleStyle}>
-              <span style={{
-                width: '16px',
-                height: '16px',
-                display: 'flex',
-                color: colors.neutral[500],
-                transform: collapsedGroups.has(group.key) ? 'rotate(0deg)' : 'rotate(0deg)',
-                transition: `transform ${transitions.fast}`,
-              }}>
-                {collapsedGroups.has(group.key) ? <ChevronRightIcon /> : <ChevronDownIcon />}
-              </span>
-              <span
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: radii.full,
-                  backgroundColor: group.color,
-                }}
+        <CollapsibleGroup
+          key={group.key}
+          title={group.label}
+          isCollapsed={collapsedGroups.has(group.key)}
+          onToggle={() => toggleGroup(group.key)}
+          badge={{ label: group.gaps.length, variant: 'default' }}
+          trailing={
+            <span
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: borderRadius.full,
+                backgroundColor: group.color,
+                display: 'inline-block',
+              }}
+            />
+          }
+        >
+          <div style={gapListStyle}>
+            {group.gaps.map((gap) => (
+              <CareGapCard
+                key={gap.id}
+                gap={gap}
+                onAction={(action) => onAction(gap.id, action)}
+                onExclude={(reason) => onExclude(gap.id, reason)}
+                compact={compact}
               />
-              <span>{group.label}</span>
-              <Badge variant="default" size="sm">
-                {group.gaps.length}
-              </Badge>
-            </div>
+            ))}
           </div>
-
-          {/* Gap List */}
-          {!collapsedGroups.has(group.key) && (
-            <div style={gapListStyle}>
-              {group.gaps.map((gap) => (
-                <CareGapCard
-                  key={gap.id}
-                  gap={gap}
-                  onAction={(action) => onAction(gap.id, action)}
-                  onExclude={(reason) => onExclude(gap.id, reason)}
-                  compact={compact}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        </CollapsibleGroup>
       ))}
     </div>
   );
@@ -294,13 +215,13 @@ function formatPriority(priority: 'critical' | 'important' | 'routine'): string 
 function getPriorityColor(priority: 'critical' | 'important' | 'routine'): string {
   switch (priority) {
     case 'critical':
-      return colors.status.error;
+      return colors.fg.alert.secondary;
     case 'important':
-      return colors.status.warning;
+      return colors.fg.attention.secondary;
     case 'routine':
-      return colors.status.success;
+      return colors.fg.positive.secondary;
     default:
-      return colors.neutral[500];
+      return colors.fg.neutral.spotReadable;
   }
 }
 
@@ -318,15 +239,15 @@ function formatStatus(status: string): string {
 function getStatusColor(status: string): string {
   switch (status) {
     case 'open':
-      return colors.status.warning;
+      return colors.fg.attention.secondary;
     case 'pending':
-      return colors.status.info;
+      return colors.fg.information.secondary;
     case 'closed':
-      return colors.status.success;
+      return colors.fg.positive.secondary;
     case 'excluded':
-      return colors.neutral[400];
+      return colors.fg.neutral.disabled;
     default:
-      return colors.neutral[500];
+      return colors.fg.neutral.spotReadable;
   }
 }
 

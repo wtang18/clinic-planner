@@ -5,7 +5,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { colors, radii, transitions } from '../../styles/tokens';
+import { colors, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -40,43 +40,47 @@ const variantStyles: Record<
 > = {
   default: {
     base: {
-      backgroundColor: colors.neutral[100],
-      color: colors.neutral[700],
+      backgroundColor: 'rgba(128, 128, 128, 0.06)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      color: colors.fg.neutral.secondary,
     },
     hover: {
-      backgroundColor: colors.neutral[200],
+      backgroundColor: 'rgba(128, 128, 128, 0.12)',
     },
     disabled: {
-      backgroundColor: colors.neutral[100],
-      color: colors.neutral[400],
+      backgroundColor: colors.bg.neutral.subtle,
+      color: colors.fg.neutral.disabled,
     },
   },
   ghost: {
     base: {
-      backgroundColor: 'transparent',
-      color: colors.neutral[600],
+      backgroundColor: 'rgba(128, 128, 128, 0.04)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      color: colors.fg.neutral.secondary,
     },
     hover: {
-      backgroundColor: colors.neutral[100],
-      color: colors.neutral[800],
+      backgroundColor: 'rgba(128, 128, 128, 0.10)',
+      color: colors.fg.neutral.primary,
     },
     disabled: {
       backgroundColor: 'transparent',
-      color: colors.neutral[400],
+      color: colors.fg.neutral.disabled,
     },
   },
   danger: {
     base: {
-      backgroundColor: colors.status.errorLight,
-      color: colors.status.error,
+      backgroundColor: colors.bg.alert.subtle,
+      color: colors.fg.alert.secondary,
     },
     hover: {
-      backgroundColor: colors.status.error,
-      color: colors.neutral[0],
+      backgroundColor: colors.fg.alert.secondary,
+      color: colors.bg.neutral.base,
     },
     disabled: {
-      backgroundColor: colors.neutral[100],
-      color: colors.neutral[400],
+      backgroundColor: colors.bg.neutral.subtle,
+      color: colors.fg.neutral.disabled,
     },
   },
 };
@@ -110,7 +114,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       height: sizeStyle.size,
       padding: 0,
       border: 'none',
-      borderRadius: radii.md,
+      borderRadius: borderRadius.full,
       cursor: disabled ? 'not-allowed' : 'pointer',
       transition: `all ${transitions.fast}`,
       outline: 'none',

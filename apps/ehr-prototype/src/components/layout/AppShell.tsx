@@ -5,7 +5,7 @@
  */
 
 import React from 'react';
-import { colors, spacing, zIndex } from '../../styles/tokens';
+import { colors, spaceAround, zIndex, transitions, typography } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -20,8 +20,10 @@ export interface AppShellProps {
   main: React.ReactNode;
   /** Optional footer content */
   footer?: React.ReactNode;
-  /** Optional minibar (AI status bar) */
+  /** Optional minibar (AI status bar) - legacy, prefer bottomBar */
   minibar?: React.ReactNode;
+  /** Optional bottom bar (new system) - renders BottomBarContainer internally */
+  bottomBar?: React.ReactNode;
   /** Sidebar width */
   sidebarWidth?: string;
   /** Whether sidebar is collapsible */
@@ -30,6 +32,8 @@ export interface AppShellProps {
   sidebarCollapsed?: boolean;
   /** Custom styles */
   style?: React.CSSProperties;
+  /** Test ID for E2E testing */
+  testID?: string;
 }
 
 // ============================================================================
@@ -42,18 +46,21 @@ export const AppShell: React.FC<AppShellProps> = ({
   main,
   footer,
   minibar,
+  bottomBar,
   sidebarWidth = '280px',
   sidebarCollapsible = false,
   sidebarCollapsed = false,
   style,
+  testID,
 }) => {
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
     width: '100%',
-    backgroundColor: colors.neutral[50],
+    backgroundColor: colors.bg.neutral.min,
     overflow: 'hidden',
+    fontFamily: typography.fontFamily.sans,
     ...style,
   };
 
@@ -73,10 +80,10 @@ export const AppShell: React.FC<AppShellProps> = ({
   const sidebarStyle: React.CSSProperties = {
     flexShrink: 0,
     width: sidebarCollapsed ? '64px' : sidebarWidth,
-    backgroundColor: colors.neutral[0],
-    borderRight: `1px solid ${colors.neutral[200]}`,
+    backgroundColor: colors.bg.neutral.base,
+    borderRight: `1px solid ${colors.border.neutral.low}`,
     overflowY: 'auto',
-    transition: 'width 0.2s ease',
+    transition: `width ${transitions.base}`,
   };
 
   const mainContainerStyle: React.CSSProperties = {
@@ -89,18 +96,18 @@ export const AppShell: React.FC<AppShellProps> = ({
   const mainContentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    padding: spacing[4],
+    padding: spaceAround.default,
   };
 
   const footerContainerStyle: React.CSSProperties = {
     flexShrink: 0,
-    borderTop: `1px solid ${colors.neutral[200]}`,
-    backgroundColor: colors.neutral[0],
+    borderTop: `1px solid ${colors.border.neutral.low}`,
+    backgroundColor: colors.bg.neutral.base,
   };
 
   const minibarContainerStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: spacing[4],
+    bottom: spaceAround.default,
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: zIndex.docked,
@@ -109,28 +116,23 @@ export const AppShell: React.FC<AppShellProps> = ({
   };
 
   return (
-    <div style={containerStyle}>
-      {/* Header */}
+    <div style={containerStyle} data-testid={testID}>
       <div style={headerContainerStyle}>
         {header}
       </div>
 
-      {/* Body: Sidebar + Main */}
       <div style={bodyStyle}>
-        {/* Sidebar */}
         {sidebar && (
           <aside style={sidebarStyle}>
             {sidebar}
           </aside>
         )}
 
-        {/* Main content area */}
         <div style={mainContainerStyle}>
           <main style={mainContentStyle}>
             {main}
           </main>
 
-          {/* Footer */}
           {footer && (
             <div style={footerContainerStyle}>
               {footer}
@@ -139,12 +141,15 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
       </div>
 
-      {/* Minibar (fixed position) */}
-      {minibar && (
+      {/* Legacy minibar (centered at bottom) */}
+      {minibar && !bottomBar && (
         <div style={minibarContainerStyle}>
           {minibar}
         </div>
       )}
+
+      {/* New bottom bar system (self-positioned) */}
+      {bottomBar}
     </div>
   );
 };

@@ -54,6 +54,13 @@ export interface AIAssistantState {
     totalCount: number;
     items: Array<{ id: string; title: string }>;
   };
+  /** Whether context bar is dismissed for this session */
+  isContextDismissed: boolean;
+  /** Recording complete data (for AI minibar handoff) */
+  recordingComplete?: {
+    duration: number;
+    timestamp: Date;
+  };
 }
 
 export interface AIAssistantActions {
@@ -85,6 +92,14 @@ export interface AIAssistantActions {
   navigateToPrevToDo: () => void;
   /** Get quick actions for current context */
   getQuickActions: () => QuickAction[];
+  /** Dismiss context bar for this session */
+  dismissContext: () => void;
+  /** Reset context dismiss state */
+  resetContextDismiss: () => void;
+  /** Set recording complete data (triggers AI minibar notification) */
+  setRecordingComplete: (duration: number) => void;
+  /** Clear recording complete notification */
+  clearRecordingComplete: () => void;
 }
 
 // ============================================================================
@@ -128,6 +143,8 @@ export function useAIAssistant(initialContext: AIContext = 'none'): [AIAssistant
   const [suggestionCount, setSuggestionCountState] = useState(0);
   const [careGapCount, setCareGapCountState] = useState(0);
   const [todoNavigation, setToDoNavigationState] = useState<AIAssistantState['todoNavigation']>();
+  const [isContextDismissed, setIsContextDismissed] = useState(false);
+  const [recordingComplete, setRecordingCompleteState] = useState<AIAssistantState['recordingComplete']>();
 
   // Derive content based on priority
   const derivedContent = useMemo<AIMinibarContent>(() => {
@@ -252,6 +269,22 @@ export function useAIAssistant(initialContext: AIContext = 'none'): [AIAssistant
     return QUICK_ACTIONS.filter(action => action.context.includes(context));
   }, [context]);
 
+  const dismissContext = useCallback(() => {
+    setIsContextDismissed(true);
+  }, []);
+
+  const resetContextDismiss = useCallback(() => {
+    setIsContextDismissed(false);
+  }, []);
+
+  const setRecordingComplete = useCallback((duration: number) => {
+    setRecordingCompleteState({ duration, timestamp: new Date() });
+  }, []);
+
+  const clearRecordingComplete = useCallback(() => {
+    setRecordingCompleteState(undefined);
+  }, []);
+
   // Build state object
   const state: AIAssistantState = {
     mode,
@@ -262,6 +295,8 @@ export function useAIAssistant(initialContext: AIContext = 'none'): [AIAssistant
     suggestionCount,
     careGapCount,
     todoNavigation,
+    isContextDismissed,
+    recordingComplete,
   };
 
   const actions: AIAssistantActions = {
@@ -279,6 +314,10 @@ export function useAIAssistant(initialContext: AIContext = 'none'): [AIAssistant
     navigateToNextToDo,
     navigateToPrevToDo,
     getQuickActions,
+    dismissContext,
+    resetContextDismiss,
+    setRecordingComplete,
+    clearRecordingComplete,
   };
 
   return [state, actions];

@@ -33,6 +33,8 @@ export interface ControlsContainerProps {
   tier: TierState;
   /** Session data (or null if no session) */
   session: TranscriptionSession | null;
+  /** Animation phase from parent - used for crossfade timing during transitions */
+  animationPhase?: string;
   /** Called to start recording */
   onStart: () => void;
   /** Called to pause recording */
@@ -136,8 +138,6 @@ const UnifiedActionButton: React.FC<UnifiedActionButtonProps> = ({
 
   return (
     <motion.button
-      layoutId={`tm-action-${actionKey}`}
-      layout
       type="button"
       style={buttonStyle}
       onClick={(e) => {
@@ -149,19 +149,11 @@ const UnifiedActionButton: React.FC<UnifiedActionButtonProps> = ({
       disabled={disabled}
       title={!showLabel ? label : undefined}
       whileTap={{ scale: 0.95 }}
-      transition={{
-        layout: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-      }}
     >
-      {/* Icon with shared layoutId for smooth transitions */}
-      <motion.span
-        layoutId={`tm-icon-${actionKey}`}
-        layout
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        transition={{ layout: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } }}
-      >
+      {/* Icon - no layout animation to prevent position jumping */}
+      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {icon}
-      </motion.span>
+      </span>
 
       {/* Label with fade animation */}
       <AnimatePresence mode="wait">
@@ -190,6 +182,7 @@ const UnifiedActionButton: React.FC<UnifiedActionButtonProps> = ({
 export const ControlsContainer: React.FC<ControlsContainerProps> = ({
   tier,
   session,
+  animationPhase,
   onStart,
   onPause,
   onResume,
@@ -217,51 +210,219 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
 
   const showTimer = isRecording || isPaused;
 
+  // Timer crossfade: hide during transitions to avoid collision with other elements
+  // Timer is visible only in idle states (idle-bar, idle-palette)
+  const isTransitioning = animationPhase && (
+    animationPhase.includes('expanding') ||
+    animationPhase.includes('collapsing')
+  );
+  const showTimerWithCrossfade = showTimer && !isTransitioning;
+
+  // Check if in height transition phase - use bar layout during these to prevent button flash
+  // The flash occurs because switching from flexbox (bar) to grid (palette) causes
+  // the button to briefly appear centered before grid recalculates
+  const isInHeightTransition = animationPhase && (
+    animationPhase === 'expanding-height' ||
+    animationPhase === 'collapsing-height'
+  );
+
+  // Use bar layout during height transitions to keep button pinned to right
+  const useBarLayout = isBar || isInHeightTransition;
+
   // Don't render in micro tier
   if (isMicro) {
     return null;
   }
 
-  // Bar tier: compact controls
-  if (isBar) {
+  // Bar tier (or height transition): Simple layout with timer (left) + button (right, pinned)
+  // No layout animation to prevent button position jumping
+  if (useBarLayout) {
     const containerStyle: React.CSSProperties = {
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'flex-end',
+      justifyContent: 'flex-end',  // Push content to right
       height: BAR_HEIGHT,
-      padding: `0 ${spaceAround.tight}px`,
-      flexShrink: 0,
+      padding: `0 ${spaceAround.tight}px 0 0`,
+      flex: 1,  // Expand to fill remaining space (shares with ContentContainer)
       ...style,
     };
 
     return (
-      <motion.div
-        layout
+      <div
         style={containerStyle}
         data-testid={testID}
-        transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       >
-        {/* Status group (timer + recording indicator) - shows when recording/paused */}
-        {showTimer && (
-          <div style={{ marginRight: spaceBetween.repeating }}>
+        {/* Timer - crossfades during transitions */}
+        <AnimatePresence mode="wait">
+          {showTimerWithCrossfade && (
+            <motion.div
+              key="bar-timer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
+              style={{ marginRight: 8 }}  // Gap between timer and button
+            >
+              <RecordingStatusGroup
+                duration={duration}
+                isRecording={isRecording}
+                isPaused={isPaused}
+                showTimer={showTimer}
+                variant="bar"
+                testID={testID ? `${testID}-status-group` : undefined}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Button - ALWAYS pinned to right via marginLeft: auto */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginLeft: 'auto' }}>
+          {isIdle && (
+            <UnifiedActionButton
+              actionKey="primary"
+              icon={<Mic size={16} />}
+              label="Start"
+              showLabel={false}
+              variant="primary"
+              onClick={onStart}
+              disabled={!isEnabled}
+            />
+          )}
+          {isRecording && (
+            <UnifiedActionButton
+              actionKey="primary"
+              icon={<Pause size={16} />}
+              label="Pause"
+              showLabel={false}
+              variant="secondary"
+              onClick={onPause}
+            />
+          )}
+          {isPaused && (
+            <UnifiedActionButton
+              actionKey="primary"
+              icon={<Play size={16} />}
+              label="Resume"
+              showLabel={false}
+              variant="primary"
+              onClick={onResume}
+            />
+          )}
+          {isError && (
+            <UnifiedActionButton
+              actionKey="primary"
+              icon={<RotateCcw size={16} />}
+              label="Retry"
+              showLabel={false}
+              variant="primary"
+              onClick={onRetry ?? onStart}
+            />
+          )}
+          {isProcessing && (
+            <div style={{ width: ICON_BUTTON_SIZE, height: ICON_BUTTON_SIZE, opacity: 0.5 }} />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Palette tier: CSS Grid for true centering without flex animation issues
+  // Grid with 3 columns: left (1fr), center (auto), right (1fr)
+  const paletteContainerStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr auto 1fr',
+    alignItems: 'center',
+    height: BAR_HEIGHT,
+    padding: `0 ${spaceAround.default}px`,
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    flexShrink: 0,
+    ...style,
+  };
+
+  return (
+    <div
+      style={paletteContainerStyle}
+      data-testid={testID}
+    >
+      {/* Left: Discard button (when paused) */}
+      <div style={{ justifySelf: 'start' }}>
+        {isPaused && (
+          <ControlsBarButton
+            label="Discard"
+            icon={<Trash2 size={14} />}
+            variant="ghost"
+            colorScheme="dark"
+            size="sm"
+            onClick={onDiscard}
+          />
+        )}
+      </div>
+
+      {/* Center: Timer - crossfades during transitions */}
+      <AnimatePresence mode="wait">
+        {showTimerWithCrossfade && (
+          <motion.div
+            key="palette-timer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+          >
             <RecordingStatusGroup
               duration={duration}
               isRecording={isRecording}
               isPaused={isPaused}
               showTimer={showTimer}
-              variant="bar"
+              variant="palette"
               testID={testID ? `${testID}-status-group` : undefined}
             />
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
+      {!showTimer && hasSegments && (
+        <ControlsBarStatus
+          text={`${session?.segments.length} segment${session?.segments.length === 1 ? '' : 's'}`}
+          colorScheme="dark"
+        />
+      )}
 
-        {/* Action button based on state - uses UnifiedActionButton for smooth bar↔palette transitions */}
+      {/* Right: Action buttons */}
+      <div
+        style={{
+          justifySelf: 'end',
+          display: 'flex',
+          gap: spaceBetween.coupled,
+        }}
+      >
+        {/* Done button - only when paused with segments */}
+        <AnimatePresence mode="popLayout">
+          {isPaused && hasSegments && (
+            <motion.div
+              key="done"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.15 }}
+            >
+              <ControlsBarButton
+                label="Done"
+                icon={<Square size={14} />}
+                variant="secondary"
+                colorScheme="dark"
+                size="sm"
+                onClick={onStop}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Primary action button - uses UnifiedActionButton for smooth bar↔palette transitions */}
         {isIdle && (
           <UnifiedActionButton
             actionKey="primary"
-            icon={<Mic size={16} />}
+            icon={<Mic size={14} />}
             label="Start"
-            showLabel={false}
+            showLabel={true}
             variant="primary"
             onClick={onStart}
             disabled={!isEnabled}
@@ -270,9 +431,9 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
         {isRecording && (
           <UnifiedActionButton
             actionKey="primary"
-            icon={<Pause size={16} />}
+            icon={<Pause size={14} />}
             label="Pause"
-            showLabel={false}
+            showLabel={true}
             variant="secondary"
             onClick={onPause}
           />
@@ -280,9 +441,9 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
         {isPaused && (
           <UnifiedActionButton
             actionKey="primary"
-            icon={<Play size={16} />}
+            icon={<Play size={14} />}
             label="Resume"
-            showLabel={false}
+            showLabel={true}
             variant="primary"
             onClick={onResume}
           />
@@ -290,170 +451,28 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
         {isError && (
           <UnifiedActionButton
             actionKey="primary"
-            icon={<RotateCcw size={16} />}
+            icon={<RotateCcw size={14} />}
             label="Retry"
-            showLabel={false}
+            showLabel={true}
             variant="primary"
             onClick={onRetry ?? onStart}
           />
         )}
-        {isProcessing && (
-          <motion.div
-            key="processing"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-            exit={{ opacity: 0 }}
-            style={{ width: ICON_BUTTON_SIZE, height: ICON_BUTTON_SIZE }}
+
+        {/* Settings button */}
+        {onSettings && (
+          <ControlsBarButton
+            label=""
+            icon={<Settings size={14} />}
+            variant="ghost"
+            colorScheme="dark"
+            size="sm"
+            onClick={onSettings}
+            style={{ padding: '0 8px', minWidth: 32 }}
           />
         )}
-      </motion.div>
-    );
-  }
-
-  // Palette tier: full controls bar
-  const renderLeftContent = () => {
-    if (isPaused) {
-      return (
-        <ControlsBarButton
-          label="Discard"
-          icon={<Trash2 size={14} />}
-          variant="ghost"
-          colorScheme="dark"
-          size="sm"
-          onClick={onDiscard}
-        />
-      );
-    }
-    return null;
-  };
-
-  const renderCenterContent = () => {
-    if (showTimer) {
-      return (
-        <RecordingStatusGroup
-          duration={duration}
-          isRecording={isRecording}
-          isPaused={isPaused}
-          showTimer={showTimer}
-          variant="palette"
-          testID={testID ? `${testID}-status-group` : undefined}
-        />
-      );
-    }
-    if (hasSegments) {
-      return (
-        <ControlsBarStatus
-          text={`${session?.segments.length} segment${session?.segments.length === 1 ? '' : 's'}`}
-          colorScheme="dark"
-        />
-      );
-    }
-    return null;
-  };
-
-  const renderRightContent = () => (
-    <motion.div layout style={{ display: 'flex', gap: spaceBetween.coupled }}>
-      {/* Done button - only when paused with segments */}
-      <AnimatePresence mode="popLayout">
-        {isPaused && hasSegments && (
-          <motion.div
-            key="done"
-            layout
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.15 }}
-          >
-            <ControlsBarButton
-              label="Done"
-              icon={<Square size={14} />}
-              variant="secondary"
-              colorScheme="dark"
-              size="sm"
-              onClick={onStop}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Primary action button - uses UnifiedActionButton for smooth bar↔palette transitions */}
-      {isIdle && (
-        <UnifiedActionButton
-          actionKey="primary"
-          icon={<Mic size={14} />}
-          label="Start"
-          showLabel={true}
-          variant="primary"
-          onClick={onStart}
-          disabled={!isEnabled}
-        />
-      )}
-      {isRecording && (
-        <UnifiedActionButton
-          actionKey="primary"
-          icon={<Pause size={14} />}
-          label="Pause"
-          showLabel={true}
-          variant="secondary"
-          onClick={onPause}
-        />
-      )}
-      {isPaused && (
-        <UnifiedActionButton
-          actionKey="primary"
-          icon={<Play size={14} />}
-          label="Resume"
-          showLabel={true}
-          variant="primary"
-          onClick={onResume}
-        />
-      )}
-      {isError && (
-        <UnifiedActionButton
-          actionKey="primary"
-          icon={<RotateCcw size={14} />}
-          label="Retry"
-          showLabel={true}
-          variant="primary"
-          onClick={onRetry ?? onStart}
-        />
-      )}
-
-      {/* Settings button */}
-      {onSettings && (
-        <ControlsBarButton
-          label=""
-          icon={<Settings size={14} />}
-          variant="ghost"
-          colorScheme="dark"
-          size="sm"
-          onClick={onSettings}
-          style={{ padding: '0 8px', minWidth: 32 }}
-        />
-      )}
-    </motion.div>
-  );
-
-  return (
-    <motion.div
-      layout
-      style={{
-        flexShrink: 0,
-        ...style,
-      }}
-      data-testid={testID}
-      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-    >
-      <ControlsBar
-        variant="dark"
-        height={48}
-        showBorder
-        left={renderLeftContent()}
-        center={renderCenterContent()}
-        right={renderRightContent()}
-        style={{ backgroundColor: 'transparent' }}
-      />
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

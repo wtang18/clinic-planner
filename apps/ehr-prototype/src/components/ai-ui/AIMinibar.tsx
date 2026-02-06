@@ -7,13 +7,17 @@
  * Content types in priority order:
  * 1. error - Sync/system errors
  * 2. loading - AI processing/thinking
- * 3. todo-context - To-Do navigation context
- * 4. suggestion - AI suggestions/nudges
- * 5. care-gap - Care gap alerts
- * 6. idle - Default prompt state
+ * 3. recording-complete - Post-recording action
+ * 4. todo-context - To-Do navigation context
+ * 5. suggestion - AI suggestions/nudges
+ * 6. care-gap - Care gap alerts
+ * 7. idle - Default prompt state
+ *
+ * Features glassmorphic dark styling and concentric action pill slot.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronUp,
   ChevronDown,
@@ -25,9 +29,10 @@ import {
   Sparkles,
   Heart,
   List,
+  FileText,
+  ArrowRight,
 } from 'lucide-react';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
-import { Spinner } from '../primitives/Spinner';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions, glass } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -36,6 +41,8 @@ import { Spinner } from '../primitives/Spinner';
 export type AIMinibarContentType =
   | 'error'
   | 'loading'
+  | 'recording-complete'
+  | 'paused-prompt'
   | 'todo-context'
   | 'suggestion'
   | 'care-gap'
@@ -85,6 +92,26 @@ export interface LoadingContent {
   message?: string;
 }
 
+export interface RecordingCompleteContent {
+  type: 'recording-complete';
+  /** Recording duration in seconds */
+  duration: number;
+  /** Action label */
+  actionLabel?: string;
+  /** Called when action is clicked */
+  onAction?: () => void;
+}
+
+export interface PausedPromptContent {
+  type: 'paused-prompt';
+  /** Prompt message (e.g., "Recording paused") */
+  message: string;
+  /** Action label (e.g., "Summarize now") */
+  actionLabel: string;
+  /** Called when action is clicked */
+  onAction?: () => void;
+}
+
 export interface IdleContent {
   type: 'idle';
 }
@@ -95,13 +122,32 @@ export type AIMinibarContent =
   | CareGapContent
   | ErrorContent
   | LoadingContent
+  | RecordingCompleteContent
+  | PausedPromptContent
   | IdleContent;
+
+export interface ActionPill {
+  id: string;
+  label: string;
+  icon?: React.ReactNode;
+  onClick?: () => void;
+}
+
+/** Animation stage type (imported from BottomBarContainer) */
+export type AIAnimationStageForMinibar =
+  | 'stable'
+  | 'expanding-width'
+  | 'expanding-height'
+  | 'collapsing-height'
+  | 'collapsing-width';
 
 export interface AIMinibarProps {
   /** Content to display */
   content: AIMinibarContent;
   /** Whether palette is currently open */
   isPaletteOpen?: boolean;
+  /** Action pill (appears on right edge when AI/context triggered) */
+  actionPill?: ActionPill;
   /** Called when expand to palette is clicked */
   onExpandPalette: () => void;
   /** Called when expand to drawer is clicked */
@@ -110,10 +156,22 @@ export interface AIMinibarProps {
   onSuggestionClick?: (id: string) => void;
   /** Called when a care gap is clicked */
   onCareGapClick?: (id: string) => void;
+  /** Current animation stage - minibar fades out during expanding-width */
+  animationStage?: AIAnimationStageForMinibar;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID */
   testID?: string;
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
 // ============================================================================
@@ -126,6 +184,10 @@ const ContentIcon: React.FC<{ type: AIMinibarContentType }> = ({ type }) => {
       return <AlertTriangle size={16} />;
     case 'loading':
       return <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />;
+    case 'recording-complete':
+      return <FileText size={16} />;
+    case 'paused-prompt':
+      return <FileText size={16} />;
     case 'todo-context':
       return <List size={16} />;
     case 'suggestion':
@@ -144,6 +206,10 @@ const getContentColor = (type: AIMinibarContentType): string => {
       return colors.fg.alert.secondary;
     case 'loading':
       return colors.fg.information.secondary;
+    case 'recording-complete':
+      return colors.fg.positive.secondary;
+    case 'paused-prompt':
+      return colors.fg.attention.secondary;
     case 'todo-context':
       return colors.fg.accent.primary;
     case 'suggestion':
@@ -157,22 +223,76 @@ const getContentColor = (type: AIMinibarContentType): string => {
 };
 
 // ============================================================================
+// Action Pill Component
+// ============================================================================
+
+interface ActionPillButtonProps {
+  pill: ActionPill;
+}
+
+const ActionPillButton: React.FC<ActionPillButtonProps> = ({ pill }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const pillStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spaceBetween.coupled,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    backgroundColor: isHovered
+      ? colors.fg.accent.primary
+      : 'rgba(255, 255, 255, 0.12)',
+    borderRadius: borderRadius.md,
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: 12,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.fg.neutral.inversePrimary,
+    transition: `all 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
+    whiteSpace: 'nowrap',
+  };
+
+  return (
+    <motion.button
+      type="button"
+      initial={{ opacity: 0, scale: 0.9, x: 10 }}
+      animate={{ opacity: 1, scale: 1, x: 0 }}
+      exit={{ opacity: 0, scale: 0.9, x: 10 }}
+      transition={{ duration: 0.2 }}
+      style={pillStyle}
+      onClick={pill.onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      title={pill.label}
+    >
+      {pill.label}
+      {pill.icon || <ArrowRight size={14} />}
+    </motion.button>
+  );
+};
+
+// ============================================================================
 // Component
 // ============================================================================
 
 export const AIMinibar: React.FC<AIMinibarProps> = ({
   content,
   isPaletteOpen = false,
+  actionPill,
   onExpandPalette,
   onExpandDrawer,
   onSuggestionClick,
   onCareGapClick,
+  animationStage = 'stable',
   style,
   testID,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const contentColor = getContentColor(content.type);
+
+  // Minibar content should fade out during expanding-width stage
+  const shouldFadeOut = animationStage === 'expanding-width';
 
   // Render content text based on type
   const renderContentText = () => {
@@ -183,9 +303,22 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
       case 'loading':
         return (content as LoadingContent).message || 'Thinking...';
 
+      case 'recording-complete': {
+        const ctx = content as RecordingCompleteContent;
+        return `Recording complete (${formatDuration(ctx.duration)})`;
+      }
+
+      case 'paused-prompt': {
+        const ctx = content as PausedPromptContent;
+        return ctx.message;
+      }
+
       case 'todo-context': {
         const ctx = content as ToDoContextContent;
-        return `${ctx.filterLabel} (${ctx.remainingCount})`;
+        const remaining = ctx.remainingCount;
+        return remaining > 0
+          ? `${ctx.filterLabel} · ${remaining} more`
+          : ctx.filterLabel;
       }
 
       case 'suggestion':
@@ -196,7 +329,7 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
 
       case 'idle':
       default:
-        return 'Ask AI for help...';
+        return 'Need help?';
     }
   };
 
@@ -209,34 +342,62 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
       case 'care-gap':
         onCareGapClick?.((content as CareGapContent).id);
         break;
+      case 'recording-complete':
+        (content as RecordingCompleteContent).onAction?.();
+        break;
+      case 'paused-prompt':
+        (content as PausedPromptContent).onAction?.();
+        break;
       default:
         onExpandPalette();
     }
   };
 
+  // Derive action pill from recording-complete or paused-prompt content
+  const derivedActionPill: ActionPill | undefined = (() => {
+    if (content.type === 'recording-complete') {
+      const ctx = content as RecordingCompleteContent;
+      return {
+        id: 'summarize',
+        label: ctx.actionLabel || 'Summarize',
+        onClick: ctx.onAction,
+      };
+    }
+    if (content.type === 'paused-prompt') {
+      const ctx = content as PausedPromptContent;
+      return {
+        id: 'summarize-paused',
+        label: ctx.actionLabel,
+        onClick: ctx.onAction,
+      };
+    }
+    return actionPill;
+  })();
+
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.relatedCompact,
-    padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
-    backgroundColor: colors.fg.neutral.primary,
-    borderRadius: borderRadius.lg,
+    padding: `0 ${spaceAround.tight}px`, // Reduced padding (8px) for concentric fit
+    ...glass.glassDark,
+    borderRadius: borderRadius.full, // Pill shape to match spec
     boxShadow: shadows.lg,
-    minWidth: 200,
-    maxWidth: 500,
+    width: 320, // Coordinate with TranscriptionPill (160+8+320=488 total bottom bar width)
+    height: 48, // Explicit height to match TranscriptionPill
+    cursor: 'pointer', // Entire bar is tappable
     transition: `all 200ms cubic-bezier(0.4, 0, 0.2, 1)`,
-    transform: isHovered ? 'scale(1.01)' : 'scale(1)',
     ...style,
   };
 
+  // Concentric: 32px circles inside 48px pill (8px padding each side)
   const iconContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.sm,
-    backgroundColor: `${contentColor}20`,
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full, // Circular, concentric with pill
+    backgroundColor: `${contentColor}30`,
     color: contentColor,
     flexShrink: 0,
   };
@@ -262,20 +423,14 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
     textOverflow: 'ellipsis',
   };
 
-  const dividerStyle: React.CSSProperties = {
-    width: 1,
-    height: 20,
-    backgroundColor: colors.fg.neutral.secondary,
-    opacity: 0.3,
-  };
-
+  // Concentric nav buttons (32px circles)
   const navButtonStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 28,
-    height: 28,
-    borderRadius: borderRadius.sm,
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full, // Circular, concentric
     border: 'none',
     backgroundColor: 'transparent',
     color: colors.fg.neutral.inversePrimary,
@@ -284,19 +439,17 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
     transition: `all 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
   };
 
-  const expandButtonStyle: React.CSSProperties = {
+  // Chevron indicator style (visual only, not a separate button)
+  const chevronIndicatorStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.sm,
-    border: 'none',
-    backgroundColor: isHovered ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)',
+    width: 24,
+    height: 24,
     color: colors.fg.neutral.inversePrimary,
-    cursor: 'pointer',
-    opacity: isHovered ? 1 : 0.8,
+    opacity: isHovered ? 0.8 : 0.5,
     transition: `all 150ms cubic-bezier(0.4, 0, 0.2, 1)`,
+    flexShrink: 0,
   };
 
   // Special rendering for To-Do context with navigation
@@ -304,82 +457,82 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
     const ctx = content as ToDoContextContent;
 
     return (
-      <div
+      <motion.div
+        layout
+        initial={false}
+        animate={{ opacity: shouldFadeOut ? 0 : 1 }}
+        transition={{ duration: 0.1, ease: 'easeOut' }}
         style={containerStyle}
         data-testid={testID}
+        onClick={onExpandPalette}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        title={isPaletteOpen ? 'Collapse' : 'Expand AI assistant'}
       >
-        {/* Prev button */}
-        {ctx.hasPrev && (
+        {/* Icon - no pointer events, clicks pass to container */}
+        <span style={{ ...iconContainerStyle, pointerEvents: 'none' }}>
+          <ContentIcon type={content.type} />
+        </span>
+
+        {/* Content - no pointer events, clicks pass to container */}
+        <div style={{ ...contentContainerStyle, pointerEvents: 'none' }}>
+          <span style={textStyle}>{renderContentText()}</span>
+        </div>
+
+        {/* Navigation arrows (contextual actions - these are buttons, need their own clicks) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <button
             type="button"
-            style={navButtonStyle}
-            onClick={ctx.onPrev}
+            style={{
+              ...navButtonStyle,
+              opacity: ctx.hasPrev ? 0.6 : 0.2,
+              cursor: ctx.hasPrev ? 'pointer' : 'not-allowed',
+            }}
+            onClick={(e) => { e.stopPropagation(); ctx.onPrev?.(); }}
+            disabled={!ctx.hasPrev}
             title="Previous item"
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = '1';
-              (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.1)';
-              (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+              if (ctx.hasPrev) {
+                (e.currentTarget as HTMLElement).style.opacity = '1';
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.1)';
+              }
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = '0.6';
+              (e.currentTarget as HTMLElement).style.opacity = ctx.hasPrev ? '0.6' : '0.2';
               (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
             }}
           >
             <ChevronLeft size={16} />
           </button>
-        )}
-
-        {/* Content */}
-        <div style={contentContainerStyle} onClick={handleContentClick}>
-          <span style={iconContainerStyle}>
-            <ContentIcon type={content.type} />
-          </span>
-          <span style={textStyle}>{renderContentText()}</span>
-        </div>
-
-        {/* Next button */}
-        {ctx.hasNext && (
           <button
             type="button"
-            style={navButtonStyle}
-            onClick={ctx.onNext}
+            style={{
+              ...navButtonStyle,
+              opacity: ctx.hasNext ? 0.6 : 0.2,
+              cursor: ctx.hasNext ? 'pointer' : 'not-allowed',
+            }}
+            onClick={(e) => { e.stopPropagation(); ctx.onNext?.(); }}
+            disabled={!ctx.hasNext}
             title="Next item"
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = '1';
-              (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.1)';
-              (e.currentTarget as HTMLElement).style.transform = 'scale(1.05)';
+              if (ctx.hasNext) {
+                (e.currentTarget as HTMLElement).style.opacity = '1';
+                (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.1)';
+              }
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = '0.6';
+              (e.currentTarget as HTMLElement).style.opacity = ctx.hasNext ? '0.6' : '0.2';
               (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-              (e.currentTarget as HTMLElement).style.transform = 'scale(1)';
             }}
           >
             <ChevronRight size={16} />
           </button>
-        )}
+        </div>
 
-        {/* Expand button */}
-        <div style={dividerStyle} />
-        <button
-          type="button"
-          style={expandButtonStyle}
-          onClick={onExpandPalette}
-          title={isPaletteOpen ? 'Collapse' : 'Expand AI assistant'}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.opacity = '1';
-            (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.2)';
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.opacity = '0.8';
-            (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.05)';
-          }}
-        >
+        {/* Chevron indicator (visual only) */}
+        <span style={chevronIndicatorStyle}>
           {isPaletteOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-        </button>
+        </span>
 
         {/* CSS for spinner */}
         <style>{`
@@ -388,45 +541,47 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
             to { transform: rotate(360deg); }
           }
         `}</style>
-      </div>
+      </motion.div>
     );
   }
 
   // Standard content rendering
   return (
-    <div
+    <motion.div
+      layout
+      initial={false}
+      animate={{ opacity: shouldFadeOut ? 0 : 1 }}
+      transition={{ duration: 0.1, ease: 'easeOut' }}
       style={containerStyle}
       data-testid={testID}
+      onClick={onExpandPalette}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      title={isPaletteOpen ? 'Collapse' : 'Expand AI assistant'}
     >
-      {/* Icon */}
-      <span style={iconContainerStyle}>
+      {/* Icon - no pointer events, clicks pass to container */}
+      <span style={{ ...iconContainerStyle, pointerEvents: 'none' }}>
         <ContentIcon type={content.type} />
       </span>
 
-      {/* Content */}
-      <div style={contentContainerStyle} onClick={handleContentClick}>
+      {/* Content - pointerEvents none so clicks pass to container */}
+      <div style={{ ...contentContainerStyle, pointerEvents: 'none' }}>
         <span style={textStyle}>{renderContentText()}</span>
       </div>
 
-      {/* Expand button */}
-      <button
-        type="button"
-        style={expandButtonStyle}
-        onClick={onExpandPalette}
-        title={isPaletteOpen ? 'Collapse' : 'Expand AI assistant'}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.opacity = '1';
-          (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.2)';
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.opacity = '0.8';
-          (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(255,255,255,0.05)';
-        }}
-      >
+      {/* Action Pill (contextual actions - these are buttons, need their own clicks) */}
+      <AnimatePresence>
+        {derivedActionPill && (
+          <div onClick={(e) => e.stopPropagation()} style={{ pointerEvents: 'auto' }}>
+            <ActionPillButton pill={derivedActionPill} />
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Chevron indicator (visual only, no pointer events) */}
+      <span style={{ ...chevronIndicatorStyle, pointerEvents: 'none' }}>
         {isPaletteOpen ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-      </button>
+      </span>
 
       {/* CSS for spinner */}
       <style>{`
@@ -435,7 +590,7 @@ export const AIMinibar: React.FC<AIMinibarProps> = ({
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </div>
+    </motion.div>
   );
 };
 

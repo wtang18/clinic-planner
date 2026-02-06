@@ -5,8 +5,9 @@
  */
 
 import React from 'react';
+import { X, Send, List } from 'lucide-react';
 import type { BackgroundTask, TaskStatus } from '../../types/suggestions';
-import { colors, spacing, typography, radii, shadows, transitions, zIndex } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions, zIndex } from '../../styles/foundations';
 import { TaskList } from './TaskList';
 import { Button } from '../primitives/Button';
 import { Badge } from '../primitives/Badge';
@@ -38,35 +39,6 @@ export interface TaskPaneProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const XIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
-  </svg>
-);
-
-const SendIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="22" y1="2" x2="11" y2="13" />
-    <polygon points="22,2 15,22 11,13 2,9" />
-  </svg>
-);
-
-const ListIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <line x1="8" y1="6" x2="21" y2="6" />
-    <line x1="8" y1="12" x2="21" y2="12" />
-    <line x1="8" y1="18" x2="21" y2="18" />
-    <line x1="3" y1="6" x2="3.01" y2="6" />
-    <line x1="3" y1="12" x2="3.01" y2="12" />
-    <line x1="3" y1="18" x2="3.01" y2="18" />
-  </svg>
-);
 
 // ============================================================================
 // Component
@@ -117,7 +89,7 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
     right: 0,
     bottom: 0,
     width,
-    backgroundColor: colors.neutral[0],
+    backgroundColor: colors.bg.neutral.base,
     boxShadow: shadows.xl,
     transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
     transition: `transform ${transitions.slow}`,
@@ -131,50 +103,50 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${spacing[4]} ${spacing[5]}`,
-    borderBottom: `1px solid ${colors.neutral[200]}`,
+    padding: `${spaceAround.default}px ${spaceAround.defaultPlus}px`,
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
     flexShrink: 0,
   };
 
   const headerLeftStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.lg[0],
+    fontSize: 18,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const contentStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    padding: spacing[4],
+    padding: spaceAround.default,
   };
 
   const sectionStyle: React.CSSProperties = {
-    marginBottom: spacing[6],
+    marginBottom: spaceAround.spacious,
   };
 
   const sectionHeaderStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing[3],
+    marginBottom: spaceAround.compact,
   };
 
   const sectionTitleStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
-    fontSize: typography.fontSize.sm[0],
+    gap: spaceBetween.repeating,
+    fontSize: 14,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.neutral[700],
+    color: colors.fg.neutral.secondary,
     textTransform: 'uppercase',
-    letterSpacing: typography.letterSpacing.wide,
+    letterSpacing: 0.5,
   };
 
   const emptyStateStyle: React.CSSProperties = {
@@ -182,15 +154,15 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing[8],
-    color: colors.neutral[400],
+    padding: spaceAround.generous,
+    color: colors.fg.neutral.disabled,
     textAlign: 'center',
   };
 
   const footerStyle: React.CSSProperties = {
-    padding: `${spacing[4]} ${spacing[5]}`,
-    borderTop: `1px solid ${colors.neutral[200]}`,
-    backgroundColor: colors.neutral[50],
+    padding: `${spaceAround.default}px ${spaceAround.defaultPlus}px`,
+    borderTop: `1px solid ${colors.border.neutral.low}`,
+    backgroundColor: colors.bg.neutral.min,
     flexShrink: 0,
   };
 
@@ -234,9 +206,9 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
         )}
         {collapsed && (
           <div style={{
-            fontSize: typography.fontSize.xs[0],
-            color: colors.neutral[500],
-            paddingLeft: spacing[2],
+            fontSize: 12,
+            color: colors.fg.neutral.spotReadable,
+            paddingLeft: spaceAround.tight,
           }}>
             Click to expand
           </div>
@@ -255,16 +227,14 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
         {/* Header */}
         <div style={headerStyle}>
           <div style={headerLeftStyle}>
-            <span style={{ width: '24px', height: '24px', display: 'flex', color: colors.neutral[500] }}>
-              <ListIcon />
-            </span>
+            <List size={24} color={colors.fg.neutral.spotReadable} />
             <h2 style={titleStyle}>Tasks</h2>
             {hasActiveTasks && (
               <Badge variant="info" size="sm">{activeTasks.length} active</Badge>
             )}
           </div>
           <IconButton
-            icon={<XIcon />}
+            icon={<X size={20} />}
             label="Close task pane"
             variant="ghost"
             size="md"
@@ -277,26 +247,19 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
           {/* Empty state */}
           {tasks.length === 0 && (
             <div style={emptyStateStyle}>
-              <span style={{
-                width: '48px',
-                height: '48px',
-                display: 'flex',
-                marginBottom: spacing[3],
-              }}>
-                <ListIcon />
-              </span>
+              <List size={48} style={{ marginBottom: spaceAround.compact }} />
               <p style={{
-                fontSize: typography.fontSize.base[0],
+                fontSize: 16,
                 fontWeight: typography.fontWeight.medium,
-                color: colors.neutral[600],
+                color: colors.fg.neutral.secondary,
                 margin: 0,
-                marginBottom: spacing[2],
+                marginBottom: spaceAround.tight,
               }}>
                 No background tasks
               </p>
               <p style={{
-                fontSize: typography.fontSize.sm[0],
-                color: colors.neutral[400],
+                fontSize: 14,
+                color: colors.fg.neutral.disabled,
                 margin: 0,
               }}>
                 Tasks will appear here as you work
@@ -315,7 +278,7 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
                 <Button
                   variant="primary"
                   size="sm"
-                  leftIcon={<SendIcon />}
+                  leftIcon={<Send size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     onBatchApprove(readyTasks.map(t => t.id));
@@ -368,8 +331,8 @@ export const TaskPane: React.FC<TaskPaneProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              fontSize: typography.fontSize.sm[0],
-              color: colors.neutral[600],
+              fontSize: 14,
+              color: colors.fg.neutral.secondary,
             }}>
               <span>
                 {processingTasks.length > 0 && `${processingTasks.length} processing`}

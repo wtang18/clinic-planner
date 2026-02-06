@@ -5,12 +5,16 @@
  */
 
 import React from 'react';
+import { Check, ChevronDown, Clock, AlertTriangle } from 'lucide-react';
 import type { CareGapInstance, CareGapExclusionReason, CareGapClosureCriteria } from '../../types/care-gaps';
-import { colors, spacing, typography, radii, transitions } from '../../styles/tokens';
+import { colors, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
 import { getCareGapPriorityColor } from '../../styles/utils';
 import { Card } from '../primitives/Card';
 import { Badge } from '../primitives/Badge';
 import { Button } from '../primitives/Button';
+import { CardIconContainer } from '../primitives/CardIconContainer';
+import { DropdownMenu } from '../primitives/DropdownMenu';
+import { ActionGroup } from '../primitives/ActionGroup';
 
 // ============================================================================
 // Types
@@ -34,45 +38,6 @@ export interface CareGapCardProps {
   /** Custom styles */
   style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Icons
-// ============================================================================
-
-const CheckIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="20,6 9,17 4,12" />
-  </svg>
-);
-
-const ChevronDownIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <polyline points="6,9 12,15 18,9" />
-  </svg>
-);
-
-const ClockIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12,6 12,12 16,14" />
-  </svg>
-);
-
-const AlertIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
-const XCircleIcon = () => (
-  <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="15" y1="9" x2="9" y2="15" />
-    <line x1="9" y1="9" x2="15" y2="15" />
-  </svg>
-);
 
 // ============================================================================
 // Constants
@@ -109,10 +74,9 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: compact ? 'row' : 'column',
-    gap: compact ? spacing[3] : spacing[3],
-    padding: compact ? spacing[3] : spacing[4],
-    borderLeft: `3px solid ${priorityColors.color}`,
-    backgroundColor: isAddressed || isClosed ? colors.status.successLight : isPending ? colors.status.warningLight : 'transparent',
+    gap: spaceBetween.relatedCompact,
+    padding: compact ? spaceAround.compact : spaceAround.default,
+    backgroundColor: priority === 'critical' ? colors.bg.alert.subtle : colors.bg.neutral.base,
     opacity: isExcluded ? 0.6 : 1,
     transition: `all ${transitions.fast}`,
     ...style,
@@ -121,20 +85,8 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: compact ? 'center' : 'flex-start',
-    gap: spacing[3],
+    gap: spaceBetween.relatedCompact,
     flex: 1,
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: compact ? '28px' : '36px',
-    height: compact ? '28px' : '36px',
-    backgroundColor: priorityColors.bgColor,
-    borderRadius: radii.full,
-    color: priorityColors.color,
-    flexShrink: 0,
   };
 
   const contentStyle: React.CSSProperties = {
@@ -142,66 +94,38 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: spacing[1],
+    gap: spaceBetween.coupled,
   };
 
   const titleRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[2],
+    gap: spaceBetween.repeating,
     flexWrap: 'wrap',
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: compact ? typography.fontSize.sm[0] : typography.fontSize.base[0],
+    fontSize: compact ? 14 : 16,
     fontWeight: typography.fontWeight.medium,
-    color: colors.neutral[900],
+    color: colors.fg.neutral.primary,
     margin: 0,
   };
 
   const dueLabelStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
-    gap: spacing[1],
-    fontSize: typography.fontSize.xs[0],
-    color: isOverdue ? colors.status.error : colors.neutral[500],
-    fontWeight: isOverdue ? typography.fontWeight.medium : typography.fontWeight.normal,
+    gap: spaceBetween.coupled,
+    fontSize: 12,
+    color: isOverdue ? colors.fg.alert.secondary : colors.fg.neutral.spotReadable,
+    fontWeight: isOverdue ? typography.fontWeight.medium : typography.fontWeight.regular,
   };
 
   const categoryStyle: React.CSSProperties = {
-    fontSize: typography.fontSize.xs[0],
-    color: colors.neutral[500],
+    fontSize: 12,
+    color: colors.fg.neutral.spotReadable,
     textTransform: 'capitalize',
   };
 
-  const actionsStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spacing[2],
-    flexShrink: 0,
-    position: 'relative',
-  };
-
-  const excludeMenuStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '100%',
-    right: 0,
-    marginTop: spacing[1],
-    backgroundColor: colors.neutral[0],
-    border: `1px solid ${colors.neutral[200]}`,
-    borderRadius: radii.md,
-    boxShadow: `0 4px 6px -1px rgb(0 0 0 / 0.1)`,
-    zIndex: 10,
-    minWidth: '200px',
-  };
-
-  const menuItemStyle: React.CSSProperties = {
-    padding: `${spacing[2]} ${spacing[3]}`,
-    fontSize: typography.fontSize.sm[0],
-    color: colors.neutral[700],
-    cursor: 'pointer',
-    transition: `background-color ${transitions.fast}`,
-  };
 
   // Closure action based on gap type
   const handleAction = () => {
@@ -233,36 +157,37 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
   };
 
   return (
-    <Card variant="default" padding="none">
+    <Card variant="default" padding="none" data-testid={`care-gap-card-${gap.id}`}>
       <div style={containerStyle}>
         {/* Main content */}
         <div style={headerStyle}>
           {/* Priority icon */}
-          <div style={iconContainerStyle}>
-            <span style={{ width: compact ? '14px' : '18px', height: compact ? '14px' : '18px', display: 'flex' }}>
-              {isClosed || isAddressed ? (
-                <CheckIcon />
-              ) : isOverdue ? (
-                <AlertIcon />
-              ) : (
-                <ClockIcon />
-              )}
-            </span>
-          </div>
+          <CardIconContainer color={priority === 'critical' ? 'alert' : 'default'} size={compact ? 'sm' : 'lg'}>
+            {isClosed || isAddressed ? (
+              <Check size={compact ? 14 : 18} />
+            ) : isOverdue ? (
+              <AlertTriangle size={compact ? 14 : 18} />
+            ) : (
+              <Clock size={compact ? 14 : 18} />
+            )}
+          </CardIconContainer>
 
           {/* Content */}
           <div style={contentStyle}>
             <div style={titleRowStyle}>
               <p style={titleStyle}>{name}</p>
               <Badge
-                variant={priority === 'critical' ? 'error' : priority === 'important' ? 'warning' : 'success'}
+                variant={priority === 'critical' ? 'error' : 'default'}
                 size="sm"
               >
                 {priority}
               </Badge>
-              {isAddressed && <Badge variant="success" size="sm">Addressed</Badge>}
-              {isPending && <Badge variant="warning" size="sm">Pending</Badge>}
-              {isExcluded && <Badge variant="default" size="sm">Excluded</Badge>}
+              {isAddressed && <Badge variant="success" size="sm" data-testid="gap-status">Addressed</Badge>}
+              {isPending && <Badge variant="warning" size="sm" data-testid="gap-status">Pending</Badge>}
+              {isExcluded && <Badge variant="default" size="sm" data-testid="gap-status">Excluded</Badge>}
+              {!isAddressed && !isPending && !isExcluded && gap.status === 'open' && (
+                <Badge variant="info" size="sm" data-testid="gap-status">Open</Badge>
+              )}
             </div>
 
             {!compact && (
@@ -270,9 +195,7 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
                 <span style={categoryStyle}>{formatCategory(category)}</span>
                 {dueLabel && (
                   <div style={dueLabelStyle}>
-                    <span style={{ width: '12px', height: '12px', display: 'flex' }}>
-                      <ClockIcon />
-                    </span>
+                    <Clock size={12} />
                     {dueLabel}
                   </div>
                 )}
@@ -287,12 +210,13 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
 
         {/* Actions */}
         {!isExcluded && !isClosed && (
-          <div style={actionsStyle}>
+          <ActionGroup style={{ flexShrink: 0, position: 'relative' }}>
             <Button
               variant="primary"
               size="sm"
               onClick={handleAction}
               disabled={isAddressed || isPending}
+              data-testid="gap-action-btn"
             >
               {actionLabel}
             </Button>
@@ -302,32 +226,22 @@ export const CareGapCard: React.FC<CareGapCardProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowExcludeMenu(!showExcludeMenu)}
-                rightIcon={<ChevronDownIcon />}
+                rightIcon={<ChevronDown size={14} />}
               >
                 Exclude
               </Button>
 
-              {showExcludeMenu && (
-                <div style={excludeMenuStyle}>
-                  {EXCLUSION_REASONS.map((reason) => (
-                    <div
-                      key={reason.type}
-                      style={menuItemStyle}
-                      onClick={() => handleExclude(reason.type)}
-                      onMouseEnter={(e) => {
-                        (e.target as HTMLDivElement).style.backgroundColor = colors.neutral[100];
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.target as HTMLDivElement).style.backgroundColor = 'transparent';
-                      }}
-                    >
-                      {reason.label}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <DropdownMenu
+                isOpen={showExcludeMenu}
+                items={EXCLUSION_REASONS.map((reason) => ({
+                  label: reason.label,
+                  value: reason.type,
+                }))}
+                onItemClick={handleExclude}
+                position="bottom-right"
+              />
             </div>
-          </div>
+          </ActionGroup>
         )}
       </div>
     </Card>
