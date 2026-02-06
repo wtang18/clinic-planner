@@ -4,6 +4,11 @@
 **Status:** Design Complete — Ready for Implementation
 **Supersedes:** AI_CONTROL_SURFACE.md (v1, 2026-02-02)
 
+> **📌 Partial Supersession Notice**
+> - **AI_DRAWER.md** (in `features/left-pane-system/`) supersedes §5 (Drawer - Full Assistant)
+> - The drawer now renders in the left pane, not as a bottom bar expansion
+> - §3-4, §6-12 remain authoritative for minibar/palette behavior
+
 ---
 
 ## Table of Contents

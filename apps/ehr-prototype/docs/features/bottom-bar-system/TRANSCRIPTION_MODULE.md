@@ -427,6 +427,10 @@ This maintains cognitive separation between the transcription module and AI Surf
 
 ## 9. Workspace Switching & Session Management
 
+> **📌 Updated by TRANSCRIPTION_DRAWER.md §8** (in `features/left-pane-system/`)
+> Session scope changed from encounter to patient workspace.
+> Navigation within the same patient does not pause recording.
+
 ### Auto-Pause Rules
 
 Recording auto-pauses when the user navigates away from the encounter being recorded. This includes:

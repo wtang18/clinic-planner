@@ -82,6 +82,10 @@ type TierState = 'mini' | 'bar' | 'palette' | 'drawer';
 
 ## 3. Mutual Exclusion Rules
 
+> **📌 Extended by DRAWER_COORDINATION.md** (in `features/left-pane-system/`)
+> Mutual exclusion rules are extended for the left pane drawer tier.
+> Cross-surface combinations (drawer in left pane + palette in bottom bar) are now allowed.
+
 ### Core Rule
 
 **Only one module can be at palette tier or above at any time.** The other module must be at bar or mini tier.

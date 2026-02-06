@@ -145,4 +145,19 @@ export type {
   UseTierControlsReturn,
 } from './useBottomBar';
 
+// Left Pane Hooks
+export {
+  LeftPaneProvider,
+  useLeftPane,
+  useLeftPaneState,
+  useBottomBarVisibility,
+  useTranscriptViewAvailable,
+} from './useLeftPane';
+export type {
+  LeftPaneProviderProps,
+  LeftPaneActions,
+  UseLeftPaneReturn,
+  UseBottomBarVisibilityParams,
+} from './useLeftPane';
+
 // Note: useSynchronizedTransition removed - using CSS Grid transitions instead

@@ -24,6 +24,26 @@
 | Patient Workspace | Coming soon |
 | Overview Pane | Coming soon |
 
+### Bottom Bar System (Phase 7)
+
+| Document | Description |
+|----------|-------------|
+| [Bottom Bar System](./features/bottom-bar-system/BOTTOM_BAR_SYSTEM.md) | CSS Grid orchestration, mutual exclusion |
+| [Transcription Module](./features/bottom-bar-system/TRANSCRIPTION_MODULE.md) | Ambient transcription recording and review |
+| [AI Control Surface](./features/bottom-bar-system/AI_CONTROL_SURFACE_V2.md) | AI awareness, commands, suggestions |
+| [Shared Patterns](./features/bottom-bar-system/SHARED_PATTERNS.md) | Common components, animation, a11y |
+
+### Left Pane System (Phase 8)
+
+| Document | Description |
+|----------|-------------|
+| [Left Pane System](./features/left-pane-system/LEFT_PANE_SYSTEM.md) | Multi-view pane architecture, view switching |
+| [AI Drawer](./features/left-pane-system/AI_DRAWER.md) | AI module at drawer density — conversation, suggestions |
+| [Transcription Drawer](./features/left-pane-system/TRANSCRIPTION_DRAWER.md) | Transcription at drawer density — full transcript |
+| [Drawer Coordination](./features/left-pane-system/DRAWER_COORDINATION.md) | Drawer ↔ bottom bar de-escalation |
+| [Voice Input](./features/left-pane-system/VOICE_INPUT.md) | Voice input for AI (Phase 9) |
+| [Future Enhancements](./features/left-pane-system/FUTURE_ENHANCEMENTS.md) | Vision items deferred from prototype |
+
 ---
 
 ## Documentation Structure
