@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | **8.0** | Documentation updates | ✅ Complete | ☑ | Cross-references added to AI_CONTROL_SURFACE_V2, BOTTOM_BAR_SYSTEM, TRANSCRIPTION_MODULE, README |
 | **8.1** | Left pane state & types | ✅ Complete | ☑ | types.ts, reducer.ts, selectors.ts, useLeftPane.tsx |
-| **8.2** | Left pane container | 🔲 Not Started | ☐ | Pane shell, header, view switching, AppShell integration |
+| **8.2** | Left pane container | ✅ Complete | ☑ | LeftPaneContainer, PaneHeader, PaneContent with placeholders |
 | **8.3** | AI drawer view | 🔲 Not Started | ☐ | Context header, suggestions, conversation history |
 | **8.4** | AI drawer footer | 🔲 Not Started | ☐ | Quick actions, input row, filtering logic |
 | **8.5** | Transcription drawer view | 🔲 Not Started | ☐ | Transcript, view indicator pill, controls |

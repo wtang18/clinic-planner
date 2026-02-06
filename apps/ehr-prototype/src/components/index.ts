@@ -121,3 +121,10 @@ export { AllergiesSection } from './overview/AllergiesSection';
 export { MedicationsSection } from './overview/MedicationsSection';
 export { ProblemsSection } from './overview/ProblemsSection';
 export { VitalsSection } from './overview/VitalsSection';
+
+// ============================================================================
+// Left Pane System
+// ============================================================================
+
+export { LeftPaneContainer, PaneHeader, PaneContent } from './LeftPane';
+export type { LeftPaneContainerProps, PaneHeaderProps, PaneContentProps } from './LeftPane';
