@@ -19,6 +19,7 @@ import { useLeftPane } from '../../hooks/useLeftPane';
 import { colors, transitions, spaceAround } from '../../styles/foundations';
 import type { MenuPaneProps } from '../layout/MenuPane';
 import type { AIDrawerViewProps } from './AIDrawer';
+import type { TranscriptionDrawerViewProps } from './TranscriptionDrawer';
 
 // ============================================================================
 // Types
@@ -31,6 +32,8 @@ export interface LeftPaneContainerProps {
   aiDrawerProps?: Omit<AIDrawerViewProps, 'style' | 'children'>;
   /** Footer component for AI drawer (quick actions + input) */
   aiDrawerFooter?: React.ReactNode;
+  /** Props to pass through to TranscriptionDrawerView when in transcript view */
+  transcriptionDrawerProps?: Omit<TranscriptionDrawerViewProps, 'style'>;
   /** Whether a transcription session exists for current patient */
   hasTranscriptionSession?: boolean;
   /** Pane width when expanded */
@@ -80,6 +83,7 @@ export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
   menuPaneProps,
   aiDrawerProps,
   aiDrawerFooter,
+  transcriptionDrawerProps,
   hasTranscriptionSession = false,
   width = 280,
   style,
@@ -141,6 +145,7 @@ export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
         menuPaneProps={menuPaneProps}
         aiDrawerProps={aiDrawerProps}
         aiDrawerFooter={aiDrawerFooter}
+        transcriptionDrawerProps={transcriptionDrawerProps}
       />
     </div>
   );

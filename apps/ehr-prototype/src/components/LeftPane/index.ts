@@ -35,3 +35,21 @@ export type {
   QuickActionsRowProps,
   AIDrawerInputProps,
 } from './AIDrawer';
+
+// Transcription Drawer components
+export {
+  TranscriptionDrawerView,
+  TranscriptionContextHeader,
+  ViewIndicatorPill,
+  TranscriptContent,
+  TranscriptionControlsFooter,
+} from './TranscriptionDrawer';
+export type {
+  TranscriptionDrawerViewProps,
+  TranscriptionContextHeaderProps,
+  ViewIndicatorPillProps,
+  TranscriptContentProps,
+  TranscriptSegment,
+  SpeakerRole,
+  TranscriptionControlsFooterProps,
+} from './TranscriptionDrawer';

@@ -137,6 +137,11 @@ export {
   AIDrawerFooter,
   QuickActionsRow,
   AIDrawerInput,
+  TranscriptionDrawerView,
+  TranscriptionContextHeader,
+  ViewIndicatorPill,
+  TranscriptContent,
+  TranscriptionControlsFooter,
 } from './LeftPane';
 export type {
   LeftPaneContainerProps,
@@ -152,4 +157,11 @@ export type {
   AIDrawerFooterProps,
   QuickActionsRowProps,
   AIDrawerInputProps,
+  TranscriptionDrawerViewProps,
+  TranscriptionContextHeaderProps,
+  ViewIndicatorPillProps,
+  TranscriptContentProps,
+  TranscriptSegment,
+  SpeakerRole,
+  TranscriptionControlsFooterProps,
 } from './LeftPane';

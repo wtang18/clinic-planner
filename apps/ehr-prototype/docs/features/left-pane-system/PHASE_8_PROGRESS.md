@@ -1,7 +1,7 @@
 # Phase 8: Left Pane System — Progress Tracker
 
 **Last Updated:** 2026-02-06
-**Status:** In Progress (5/10 chunks complete)
+**Status:** In Progress (6/10 chunks complete)
 
 ---
 
@@ -14,7 +14,7 @@
 | **8.2** | Left pane container | ✅ Complete | ☑ | LeftPaneContainer, PaneHeader, PaneContent with placeholders |
 | **8.3** | AI drawer view | ✅ Complete | ☑ | AIContextHeader, SuggestionsSection, ConversationHistory, AIDrawerView |
 | **8.4** | AI drawer footer | ✅ Complete | ☑ | QuickActionsRow, AIDrawerInput, AIDrawerFooter |
-| **8.5** | Transcription drawer view | 🔲 Not Started | ☐ | Transcript, view indicator pill, controls |
+| **8.5** | Transcription drawer view | ✅ Complete | ☑ | TranscriptionContextHeader, ViewIndicatorPill, TranscriptContent, TranscriptionControlsFooter, TranscriptionDrawerView |
 | **8.6** | Settings modal & activity log | 🔲 Not Started | ☐ | Full-screen modals for both |
 | **8.7** | Drawer ↔ bottom bar coordination | 🔲 Not Started | ☐ | De-escalation, composition, grid updates |
 | **8.8** | Keyboard shortcuts | 🔲 Not Started | ☐ | ⌘K and Escape updates |
@@ -37,9 +37,9 @@
 - [x] Quick actions row with horizontal scroll
 - [ ] Conversation: user right, AI left, system centered
 - [ ] Follow-up actions only on latest AI response
-- [ ] Transcript: live transcript with speaker diarization
-- [ ] View indicator pill: correct state (Live/Paused/Processing)
-- [ ] [↓ Latest] on scroll-up, scrolls to bottom on tap
+- [x] Transcript: live transcript with speaker diarization
+- [x] View indicator pill: correct state (Live/Paused/Processing)
+- [x] [↓ Latest] on scroll-up, scrolls to bottom on tap
 - [ ] Settings modal from ⚙ (header and footer)
 - [ ] Activity log modal from 📋
 - [ ] Both modals close with [Done]
@@ -101,6 +101,12 @@ Track files touched during implementation:
 | `src/components/LeftPane/AIDrawer/QuickActionsRow.tsx` | 8.4 | Horizontal scrollable quick action chips |
 | `src/components/LeftPane/AIDrawer/AIDrawerInput.tsx` | 8.4 | Light-themed input with mic/send buttons |
 | `src/components/LeftPane/AIDrawer/AIDrawerFooter.tsx` | 8.4 | Footer container for quick actions + input |
+| `src/components/LeftPane/TranscriptionDrawer/TranscriptionContextHeader.tsx` | 8.5 | Floating header with patient info |
+| `src/components/LeftPane/TranscriptionDrawer/ViewIndicatorPill.tsx` | 8.5 | Live/Paused/Processing pill with waveform |
+| `src/components/LeftPane/TranscriptionDrawer/TranscriptContent.tsx` | 8.5 | Scrollable transcript with speaker diarization |
+| `src/components/LeftPane/TranscriptionDrawer/TranscriptionControlsFooter.tsx` | 8.5 | Light-themed controls footer |
+| `src/components/LeftPane/TranscriptionDrawer/TranscriptionDrawerView.tsx` | 8.5 | Main container composing all pieces |
+| `src/components/LeftPane/TranscriptionDrawer/index.ts` | 8.5 | Barrel exports |
 
 ### Modified Files
 
@@ -130,9 +136,9 @@ Track which existing components were reused vs. new creation:
 | Context header | — | ☑ | Created new AIContextHeader (different from palette ContextBanner) |
 | Quick action chips | — | ☑ | Created QuickActionsRow with light theme (palette version is dark) |
 | AI text input | — | ☑ | Created AIDrawerInput with light theme (palette AIInputArea is dark) |
-| Transcript segments | TranscriptSegment? | ☐ | Chunk 8.5 |
-| Waveform indicator | WaveformIndicator | ☐ | Chunk 8.5 |
-| Controls bar | ControlsBar | ☐ | Chunk 8.5 |
+| Transcript segments | — | ☑ | Created TranscriptContent with SegmentRow (new) |
+| Waveform indicator | WaveformIndicator | ☑ | Reused in ViewIndicatorPill |
+| Controls bar | — | ☑ | Created TranscriptionControlsFooter with light theme (palette ControlsContainer is dark) |
 | Patient avatar | Avatar/Initials? | ☐ | |
 | Modal | Modal? | ☐ | Chunk 8.6 |
 | Toggle/Switch | Toggle? | ☐ | Chunk 8.6 |

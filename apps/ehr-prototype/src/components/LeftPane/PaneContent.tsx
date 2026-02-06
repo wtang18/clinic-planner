@@ -3,16 +3,16 @@
  *
  * Content switcher that renders the appropriate view based on activeView.
  * Menu view renders the existing MenuPane, AI drawer renders the full AI view,
- * Transcript view is a placeholder for chunk 8.5.
+ * Transcript drawer renders the full transcription view.
  */
 
 import React from 'react';
-import { Mic } from 'lucide-react';
 import { MenuPane } from '../layout/MenuPane';
 import type { MenuPaneProps } from '../layout/MenuPane';
 import { AIDrawerView } from './AIDrawer';
 import type { AIDrawerViewProps } from './AIDrawer';
-import { colors, spaceAround, typography } from '../../styles/foundations';
+import { TranscriptionDrawerView } from './TranscriptionDrawer';
+import type { TranscriptionDrawerViewProps } from './TranscriptionDrawer';
 import type { PaneView } from '../../state/leftPane';
 
 // ============================================================================
@@ -26,80 +26,11 @@ export interface PaneContentProps {
   menuPaneProps?: Omit<MenuPaneProps, 'style'>;
   /** Props to pass through to AIDrawerView */
   aiDrawerProps?: Omit<AIDrawerViewProps, 'style' | 'children'>;
-  /** Footer component for AI drawer (quick actions + input from 8.4) */
+  /** Footer component for AI drawer (quick actions + input) */
   aiDrawerFooter?: React.ReactNode;
+  /** Props to pass through to TranscriptionDrawerView */
+  transcriptionDrawerProps?: Omit<TranscriptionDrawerViewProps, 'style'>;
 }
-
-// ============================================================================
-// Placeholder Components
-// ============================================================================
-
-interface PlaceholderViewProps {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}
-
-const PlaceholderView: React.FC<PlaceholderViewProps> = ({
-  icon,
-  title,
-  description,
-}) => {
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-    padding: spaceAround.default,
-    textAlign: 'center',
-  };
-
-  const iconContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: colors.bg.accent.subtle,
-    color: colors.fg.accent.primary,
-    marginBottom: spaceAround.compact,
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontFamily: typography.fontFamily.sans,
-    fontSize: 16,
-    fontWeight: typography.fontWeight.semibold,
-    lineHeight: 1.5,
-    color: colors.fg.neutral.primary,
-    marginBottom: 4,
-  };
-
-  const descriptionStyle: React.CSSProperties = {
-    fontFamily: typography.fontFamily.sans,
-    fontSize: 14,
-    fontWeight: typography.fontWeight.regular,
-    lineHeight: 1.5,
-    color: colors.fg.neutral.secondary,
-  };
-
-  return (
-    <div style={containerStyle}>
-      <div style={iconContainerStyle}>{icon}</div>
-      <div style={titleStyle}>{title}</div>
-      <div style={descriptionStyle}>{description}</div>
-    </div>
-  );
-};
-
-const TranscriptDrawerPlaceholder: React.FC = () => (
-  <PlaceholderView
-    icon={<Mic size={24} />}
-    title="Transcript Drawer"
-    description="Coming in Chunk 8.5"
-  />
-);
 
 // ============================================================================
 // Component
@@ -110,6 +41,7 @@ export const PaneContent: React.FC<PaneContentProps> = ({
   menuPaneProps,
   aiDrawerProps,
   aiDrawerFooter,
+  transcriptionDrawerProps,
 }) => {
   const containerStyle: React.CSSProperties = {
     flex: 1,
@@ -129,7 +61,14 @@ export const PaneContent: React.FC<PaneContentProps> = ({
           </AIDrawerView>
         );
       case 'transcript':
-        return <TranscriptDrawerPlaceholder />;
+        // Provide defaults for required props if not provided
+        const defaultTranscriptProps: TranscriptionDrawerViewProps = {
+          patientName: 'Patient',
+          patientInitials: 'PT',
+          status: 'idle',
+          ...transcriptionDrawerProps,
+        };
+        return <TranscriptionDrawerView {...defaultTranscriptProps} style={{ flex: 1 }} />;
       default:
         return null;
     }
