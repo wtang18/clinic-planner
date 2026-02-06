@@ -15,6 +15,7 @@ import { TourTargetProvider } from '../tour/TourTargetRegistry';
 import { NetworkStatusBanner } from '../errors/NetworkStatusBanner';
 import { BottomBarProvider } from '../hooks/useBottomBar';
 import { LeftPaneProvider } from '../hooks/useLeftPane';
+import { AIKeyboardShortcutsProvider } from '../hooks/useAIKeyboardShortcuts';
 import type { EncounterState } from '../state/types';
 import type { AIServicesConfig } from '../services/ai/services/service-config';
 
@@ -57,8 +58,9 @@ export interface AppProvidersProps {
  * 6. TranscriptionProvider - transcription service
  * 7. BottomBarProvider - bottom bar module state
  * 8. LeftPaneProvider - left pane view state
- * 9. TourTargetProvider - tour target registration
- * 10. NetworkStatusBanner - offline/online status
+ * 9. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
+ * 10. TourTargetProvider - tour target registration
+ * 11. NetworkStatusBanner - offline/online status
  */
 export const AppProviders: React.FC<AppProvidersProps> = ({
   children,
@@ -82,13 +84,15 @@ export const AppProviders: React.FC<AppProvidersProps> = ({
               >
                 <BottomBarProvider demoMode={true}>
                   <LeftPaneProvider>
-                    <TourTargetProvider>
-                      {showNetworkStatus ? (
-                        <NetworkStatusBanner>{children}</NetworkStatusBanner>
-                      ) : (
-                        children
-                      )}
-                    </TourTargetProvider>
+                    <AIKeyboardShortcutsProvider>
+                      <TourTargetProvider>
+                        {showNetworkStatus ? (
+                          <NetworkStatusBanner>{children}</NetworkStatusBanner>
+                        ) : (
+                          children
+                        )}
+                      </TourTargetProvider>
+                    </AIKeyboardShortcutsProvider>
                   </LeftPaneProvider>
                 </BottomBarProvider>
               </TranscriptionProvider>

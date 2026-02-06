@@ -10,6 +10,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Mic, Send, Clipboard } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
+import { useAIInputRegistry } from '../../../hooks/useAIKeyboardShortcuts';
 
 // ============================================================================
 // Types
@@ -70,6 +71,19 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = externalRef || internalTextareaRef;
+
+  // Register with keyboard shortcuts for ⌘K focus
+  const inputRegistry = useAIInputRegistry();
+  useEffect(() => {
+    if (inputRegistry && textareaRef.current) {
+      inputRegistry.registerDrawerInput(textareaRef.current);
+    }
+    return () => {
+      if (inputRegistry) {
+        inputRegistry.registerDrawerInput(null);
+      }
+    };
+  }, [inputRegistry, textareaRef]);
 
   // Use controlled or uncontrolled value
   const value = controlledValue !== undefined ? controlledValue : internalValue;

@@ -11,6 +11,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { PanelRight, Send, Mic } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
+import { useAIInputRegistry } from '../../hooks/useAIKeyboardShortcuts';
 
 // ============================================================================
 // Types
@@ -70,6 +71,19 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
   const [internalValue, setInternalValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Register with keyboard shortcuts for ⌘K focus
+  const inputRegistry = useAIInputRegistry();
+  useEffect(() => {
+    if (inputRegistry && textareaRef.current) {
+      inputRegistry.registerPaletteInput(textareaRef.current);
+    }
+    return () => {
+      if (inputRegistry) {
+        inputRegistry.registerPaletteInput(null);
+      }
+    };
+  }, [inputRegistry]);
 
   // Use controlled or uncontrolled value
   const value = controlledValue !== undefined ? controlledValue : internalValue;

@@ -171,4 +171,16 @@ export type {
   UseDrawerCoordinationReturn,
 } from './useDrawerCoordination';
 
+// AI Keyboard Shortcuts
+export {
+  useAIKeyboardShortcuts,
+  useAIInputRegistry,
+  AIKeyboardShortcutsProvider,
+} from './useAIKeyboardShortcuts';
+export type {
+  AIKeyboardShortcutsConfig,
+  UseAIKeyboardShortcutsReturn,
+  AIKeyboardShortcutsProviderProps,
+} from './useAIKeyboardShortcuts';
+
 // Note: useSynchronizedTransition removed - using CSS Grid transitions instead

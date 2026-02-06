@@ -67,13 +67,14 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
       category: 'editing',
       handler: actions.save,
     },
-    {
-      id: 'search',
-      key: 'mod+k',
-      description: 'Quick search',
-      category: 'editing',
-      handler: actions.openOmniAdd,
-    },
+    // Note: ⌘K is handled by useAIKeyboardShortcuts hook for left pane awareness
+    // {
+    //   id: 'search',
+    //   key: 'mod+k',
+    //   description: 'AI Quick Access',
+    //   category: 'ai',
+    //   handler: actions.openPalette,
+    // },
 
     // Actions
     {
