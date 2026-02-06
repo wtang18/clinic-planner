@@ -1,7 +1,7 @@
 # Phase 8: Left Pane System — Progress Tracker
 
 **Last Updated:** 2026-02-06
-**Status:** In Progress (4/10 chunks complete)
+**Status:** In Progress (5/10 chunks complete)
 
 ---
 
@@ -13,7 +13,7 @@
 | **8.1** | Left pane state & types | ✅ Complete | ☑ | types.ts, reducer.ts, selectors.ts, useLeftPane.tsx |
 | **8.2** | Left pane container | ✅ Complete | ☑ | LeftPaneContainer, PaneHeader, PaneContent with placeholders |
 | **8.3** | AI drawer view | ✅ Complete | ☑ | AIContextHeader, SuggestionsSection, ConversationHistory, AIDrawerView |
-| **8.4** | AI drawer footer | 🔲 Not Started | ☐ | Quick actions, input row, filtering logic |
+| **8.4** | AI drawer footer | ✅ Complete | ☑ | QuickActionsRow, AIDrawerInput, AIDrawerFooter |
 | **8.5** | Transcription drawer view | 🔲 Not Started | ☐ | Transcript, view indicator pill, controls |
 | **8.6** | Settings modal & activity log | 🔲 Not Started | ☐ | Full-screen modals for both |
 | **8.7** | Drawer ↔ bottom bar coordination | 🔲 Not Started | ☐ | De-escalation, composition, grid updates |
@@ -33,8 +33,8 @@
 - [x] 🎙 icon conditional on transcription session for current patient
 - [x] Active view icon shows indicator
 - [x] Pane collapse/expand; always re-expands to Menu
-- [x] AI drawer: suggestions, conversation render (quick actions in 8.4)
-- [ ] Quick actions filtered by active suggestions
+- [x] AI drawer: suggestions, conversation, quick actions render
+- [x] Quick actions row with horizontal scroll
 - [ ] Conversation: user right, AI left, system centered
 - [ ] Follow-up actions only on latest AI response
 - [ ] Transcript: live transcript with speaker diarization
@@ -97,7 +97,10 @@ Track files touched during implementation:
 | `src/components/LeftPane/AIDrawer/SuggestionsSection.tsx` | 8.3 | Collapsible suggestions section, reuses SuggestionList |
 | `src/components/LeftPane/AIDrawer/ConversationHistory.tsx` | 8.3 | User/AI/system message thread with auto-scroll |
 | `src/components/LeftPane/AIDrawer/AIDrawerView.tsx` | 8.3 | Main AI drawer container with empty states |
-| `src/components/LeftPane/AIDrawer/index.ts` | 8.3 | Barrel exports for AIDrawer |
+| `src/components/LeftPane/AIDrawer/index.ts` | 8.3, 8.4 | Barrel exports for AIDrawer |
+| `src/components/LeftPane/AIDrawer/QuickActionsRow.tsx` | 8.4 | Horizontal scrollable quick action chips |
+| `src/components/LeftPane/AIDrawer/AIDrawerInput.tsx` | 8.4 | Light-themed input with mic/send buttons |
+| `src/components/LeftPane/AIDrawer/AIDrawerFooter.tsx` | 8.4 | Footer container for quick actions + input |
 
 ### Modified Files
 
@@ -125,8 +128,8 @@ Track which existing components were reused vs. new creation:
 | Suggestion display | SuggestionList | ☑ | Reused in SuggestionsSection, variant="default" |
 | AI response renderer | — | ☑ | Created new ConversationHistory with AIMessage/UserMessage |
 | Context header | — | ☑ | Created new AIContextHeader (different from palette ContextBanner) |
-| Quick action chips | QuickAction? | ☐ | Chunk 8.4 |
-| AI text input | AIInput? | ☐ | Chunk 8.4 |
+| Quick action chips | — | ☑ | Created QuickActionsRow with light theme (palette version is dark) |
+| AI text input | — | ☑ | Created AIDrawerInput with light theme (palette AIInputArea is dark) |
 | Transcript segments | TranscriptSegment? | ☐ | Chunk 8.5 |
 | Waveform indicator | WaveformIndicator | ☐ | Chunk 8.5 |
 | Controls bar | ControlsBar | ☐ | Chunk 8.5 |

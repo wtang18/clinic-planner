@@ -134,6 +134,9 @@ export {
   AIContextHeader,
   SuggestionsSection,
   ConversationHistory,
+  AIDrawerFooter,
+  QuickActionsRow,
+  AIDrawerInput,
 } from './LeftPane';
 export type {
   LeftPaneContainerProps,
@@ -146,4 +149,7 @@ export type {
   ConversationHistoryProps,
   ConversationMessage,
   MessageType,
+  AIDrawerFooterProps,
+  QuickActionsRowProps,
+  AIDrawerInputProps,
 } from './LeftPane';

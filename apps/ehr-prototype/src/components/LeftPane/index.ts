@@ -19,6 +19,9 @@ export {
   AIContextHeader,
   SuggestionsSection,
   ConversationHistory,
+  AIDrawerFooter,
+  QuickActionsRow,
+  AIDrawerInput,
 } from './AIDrawer';
 export type {
   AIDrawerViewProps,
@@ -28,4 +31,7 @@ export type {
   ConversationHistoryProps,
   ConversationMessage,
   MessageType,
+  AIDrawerFooterProps,
+  QuickActionsRowProps,
+  AIDrawerInputProps,
 } from './AIDrawer';

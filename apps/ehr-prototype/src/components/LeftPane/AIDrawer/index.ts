@@ -19,3 +19,13 @@ export type {
   ConversationMessage,
   MessageType,
 } from './ConversationHistory';
+
+// Footer components (8.4)
+export { AIDrawerFooter } from './AIDrawerFooter';
+export type { AIDrawerFooterProps } from './AIDrawerFooter';
+
+export { QuickActionsRow } from './QuickActionsRow';
+export type { QuickActionsRowProps } from './QuickActionsRow';
+
+export { AIDrawerInput } from './AIDrawerInput';
+export type { AIDrawerInputProps } from './AIDrawerInput';
