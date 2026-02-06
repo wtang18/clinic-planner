@@ -1,7 +1,7 @@
 # Phase 8: Left Pane System — Progress Tracker
 
 **Last Updated:** 2026-02-06
-**Status:** In Progress (7/10 chunks complete)
+**Status:** In Progress (8/10 chunks complete)
 
 ---
 
@@ -17,7 +17,7 @@
 | **8.5** | Transcription drawer view | ✅ Complete | ☑ | TranscriptionContextHeader, ViewIndicatorPill, TranscriptContent, TranscriptionControlsFooter, TranscriptionDrawerView |
 | **8.6** | Settings modal & activity log | 🔲 Not Started | ☐ | Full-screen modals for both |
 | **8.7** | Drawer ↔ bottom bar coordination | ✅ Complete | ☑ | useDrawerCoordination hook, action overrides in LeftPaneContainer |
-| **8.8** | Keyboard shortcuts | 🔲 Not Started | ☐ | ⌘K and Escape updates |
+| **8.8** | Keyboard shortcuts | ✅ Complete | ☑ | useAIKeyboardShortcuts hook, AIKeyboardShortcutsProvider, input registration |
 | **8.9** | Storybook stories & demo | 🔲 Not Started | ☐ | Component stories, workflow demos, a11y |
 
 **Legend:** 🔲 Not Started · 🔄 In Progress · ✅ Complete · ⚠️ Blocked · 🔁 Needs Revision
@@ -108,6 +108,7 @@ Track files touched during implementation:
 | `src/components/LeftPane/TranscriptionDrawer/TranscriptionDrawerView.tsx` | 8.5 | Main container composing all pieces |
 | `src/components/LeftPane/TranscriptionDrawer/index.ts` | 8.5 | Barrel exports |
 | `src/hooks/useDrawerCoordination.tsx` | 8.7 | Coordination hook bridging left pane and bottom bar |
+| `src/hooks/useAIKeyboardShortcuts.tsx` | 8.8 | ⌘K and Escape shortcuts with left pane awareness |
 
 ### Modified Files
 
@@ -125,6 +126,10 @@ Track files touched during implementation:
 | `src/hooks/index.ts` | 8.7 | Added useDrawerCoordination exports |
 | `src/components/LeftPane/LeftPaneContainer.tsx` | 8.7 | Added onViewChange, onCollapse action overrides |
 | `src/state/leftPane/selectors.ts` | 8.7 | Fixed tier name 'minibar' → 'mini' |
+| `src/context/AppProviders.tsx` | 8.8 | Added AIKeyboardShortcutsProvider |
+| `src/shortcuts/defaultShortcuts.ts` | 8.8 | Disabled conflicting ⌘K (handled by new hook) |
+| `src/components/LeftPane/AIDrawer/AIDrawerInput.tsx` | 8.8 | Added input registration for ⌘K focus |
+| `src/components/ai-ui/AIInputArea.tsx` | 8.8 | Added input registration for ⌘K focus |
 
 ---
 
