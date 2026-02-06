@@ -13,6 +13,8 @@ import { WorkspaceProvider } from './WorkspaceContext';
 import { DemoProvider } from '../demo/DemoContext';
 import { TourTargetProvider } from '../tour/TourTargetRegistry';
 import { NetworkStatusBanner } from '../errors/NetworkStatusBanner';
+import { BottomBarProvider } from '../hooks/useBottomBar';
+import { LeftPaneProvider } from '../hooks/useLeftPane';
 import type { EncounterState } from '../state/types';
 import type { AIServicesConfig } from '../services/ai/services/service-config';
 
@@ -53,8 +55,10 @@ export interface AppProvidersProps {
  * 4. EncounterStoreProvider - encounter state (provides store context for hooks)
  * 5. AIServicesProvider - AI service orchestration
  * 6. TranscriptionProvider - transcription service
- * 7. TourTargetProvider - tour target registration
- * 8. NetworkStatusBanner - offline/online status
+ * 7. BottomBarProvider - bottom bar module state
+ * 8. LeftPaneProvider - left pane view state
+ * 9. TourTargetProvider - tour target registration
+ * 10. NetworkStatusBanner - offline/online status
  */
 export const AppProviders: React.FC<AppProvidersProps> = ({
   children,
@@ -76,13 +80,17 @@ export const AppProviders: React.FC<AppProvidersProps> = ({
                 useMock={useMockTranscription}
                 mockScenario={mockScenario}
               >
-                <TourTargetProvider>
-                  {showNetworkStatus ? (
-                    <NetworkStatusBanner>{children}</NetworkStatusBanner>
-                  ) : (
-                    children
-                  )}
-                </TourTargetProvider>
+                <BottomBarProvider demoMode={true}>
+                  <LeftPaneProvider>
+                    <TourTargetProvider>
+                      {showNetworkStatus ? (
+                        <NetworkStatusBanner>{children}</NetworkStatusBanner>
+                      ) : (
+                        children
+                      )}
+                    </TourTargetProvider>
+                  </LeftPaneProvider>
+                </BottomBarProvider>
               </TranscriptionProvider>
             </AIServicesProvider>
           </EncounterStoreProvider>

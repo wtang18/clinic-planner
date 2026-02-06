@@ -14,6 +14,7 @@ import {
   useOpenCareGaps,
   usePendingReviewCount,
   useToDoNavigation,
+  useDrawerCoordination,
 } from '../../hooks';
 import { useTranscription } from '../../context/TranscriptionContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
@@ -69,6 +70,84 @@ import { colors, spaceAround } from '../../styles/foundations';
 // ============================================================================
 // Component
 // ============================================================================
+
+// ============================================================================
+// Debug Panel for Drawer Coordination
+// ============================================================================
+
+const CoordinationDebugPanel: React.FC = () => {
+  const { paneState, barState, actions } = useDrawerCoordination();
+
+  const panelStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: 70,
+    right: 16,
+    zIndex: 9999,
+    padding: 12,
+    background: 'rgba(0,0,0,0.85)',
+    color: '#fff',
+    borderRadius: 8,
+    fontSize: 11,
+    fontFamily: 'monospace',
+    minWidth: 200,
+  };
+
+  const rowStyle: React.CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  };
+
+  const buttonRowStyle: React.CSSProperties = {
+    display: 'flex',
+    gap: 4,
+    marginTop: 8,
+    flexWrap: 'wrap',
+  };
+
+  const btnStyle: React.CSSProperties = {
+    padding: '4px 8px',
+    fontSize: 10,
+    background: '#333',
+    color: '#fff',
+    border: '1px solid #555',
+    borderRadius: 4,
+    cursor: 'pointer',
+  };
+
+  return (
+    <div style={panelStyle}>
+      <div style={{ fontWeight: 'bold', marginBottom: 8, borderBottom: '1px solid #444', paddingBottom: 4 }}>
+        🔗 Coordination Debug
+      </div>
+      <div style={rowStyle}>
+        <span>Pane View:</span>
+        <span style={{ color: '#4ade80' }}>{paneState.activeView}</span>
+      </div>
+      <div style={rowStyle}>
+        <span>Expanded:</span>
+        <span style={{ color: paneState.isExpanded ? '#4ade80' : '#f87171' }}>
+          {paneState.isExpanded ? 'Yes' : 'No'}
+        </span>
+      </div>
+      <div style={rowStyle}>
+        <span>AI Tier:</span>
+        <span style={{ color: '#60a5fa' }}>{barState.aiTier}</span>
+      </div>
+      <div style={rowStyle}>
+        <span>TM Tier:</span>
+        <span style={{ color: '#fbbf24' }}>{barState.transcriptionTier}</span>
+      </div>
+      <div style={buttonRowStyle}>
+        <button style={btnStyle} onClick={() => actions.switchView('menu')}>Menu</button>
+        <button style={btnStyle} onClick={() => actions.switchView('ai')}>AI</button>
+        <button style={btnStyle} onClick={() => actions.switchView('transcript')}>TM</button>
+        <button style={btnStyle} onClick={() => actions.collapse()}>Collapse</button>
+        <button style={btnStyle} onClick={() => actions.expand()}>Expand</button>
+      </div>
+    </div>
+  );
+};
 
 export const CaptureView: React.FC = () => {
   const state = useEncounterState();
@@ -596,6 +675,9 @@ export const CaptureView: React.FC = () => {
     <>
       {/* Inject animations */}
       <style>{captureViewAnimations}</style>
+
+      {/* Debug panel for coordination testing - REMOVE after testing */}
+      <CoordinationDebugPanel />
 
       <AdaptiveLayout
         menuPane={
