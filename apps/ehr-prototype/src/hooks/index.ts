@@ -160,4 +160,15 @@ export type {
   UseBottomBarVisibilityParams,
 } from './useLeftPane';
 
+// Drawer Coordination Hooks
+export {
+  useDrawerCoordination,
+  useIsAIInDrawer,
+  useIsTranscriptionInDrawer,
+} from './useDrawerCoordination';
+export type {
+  CoordinatedActions,
+  UseDrawerCoordinationReturn,
+} from './useDrawerCoordination';
+
 // Note: useSynchronizedTransition removed - using CSS Grid transitions instead

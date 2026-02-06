@@ -40,6 +40,18 @@ export interface LeftPaneContainerProps {
   width?: string | number;
   /** Custom styles */
   style?: React.CSSProperties;
+  /**
+   * Override view change handler for coordination with bottom bar.
+   * If not provided, uses internal useLeftPane actions.
+   * @see useDrawerCoordination for coordinated actions
+   */
+  onViewChange?: (view: 'menu' | 'ai' | 'transcript') => void;
+  /**
+   * Override collapse handler for coordination with bottom bar.
+   * If not provided, uses internal useLeftPane actions.
+   * @see useDrawerCoordination for coordinated actions
+   */
+  onCollapse?: () => void;
 }
 
 // ============================================================================
@@ -87,9 +99,15 @@ export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
   hasTranscriptionSession = false,
   width = 280,
   style,
+  onViewChange: onViewChangeOverride,
+  onCollapse: onCollapseOverride,
 }) => {
   const { state, actions } = useLeftPane();
   const { isExpanded, activeView } = state;
+
+  // Use provided overrides or default to internal actions
+  const handleViewChange = onViewChangeOverride ?? actions.switchView;
+  const handleCollapse = onCollapseOverride ?? actions.collapse;
 
   // Collapsed state - show expand tab
   if (!isExpanded) {
@@ -132,8 +150,8 @@ export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
       <div style={headerZoneStyle}>
         <PaneHeader
           activeView={activeView}
-          onViewChange={actions.switchView}
-          onCollapse={actions.collapse}
+          onViewChange={handleViewChange}
+          onCollapse={handleCollapse}
           showTranscript={hasTranscriptionSession}
         />
         <div style={gradientOverlayStyle} />

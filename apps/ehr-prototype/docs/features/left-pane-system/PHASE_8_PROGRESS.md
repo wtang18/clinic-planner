@@ -1,7 +1,7 @@
 # Phase 8: Left Pane System — Progress Tracker
 
 **Last Updated:** 2026-02-06
-**Status:** In Progress (6/10 chunks complete)
+**Status:** In Progress (7/10 chunks complete)
 
 ---
 
@@ -16,7 +16,7 @@
 | **8.4** | AI drawer footer | ✅ Complete | ☑ | QuickActionsRow, AIDrawerInput, AIDrawerFooter |
 | **8.5** | Transcription drawer view | ✅ Complete | ☑ | TranscriptionContextHeader, ViewIndicatorPill, TranscriptContent, TranscriptionControlsFooter, TranscriptionDrawerView |
 | **8.6** | Settings modal & activity log | 🔲 Not Started | ☐ | Full-screen modals for both |
-| **8.7** | Drawer ↔ bottom bar coordination | 🔲 Not Started | ☐ | De-escalation, composition, grid updates |
+| **8.7** | Drawer ↔ bottom bar coordination | ✅ Complete | ☑ | useDrawerCoordination hook, action overrides in LeftPaneContainer |
 | **8.8** | Keyboard shortcuts | 🔲 Not Started | ☐ | ⌘K and Escape updates |
 | **8.9** | Storybook stories & demo | 🔲 Not Started | ☐ | Component stories, workflow demos, a11y |
 
@@ -107,6 +107,7 @@ Track files touched during implementation:
 | `src/components/LeftPane/TranscriptionDrawer/TranscriptionControlsFooter.tsx` | 8.5 | Light-themed controls footer |
 | `src/components/LeftPane/TranscriptionDrawer/TranscriptionDrawerView.tsx` | 8.5 | Main container composing all pieces |
 | `src/components/LeftPane/TranscriptionDrawer/index.ts` | 8.5 | Barrel exports |
+| `src/hooks/useDrawerCoordination.tsx` | 8.7 | Coordination hook bridging left pane and bottom bar |
 
 ### Modified Files
 
@@ -121,6 +122,9 @@ Track files touched during implementation:
 | `src/components/LeftPane/PaneContent.tsx` | 8.3 | Added AIDrawerView integration, removed placeholder |
 | `src/components/LeftPane/LeftPaneContainer.tsx` | 8.3 | Added aiDrawerProps and aiDrawerFooter pass-through |
 | `src/components/LeftPane/index.ts` | 8.3 | Added AIDrawer exports |
+| `src/hooks/index.ts` | 8.7 | Added useDrawerCoordination exports |
+| `src/components/LeftPane/LeftPaneContainer.tsx` | 8.7 | Added onViewChange, onCollapse action overrides |
+| `src/state/leftPane/selectors.ts` | 8.7 | Fixed tier name 'minibar' → 'mini' |
 
 ---
 
@@ -155,6 +159,7 @@ Track any issues encountered or decisions made during implementation:
 |---|---|---|---|
 | 1 | TierState already had 'drawer' | No change needed - Phase 7 already added it | 8.1 |
 | 2 | typography.fontSize not available | Used inline font sizes (16, 14) for placeholder styles | 8.2 |
+| 3 | Coordination requires both providers | Created useDrawerCoordination as bridge hook; LeftPaneContainer accepts optional action overrides | 8.7 |
 
 ---
 

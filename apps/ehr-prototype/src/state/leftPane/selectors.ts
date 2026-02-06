@@ -62,7 +62,7 @@ export function deriveBottomBarVisibility(
     return {
       ai: {
         visible: true,
-        tier: aiTier === 'drawer' ? 'minibar' as Exclude<TierState, 'drawer'> : aiTier as Exclude<TierState, 'drawer'>,
+        tier: aiTier === 'drawer' ? 'mini' as Exclude<TierState, 'drawer'> : aiTier as Exclude<TierState, 'drawer'>,
       },
       transcription: {
         visible: txVisible,
