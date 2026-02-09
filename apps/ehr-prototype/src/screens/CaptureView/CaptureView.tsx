@@ -164,6 +164,9 @@ export const CaptureView: React.FC = () => {
   const openCareGaps = useOpenCareGaps();
   const pendingReviewCount = usePendingReviewCount();
 
+  // Drawer coordination (cross-surface actions)
+  const { actions } = useDrawerCoordination();
+
   // Local state for AI drawer
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
 
