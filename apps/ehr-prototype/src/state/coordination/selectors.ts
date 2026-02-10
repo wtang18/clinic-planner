@@ -17,9 +17,8 @@ export const GRID_TOKENS = {
   paletteWidth: 'var(--bottom-bar-palette-width)',
   anchorWidth: 'var(--bottom-bar-anchor-width)',
   gap: 'var(--bottom-bar-gap)',
-  barRatioTm: 'var(--bottom-bar-bar-ratio-tm)',
-  barRatioAi: 'var(--bottom-bar-bar-ratio-ai)',
-  minTmBar: 'var(--bottom-bar-min-tm-bar)',
+  barWidthTm: 'var(--bottom-bar-bar-width-tm)',
+  barWidthAi: 'var(--bottom-bar-bar-width-ai)',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -95,7 +94,7 @@ export function selectGridTemplate(state: CoordinationState): string {
   }
 
   // Both at bar (E1/E2): proportional with TM having min floor
-  return `minmax(${GRID_TOKENS.minTmBar}, ${GRID_TOKENS.barRatioTm}) ${GRID_TOKENS.gap} ${GRID_TOKENS.barRatioAi}`;
+  return `${GRID_TOKENS.barWidthTm} ${GRID_TOKENS.gap} ${GRID_TOKENS.barWidthAi}`;
 }
 
 // ---------------------------------------------------------------------------

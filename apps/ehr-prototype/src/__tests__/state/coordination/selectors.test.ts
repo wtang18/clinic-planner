@@ -108,15 +108,14 @@ describe('selectGridTemplate', () => {
     expect(selectGridTemplate(S.N5)).toBe('none');
   });
 
-  // Two-column: both at bar (proportional)
+  // Two-column: both at bar (fixed widths)
   it.each([['E1', S.E1], ['E2', S.E2]])(
-    '%s: both at bar → proportional grid',
+    '%s: both at bar → fixed-width grid',
     (id, state) => {
       const template = selectGridTemplate(state);
-      expect(template).toContain(GRID_TOKENS.barRatioTm);
-      expect(template).toContain(GRID_TOKENS.barRatioAi);
-      expect(template).toContain(GRID_TOKENS.minTmBar);
-      expect(template).toContain(GRID_TOKENS.gap);
+      expect(template).toBe(
+        `${GRID_TOKENS.barWidthTm} ${GRID_TOKENS.gap} ${GRID_TOKENS.barWidthAi}`
+      );
     }
   );
 

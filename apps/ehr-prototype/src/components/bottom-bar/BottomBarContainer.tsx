@@ -1,43 +1,36 @@
 /**
- * BottomBarContainer Component (Simplified)
+ * BottomBarContainer Component
  *
  * CSS Grid-based orchestrator that coordinates the Transcription and AI modules.
- * CSS Grid transition handles width animation. No state machine.
+ * Reads visibility and grid template from the coordination state machine.
  *
- * Grid Column Allocation (total always 488px):
- * - Default (both bar): '160px 320px' (gap 8px = 488px total)
- * - AI Expanded: '48px 432px' (transcription mini)
- * - Transcription Expanded: '432px 48px' (AI mini)
+ * - Modules at drawer tier are hidden (not rendered in the bottom bar).
+ * - When both modules are in drawer, the entire bar returns null.
+ * - Grid template uses CSS custom properties from coordination selectors.
  *
- * See: /docs/features/bottom-bar-system/LAYOUT_SPEC.md
+ * See: /docs/features/anchor-bar-palette-pane-system/COORDINATION_STATE_MACHINE.md
  */
 
-import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { LayoutGroup } from 'framer-motion';
+import React, { useCallback } from 'react';
 import { TranscriptionModule } from './transcription';
 import { AISurfaceModule } from './ai';
 import { useBottomBar, useTranscription, useTierControls } from '../../hooks/useBottomBar';
+import { useCoordination } from '../../hooks/useCoordination';
 import { spaceAround, zIndex } from '../../styles/foundations';
 import type { AIMinibarContent } from '../ai-ui/AIMinibar';
 import type { Suggestion, Alert } from '../../types/suggestions';
 
 // ============================================================================
-// Constants
+// Constants — CSS custom property values for coordination grid tokens
 // ============================================================================
 
-const WIDTHS = {
-  transcription: {
-    bar: 160,
-    mini: 48,
-  },
-  ai: {
-    bar: 320,
-    mini: 48,
-    expanded: 432,
-  },
-  gap: 8,
-  total: 488, // Fixed total width: 160 + 8 + 320 = 488
-} as const;
+const GRID_TOKEN_VALUES: React.CSSProperties = {
+  '--bottom-bar-palette-width': '432px',
+  '--bottom-bar-anchor-width': '48px',
+  '--bottom-bar-gap': '8px',
+  '--bottom-bar-bar-width-tm': '160px',
+  '--bottom-bar-bar-width-ai': '320px',
+} as React.CSSProperties;
 
 // ============================================================================
 // Types
@@ -94,30 +87,17 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   } = useTierControls();
   const transcription = useTranscription();
 
-  // Determine if modules are expanded (palette or drawer)
-  const aiExpanded = aiTier === 'palette' || aiTier === 'drawer';
-  const tmExpanded = transcriptionTier === 'palette' || transcriptionTier === 'drawer';
+  // Coordination state — visibility, grid template, hidden flag
+  const { bottomBarVisibility, gridTemplate: coordGridTemplate, isBottomBarHidden } = useCoordination();
 
-  // Enforce tier coordination constraints:
-  // 1. If either is at palette/drawer, the other MUST be mini
-  // 2. If neither is at palette/drawer, both MUST be bar (not mini)
-  // This prevents invalid states like minibar + micro
-  const effectiveTranscriptionTier = aiExpanded ? 'mini' : (tmExpanded ? transcriptionTier : 'bar');
-  const effectiveAITier = tmExpanded ? 'mini' : (aiExpanded ? aiTier : 'bar');
+  // Early return when both modules are in drawer
+  if (isBottomBarHidden) return null;
 
-  // Grid columns based on effective tiers
-  const getGridColumns = (): string => {
-    // AI expanded
-    if (aiExpanded) {
-      return `${WIDTHS.transcription.mini}px ${WIDTHS.ai.expanded}px`;
-    }
-    // Transcription expanded
-    if (tmExpanded) {
-      return `${WIDTHS.ai.expanded}px ${WIDTHS.ai.mini}px`;
-    }
-    // Both at bar state (default)
-    return `${WIDTHS.transcription.bar}px ${WIDTHS.ai.bar}px`;
-  };
+  // Effective tiers: modules at drawer are hidden (not rendered), so only bar/anchor/palette matter
+  const aiVisible = bottomBarVisibility.ai.visible;
+  const tmVisible = bottomBarVisibility.transcription.visible;
+  const effectiveAITier = aiVisible ? (bottomBarVisibility.ai.tier === 'anchor' ? 'mini' : bottomBarVisibility.ai.tier!) : 'bar';
+  const effectiveTranscriptionTier = tmVisible ? (bottomBarVisibility.transcription.tier === 'anchor' ? 'mini' : bottomBarVisibility.transcription.tier!) : 'bar';
 
   // Handle tier changes
   const handleAITierChange = useCallback((tier: 'bar' | 'mini' | 'palette' | 'drawer') => {
@@ -147,18 +127,17 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
     alignItems: 'flex-end',
   };
 
-  // Fixed-width wrapper - overflow hidden clips any animation timing mismatches
+  // Wrapper — uses CSS custom properties for coordination grid tokens
   const gridWrapperStyle: React.CSSProperties = {
-    width: WIDTHS.total,
-    overflow: 'hidden',  // Clip overflow during micro ↔ palette transitions
+    width: 'max-content',
+    ...GRID_TOKEN_VALUES,
   };
 
-  // CSS Grid with transition matching module animation timing (200ms).
-  // Grid columns animate in sync with module width animations.
+  // CSS Grid with coordination-driven template.
+  // Gap is encoded as a column in the grid template (not CSS `gap`).
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: getGridColumns(),
-    gap: WIDTHS.gap,
+    gridTemplateColumns: coordGridTemplate,
     alignItems: 'flex-end',
     pointerEvents: 'auto',
     transition: 'grid-template-columns 200ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -173,39 +152,44 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
     <div style={containerStyle} data-testid={testID}>
       <div style={innerStyle}>
         <div style={gridWrapperStyle}>
-          <LayoutGroup>
             <div style={gridStyle}>
-              {/* Transcription Module (Left) */}
-              <TranscriptionModule
-                tier={effectiveTranscriptionTier}
-                session={activeSession}
-                onTierChange={handleTranscriptionTierChange}
-                onStart={transcription.start}
-                onPause={transcription.pause}
-                onResume={transcription.resume}
-                onStop={transcription.stop}
-                onDiscard={transcription.discard}
-                isEnabled={transcriptionEnabled}
-                testID="transcription-module"
-              />
+              {/* Transcription Module (Left) — hidden when in drawer */}
+              {tmVisible && (
+                <TranscriptionModule
+                  tier={effectiveTranscriptionTier}
+                  session={activeSession}
+                  onTierChange={handleTranscriptionTierChange}
+                  onStart={transcription.start}
+                  onPause={transcription.pause}
+                  onResume={transcription.resume}
+                  onStop={transcription.stop}
+                  onDiscard={transcription.discard}
+                  isEnabled={transcriptionEnabled}
+                  testID="transcription-module"
+                />
+              )}
 
-              {/* AI Module (Right) */}
-              <AISurfaceModule
-                tier={effectiveAITier}
-                content={aiContent}
-                onTierChange={handleAITierChange}
-                suggestions={suggestions}
-                alerts={alerts}
-                onSuggestionAccept={onSuggestionAccept}
-                onSuggestionDismiss={onSuggestionDismiss}
-                onAlertAcknowledge={onAlertAcknowledge}
-                onGenerateNote={onGenerateNote}
-                onCheckInteractions={onCheckInteractions}
-                badgeCount={badgeCount > 0 ? badgeCount : undefined}
-                testID="ai-module"
-              />
+              {/* Gap column — rendered as empty div when two-column */}
+              {tmVisible && aiVisible && <div />}
+
+              {/* AI Module (Right) — hidden when in drawer */}
+              {aiVisible && (
+                <AISurfaceModule
+                  tier={effectiveAITier}
+                  content={aiContent}
+                  onTierChange={handleAITierChange}
+                  suggestions={suggestions}
+                  alerts={alerts}
+                  onSuggestionAccept={onSuggestionAccept}
+                  onSuggestionDismiss={onSuggestionDismiss}
+                  onAlertAcknowledge={onAlertAcknowledge}
+                  onGenerateNote={onGenerateNote}
+                  onCheckInteractions={onCheckInteractions}
+                  badgeCount={badgeCount > 0 ? badgeCount : undefined}
+                  testID="ai-module"
+                />
+              )}
             </div>
-          </LayoutGroup>
         </div>
       </div>
     </div>
