@@ -21,25 +21,20 @@ import { useWorkspace } from '../../context/WorkspaceContext';
 import { getPatientByMrn } from '../../scenarios/patientData';
 import {
   selectCaptureViewData,
-  selectMinibarData,
 } from '../../state/selectors/views';
 
 import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
 import { MenuPane } from '../../components/layout/MenuPane';
-import { LeftPaneContainer } from '../../components/LeftPane';
+import { LeftPaneContainer, ViewIconsRow } from '../../components/LeftPane';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
-import { AIDrawer } from '../../components/layout/AIDrawer';
 import { ModeSelector } from '../../components/layout/ModeSelector';
 import { PatientIdentityHeader } from '../../components/layout/PatientIdentityHeader';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
-import { Minibar } from '../../components/ai-ui/Minibar';
-import { Palette } from '../../components/ai-ui/Palette';
-import { AIControlSurface, type AIControlMode } from '../../components/ai-ui/AIControlSurface';
-import { type AIMinibarContent } from '../../components/ai-ui/AIMinibar';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
+import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
@@ -158,45 +153,22 @@ export const CaptureView: React.FC = () => {
 
   // Selectors
   const viewData = selectCaptureViewData(state);
-  const minibarData = selectMinibarData(state);
   const items = useChartItems();
   const activeSuggestions = useActiveSuggestions();
   const openCareGaps = useOpenCareGaps();
   const pendingReviewCount = usePendingReviewCount();
 
   // Drawer coordination (cross-surface actions)
-  const { actions } = useDrawerCoordination();
+  const { paneState, barState, barActions, actions, activeSession } = useDrawerCoordination();
 
-  // Local state for AI drawer
-  const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
-
-  // AI Assistant state (tri-state: minibar/palette/drawer)
+  // AI Assistant state (content, context, loading — mode is now from coordination)
   const [aiState, aiActions] = useAIAssistant('encounter');
-
-  // Recording duration state
-  const [recordingDuration, setRecordingDuration] = useState(0);
 
   // Navigation state
   const [viewMode, setViewMode] = useState<ViewMode>('patient');
   const [todoViewState, setTodoViewState] = useState<ToDoViewState | null>(null);
   const [selectedNavItem, setSelectedNavItem] = useState<string>('');
   const [todoSearchQuery, setTodoSearchQuery] = useState<string>('');
-  const [isContextDismissed, setIsContextDismissed] = useState(false);
-
-  // Track recording duration
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (transcriptionStatus === 'recording') {
-      interval = setInterval(() => {
-        setRecordingDuration(prev => prev + 1);
-      }, 1000);
-    } else {
-      setRecordingDuration(0);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [transcriptionStatus]);
 
   // Update AI context based on view mode
   useEffect(() => {
@@ -553,6 +525,17 @@ export const CaptureView: React.FC = () => {
     }
   }, [patient?.mrn, patientOverviewData.name, workspace, encounter]);
 
+  // Create transcription session for BottomBarContainer's TranscriptionModule
+  useEffect(() => {
+    if (patient && encounter && !activeSession) {
+      barActions.createSession(encounter.id || 'enc-current', {
+        id: patient.mrn,
+        name: patientOverviewData.name,
+        initials: patient.demographics.firstName[0] + patient.demographics.lastName[0],
+      });
+    }
+  }, [patient?.mrn, encounter]);
+
   // Build patient workspaces for menu from ALL open workspaces in context
   const patientWorkspaces = useMemo(() => {
     // Get all patient workspaces from context
@@ -675,6 +658,32 @@ export const CaptureView: React.FC = () => {
     />
   );
 
+  // Enrich To-Do context content with navigation callbacks for AI minibar
+  let enrichedContent = aiState.content;
+  if (aiState.content.type === 'todo-context') {
+    enrichedContent = {
+      ...aiState.content,
+      onPrev: () => {
+        const prevItem = todoNav.navigateToPrev();
+        if (prevItem) {
+          const workspaceId = prevItem.patient.mrn;
+          const patientName = prevItem.patient.name;
+          workspace.openWorkspace(workspaceId, 'patient', patientName);
+          setSelectedNavItem(`patient-${workspaceId}`);
+        }
+      },
+      onNext: () => {
+        const nextItem = todoNav.navigateToNext();
+        if (nextItem) {
+          const workspaceId = nextItem.patient.mrn;
+          const patientName = nextItem.patient.name;
+          workspace.openWorkspace(workspaceId, 'patient', patientName);
+          setSelectedNavItem(`patient-${workspaceId}`);
+        }
+      },
+    };
+  }
+
   return (
     <>
       {/* Inject animations */}
@@ -697,7 +706,7 @@ export const CaptureView: React.FC = () => {
               onTabClose: handleTabClose,
               onWorkspaceClose: handleWorkspaceClose,
             }}
-            hasTranscriptionSession={transcriptionStatus !== 'idle'}
+            hasTranscriptionSession={!!activeSession}
             onViewChange={actions.switchView}
             onCollapse={actions.collapse}
             transcriptionDrawerProps={{
@@ -717,6 +726,13 @@ export const CaptureView: React.FC = () => {
               onSuggestionAccept: handleSuggestionAccept,
               onSuggestionDismiss: handleSuggestionDismiss,
             }}
+          />
+        }
+        menuPaneHeaderContent={
+          <ViewIconsRow
+            activeView={paneState.activeView}
+            onViewChange={actions.switchView}
+            showTranscript={!!activeSession}
           />
         }
         overviewPane={
@@ -1034,147 +1050,16 @@ export const CaptureView: React.FC = () => {
             })()}
           </CanvasPane>
         }
-        aiDrawer={
-          <AIDrawer
-            isOpen={isAIDrawerOpen}
-            onClose={() => setIsAIDrawerOpen(false)}
+        aiControlSurface={
+          <BottomBarContainer
+            aiContent={enrichedContent}
+            suggestions={activeSuggestions}
+            onSuggestionAccept={handleSuggestionAccept}
+            onSuggestionDismiss={handleSuggestionDismiss}
+            transcriptionEnabled={true}
           />
         }
-        aiControlSurface={(() => {
-          // Enrich To-Do context content with navigation callbacks
-          let enrichedContent = aiState.content;
-          if (aiState.content.type === 'todo-context') {
-            enrichedContent = {
-              ...aiState.content,
-              onPrev: () => {
-                const prevItem = todoNav.navigateToPrev();
-                if (prevItem) {
-                  const workspaceId = prevItem.patient.mrn;
-                  const patientName = prevItem.patient.name;
-                  workspace.openWorkspace(workspaceId, 'patient', patientName);
-                  setSelectedNavItem(`patient-${workspaceId}`);
-                }
-              },
-              onNext: () => {
-                const nextItem = todoNav.navigateToNext();
-                if (nextItem) {
-                  const workspaceId = nextItem.patient.mrn;
-                  const patientName = nextItem.patient.name;
-                  workspace.openWorkspace(workspaceId, 'patient', patientName);
-                  setSelectedNavItem(`patient-${workspaceId}`);
-                }
-              },
-            };
-          }
-
-          // Handle quick action clicks
-          const handleQuickActionClick = (actionId: string) => {
-            switch (actionId) {
-              case 'next-item':
-                const nextItem = todoNav.navigateToNext();
-                if (nextItem) {
-                  workspace.openWorkspace(nextItem.patient.mrn, 'patient', nextItem.patient.name);
-                  setSelectedNavItem(`patient-${nextItem.patient.mrn}`);
-                }
-                aiActions.closeToPill();
-                break;
-              case 'review-chart':
-              case 'summarize-visit':
-              case 'suggest-orders':
-              case 'check-interactions':
-              case 'care-gaps':
-              case 'med-review':
-              case 'problem-list':
-              case 'whats-urgent':
-              case 'prioritize':
-              case 'summarize-day':
-                console.log('AI action:', actionId);
-                aiActions.setLoading(true, 'Processing...');
-                setTimeout(() => {
-                  aiActions.setLoading(false);
-                  aiActions.closeToPill();
-                }, 1000);
-                break;
-              case 'complete-task':
-              case 'skip-item':
-                aiActions.closeToPill();
-                break;
-              default:
-                console.log('Quick action clicked:', actionId);
-            }
-          };
-
-          // Handle AI question submission
-          const handleAskQuestion = (question: string) => {
-            console.log('AI question:', question);
-            aiActions.setLoading(true, 'Thinking...');
-            setTimeout(() => {
-              aiActions.setLoading(false);
-            }, 2000);
-          };
-
-          return (
-            <AIControlSurface
-              // Mode control
-              mode={aiState.mode as AIControlMode}
-              onModeChange={(mode) => {
-                if (mode === 'minibar') aiActions.closeToPill();
-                else if (mode === 'palette') aiActions.togglePalette();
-                else if (mode === 'drawer') setIsAIDrawerOpen(true);
-              }}
-
-              // Transcription props
-              transcriptionStatus={transcriptionStatus}
-              patientName={patientOverviewData.name}
-              patientInitials={patient.demographics.firstName[0] + patient.demographics.lastName[0]}
-              recordingDuration={recordingDuration}
-              transcriptionEnabled={true}
-              onTranscriptionToggle={handleTranscriptionToggle}
-              onTranscriptionStop={() => handleTranscriptionToggle()}
-
-              // Minibar props
-              minibarContent={enrichedContent}
-              onSuggestionClick={() => aiActions.togglePalette()}
-              onCareGapClick={() => aiActions.togglePalette()}
-
-              // Palette props
-              aiContext={aiState.context}
-              quickActions={aiActions.getQuickActions()}
-              suggestions={activeSuggestions}
-              visitType={state.context.visit?.chiefComplaint || encounter?.type}
-              onSuggestionAccept={handleSuggestionAccept}
-              onSuggestionDismiss={handleSuggestionDismiss}
-              onQuickActionClick={handleQuickActionClick}
-              onAskQuestion={handleAskQuestion}
-              isAILoading={aiState.isLoading}
-              onExpandToDrawer={() => setIsAIDrawerOpen(true)}
-              isContextDismissed={isContextDismissed}
-              onContextDismiss={() => setIsContextDismissed(!isContextDismissed)}
-            />
-          );
-        })()}
       />
-
-      {/* Legacy Palette overlay (fallback) */}
-      {isPaletteOpen && aiState.mode !== 'palette' && (
-        <div
-          style={captureViewStyles.paletteOverlay}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsPaletteOpen(false);
-            }
-          }}
-        >
-          <div style={captureViewStyles.paletteContainer}>
-            <Palette
-              isOpen={isPaletteOpen}
-              onClose={() => setIsPaletteOpen(false)}
-              onSuggestionAccept={handleSuggestionAccept}
-              onSuggestionDismiss={handleSuggestionDismiss}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Task pane overlay */}
       {isTaskPaneOpen && (

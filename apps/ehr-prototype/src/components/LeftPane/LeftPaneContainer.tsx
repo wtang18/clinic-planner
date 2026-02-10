@@ -12,11 +12,10 @@
 
 import React from 'react';
 import { PanelLeft } from 'lucide-react';
-import { PaneHeader } from './PaneHeader';
 import { PaneContent } from './PaneContent';
 import { IconButton } from '../primitives/IconButton';
 import { useLeftPane } from '../../hooks/useLeftPane';
-import { colors, transitions, spaceAround } from '../../styles/foundations';
+import { colors, spaceAround } from '../../styles/foundations';
 import type { MenuPaneProps } from '../layout/MenuPane';
 import type { AIDrawerViewProps } from './AIDrawer';
 import type { TranscriptionDrawerViewProps } from './TranscriptionDrawer';
@@ -96,76 +95,26 @@ export const LeftPaneContainer: React.FC<LeftPaneContainerProps> = ({
   aiDrawerProps,
   aiDrawerFooter,
   transcriptionDrawerProps,
-  hasTranscriptionSession = false,
-  width = 280,
-  style,
-  onViewChange: onViewChangeOverride,
-  onCollapse: onCollapseOverride,
+  // Note: hasTranscriptionSession, onViewChange, onCollapse are now handled
+  // by AdaptiveLayout's menuPaneHeaderContent (ViewIconsRow)
 }) => {
   const { state, actions } = useLeftPane();
   const { isExpanded, activeView } = state;
-
-  // Use provided overrides or default to internal actions
-  const handleViewChange = onViewChangeOverride ?? actions.switchView;
-  const handleCollapse = onCollapseOverride ?? actions.collapse;
 
   // Collapsed state - show expand tab
   if (!isExpanded) {
     return <CollapsedPaneTab onExpand={actions.expand} />;
   }
 
-  // Expanded state - full pane
-  const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    width: typeof width === 'number' ? `${width}px` : width,
-    height: '100%',
-    backgroundColor: colors.bg.neutral.base,
-    borderRight: `1px solid ${colors.border.neutral.low}`,
-    overflow: 'hidden',
-    transition: `width ${transitions.base}`,
-    ...style,
-  };
-
-  // Gradient fade for header zone (subtle, not harsh separator)
-  const headerZoneStyle: React.CSSProperties = {
-    position: 'relative',
-    flexShrink: 0,
-  };
-
-  const gradientOverlayStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 8,
-    background: `linear-gradient(to bottom, ${colors.bg.neutral.base}, transparent)`,
-    pointerEvents: 'none',
-    zIndex: 1,
-  };
-
+  // Return only PaneContent - ViewIcons are now rendered in AdaptiveLayout's header row
   return (
-    <div style={containerStyle}>
-      {/* Header zone with gradient fade */}
-      <div style={headerZoneStyle}>
-        <PaneHeader
-          activeView={activeView}
-          onViewChange={handleViewChange}
-          onCollapse={handleCollapse}
-          showTranscript={hasTranscriptionSession}
-        />
-        <div style={gradientOverlayStyle} />
-      </div>
-
-      {/* Content area */}
-      <PaneContent
-        activeView={activeView}
-        menuPaneProps={menuPaneProps}
-        aiDrawerProps={aiDrawerProps}
-        aiDrawerFooter={aiDrawerFooter}
-        transcriptionDrawerProps={transcriptionDrawerProps}
-      />
-    </div>
+    <PaneContent
+      activeView={activeView}
+      menuPaneProps={menuPaneProps}
+      aiDrawerProps={aiDrawerProps}
+      aiDrawerFooter={aiDrawerFooter}
+      transcriptionDrawerProps={transcriptionDrawerProps}
+    />
   );
 };
 

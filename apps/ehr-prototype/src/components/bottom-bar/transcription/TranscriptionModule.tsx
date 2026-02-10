@@ -6,11 +6,10 @@
  * - ContentContainer: Display (waveform, transcript, status)
  * - ControlsContainer: Actions (timer + buttons)
  *
- * 2-Stage Animation Pattern (mirrors AIM - X-first, then Y):
- * - EXPAND (bar → palette): width first (160→432), then height (48→auto)
- * - EXPAND (mini → palette): width first (48→432), then height (48→auto)
- * - COLLAPSE (palette → bar): height first (auto→48), then width (432→160)
- * - COLLAPSE (palette → mini): height first (auto→48), then width (432→48)
+ * CSS Grid drives horizontal sizing (width: 100%), framer-motion drives vertical:
+ * - EXPAND: height animates 48→auto (grid handles width)
+ * - COLLAPSE: height animates auto→48, then dispatches tier change
+ * - Anchor (48×48 pill) keeps explicit 48px width in its 48px grid cell.
  *
  * Bottom-anchored: Frame grows upward, Controls stays at baseline.
  */
@@ -65,33 +64,24 @@ export interface TranscriptionModuleProps {
 // ============================================================================
 
 /**
- * 2-Stage Animation Phases
- * Supports bar ↔ palette and mini ↔ palette transitions
+ * Animation Phases — CSS Grid handles width, framer-motion handles height only.
  *
- * EXPAND (bar → palette): width 160→432, then height 48→auto
- * EXPAND (mini → palette): width 48→432, then height 48→auto
- * COLLAPSE (palette → bar): height auto→48, then width 432→160
- * COLLAPSE (palette → mini): height auto→48, then width 432→48
+ * EXPAND: expanding-height (48→auto)
+ * COLLAPSE: collapsing-height (auto→48), then dispatch tier change
  */
 type AnimationPhase =
-  | 'idle-mini'             // Resting at mini size (48×48)
-  | 'idle-bar'              // Resting at bar size (160×48)
-  | 'expanding-width'       // Stage 1: width 160→432 (bar→palette)
-  | 'expanding-height'      // Stage 2: height 48→auto
-  | 'idle-palette'          // Resting at palette size (432×auto)
-  | 'collapsing-height'     // Stage 1: height auto→48
-  | 'collapsing-width'      // Stage 2: width 432→160 (palette→bar)
-  | 'mini-expanding-width'  // Stage 1: width 48→432 (mini→palette)
-  | 'mini-collapsing-width'; // Stage 2: width 432→48 (palette→mini)
+  | 'idle-mini'             // Resting at anchor size (48×48)
+  | 'idle-bar'              // Resting at bar size (width:100% × 48)
+  | 'expanding-height'      // Height 48→auto (grid already allocated width)
+  | 'idle-palette'          // Resting at palette size (width:100% × auto)
+  | 'collapsing-height';    // Height auto→48
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 const MICRO_SIZE = 48;
-const BAR_WIDTH = 160;
 const BAR_HEIGHT = 48;
-const PALETTE_WIDTH = 432;  // Matches AIM palette width for consistent 488px total
 const PALETTE_MAX_HEIGHT = 400;
 const CONTAINER_GAP = 2;  // Tightened to bring waveform closer to timer
 const STAGE_DURATION = 0.2; // 200ms per stage
@@ -114,10 +104,6 @@ interface MiniContentProps {
   isRecording: boolean;
   isPaused: boolean;
   isVisible: boolean;
-  /** Whether expanding from mini to bar/palette */
-  isExpanding?: boolean;
-  /** Whether collapsing from bar/palette to mini */
-  isCollapsing?: boolean;
 }
 
 /** Map recording state to BadgeStatus for micro mode */
@@ -132,47 +118,20 @@ const MiniContent: React.FC<MiniContentProps> = ({
   isRecording,
   isPaused,
   isVisible,
-  isExpanding = false,
-  isCollapsing = false,
 }) => {
   const badgeStatus = toMicroBadgeStatus(isRecording, isPaused);
-
-  // Crossfade timing:
-  // - Expanding: fade out quickly (100ms) at start
-  // - Collapsing: fade in with delay (starts at 100ms, completes at 200ms)
-  // - Normal: standard visibility toggle
-  const getOpacity = () => {
-    if (isExpanding) return 0;  // Fade out when expanding
-    if (isCollapsing) return 1; // Fade in when collapsing
-    return isVisible ? 1 : 0;
-  };
-
-  const getTransition = () => {
-    if (isExpanding) {
-      return { duration: 0.1, ease: 'easeOut' as const };
-    }
-    if (isCollapsing) {
-      return { duration: 0.1, delay: 0.1, ease: 'easeIn' as const };
-    }
-    return { duration: 0.1 };
-  };
-
-  // During collapse, pin avatar to left edge (matching bar/palette position)
-  // Only center when at idle-mini state
-  const shouldCenter = !isCollapsing;
 
   return (
     <motion.div
       initial={false}
-      animate={{ opacity: getOpacity() }}
-      transition={getTransition()}
+      animate={{ opacity: isVisible ? 1 : 0 }}
+      transition={{ duration: 0.1 }}
       style={{
         position: 'absolute',
         inset: 0,
         display: 'flex',
         alignItems: 'center',
-        justifyContent: shouldCenter ? 'center' : 'flex-start',
-        paddingLeft: shouldCenter ? 0 : 8, // Match bar mode's left padding
+        justifyContent: 'center',
       }}
     >
       {/* Avatar with patient initials (32px centered in 48px when idle) */}
@@ -221,14 +180,10 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
   // Track where we're collapsing TO (bar or mini) - set when collapse starts
   const collapseTargetRef = useRef<'bar' | 'mini'>('bar');
 
-  const isMicro = tier === 'mini';
-  const isBar = tier === 'bar';
-  const isPalette = tier === 'palette';
   const isDrawer = tier === 'drawer';
 
   const isRecording = session?.status === 'recording';
   const isPaused = session?.status === 'paused';
-  const hasActiveRecording = isRecording || isPaused;
 
   // Sync phase with external tier changes
   const prevTierRef = useRef(tier);
@@ -242,9 +197,8 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
     const isAnimating = phase.includes('expanding') || phase.includes('collapsing');
     if (isAnimating) return;
 
-    // Handle external tier changes (snap to correct phase)
+    // Handle external tier changes
     if (tier === 'mini' && phase !== 'idle-mini') {
-      // External change to mini - if from palette, start animation; otherwise snap
       if (prevTier === 'palette' && phase === 'idle-palette') {
         collapseTargetRef.current = 'mini';
         setPhase('collapsing-height');
@@ -252,14 +206,18 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
         setPhase('idle-mini');
       }
     } else if (tier === 'palette' && phase !== 'idle-palette') {
-      // External change to palette - if from mini, start animation; otherwise snap
-      if (prevTier === 'mini' && phase === 'idle-mini') {
-        setPhase('mini-expanding-width');
+      if (prevTier === 'mini' || prevTier === 'bar') {
+        setPhase('expanding-height');
       } else {
         setPhase('idle-palette');
       }
     } else if (tier === 'bar' && phase !== 'idle-bar') {
-      setPhase('idle-bar');
+      if (prevTier === 'palette' && phase === 'idle-palette') {
+        collapseTargetRef.current = 'bar';
+        setPhase('collapsing-height');
+      } else {
+        setPhase('idle-bar');
+      }
     }
   }, [tier, phase]);
 
@@ -273,89 +231,65 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
     }
   }, [phase, session]);
 
+
   // Handle mini click - expand to palette
   const handleMiniClick = useCallback(() => {
     if (phase === 'idle-mini') {
-      onTierChange('palette'); // Grid allocates space immediately
-      setPhase('mini-expanding-width'); // Start visual animation
+      onTierChange('palette');
+      setPhase('expanding-height');
     }
   }, [phase, onTierChange]);
 
-  // Handle bar click - expand to palette when active
+  // Handle bar click - expand to palette
   const handleBarClick = useCallback(() => {
-    if (phase === 'idle-bar' && hasActiveRecording) {
-      onTierChange('palette'); // Grid allocates space immediately
-      setPhase('expanding-width'); // Start visual animation
+    if (phase === 'idle-bar') {
+      onTierChange('palette');
+      setPhase('expanding-height');
     }
-  }, [phase, hasActiveRecording, onTierChange]);
+  }, [phase, onTierChange]);
 
   // Handle collapse from palette
   const handleCollapse = useCallback(() => {
     if (phase === 'idle-palette') {
-      // Determine collapse target based on whether there's active recording
-      // If recording, collapse to bar; if not, collapse to mini (or bar based on context)
-      collapseTargetRef.current = 'bar'; // Default to bar
+      collapseTargetRef.current = 'bar';
       setPhase('collapsing-height');
     }
   }, [phase]);
 
-  // Handle animation complete - progress through stages
+  // Handle animation complete
   const handleAnimationComplete = useCallback(() => {
     switch (phase) {
-      // Bar → Palette expansion
-      case 'expanding-width':
-        setPhase('expanding-height');
-        break;
-
-      // Mini → Palette expansion
-      case 'mini-expanding-width':
-        setPhase('expanding-height');
-        break;
-
       case 'expanding-height':
         setPhase('idle-palette');
         break;
 
-      // Palette → Bar/Mini collapse (height first)
       case 'collapsing-height':
         if (collapseTargetRef.current === 'mini') {
-          setPhase('mini-collapsing-width');
           onTierChange('mini');
+          setPhase('idle-mini');
         } else {
-          setPhase('collapsing-width');
           onTierChange('bar');
+          setPhase('idle-bar');
         }
-        break;
-
-      // Width collapse completion
-      case 'collapsing-width':
-        setPhase('idle-bar');
-        break;
-
-      case 'mini-collapsing-width':
-        setPhase('idle-mini');
         break;
     }
   }, [phase, onTierChange]);
 
   // Calculate dimensions based on animation phase
+  // CSS Grid drives width; modules use 100% to fill their cell.
+  // Only anchor (48×48 pill) uses explicit width.
   const getDimensions = useCallback(() => {
     switch (phase) {
       case 'idle-mini':
-      case 'mini-collapsing-width':
         return { width: MICRO_SIZE, height: MICRO_SIZE };
       case 'idle-bar':
-      case 'collapsing-width':
-        return { width: BAR_WIDTH, height: BAR_HEIGHT };
-      case 'expanding-width':
-      case 'collapsing-height':
-        return { width: PALETTE_WIDTH, height: BAR_HEIGHT };
-      case 'mini-expanding-width':
-        return { width: PALETTE_WIDTH, height: MICRO_SIZE };
+        return { width: '100%' as const, height: BAR_HEIGHT };
       case 'expanding-height':
-        return { width: PALETTE_WIDTH, height: contentHeight };
+        return { width: '100%' as const, height: contentHeight };
       case 'idle-palette':
-        return { width: PALETTE_WIDTH, height: 'auto' as const };
+        return { width: '100%' as const, height: 'auto' as const };
+      case 'collapsing-height':
+        return { width: '100%' as const, height: BAR_HEIGHT };
     }
   }, [phase, contentHeight]);
 
@@ -406,10 +340,9 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
   // ========================================
 
   // Determine visual state based on animation phase
-  const isVisuallyMini = phase === 'idle-mini' || phase === 'mini-collapsing-width';
-  const isVisuallyBar = phase === 'idle-bar' || phase === 'collapsing-width' || phase === 'expanding-width';
+  const isVisuallyMini = phase === 'idle-mini';
+  const isVisuallyBar = phase === 'idle-bar';
   const isVisuallyPalette = phase === 'idle-palette' || phase === 'expanding-height' || phase === 'collapsing-height';
-  const isTransitioningFromMini = phase === 'mini-expanding-width';
 
   const dimensions = getDimensions();
 
@@ -424,18 +357,16 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
     position: 'relative',
     display: 'flex',
     flexDirection: isVisuallyPalette ? 'column' : 'row',
-    alignItems: (isVisuallyBar || isTransitioningFromMini) ? 'center' : isVisuallyMini ? 'center' : 'stretch',
+    alignItems: isVisuallyBar ? 'center' : isVisuallyMini ? 'center' : 'stretch',
     justifyContent: isVisuallyMini ? 'center' : 'flex-start',
-    gap: (isVisuallyBar || isTransitioningFromMini) ? CONTAINER_GAP : 0,
+    gap: isVisuallyBar ? CONTAINER_GAP : 0,
     // Allow badge to extend outside in mini state, clip content in other states
     overflow: isVisuallyMini ? 'visible' : 'hidden',
     ...glass.glassDark,
     boxShadow: isVisuallyMini ? shadows.lg : undefined,
-    cursor: isVisuallyMini
+    cursor: isVisuallyMini || phase === 'idle-bar'
       ? 'pointer'
-      : (phase === 'idle-bar' && hasActiveRecording)
-        ? 'pointer'
-        : 'default',
+      : 'default',
     ...style,
   };
 
@@ -451,6 +382,7 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
   return (
     <motion.div
       ref={contentRef}
+      layout={false}
       initial={false}
       style={frameStyle}
       animate={{
@@ -459,22 +391,25 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
         maxHeight: isVisuallyPalette ? PALETTE_MAX_HEIGHT : isVisuallyMini ? MICRO_SIZE : BAR_HEIGHT,
         borderRadius: getBorderRadius(),
       }}
-      transition={stageTransition}
+      transition={{
+        height: stageTransition,
+        maxHeight: stageTransition,
+        borderRadius: stageTransition,
+        width: { duration: 0 },
+      }}
       onAnimationComplete={handleAnimationComplete}
       onClick={handleClick}
       whileHover={isVisuallyMini ? { scale: 1.05 } : undefined}
       whileTap={isVisuallyMini ? { scale: 0.95 } : undefined}
       data-testid={testID}
     >
-      {/* Mini Content - shown when visually mini or during mini transitions */}
-      {(isVisuallyMini || isTransitioningFromMini) && (
+      {/* Mini Content - shown when visually mini */}
+      {isVisuallyMini && (
         <MiniContent
           session={session}
           isRecording={isRecording}
           isPaused={isPaused}
           isVisible={isVisuallyMini}
-          isExpanding={isTransitioningFromMini}
-          isCollapsing={phase === 'mini-collapsing-width'}
         />
       )}
 

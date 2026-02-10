@@ -243,7 +243,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
       justifyContent: 'flex-end',  // Push content to right
       height: BAR_HEIGHT,
       padding: `0 ${spaceAround.tight}px 0 0`,
-      flex: 1,  // Expand to fill remaining space (shares with ContentContainer)
+      flexShrink: 0,
       ...style,
     };
 
@@ -326,8 +326,8 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
     );
   }
 
-  // Palette tier: CSS Grid for true centering without flex animation issues
-  // Grid with 3 columns: left (1fr), center (auto), right (1fr)
+  // Palette tier: Flexbox with space-between to pin controls to right edge
+  // Left: Discard (when paused), Center: Timer (flex-1), Right: Action buttons (always pinned)
   const paletteContainerStyle: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: '1fr auto 1fr',
@@ -345,7 +345,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
       data-testid={testID}
     >
       {/* Left: Discard button (when paused) */}
-      <div style={{ justifySelf: 'start' }}>
+      <div style={{ display: 'flex', gap: spaceBetween.coupled, justifyContent: 'flex-start' }}>
         {isPaused && (
           <ControlsBarButton
             label="Discard"
@@ -358,40 +358,42 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
         )}
       </div>
 
-      {/* Center: Timer - crossfades during transitions */}
-      <AnimatePresence mode="wait">
-        {showTimerWithCrossfade && (
-          <motion.div
-            key="palette-timer"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-          >
-            <RecordingStatusGroup
-              duration={duration}
-              isRecording={isRecording}
-              isPaused={isPaused}
-              showTimer={showTimer}
-              variant="palette"
-              testID={testID ? `${testID}-status-group` : undefined}
-            />
-          </motion.div>
+      {/* Center: Timer - grid auto column centers it */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <AnimatePresence mode="wait">
+          {showTimerWithCrossfade && (
+            <motion.div
+              key="palette-timer"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1 }}
+            >
+              <RecordingStatusGroup
+                duration={duration}
+                isRecording={isRecording}
+                isPaused={isPaused}
+                showTimer={showTimer}
+                variant="palette"
+                testID={testID ? `${testID}-status-group` : undefined}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {!showTimer && hasSegments && (
+          <ControlsBarStatus
+            text={`${session?.segments.length} segment${session?.segments.length === 1 ? '' : 's'}`}
+            colorScheme="dark"
+          />
         )}
-      </AnimatePresence>
-      {!showTimer && hasSegments && (
-        <ControlsBarStatus
-          text={`${session?.segments.length} segment${session?.segments.length === 1 ? '' : 's'}`}
-          colorScheme="dark"
-        />
-      )}
+      </div>
 
-      {/* Right: Action buttons */}
+      {/* Right: Action buttons - always pinned to right edge */}
       <div
         style={{
-          justifySelf: 'end',
           display: 'flex',
           gap: spaceBetween.coupled,
+          justifyContent: 'flex-end',
         }}
       >
         {/* Done button - only when paused with segments */}

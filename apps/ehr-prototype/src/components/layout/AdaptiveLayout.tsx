@@ -9,10 +9,11 @@
  * the same element as the menu toggle button (just in expanded form).
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { Platform } from 'react-native';
 import { colors, zIndex as zIndexTokens, transitions, glass, GLASS_BUTTON_RADIUS, GLASS_BUTTON_HEIGHT, LAYOUT } from '../../styles/foundations';
 import { LayoutStateProvider, useLayoutState, PaneId } from '../../context/LayoutStateContext';
+import { CoordinationContext } from '../../hooks/useCoordination';
 import { CollapsiblePane } from './CollapsiblePane';
 import { FloatingNavRow } from './FloatingNavRow';
 
@@ -41,6 +42,8 @@ export interface AdaptiveLayoutProps {
   overviewHeaderContent?: React.ReactNode;
   /** Custom header content for canvas section (contextual controls like ModeSelector) */
   canvasHeaderContent?: React.ReactNode;
+  /** Custom content rendered in the menu pane header (left of close button) */
+  menuPaneHeaderContent?: React.ReactNode;
   /** Patient identity info (shown in nav row when overview collapsed) */
   patientIdentity?: {
     name: string;
@@ -102,6 +105,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   aiControlSurface,
   overviewHeaderContent,
   canvasHeaderContent,
+  menuPaneHeaderContent,
   patientIdentity,
   isToDoView = false,
   todoTitle,
@@ -165,6 +169,23 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [togglePane, toggleAIDrawer, closeAIDrawer, aiDrawerOpen]);
+
+  // Bridge: sync menu collapse/expand to coordination state machine
+  const coordContext = React.useContext(CoordinationContext);
+  const prevMenuCollapsedRef = useRef(collapsed.menu);
+
+  useEffect(() => {
+    if (!coordContext) return; // Storybook without CoordinationProvider
+    const prev = prevMenuCollapsedRef.current;
+    prevMenuCollapsedRef.current = collapsed.menu;
+    if (prev === collapsed.menu) return; // Skip initial render
+
+    if (collapsed.menu) {
+      coordContext.dispatch({ type: 'PANE_COLLAPSED' });
+    } else {
+      coordContext.dispatch({ type: 'PANE_EXPANDED' });
+    }
+  }, [collapsed.menu, coordContext]);
 
   // ============================================================================
   // Styles
@@ -264,7 +285,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   // So button center relative to pane = 30 - 8 = 22px, button top = 22 - 22 = 0px
   const menuPaneHeaderStyle: React.CSSProperties = {
     display: 'flex',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     padding: `0 ${LAYOUT.floatingInset}px 0 0`,
     flexShrink: 0,
   };
@@ -372,6 +393,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
         >
           {/* Menu pane internal header with close toggle */}
           <div style={menuPaneHeaderStyle}>
+            {menuPaneHeaderContent}
             <MenuToggleButton
               isOpen={true}
               onClick={() => togglePane('menu')}

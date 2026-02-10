@@ -131,7 +131,8 @@ export const AvatarContainer: React.FC<AvatarContainerProps> = ({
         ? `0 ${spaceAround.compact}px`
         : `0 4px 0 ${spaceAround.tight}px`,
     overflow: 'hidden',
-    flexShrink: 0,
+    flexShrink: 1,
+    minWidth: 0,
     // Reduce bottom margin in palette to bring content closer (8px reduction)
     marginBottom: isPalette ? -spaceBetween.repeating : undefined,
     ...style,

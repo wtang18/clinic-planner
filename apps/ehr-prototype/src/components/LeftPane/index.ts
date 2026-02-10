@@ -7,8 +7,8 @@
 export { LeftPaneContainer } from './LeftPaneContainer';
 export type { LeftPaneContainerProps } from './LeftPaneContainer';
 
-export { PaneHeader } from './PaneHeader';
-export type { PaneHeaderProps } from './PaneHeader';
+export { PaneHeader, ViewIconsRow } from './PaneHeader';
+export type { PaneHeaderProps, ViewIconsRowProps } from './PaneHeader';
 
 export { PaneContent } from './PaneContent';
 export type { PaneContentProps } from './PaneContent';

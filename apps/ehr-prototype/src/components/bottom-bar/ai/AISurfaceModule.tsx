@@ -4,11 +4,10 @@
  * Single animated container that transitions between mini, bar, and palette states.
  * NO component swapping - one motion.div animates dimensions, content changes inside.
  *
- * 2-Stage Animation:
- * EXPAND (bar → palette): width first (320→432), then height (48→auto)
- * EXPAND (mini → palette): width first (48→432), then height (48→auto)
- * COLLAPSE (palette → bar): height first (auto→48), then width (432→320)
- * COLLAPSE (palette → mini): height first (auto→48), then width (432→48)
+ * CSS Grid drives horizontal sizing (width: 100%), framer-motion drives vertical:
+ * - EXPAND: height animates 48→auto (grid handles width)
+ * - COLLAPSE: height animates auto→48, then dispatches tier change
+ * - Anchor (48×48 pill) keeps explicit 48px width in its 48px grid cell.
  *
  * See: /docs/features/bottom-bar-system/LAYOUT_SPEC.md
  */
@@ -53,10 +52,7 @@ import type { Suggestion, Alert } from '../../../types/suggestions';
 // ============================================================================
 
 const MICRO_SIZE = 48;
-const BAR_WIDTH = 320;
 const BAR_HEIGHT = 48;
-const EXPANDED_WIDTH = 432;
-// Height is auto for palette, measured dynamically
 
 const STAGE_DURATION = 0.2; // 200ms per stage
 
@@ -73,19 +69,14 @@ export interface ContextTarget {
 }
 
 /**
- * 2-Stage Animation Phases
- * Supports bar ↔ palette and mini ↔ palette transitions
+ * Animation Phases — CSS Grid handles width, framer-motion handles height only.
  */
 type AnimationPhase =
-  | 'idle-mini'             // Resting at mini size (48×48)
-  | 'idle-bar'              // Resting at bar size (320×48)
-  | 'expanding-width'       // Stage 1: width 320→432 (bar→palette)
-  | 'expanding-height'      // Stage 2: height 48→auto
-  | 'idle-palette'          // Resting at palette size (432×auto)
-  | 'collapsing-height'     // Stage 1: height auto→48
-  | 'collapsing-width'      // Stage 2: width 432→320 (palette→bar)
-  | 'mini-expanding-width'  // Stage 1: width 48→432 (mini→palette)
-  | 'mini-collapsing-width'; // Stage 2: width 432→48 (palette→mini)
+  | 'idle-mini'             // Resting at anchor size (48×48)
+  | 'idle-bar'              // Resting at bar size (width:100% × 48)
+  | 'expanding-height'      // Height 48→auto (grid already allocated width)
+  | 'idle-palette'          // Resting at palette size (width:100% × auto)
+  | 'collapsing-height';    // Height auto→48
 
 export interface AISurfaceModuleProps {
   tier: TierState;
@@ -667,13 +658,12 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
 
     if (tier === 'drawer') return; // Drawer handled separately
 
-    // Skip if phase is already animating (our animation is in progress)
+    // Skip if phase is already animating
     const isAnimating = phase.includes('expanding') || phase.includes('collapsing');
     if (isAnimating) return;
 
     // Handle external tier changes
     if (tier === 'mini' && phase !== 'idle-mini') {
-      // External change to mini - if from palette, start animation; otherwise snap
       if (prevTier === 'palette' && phase === 'idle-palette') {
         collapseTargetRef.current = 'mini';
         setPhase('collapsing-height');
@@ -681,14 +671,18 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
         setPhase('idle-mini');
       }
     } else if (tier === 'palette' && phase !== 'idle-palette') {
-      // External change to palette - if from mini, start animation; otherwise snap
-      if (prevTier === 'mini' && phase === 'idle-mini') {
-        setPhase('mini-expanding-width');
+      if (prevTier === 'mini' || prevTier === 'bar') {
+        setPhase('expanding-height');
       } else {
         setPhase('idle-palette');
       }
     } else if (tier === 'bar' && phase !== 'idle-bar') {
-      setPhase('idle-bar');
+      if (prevTier === 'palette' && phase === 'idle-palette') {
+        collapseTargetRef.current = 'bar';
+        setPhase('collapsing-height');
+      } else {
+        setPhase('idle-bar');
+      }
     }
   }, [tier, phase]);
 
@@ -700,95 +694,72 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
     }
   }, [phase, suggestions]);
 
+
   // Handle mini click - expand to palette
   const handleMiniClick = useCallback(() => {
     if (phase === 'idle-mini') {
-      onTierChange('palette'); // Grid allocates space immediately
-      setPhase('mini-expanding-width'); // Start visual animation
+      onTierChange('palette');
+      setPhase('expanding-height');
     }
   }, [phase, onTierChange]);
 
   // Handle bar expand request
   const handleExpand = useCallback(() => {
     if (phase === 'idle-bar') {
-      onTierChange('palette'); // Grid allocates 432px immediately
-      setPhase('expanding-width'); // Start visual animation
+      onTierChange('palette');
+      setPhase('expanding-height');
     }
   }, [phase, onTierChange]);
 
   // Handle collapse request
   const handleCollapse = useCallback(() => {
     if (phase === 'idle-palette') {
-      collapseTargetRef.current = 'bar'; // Default to bar
-      setPhase('collapsing-height'); // Start visual animation
+      collapseTargetRef.current = 'bar';
+      setPhase('collapsing-height');
     }
   }, [phase]);
 
-  // Handle animation complete - progress through stages
+  // Handle animation complete
   const handleAnimationComplete = useCallback(() => {
     switch (phase) {
-      // Bar → Palette expansion
-      case 'expanding-width':
-        setPhase('expanding-height');
-        break;
-
-      // Mini → Palette expansion
-      case 'mini-expanding-width':
-        setPhase('expanding-height');
-        break;
-
       case 'expanding-height':
         setPhase('idle-palette');
         break;
 
-      // Palette → Bar/Mini collapse (height first)
       case 'collapsing-height':
         if (collapseTargetRef.current === 'mini') {
-          setPhase('mini-collapsing-width');
           onTierChange('mini');
+          setPhase('idle-mini');
         } else {
-          setPhase('collapsing-width');
           onTierChange('bar');
+          setPhase('idle-bar');
         }
-        break;
-
-      // Width collapse completion
-      case 'collapsing-width':
-        setPhase('idle-bar');
-        break;
-
-      case 'mini-collapsing-width':
-        setPhase('idle-mini');
         break;
     }
   }, [phase, onTierChange]);
 
   // Calculate current dimensions based on phase
+  // CSS Grid drives width; modules use 100% to fill their cell.
+  // Only anchor (48×48 pill) uses explicit width.
   const getDimensions = () => {
     switch (phase) {
       case 'idle-mini':
-      case 'mini-collapsing-width':
         return { width: MICRO_SIZE, height: MICRO_SIZE };
       case 'idle-bar':
-      case 'collapsing-width':
-        return { width: BAR_WIDTH, height: BAR_HEIGHT };
-      case 'expanding-width':
-      case 'collapsing-height':
-        return { width: EXPANDED_WIDTH, height: BAR_HEIGHT };
-      case 'mini-expanding-width':
-        return { width: EXPANDED_WIDTH, height: MICRO_SIZE };
+        return { width: '100%' as const, height: BAR_HEIGHT };
       case 'expanding-height':
-        return { width: EXPANDED_WIDTH, height: measuredHeight };
+        return { width: '100%' as const, height: measuredHeight };
       case 'idle-palette':
-        return { width: EXPANDED_WIDTH, height: 'auto' as const };
+        return { width: '100%' as const, height: 'auto' as const };
+      case 'collapsing-height':
+        return { width: '100%' as const, height: BAR_HEIGHT };
     }
   };
 
   // Determine visual state based on animation phase
-  const isVisuallyMini = phase === 'idle-mini' || phase === 'mini-collapsing-width';
-  const isVisuallyBar = phase === 'idle-bar' || phase === 'collapsing-width' || phase === 'expanding-width';
+  const isVisuallyMini = phase === 'idle-mini';
+  const isVisuallyBar = phase === 'idle-bar';
   const isVisuallyPalette = phase === 'idle-palette' || phase === 'expanding-height' || phase === 'collapsing-height';
-  const isTransitioningFromMini = phase === 'mini-expanding-width';
 
   const dimensions = getDimensions();
 
@@ -809,6 +780,7 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
   return (
     <motion.div
       ref={contentRef}
+      layout={false}
       initial={false}
       animate={{
         width: dimensions.width,
@@ -816,8 +788,9 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
         borderRadius: getBorderRadius(),
       }}
       transition={{
-        duration: STAGE_DURATION,
-        ease: [0.4, 0, 0.2, 1],
+        height: { duration: STAGE_DURATION, ease: [0.4, 0, 0.2, 1] },
+        borderRadius: { duration: STAGE_DURATION, ease: [0.4, 0, 0.2, 1] },
+        width: { duration: 0 },
       }}
       onAnimationComplete={handleAnimationComplete}
       onClick={isVisuallyMini ? handleClick : undefined}
@@ -845,7 +818,7 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
       )}
 
       {/* Minibar Content - shown when visually bar */}
-      {!isVisuallyMini && (isVisuallyBar || isTransitioningFromMini) && (
+      {!isVisuallyMini && isVisuallyBar && (
         <MinibarContent
           content={content}
           onExpand={handleExpand}
