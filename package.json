@@ -17,6 +17,7 @@
     "build:tokens": "npm run build --workspace=@carbon-health/design-tokens",
     "build:icons": "npm run generate:all --workspace=@carbon-health/design-icons",
     "storybook": "npm run storybook --workspace=clinic-planner",
+    "storybook:ehr": "storybook dev -p 6007 --config-dir ./apps/ehr-prototype/.storybook",
     "storybook:tokens": "npm run storybook --workspace=@carbon-health/design-tokens",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
