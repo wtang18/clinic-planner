@@ -25,16 +25,12 @@ export function contextReducer(
     }
     
     case 'ENCOUNTER_CLOSED': {
-      if (!action.payload.save) {
-        // Clear context when encounter closes without save
-        return {
-          encounter: null,
-          patient: null,
-          visit: null,
-        };
-      }
-      // Keep context if saved (for post-close reference)
-      return state;
+      // Always clear context when encounter closes
+      return {
+        encounter: null,
+        patient: null,
+        visit: null,
+      };
     }
     
     default:

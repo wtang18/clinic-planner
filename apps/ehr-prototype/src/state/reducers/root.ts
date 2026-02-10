@@ -4,6 +4,7 @@
 
 import type { EncounterState } from '../types';
 import type { EncounterAction } from '../actions/types';
+import type { ChartItem } from '../../types';
 import {
   itemsReducer,
   suggestionsReducer,
@@ -38,6 +39,36 @@ export function rootReducer(
   const sync = syncReducer(state.sync, action);
   const collaboration = collaborationReducer(state.collaboration, action);
   
+  // Cross-slice: SUGGESTION_ACCEPTED creates an item from the suggestion template
+  if (action.type === 'SUGGESTION_ACCEPTED') {
+    const suggestion = state.entities.suggestions[action.payload.id];
+    if (suggestion && suggestion.content.type === 'new-item') {
+      const { itemTemplate, category } = suggestion.content;
+      const now = new Date();
+      const newItem: ChartItem = {
+        id: `from-suggestion-${suggestion.id}`,
+        category,
+        status: 'confirmed',
+        displayText: itemTemplate.displayText || suggestion.displayText,
+        createdAt: now,
+        createdBy: { id: 'system', name: 'AI System' },
+        modifiedAt: now,
+        modifiedBy: { id: 'system', name: 'AI System' },
+        source: { type: 'ai-generated' },
+        tags: [],
+        linkedDiagnoses: [],
+        linkedEncounters: [],
+        _meta: { syncStatus: 'local', aiGenerated: true, requiresReview: false },
+        data: itemTemplate.data,
+        ...itemTemplate,
+        // Ensure these aren't overwritten by template
+        id: `from-suggestion-${suggestion.id}`,
+        status: 'confirmed',
+      } as ChartItem;
+      entities.items = { ...entities.items, [newItem.id]: newItem };
+    }
+  }
+
   // Special handling for ENCOUNTER_OPENED - set initial owner
   let finalCollaboration = collaboration;
   if (action.type === 'ENCOUNTER_OPENED' && session.currentUser && !collaboration.currentOwner) {

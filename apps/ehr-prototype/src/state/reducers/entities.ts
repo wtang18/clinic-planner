@@ -40,6 +40,12 @@ export function itemsReducer(
       };
     }
     
+    case 'ITEM_DELETED': {
+      const { id } = action.payload;
+      const { [id]: _, ...remaining } = state;
+      return remaining;
+    }
+
     case 'ITEM_CONFIRMED': {
       const { id } = action.payload;
       const existing = state[id];
