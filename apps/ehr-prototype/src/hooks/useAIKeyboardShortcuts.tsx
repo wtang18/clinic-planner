@@ -1,26 +1,26 @@
 /**
  * useAIKeyboardShortcuts Hook
  *
- * Handles ⌘K (AI quick access) and Escape keyboard shortcuts with
- * awareness of the left pane drawer state.
+ * Handles Cmd+K (AI quick access) and Escape keyboard shortcuts with
+ * awareness of the coordination state machine.
  *
- * ⌘K behavior (per LEFT_PANE_SYSTEM.md §8):
- * - AI drawer visible → focus drawer input
- * - AI palette open → focus palette input
- * - Otherwise → open AI palette, focus its input
+ * Cmd+K behavior (per spec S9):
+ * - AI drawer visible -> focus drawer input
+ * - AI palette open -> focus palette input
+ * - Otherwise -> dispatch CMD_K_PRESSED (opens AI palette), focus its input
  *
  * Escape behavior:
- * - AI palette open → collapse to bar
- * - TM palette open → collapse to bar
- * - AI drawer input focused → blur input
- * - Otherwise → no action (never closes left pane views)
+ * - AI palette open -> dispatch ESCAPE_PRESSED (collapse palette)
+ * - TM palette open -> dispatch ESCAPE_PRESSED (collapse palette)
+ * - AI drawer input focused -> blur input
+ * - Otherwise -> no action (never closes left pane views)
  *
- * @see LEFT_PANE_SYSTEM.md §8 for full specification
+ * @see COORDINATION_STATE_MACHINE.md S9 for full specification
  */
 
 import React, { useEffect, useRef, useCallback, useContext, createContext } from 'react';
 import { Platform } from 'react-native';
-import { useDrawerCoordination } from './useDrawerCoordination';
+import { useCoordination } from './useCoordination';
 
 // ============================================================================
 // Input Registration Context
@@ -34,7 +34,7 @@ interface AIInputRegistryContextValue {
 const AIInputRegistryContext = createContext<AIInputRegistryContextValue | null>(null);
 
 /**
- * Hook for AI input components to register themselves for ⌘K focus management.
+ * Hook for AI input components to register themselves for Cmd+K focus management.
  * Must be used within AIKeyboardShortcutsProvider.
  */
 export function useAIInputRegistry(): AIInputRegistryContextValue | null {
@@ -55,7 +55,7 @@ export interface UseAIKeyboardShortcutsReturn {
   registerDrawerInput: (ref: HTMLTextAreaElement | HTMLInputElement | null) => void;
   /** Register the AI palette input for focus management */
   registerPaletteInput: (ref: HTMLTextAreaElement | HTMLInputElement | null) => void;
-  /** Manually trigger ⌘K behavior */
+  /** Manually trigger Cmd+K behavior */
   triggerAIQuickAccess: () => void;
 }
 
@@ -67,18 +67,18 @@ export function useAIKeyboardShortcuts(
   config: AIKeyboardShortcutsConfig = {}
 ): UseAIKeyboardShortcutsReturn {
   const { enabled = true } = config;
-  const { paneState, barState, barActions } = useDrawerCoordination();
+  const { state: coordState, dispatch: coordDispatch } = useCoordination();
 
   // Refs for input elements
   const drawerInputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
   const paletteInputRef = useRef<HTMLTextAreaElement | HTMLInputElement | null>(null);
 
   /**
-   * ⌘K handler: Focus the highest-density visible AI surface
+   * Cmd+K handler: Focus the highest-density visible AI surface
    */
   const handleAIQuickAccess = useCallback(() => {
     // Priority 1: AI drawer is open in left pane
-    if (paneState.isExpanded && paneState.activeView === 'ai') {
+    if (coordState.paneExpanded && coordState.paneView === 'ai') {
       if (drawerInputRef.current) {
         drawerInputRef.current.focus();
         return;
@@ -86,41 +86,35 @@ export function useAIKeyboardShortcuts(
     }
 
     // Priority 2: AI palette is already open
-    if (barState.aiTier === 'palette') {
+    if (coordState.aiTier === 'palette') {
       if (paletteInputRef.current) {
         paletteInputRef.current.focus();
         return;
       }
     }
 
-    // Priority 3: Open AI palette and focus its input
-    barActions.setAITier('palette');
+    // Priority 3: Open AI palette via coordination and focus its input
+    coordDispatch({ type: 'CMD_K_PRESSED' });
     // Focus happens after state update - use microtask
     queueMicrotask(() => {
       if (paletteInputRef.current) {
         paletteInputRef.current.focus();
       }
     });
-  }, [paneState.isExpanded, paneState.activeView, barState.aiTier, barActions]);
+  }, [coordState.paneExpanded, coordState.paneView, coordState.aiTier, coordDispatch]);
 
   /**
    * Escape handler: De-escalate one step
    */
   const handleEscape = useCallback(() => {
-    // If AI palette is open, collapse it
-    if (barState.aiTier === 'palette') {
-      barActions.setAITier('bar');
-      return true; // Handled
-    }
-
-    // If TM palette is open, collapse it
-    if (barState.transcriptionTier === 'palette') {
-      barActions.setTranscriptionTier('bar');
+    // If any palette is open, collapse it
+    if (coordState.aiTier === 'palette' || (coordState.txEligible && coordState.txTier === 'palette')) {
+      coordDispatch({ type: 'ESCAPE_PRESSED' });
       return true; // Handled
     }
 
     // If in AI drawer and input is focused, blur it
-    if (paneState.isExpanded && paneState.activeView === 'ai') {
+    if (coordState.paneExpanded && coordState.paneView === 'ai') {
       if (
         drawerInputRef.current &&
         document.activeElement === drawerInputRef.current
@@ -133,11 +127,12 @@ export function useAIKeyboardShortcuts(
     // Don't handle - let other handlers deal with it
     return false;
   }, [
-    barState.aiTier,
-    barState.transcriptionTier,
-    paneState.isExpanded,
-    paneState.activeView,
-    barActions,
+    coordState.aiTier,
+    coordState.txTier,
+    coordState.txEligible,
+    coordState.paneExpanded,
+    coordState.paneView,
+    coordDispatch,
   ]);
 
   // Set up keyboard listener
@@ -145,7 +140,7 @@ export function useAIKeyboardShortcuts(
     if (Platform.OS !== 'web' || !enabled) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // ⌘K / Ctrl+K - AI Quick Access
+      // Cmd+K / Ctrl+K - AI Quick Access
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         handleAIQuickAccess();
@@ -200,8 +195,8 @@ export interface AIKeyboardShortcutsProviderProps {
 }
 
 /**
- * Provider that enables ⌘K and Escape keyboard shortcuts with left pane awareness.
- * Wrap your app (inside BottomBarProvider and LeftPaneProvider) with this.
+ * Provider that enables Cmd+K and Escape keyboard shortcuts with coordination awareness.
+ * Wrap your app (inside CoordinationProvider and BottomBarProvider) with this.
  *
  * AI input components should use useAIInputRegistry() to register themselves.
  */

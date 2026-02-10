@@ -4,6 +4,9 @@
  * Provides access to bottom bar state and actions for managing
  * the transcription and AI modules.
  *
+ * Tier state is sourced from CoordinationProvider (single source of truth).
+ * Session state is sourced from BottomBarProvider.
+ *
  * Includes three focused hooks:
  * - useBottomBar: Full state and dispatch access
  * - useTranscription: Recording-specific state and actions
@@ -18,7 +21,7 @@ import {
   createTranscriptionSession,
   selectActiveSession,
   selectRecordingSession,
-  selectGridTemplate,
+  selectGridTemplate as selectLegacyGridTemplate,
   selectIsRecording,
   selectActiveStatus,
   selectActiveDuration,
@@ -40,9 +43,41 @@ import type {
   SessionSummary,
   GridTemplateConfig,
 } from '../state/bottomBar';
+import { useCoordination } from './useCoordination';
+import type { TierState as CoordTierState, ModuleId } from '../state/coordination';
 
 // ============================================================================
-// Context
+// Tier Name Bridge
+// ============================================================================
+
+/**
+ * Maps coordination tier names to legacy tier names.
+ * 'anchor' (new) → 'mini' (legacy)
+ * Temporary — removed when components adopt new tier names.
+ */
+function mapTierToLegacy(tier: CoordTierState): TierState {
+  return tier === 'anchor' ? 'mini' : tier;
+}
+
+function mapTierFromLegacy(tier: TierState): CoordTierState {
+  return tier === 'mini' ? 'anchor' : tier;
+}
+
+/**
+ * Derive expandedModule from coordination state.
+ */
+function deriveExpandedModule(
+  aiTier: CoordTierState,
+  txTier: CoordTierState,
+  txEligible: boolean
+): 'transcription' | 'ai' | null {
+  if (aiTier === 'palette' || aiTier === 'drawer') return 'ai';
+  if (txEligible && (txTier === 'palette' || txTier === 'drawer')) return 'transcription';
+  return null;
+}
+
+// ============================================================================
+// Context (Session state only)
 // ============================================================================
 
 interface BottomBarContextValue {
@@ -53,7 +88,7 @@ interface BottomBarContextValue {
 const BottomBarContext = createContext<BottomBarContextValue | null>(null);
 
 // ============================================================================
-// Provider
+// Provider (Session state — tiers come from CoordinationProvider)
 // ============================================================================
 
 export interface BottomBarProviderProps {
@@ -89,14 +124,14 @@ export function BottomBarProvider({
 // ============================================================================
 
 export interface BottomBarActions {
-  // Tier controls
+  // Tier controls (dispatch to CoordinationProvider)
   setTranscriptionTier: (tier: TierState) => void;
   setAITier: (tier: TierState) => void;
   expandModule: (module: 'transcription' | 'ai') => void;
   collapseModule: (module: 'transcription' | 'ai') => void;
   collapseAll: () => void;
 
-  // Session management
+  // Session management (dispatch to BottomBarProvider)
   createSession: (
     encounterId: string,
     patient: { id: string; name: string; initials?: string }
@@ -105,7 +140,7 @@ export interface BottomBarActions {
   removeSession: (sessionId: string) => void;
   switchEncounter: (encounterId: string) => void;
 
-  // Recording controls
+  // Recording controls (dispatch to BottomBarProvider)
   startRecording: () => void;
   pauseRecording: () => void;
   resumeRecording: () => void;
@@ -127,106 +162,175 @@ export interface UseBottomBarReturn {
 }
 
 export function useBottomBar(): UseBottomBarReturn {
-  const context = useContext(BottomBarContext);
+  const bbContext = useContext(BottomBarContext);
 
-  if (!context) {
+  if (!bbContext) {
     throw new Error('useBottomBar must be used within a BottomBarProvider');
   }
 
-  const { state, dispatch } = context;
+  const { state: bbState, dispatch: bbDispatch } = bbContext;
+  const { state: coordState, dispatch: coordDispatch } = useCoordination();
 
-  // Tier controls
+  // Merge state: session data from BottomBarProvider, tiers from CoordinationProvider
+  const state: BottomBarState = useMemo(
+    () => ({
+      ...bbState,
+      transcriptionTier: mapTierToLegacy(coordState.txTier),
+      aiTier: mapTierToLegacy(coordState.aiTier),
+      expandedModule: deriveExpandedModule(coordState.aiTier, coordState.txTier, coordState.txEligible),
+    }),
+    [bbState, coordState.aiTier, coordState.txTier, coordState.txEligible]
+  );
+
+  // ---------------------------------------------------------------------------
+  // Tier controls — dispatch to CoordinationProvider
+  // Maps legacy imperative tier sets to semantic coordination actions.
+  // ---------------------------------------------------------------------------
+
   const setTranscriptionTier = useCallback(
     (tier: TierState) => {
-      dispatch({ type: 'TIER_CHANGED', payload: { module: 'transcription', tier } });
+      const coordTier = mapTierFromLegacy(tier);
+      const currentTier = coordState.txTier;
+
+      if (coordTier === currentTier) return;
+
+      if (coordTier === 'palette') {
+        if (currentTier === 'bar') {
+          coordDispatch({ type: 'BAR_TAPPED', payload: { module: 'tm' } });
+        } else if (currentTier === 'anchor') {
+          coordDispatch({ type: 'ANCHOR_TAPPED', payload: { module: 'tm' } });
+        }
+      } else if (coordTier === 'bar') {
+        if (currentTier === 'palette') {
+          coordDispatch({ type: 'PALETTE_COLLAPSED', payload: { module: 'tm' } });
+        }
+      } else if (coordTier === 'drawer') {
+        if (currentTier === 'palette') {
+          coordDispatch({ type: 'PALETTE_ESCALATED', payload: { module: 'tm' } });
+        }
+      }
     },
-    [dispatch]
+    [coordState.txTier, coordDispatch]
   );
 
   const setAITier = useCallback(
     (tier: TierState) => {
-      dispatch({ type: 'TIER_CHANGED', payload: { module: 'ai', tier } });
+      const coordTier = mapTierFromLegacy(tier);
+      const currentTier = coordState.aiTier;
+
+      if (coordTier === currentTier) return;
+
+      if (coordTier === 'palette') {
+        if (currentTier === 'bar') {
+          coordDispatch({ type: 'BAR_TAPPED', payload: { module: 'ai' } });
+        } else if (currentTier === 'anchor') {
+          coordDispatch({ type: 'ANCHOR_TAPPED', payload: { module: 'ai' } });
+        }
+      } else if (coordTier === 'bar') {
+        if (currentTier === 'palette') {
+          coordDispatch({ type: 'PALETTE_COLLAPSED', payload: { module: 'ai' } });
+        }
+      } else if (coordTier === 'drawer') {
+        if (currentTier === 'palette') {
+          coordDispatch({ type: 'PALETTE_ESCALATED', payload: { module: 'ai' } });
+        }
+      }
     },
-    [dispatch]
+    [coordState.aiTier, coordDispatch]
   );
 
   const expandModule = useCallback(
     (module: 'transcription' | 'ai') => {
-      dispatch({ type: 'MODULE_EXPANDED', payload: { module } });
+      const coordModule: ModuleId = module === 'transcription' ? 'tm' : 'ai';
+      const currentTier = coordModule === 'ai' ? coordState.aiTier : coordState.txTier;
+
+      if (currentTier === 'bar') {
+        coordDispatch({ type: 'BAR_TAPPED', payload: { module: coordModule } });
+      } else if (currentTier === 'anchor') {
+        coordDispatch({ type: 'ANCHOR_TAPPED', payload: { module: coordModule } });
+      }
     },
-    [dispatch]
+    [coordState.aiTier, coordState.txTier, coordDispatch]
   );
 
   const collapseModule = useCallback(
     (module: 'transcription' | 'ai') => {
-      dispatch({ type: 'MODULE_COLLAPSED', payload: { module } });
+      const coordModule: ModuleId = module === 'transcription' ? 'tm' : 'ai';
+      const currentTier = coordModule === 'ai' ? coordState.aiTier : coordState.txTier;
+
+      if (currentTier === 'palette') {
+        coordDispatch({ type: 'PALETTE_COLLAPSED', payload: { module: coordModule } });
+      }
     },
-    [dispatch]
+    [coordState.aiTier, coordState.txTier, coordDispatch]
   );
 
   const collapseAll = useCallback(() => {
-    dispatch({ type: 'BOTH_COLLAPSED', payload: {} });
-  }, [dispatch]);
+    coordDispatch({ type: 'ESCAPE_PRESSED' });
+  }, [coordDispatch]);
 
-  // Session management
+  // ---------------------------------------------------------------------------
+  // Session management — dispatch to BottomBarProvider
+  // ---------------------------------------------------------------------------
+
   const createSession = useCallback(
     (
       encounterId: string,
       patient: { id: string; name: string; initials?: string }
     ) => {
       const session = createTranscriptionSession(encounterId, patient, { isDemo: true });
-      dispatch({ type: 'SESSION_CREATED', payload: { session } });
+      bbDispatch({ type: 'SESSION_CREATED', payload: { session } });
     },
-    [dispatch]
+    [bbDispatch]
   );
 
   const activateSession = useCallback(
     (sessionId: string) => {
-      dispatch({ type: 'SESSION_ACTIVATED', payload: { sessionId } });
+      bbDispatch({ type: 'SESSION_ACTIVATED', payload: { sessionId } });
     },
-    [dispatch]
+    [bbDispatch]
   );
 
   const removeSession = useCallback(
     (sessionId: string) => {
-      dispatch({ type: 'SESSION_REMOVED', payload: { sessionId } });
+      bbDispatch({ type: 'SESSION_REMOVED', payload: { sessionId } });
     },
-    [dispatch]
+    [bbDispatch]
   );
 
   const switchEncounter = useCallback(
     (encounterId: string) => {
-      dispatch({ type: 'ENCOUNTER_SWITCHED', payload: { encounterId } });
+      bbDispatch({ type: 'ENCOUNTER_SWITCHED', payload: { encounterId } });
     },
-    [dispatch]
+    [bbDispatch]
   );
 
   // Recording controls
   const startRecording = useCallback(() => {
-    const activeSession = selectActiveSession(state);
+    const activeSession = selectActiveSession(bbState);
     if (activeSession) {
-      dispatch({ type: 'RECORDING_STARTED', payload: { sessionId: activeSession.id } });
+      bbDispatch({ type: 'RECORDING_STARTED', payload: { sessionId: activeSession.id } });
     }
-  }, [dispatch, state]);
+  }, [bbDispatch, bbState]);
 
   const pauseRecording = useCallback(() => {
-    const recordingSession = selectRecordingSession(state);
+    const recordingSession = selectRecordingSession(bbState);
     if (recordingSession) {
-      dispatch({ type: 'RECORDING_PAUSED', payload: { sessionId: recordingSession.id } });
+      bbDispatch({ type: 'RECORDING_PAUSED', payload: { sessionId: recordingSession.id } });
     }
-  }, [dispatch, state]);
+  }, [bbDispatch, bbState]);
 
   const resumeRecording = useCallback(() => {
-    const activeSession = selectActiveSession(state);
+    const activeSession = selectActiveSession(bbState);
     if (activeSession && activeSession.status === 'paused') {
-      dispatch({ type: 'RECORDING_RESUMED', payload: { sessionId: activeSession.id } });
+      bbDispatch({ type: 'RECORDING_RESUMED', payload: { sessionId: activeSession.id } });
     }
-  }, [dispatch, state]);
+  }, [bbDispatch, bbState]);
 
   const stopRecording = useCallback(() => {
-    const recordingSession = selectRecordingSession(state);
+    const recordingSession = selectRecordingSession(bbState);
     if (recordingSession) {
-      dispatch({
+      bbDispatch({
         type: 'RECORDING_STOPPED',
         payload: {
           sessionId: recordingSession.id,
@@ -234,14 +338,14 @@ export function useBottomBar(): UseBottomBarReturn {
         },
       });
     }
-  }, [dispatch, state]);
+  }, [bbDispatch, bbState]);
 
   const discardRecording = useCallback(() => {
-    const activeSession = selectActiveSession(state);
+    const activeSession = selectActiveSession(bbState);
     if (activeSession) {
-      dispatch({ type: 'RECORDING_DISCARDED', payload: { sessionId: activeSession.id } });
+      bbDispatch({ type: 'RECORDING_DISCARDED', payload: { sessionId: activeSession.id } });
     }
-  }, [dispatch, state]);
+  }, [bbDispatch, bbState]);
 
   const actions: BottomBarActions = useMemo(
     () => ({
@@ -261,27 +365,16 @@ export function useBottomBar(): UseBottomBarReturn {
       discardRecording,
     }),
     [
-      setTranscriptionTier,
-      setAITier,
-      expandModule,
-      collapseModule,
-      collapseAll,
-      createSession,
-      activateSession,
-      removeSession,
-      switchEncounter,
-      startRecording,
-      pauseRecording,
-      resumeRecording,
-      stopRecording,
-      discardRecording,
+      setTranscriptionTier, setAITier, expandModule, collapseModule, collapseAll,
+      createSession, activateSession, removeSession, switchEncounter,
+      startRecording, pauseRecording, resumeRecording, stopRecording, discardRecording,
     ]
   );
 
-  // Derived values
+  // Derived values (using merged state for backward compat with old selectors)
   const activeSession = useMemo(() => selectActiveSession(state), [state]);
   const recordingSession = useMemo(() => selectRecordingSession(state), [state]);
-  const gridTemplate = useMemo(() => selectGridTemplate(state), [state]);
+  const gridTemplate = useMemo(() => selectLegacyGridTemplate(state), [state]);
   const sessionSummaries = useMemo(() => selectSessionSummaries(state), [state]);
   const isRecording = useMemo(() => selectIsRecording(state), [state]);
   const canExpandTranscription = useMemo(() => selectCanExpandTranscription(state), [state]);
@@ -301,7 +394,7 @@ export function useBottomBar(): UseBottomBarReturn {
 }
 
 // ============================================================================
-// useTranscription Hook
+// useTranscription Hook (unchanged — reads from adapted useBottomBar)
 // ============================================================================
 
 export interface UseTranscriptionReturn {
@@ -363,7 +456,7 @@ export function useTranscription(): UseTranscriptionReturn {
 }
 
 // ============================================================================
-// useTierControls Hook
+// useTierControls Hook (reads tiers from coordination via adapted useBottomBar)
 // ============================================================================
 
 export interface UseTierControlsReturn {
@@ -434,7 +527,7 @@ export function useTierControls(): UseTierControlsReturn {
 }
 
 // ============================================================================
-// useDemoTranscription Hook
+// useDemoTranscription Hook (unchanged — session-only)
 // ============================================================================
 
 /**

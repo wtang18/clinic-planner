@@ -13,6 +13,7 @@ import { WorkspaceProvider } from './WorkspaceContext';
 import { DemoProvider } from '../demo/DemoContext';
 import { TourTargetProvider } from '../tour/TourTargetRegistry';
 import { NetworkStatusBanner } from '../errors/NetworkStatusBanner';
+import { CoordinationProvider } from '../hooks/useCoordination';
 import { BottomBarProvider } from '../hooks/useBottomBar';
 import { LeftPaneProvider } from '../hooks/useLeftPane';
 import { AIKeyboardShortcutsProvider } from '../hooks/useAIKeyboardShortcuts';
@@ -56,9 +57,10 @@ export interface AppProvidersProps {
  * 4. EncounterStoreProvider - encounter state (provides store context for hooks)
  * 5. AIServicesProvider - AI service orchestration
  * 6. TranscriptionProvider - transcription service
- * 7. BottomBarProvider - bottom bar module state
- * 8. LeftPaneProvider - left pane view state
- * 9. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
+ * 7. CoordinationProvider - tier + pane coordination (single source of truth)
+ * 8. BottomBarProvider - bottom bar session state
+ * 9. LeftPaneProvider - no-op (kept for backward compat)
+ * 10. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
  * 10. TourTargetProvider - tour target registration
  * 11. NetworkStatusBanner - offline/online status
  */
@@ -82,19 +84,21 @@ export const AppProviders: React.FC<AppProvidersProps> = ({
                 useMock={useMockTranscription}
                 mockScenario={mockScenario}
               >
-                <BottomBarProvider demoMode={true}>
-                  <LeftPaneProvider>
-                    <AIKeyboardShortcutsProvider>
-                      <TourTargetProvider>
-                        {showNetworkStatus ? (
-                          <NetworkStatusBanner>{children}</NetworkStatusBanner>
-                        ) : (
-                          children
-                        )}
-                      </TourTargetProvider>
-                    </AIKeyboardShortcutsProvider>
-                  </LeftPaneProvider>
-                </BottomBarProvider>
+                <CoordinationProvider initialState={{ txEligible: true }}>
+                  <BottomBarProvider demoMode={true}>
+                    <LeftPaneProvider>
+                      <AIKeyboardShortcutsProvider>
+                        <TourTargetProvider>
+                          {showNetworkStatus ? (
+                            <NetworkStatusBanner>{children}</NetworkStatusBanner>
+                          ) : (
+                            children
+                          )}
+                        </TourTargetProvider>
+                      </AIKeyboardShortcutsProvider>
+                    </LeftPaneProvider>
+                  </BottomBarProvider>
+                </CoordinationProvider>
               </TranscriptionProvider>
             </AIServicesProvider>
           </EncounterStoreProvider>

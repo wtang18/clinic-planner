@@ -17,6 +17,7 @@
 
 import React, { useEffect, ReactNode } from 'react';
 import { BottomBarProvider as StateProvider, useBottomBar } from '../../hooks/useBottomBar';
+import { CoordinationProvider } from '../../hooks/useCoordination';
 import { BottomBarContainer } from './BottomBarContainer';
 import type { BottomBarState } from '../../state/bottomBar/types';
 import type { AIMinibarContent } from '../ai-ui/AIMinibar';
@@ -158,6 +159,7 @@ export const BottomBarSystem: React.FC<BottomBarSystemProps> = ({
   showBottomBar = true,
 }) => {
   return (
+    <CoordinationProvider initialState={{ txEligible: true }}>
     <StateProvider initialState={initialState}>
       <BottomBarInner
         encounterId={encounterId}
@@ -176,6 +178,7 @@ export const BottomBarSystem: React.FC<BottomBarSystemProps> = ({
         {children}
       </BottomBarInner>
     </StateProvider>
+    </CoordinationProvider>
   );
 };
 

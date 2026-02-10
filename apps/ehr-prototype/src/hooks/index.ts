@@ -183,4 +183,15 @@ export type {
   AIKeyboardShortcutsProviderProps,
 } from './useAIKeyboardShortcuts';
 
+// Coordination Provider (single source of truth for tiers + pane)
+export {
+  CoordinationProvider,
+  CoordinationContext,
+  useCoordination,
+} from './useCoordination';
+export type {
+  CoordinationProviderProps,
+  UseCoordinationReturn,
+} from './useCoordination';
+
 // Note: useSynchronizedTransition removed - using CSS Grid transitions instead

@@ -5,6 +5,7 @@ import {
   BottomBarContainer,
 } from '../../components/bottom-bar';
 import { BottomBarProvider, useBottomBar, useTierControls, useTranscription } from '../../hooks/useBottomBar';
+import { CoordinationProvider } from '../../hooks/useCoordination';
 import {
   DEMO_PATIENTS,
   DEMO_SCENARIOS,
@@ -25,6 +26,13 @@ const meta: Meta = {
     layout: 'fullscreen',
     backgrounds: { default: 'dark' },
   },
+  decorators: [
+    (Story) => (
+      <CoordinationProvider initialState={{ txEligible: true }}>
+        <Story />
+      </CoordinationProvider>
+    ),
+  ],
 };
 
 export default meta;

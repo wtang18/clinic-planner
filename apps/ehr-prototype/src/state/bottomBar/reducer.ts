@@ -29,11 +29,16 @@ function isExpandedTier(tier: TierState): boolean {
 }
 
 /**
- * Get the default tier for a module when the other expands
+ * Get the default tier for a module when the other expands.
+ * IMPORTANT: Drawer tier is NEVER collapsed - module stays in left pane.
  */
 function getCollapsedTier(currentTier: TierState): TierState {
-  // If currently expanded, collapse to bar
-  if (isExpandedTier(currentTier)) {
+  // Drawer tier is preserved - module is in left pane, not affected by bottom bar
+  if (currentTier === 'drawer') {
+    return 'drawer';
+  }
+  // If currently at palette, collapse to bar
+  if (currentTier === 'palette') {
     return 'bar';
   }
   // If at bar, stay at bar

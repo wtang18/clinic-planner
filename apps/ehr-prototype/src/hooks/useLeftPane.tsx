@@ -1,32 +1,21 @@
 /**
  * useLeftPane Hook
  *
- * Provides access to left pane state and actions for managing
- * the multi-view left pane system.
+ * Adapter: reads pane state from CoordinationProvider.
+ * Preserves the same return types for backward compatibility.
  *
- * Includes:
- * - useLeftPane: Full state and dispatch access
- * - useLeftPaneActions: Action dispatchers only
- * - useBottomBarVisibility: Derived bottom bar visibility state
- *
+ * @see COORDINATION_STATE_MACHINE.md
  * @see LEFT_PANE_SYSTEM.md for behavioral specification
- * @see DRAWER_COORDINATION.md for coordination with bottom bar
  */
 
 import React, {
-  useReducer,
   useCallback,
   useMemo,
-  createContext,
-  useContext,
 } from 'react';
 import type { ReactNode } from 'react';
-import {
-  leftPaneReducer,
-  initialLeftPaneState,
-  deriveBottomBarVisibility,
-  selectTranscriptViewAvailable,
-} from '../state/leftPane';
+import { useCoordination } from './useCoordination';
+import { selectBottomBarVisibility } from '../state/coordination';
+import type { TierState as CoordTierState } from '../state/coordination';
 import type {
   LeftPaneState,
   LeftPaneAction,
@@ -34,44 +23,22 @@ import type {
   BottomBarVisibility,
 } from '../state/leftPane';
 import type { TierState } from '../state/bottomBar';
+import { selectTranscriptViewAvailable } from '../state/leftPane';
 
 // ============================================================================
-// Context
-// ============================================================================
-
-interface LeftPaneContextValue {
-  state: LeftPaneState;
-  dispatch: React.Dispatch<LeftPaneAction>;
-}
-
-const LeftPaneContext = createContext<LeftPaneContextValue | null>(null);
-
-// ============================================================================
-// Provider
+// Provider (no-op wrapper — kept for backward compat, Storybook)
 // ============================================================================
 
 export interface LeftPaneProviderProps {
   children: ReactNode;
-  /** Initial state override (for testing/Storybook) */
+  /** @deprecated Initial state no longer used — state comes from CoordinationProvider */
   initialState?: Partial<LeftPaneState>;
 }
 
 export function LeftPaneProvider({
   children,
-  initialState,
 }: LeftPaneProviderProps) {
-  const [state, dispatch] = useReducer(leftPaneReducer, {
-    ...initialLeftPaneState,
-    ...initialState,
-  });
-
-  const value = useMemo(() => ({ state, dispatch }), [state]);
-
-  return (
-    <LeftPaneContext.Provider value={value}>
-      {children}
-    </LeftPaneContext.Provider>
-  );
+  return <>{children}</>;
 }
 
 // ============================================================================
@@ -95,40 +62,43 @@ export interface UseLeftPaneReturn {
   /** Pane actions */
   actions: LeftPaneActions;
   /** Raw dispatch (for advanced use) */
-  dispatch: React.Dispatch<LeftPaneAction>;
+  dispatch: (action: LeftPaneAction) => void;
 }
 
 export function useLeftPane(): UseLeftPaneReturn {
-  const context = useContext(LeftPaneContext);
+  const { state: coordState, dispatch: coordDispatch } = useCoordination();
 
-  if (!context) {
-    throw new Error('useLeftPane must be used within a LeftPaneProvider');
-  }
-
-  const { state, dispatch } = context;
+  // Map coordination state to legacy LeftPaneState shape
+  const state: LeftPaneState = useMemo(
+    () => ({
+      isExpanded: coordState.paneExpanded,
+      activeView: coordState.paneView,
+    }),
+    [coordState.paneExpanded, coordState.paneView]
+  );
 
   const switchView = useCallback(
     (view: PaneView) => {
-      dispatch({ type: 'PANE_VIEW_CHANGED', payload: { to: view } });
+      coordDispatch({ type: 'PANE_VIEW_CHANGED', payload: { to: view } });
     },
-    [dispatch]
+    [coordDispatch]
   );
 
   const collapse = useCallback(() => {
-    dispatch({ type: 'PANE_COLLAPSED' });
-  }, [dispatch]);
+    coordDispatch({ type: 'PANE_COLLAPSED' });
+  }, [coordDispatch]);
 
   const expand = useCallback(() => {
-    dispatch({ type: 'PANE_EXPANDED' });
-  }, [dispatch]);
+    coordDispatch({ type: 'PANE_EXPANDED' });
+  }, [coordDispatch]);
 
   const toggle = useCallback(() => {
-    if (state.isExpanded) {
-      dispatch({ type: 'PANE_COLLAPSED' });
+    if (coordState.paneExpanded) {
+      coordDispatch({ type: 'PANE_COLLAPSED' });
     } else {
-      dispatch({ type: 'PANE_EXPANDED' });
+      coordDispatch({ type: 'PANE_EXPANDED' });
     }
-  }, [state.isExpanded, dispatch]);
+  }, [coordState.paneExpanded, coordDispatch]);
 
   const actions = useMemo(
     () => ({
@@ -140,7 +110,25 @@ export function useLeftPane(): UseLeftPaneReturn {
     [switchView, collapse, expand, toggle]
   );
 
-  return { state, actions, dispatch };
+  // Wrap coordDispatch to accept LeftPaneAction types
+  const legacyDispatch = useCallback(
+    (action: LeftPaneAction) => {
+      switch (action.type) {
+        case 'PANE_VIEW_CHANGED':
+          coordDispatch({ type: 'PANE_VIEW_CHANGED', payload: action.payload });
+          break;
+        case 'PANE_COLLAPSED':
+          coordDispatch({ type: 'PANE_COLLAPSED' });
+          break;
+        case 'PANE_EXPANDED':
+          coordDispatch({ type: 'PANE_EXPANDED' });
+          break;
+      }
+    },
+    [coordDispatch]
+  );
+
+  return { state, actions, dispatch: legacyDispatch };
 }
 
 // ============================================================================
@@ -148,13 +136,8 @@ export function useLeftPane(): UseLeftPaneReturn {
 // ============================================================================
 
 export function useLeftPaneState(): LeftPaneState {
-  const context = useContext(LeftPaneContext);
-
-  if (!context) {
-    throw new Error('useLeftPaneState must be used within a LeftPaneProvider');
-  }
-
-  return context.state;
+  const { state } = useLeftPane();
+  return state;
 }
 
 // ============================================================================
@@ -173,26 +156,37 @@ export interface UseBottomBarVisibilityParams {
 }
 
 /**
- * Derives what should be visible in the bottom bar based on pane state
- * and module tiers.
+ * Derives what should be visible in the bottom bar.
+ * Reads from CoordinationProvider's selectBottomBarVisibility.
+ *
+ * Note: params are accepted for backward compat but visibility is derived
+ * from coordination state (single source of truth).
  */
 export function useBottomBarVisibility(
   params: UseBottomBarVisibilityParams
 ): BottomBarVisibility {
-  const paneState = useLeftPaneState();
-  const { aiTier, transcriptionTier, hasTranscriptionSession, inEncounter } = params;
+  const { state: coordState } = useCoordination();
 
-  return useMemo(
-    () =>
-      deriveBottomBarVisibility(
-        paneState,
-        aiTier,
-        transcriptionTier,
-        hasTranscriptionSession,
-        inEncounter
-      ),
-    [paneState, aiTier, transcriptionTier, hasTranscriptionSession, inEncounter]
-  );
+  return useMemo(() => {
+    const vis = selectBottomBarVisibility(coordState);
+    // Map coordination tier names to legacy tier names
+    const mapTier = (tier: CoordTierState | null): Exclude<TierState, 'drawer'> | null => {
+      if (tier === null) return null;
+      if (tier === 'anchor') return 'mini';
+      return tier as Exclude<TierState, 'drawer'>;
+    };
+    return {
+      ai: {
+        visible: vis.ai.visible,
+        tier: mapTier(vis.ai.tier),
+      },
+      transcription: {
+        visible: vis.transcription.visible,
+        tier: mapTier(vis.transcription.tier),
+      },
+      layout: vis.layout,
+    };
+  }, [coordState]);
 }
 
 // ============================================================================
