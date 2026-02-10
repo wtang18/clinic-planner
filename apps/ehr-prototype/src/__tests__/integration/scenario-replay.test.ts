@@ -4,6 +4,7 @@
  * Tests for the scenario runner and demo playback functionality.
  */
 
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createStore } from '../../state/store';
 import { createInitialState } from '../../state/initialState';
 import { createScenarioRunner, type ScenarioRunner, type Scenario } from '../../scenarios';
@@ -299,7 +300,7 @@ describe('Scenario Replay Integration', () => {
 
   describe('Event Callbacks', () => {
     it('should call onEventExecuted callback', async () => {
-      const onEvent = jest.fn();
+      const onEvent = vi.fn();
       runner = createScenarioRunner(store);
       runner.onEventExecuted(onEvent);
 
@@ -317,7 +318,7 @@ describe('Scenario Replay Integration', () => {
     });
 
     it('should call onComplete callback', async () => {
-      const onComplete = jest.fn();
+      const onComplete = vi.fn();
       runner = createScenarioRunner(store);
       runner.onComplete(onComplete);
 
