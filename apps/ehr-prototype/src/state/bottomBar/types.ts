@@ -6,7 +6,7 @@
  * exclusion at the palette/drawer tier.
  *
  * Tier Hierarchy:
- * - mini (48px): Collapsed icon anchor
+ * - anchor (48px): Collapsed icon anchor
  * - bar (~160px): Default interactive state
  * - palette: Expanded overlay (~400px height)
  * - drawer: Full-height side panel
@@ -19,7 +19,7 @@ import type { TranscriptSegment } from '../../types/transcription';
 // ============================================================================
 
 /** Display tiers for bottom bar modules */
-export type TierState = 'mini' | 'bar' | 'palette' | 'drawer';
+export type TierState = 'anchor' | 'bar' | 'palette' | 'drawer';
 
 /** Which module is currently expanded (palette or drawer tier) */
 export type ExpandedModule = 'transcription' | 'ai' | null;

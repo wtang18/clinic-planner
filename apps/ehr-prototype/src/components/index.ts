@@ -38,7 +38,7 @@ export { PatientHeader } from './layout/PatientHeader';
 export { SplitPane } from './layout/SplitPane';
 
 // New Adaptive Layout System
-export { AdaptiveLayout, useLayoutState } from './layout/AdaptiveLayout';
+export { AdaptiveLayout } from './layout/AdaptiveLayout';
 export { CollapsiblePane } from './layout/CollapsiblePane';
 export { FloatingToggleButton } from './layout/FloatingToggleButton';
 export { UnifiedHeaderRow } from './layout/UnifiedHeaderRow';

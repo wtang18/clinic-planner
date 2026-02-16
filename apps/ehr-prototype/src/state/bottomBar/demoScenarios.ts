@@ -212,12 +212,12 @@ export function withTiers(
 }
 
 // Pre-configured tier scenarios
-export const SCENARIO_TRANSCRIPTION_PALETTE = withTiers(SCENARIO_RECORDING, 'palette', 'mini');
-export const SCENARIO_AI_PALETTE = withTiers(SCENARIO_RECORDING, 'mini', 'palette');
-export const SCENARIO_TRANSCRIPTION_DRAWER = withTiers(SCENARIO_WITH_SEGMENTS, 'drawer', 'mini');
+export const SCENARIO_TRANSCRIPTION_PALETTE = withTiers(SCENARIO_RECORDING, 'palette', 'anchor');
+export const SCENARIO_AI_PALETTE = withTiers(SCENARIO_RECORDING, 'anchor', 'palette');
+export const SCENARIO_TRANSCRIPTION_DRAWER = withTiers(SCENARIO_WITH_SEGMENTS, 'drawer', 'anchor');
 export const SCENARIO_BOTH_BARS = withTiers(SCENARIO_RECORDING, 'bar', 'bar');
-export const SCENARIO_TRANSCRIPTION_MINI = withTiers(SCENARIO_RECORDING, 'mini', 'bar');
-export const SCENARIO_AI_MINI = withTiers(SCENARIO_RECORDING, 'bar', 'mini');
+export const SCENARIO_TRANSCRIPTION_MINI = withTiers(SCENARIO_RECORDING, 'anchor', 'bar');
+export const SCENARIO_AI_MINI = withTiers(SCENARIO_RECORDING, 'bar', 'anchor');
 
 // ============================================================================
 // All Scenarios Map

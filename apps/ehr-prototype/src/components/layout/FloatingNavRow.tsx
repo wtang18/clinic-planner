@@ -12,7 +12,7 @@
  */
 
 import React, { useState } from 'react';
-import { Sparkles, ChevronLeft, Search } from 'lucide-react';
+import { ChevronLeft, Search } from 'lucide-react';
 import { colors, spaceBetween, transitions, zIndex as zIndexTokens, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS, LAYOUT, typography } from '../../styles/foundations';
 import { PatientIdentityHeader } from './PatientIdentityHeader';
 
@@ -25,14 +25,10 @@ export interface FloatingNavRowProps {
   menuCollapsed: boolean;
   /** Overview pane collapsed state */
   overviewCollapsed: boolean;
-  /** AI drawer open state */
-  aiDrawerOpen: boolean;
   /** Toggle menu pane */
   onToggleMenu: () => void;
   /** Toggle overview pane */
   onToggleOverview: () => void;
-  /** Toggle AI drawer */
-  onToggleAIDrawer: () => void;
   /** Menu pane width (for alignment) */
   menuWidth: number;
   /** Overview pane width (for alignment) */
@@ -85,10 +81,8 @@ const DEFAULT_HEIGHT = 60; // Increased to accommodate 44px buttons with padding
 export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   menuCollapsed,
   overviewCollapsed,
-  aiDrawerOpen,
   onToggleMenu,
   onToggleOverview,
-  onToggleAIDrawer,
   menuWidth,
   overviewWidth,
   overviewHeaderContent,
@@ -214,13 +208,6 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
       : ((menuCollapsed && overviewCollapsed) ? 0 : LAYOUT.canvasContentPadding),
     paddingRight: 16, // 16px gap before AI button
     overflow: 'hidden',
-  };
-
-  // Right zone: AI drawer toggle
-  const rightZoneStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    flexShrink: 0,
   };
 
   return (
@@ -422,32 +409,6 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
         </div>
       </div>
 
-      {/* ================================================================ */}
-      {/* RIGHT ZONE: AI drawer toggle                                     */}
-      {/* ================================================================ */}
-      <div style={rightZoneStyle}>
-        <button
-          type="button"
-          style={{
-            ...glassButtonStyle,
-            // Active state: accent background when drawer is open
-            backgroundColor: aiDrawerOpen ? colors.bg.accent.subtle : glass.button.backgroundColor,
-            color: aiDrawerOpen ? colors.fg.accent.primary : colors.fg.neutral.primary,
-          }}
-          onClick={onToggleAIDrawer}
-          onMouseEnter={(e) => {
-            if (!aiDrawerOpen) handleGlassButtonHover(e, true);
-          }}
-          onMouseLeave={(e) => {
-            if (!aiDrawerOpen) handleGlassButtonHover(e, false);
-          }}
-          aria-label={aiDrawerOpen ? 'Close AI assistant' : 'Open AI assistant'}
-          aria-expanded={aiDrawerOpen}
-          title={aiDrawerOpen ? 'Close AI assistant' : 'Open AI assistant'}
-        >
-          <Sparkles size={20} />
-        </button>
-      </div>
     </header>
   );
 };

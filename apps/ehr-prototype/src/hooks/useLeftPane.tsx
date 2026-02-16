@@ -8,14 +8,12 @@
  * @see LEFT_PANE_SYSTEM.md for behavioral specification
  */
 
-import React, {
+import {
   useCallback,
   useMemo,
 } from 'react';
-import type { ReactNode } from 'react';
 import { useCoordination } from './useCoordination';
 import { selectBottomBarVisibility } from '../state/coordination';
-import type { TierState as CoordTierState } from '../state/coordination';
 import type {
   LeftPaneState,
   LeftPaneAction,
@@ -24,22 +22,6 @@ import type {
 } from '../state/leftPane';
 import type { TierState } from '../state/bottomBar';
 import { selectTranscriptViewAvailable } from '../state/leftPane';
-
-// ============================================================================
-// Provider (no-op wrapper — kept for backward compat, Storybook)
-// ============================================================================
-
-export interface LeftPaneProviderProps {
-  children: ReactNode;
-  /** @deprecated Initial state no longer used — state comes from CoordinationProvider */
-  initialState?: Partial<LeftPaneState>;
-}
-
-export function LeftPaneProvider({
-  children,
-}: LeftPaneProviderProps) {
-  return <>{children}</>;
-}
 
 // ============================================================================
 // useLeftPane Hook
@@ -170,19 +152,14 @@ export function useBottomBarVisibility(
   return useMemo(() => {
     const vis = selectBottomBarVisibility(coordState);
     // Map coordination tier names to legacy tier names
-    const mapTier = (tier: CoordTierState | null): Exclude<TierState, 'drawer'> | null => {
-      if (tier === null) return null;
-      if (tier === 'anchor') return 'mini';
-      return tier as Exclude<TierState, 'drawer'>;
-    };
     return {
       ai: {
         visible: vis.ai.visible,
-        tier: mapTier(vis.ai.tier),
+        tier: vis.ai.tier as Exclude<TierState, 'drawer'> | null,
       },
       transcription: {
         visible: vis.transcription.visible,
-        tier: mapTier(vis.transcription.tier),
+        tier: vis.transcription.tier as Exclude<TierState, 'drawer'> | null,
       },
       layout: vis.layout,
     };

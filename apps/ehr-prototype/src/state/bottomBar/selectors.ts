@@ -138,7 +138,7 @@ export function selectIsTierActive(
  * Width values for different tiers
  */
 const TIER_WIDTHS: Record<TierState, string> = {
-  mini: '48px',
+  anchor: '48px',
   bar: '1fr',
   palette: '2fr',
   drawer: 'minmax(400px, 500px)',
@@ -180,9 +180,9 @@ export function selectGridTemplate(state: BottomBarState): GridTemplateConfig {
   // Transcription expanded, AI collapsed
   if (transcriptionTier === 'palette' || transcriptionTier === 'drawer') {
     return {
-      columns: `${TIER_WIDTHS[transcriptionTier]} ${TIER_WIDTHS.mini}`,
+      columns: `${TIER_WIDTHS[transcriptionTier]} ${TIER_WIDTHS.anchor}`,
       transcriptionWidth: TIER_WIDTHS[transcriptionTier],
-      aiWidth: TIER_WIDTHS.mini,
+      aiWidth: TIER_WIDTHS.anchor,
       gap: '8px',
     };
   }
@@ -190,28 +190,28 @@ export function selectGridTemplate(state: BottomBarState): GridTemplateConfig {
   // AI expanded, transcription collapsed
   if (aiTier === 'palette' || aiTier === 'drawer') {
     return {
-      columns: `${TIER_WIDTHS.mini} ${TIER_WIDTHS[aiTier]}`,
-      transcriptionWidth: TIER_WIDTHS.mini,
+      columns: `${TIER_WIDTHS.anchor} ${TIER_WIDTHS[aiTier]}`,
+      transcriptionWidth: TIER_WIDTHS.anchor,
       aiWidth: TIER_WIDTHS[aiTier],
       gap: '8px',
     };
   }
 
   // One at mini, one at bar
-  if (transcriptionTier === 'mini') {
+  if (transcriptionTier === 'anchor') {
     return {
-      columns: `${TIER_WIDTHS.mini} ${TIER_WIDTHS[aiTier]}`,
-      transcriptionWidth: TIER_WIDTHS.mini,
+      columns: `${TIER_WIDTHS.anchor} ${TIER_WIDTHS[aiTier]}`,
+      transcriptionWidth: TIER_WIDTHS.anchor,
       aiWidth: TIER_WIDTHS[aiTier],
       gap: '8px',
     };
   }
 
-  if (aiTier === 'mini') {
+  if (aiTier === 'anchor') {
     return {
-      columns: `${TIER_WIDTHS[transcriptionTier]} ${TIER_WIDTHS.mini}`,
+      columns: `${TIER_WIDTHS[transcriptionTier]} ${TIER_WIDTHS.anchor}`,
       transcriptionWidth: TIER_WIDTHS[transcriptionTier],
-      aiWidth: TIER_WIDTHS.mini,
+      aiWidth: TIER_WIDTHS.anchor,
       gap: '8px',
     };
   }

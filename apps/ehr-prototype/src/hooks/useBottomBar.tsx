@@ -46,23 +46,6 @@ import type {
 import { useCoordination } from './useCoordination';
 import type { TierState as CoordTierState, ModuleId } from '../state/coordination';
 
-// ============================================================================
-// Tier Name Bridge
-// ============================================================================
-
-/**
- * Maps coordination tier names to legacy tier names.
- * 'anchor' (new) → 'mini' (legacy)
- * Temporary — removed when components adopt new tier names.
- */
-function mapTierToLegacy(tier: CoordTierState): TierState {
-  return tier === 'anchor' ? 'mini' : tier;
-}
-
-function mapTierFromLegacy(tier: TierState): CoordTierState {
-  return tier === 'mini' ? 'anchor' : tier;
-}
-
 /**
  * Derive expandedModule from coordination state.
  */
@@ -175,8 +158,8 @@ export function useBottomBar(): UseBottomBarReturn {
   const state: BottomBarState = useMemo(
     () => ({
       ...bbState,
-      transcriptionTier: mapTierToLegacy(coordState.txTier),
-      aiTier: mapTierToLegacy(coordState.aiTier),
+      transcriptionTier: coordState.txTier,
+      aiTier: coordState.aiTier,
       expandedModule: deriveExpandedModule(coordState.aiTier, coordState.txTier, coordState.txEligible),
     }),
     [bbState, coordState.aiTier, coordState.txTier, coordState.txEligible]
@@ -189,7 +172,7 @@ export function useBottomBar(): UseBottomBarReturn {
 
   const setTranscriptionTier = useCallback(
     (tier: TierState) => {
-      const coordTier = mapTierFromLegacy(tier);
+      const coordTier = tier;
       const currentTier = coordState.txTier;
 
       if (coordTier === currentTier) return;
@@ -215,7 +198,7 @@ export function useBottomBar(): UseBottomBarReturn {
 
   const setAITier = useCallback(
     (tier: TierState) => {
-      const coordTier = mapTierFromLegacy(tier);
+      const coordTier = tier;
       const currentTier = coordState.aiTier;
 
       if (coordTier === currentTier) return;

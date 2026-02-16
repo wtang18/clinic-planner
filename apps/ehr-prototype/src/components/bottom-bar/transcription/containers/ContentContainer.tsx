@@ -12,7 +12,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Pause } from 'lucide-react';
 import {
   colors,
   typography,
@@ -20,7 +20,6 @@ import {
   spaceAround,
   borderRadius,
 } from '../../../../styles/foundations';
-import { WaveformIndicator } from '../WaveformIndicator';
 import type { TierState, TranscriptionSession, RecordingStatus } from '../../../../state/bottomBar/types';
 import type { TranscriptSegment } from '../../../../types/transcription';
 
@@ -62,30 +61,6 @@ function formatTime(seconds: number): string {
 // ============================================================================
 // Bar Content Components
 // ============================================================================
-
-interface BarWaveformProps {
-  isAnimating: boolean;
-}
-
-const BarWaveform: React.FC<BarWaveformProps> = ({ isAnimating }) => (
-  <motion.div
-    key="waveform"
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.8 }}
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-  >
-    <WaveformIndicator
-      isAnimating={isAnimating}
-      size="sm"
-      barCount={3}
-    />
-  </motion.div>
-);
 
 interface BarStatusTextProps {
   text: string;
@@ -168,27 +143,11 @@ const PaletteTranscript: React.FC<PaletteTranscriptProps> = ({
 
   const hasContent = segments.length > 0 || currentSegment?.text;
 
-  if (!hasContent) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100%',
-        padding: spaceAround.default,
-        color: colors.fg.neutral.inversePrimary,
-        opacity: 0.4,
-        fontSize: 13,
-        fontFamily: typography.fontFamily.sans,
-      }}>
-        {isRecording ? 'Listening...' : 'No transcript yet'}
-      </div>
-    );
-  }
-
   // Get last segment or partial for preview
   const lastSegment = segments[segments.length - 1];
-  const previewText = currentSegment?.text || lastSegment?.text || '';
+  const previewText = hasContent
+    ? (currentSegment?.text || lastSegment?.text || '')
+    : '';
 
   return (
     <motion.div
@@ -197,45 +156,52 @@ const PaletteTranscript: React.FC<PaletteTranscriptProps> = ({
       animate={{ opacity: 1 }}
       style={{
         flex: 1,
-        overflow: 'auto',
-        padding: `${spaceAround.compact}px ${spaceAround.default}px`,
+        overflow: 'hidden',
+        padding: `${spaceAround.default}px ${spaceAround.default}px`,
       }}
     >
-      {/* Waveform indicator at top */}
+      {/* Single-row: waveform + inline transcript preview */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: spaceBetween.related,
-        marginBottom: spaceBetween.related,
+        gap: 12,
       }}>
-        <WaveformIndicator
-          isAnimating={isRecording}
-          size="sm"
-          barCount={3}
-        />
+        {isRecording ? (
+          <motion.span
+            style={{
+              width: 6, height: 6,
+              borderRadius: '50%',
+              backgroundColor: '#EF4444',
+              flexShrink: 0,
+            }}
+            animate={{
+              scale: [1, 1.25, 1],
+              opacity: [1, 0.75, 1],
+              boxShadow: [
+                '0 0 0 0 rgba(239, 68, 68, 0)',
+                '0 0 6px 3px rgba(239, 68, 68, 0.4)',
+                '0 0 0 0 rgba(239, 68, 68, 0)',
+              ],
+            }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        ) : (
+          <Pause size={14} fill="currentColor" style={{ color: 'rgba(255, 255, 255, 0.5)', flexShrink: 0 }} />
+        )}
         <span style={{
-          fontSize: 12,
+          flex: 1,
+          fontSize: 13,
           fontFamily: typography.fontFamily.sans,
-          color: colors.fg.neutral.inversePrimary,
-          opacity: 0.6,
+          color: 'rgba(255, 255, 255, 0.6)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          direction: 'rtl',
+          textAlign: 'left',
         }}>
-          {isRecording ? 'Recording...' : 'Paused'}
+          {previewText || (isRecording ? 'Listening...' : 'Paused')}
         </span>
       </div>
-
-      {/* Transcript preview - single line with ellipsis */}
-      <p style={{
-        fontSize: 14,
-        fontFamily: typography.fontFamily.sans,
-        fontWeight: typography.fontWeight.regular,
-        color: colors.fg.neutral.inversePrimary,
-        opacity: currentSegment ? 0.7 : 1,
-        fontStyle: currentSegment ? 'italic' : 'normal',
-        margin: 0,
-        lineHeight: 1.5,
-      }}>
-        "{previewText}"
-      </p>
     </motion.div>
   );
 };
@@ -284,7 +250,7 @@ export const ContentContainer: React.FC<ContentContainerProps> = ({
   testID,
 }) => {
   const status = session?.status ?? 'idle';
-  const isMicro = tier === 'mini';
+  const isMicro = tier === 'anchor';
   const isBar = tier === 'bar';
   const isPalette = tier === 'palette';
 
@@ -322,7 +288,7 @@ export const ContentContainer: React.FC<ContentContainerProps> = ({
     ...style,
   };
 
-  // Bar tier content - no layout animation to prevent position jumping
+  // Bar tier content - waveform moved to ControlsContainer, only status text here
   if (isBar) {
     return (
       <div
@@ -330,17 +296,13 @@ export const ContentContainer: React.FC<ContentContainerProps> = ({
         data-testid={testID}
       >
         <AnimatePresence mode="wait">
-          {/* Waveform crossfades - only visible when not transitioning */}
-          {showWaveformWithCrossfade && (
-            <BarWaveform isAnimating={isRecording} />
-          )}
           {isProcessing && (
             <BarStatusText text="Processing..." />
           )}
           {isError && (
             <BarStatusText text={session?.error || 'Mic error'} isError />
           )}
-          {/* Idle: empty, container collapses */}
+          {/* Recording/Idle: empty spacer — waveform is in ControlsContainer */}
         </AnimatePresence>
       </div>
     );

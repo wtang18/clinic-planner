@@ -12,7 +12,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Pause, Play, RotateCcw, Trash2, Square, Settings } from 'lucide-react';
+import { Mic, Pause, Play, RotateCcw, Trash2, Settings } from 'lucide-react';
 import {
   colors,
   borderRadius,
@@ -35,6 +35,8 @@ export interface ControlsContainerProps {
   session: TranscriptionSession | null;
   /** Animation phase from parent - used for crossfade timing during transitions */
   animationPhase?: string;
+  /** Whether TM bar is full-width (AI in pane) */
+  isFullWidth?: boolean;
   /** Called to start recording */
   onStart: () => void;
   /** Called to pause recording */
@@ -183,6 +185,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
   tier,
   session,
   animationPhase,
+  isFullWidth,
   onStart,
   onPause,
   onResume,
@@ -198,7 +201,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
   const duration = session?.duration ?? 0;
   const hasSegments = (session?.segments.length ?? 0) > 0;
 
-  const isMicro = tier === 'mini';
+  const isMicro = tier === 'anchor';
   const isBar = tier === 'bar';
   const isPalette = tier === 'palette';
 
@@ -252,7 +255,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
         style={containerStyle}
         data-testid={testID}
       >
-        {/* Timer - crossfades during transitions */}
+        {/* Waveform + Timer - crossfades during transitions */}
         <AnimatePresence mode="wait">
           {showTimerWithCrossfade && (
             <motion.div
@@ -261,7 +264,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.1 }}
-              style={{ marginRight: 8 }}  // Gap between timer and button
+              style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8 }}
             >
               <RecordingStatusGroup
                 duration={duration}
@@ -282,7 +285,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<Mic size={16} />}
               label="Start"
-              showLabel={false}
+              showLabel={isFullWidth}
               variant="primary"
               onClick={onStart}
               disabled={!isEnabled}
@@ -291,9 +294,9 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
           {isRecording && (
             <UnifiedActionButton
               actionKey="primary"
-              icon={<Pause size={16} />}
+              icon={<Pause size={16} fill="currentColor" />}
               label="Pause"
-              showLabel={false}
+              showLabel={isFullWidth}
               variant="secondary"
               onClick={onPause}
             />
@@ -303,7 +306,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<Play size={16} />}
               label="Resume"
-              showLabel={false}
+              showLabel={isFullWidth}
               variant="primary"
               onClick={onResume}
             />
@@ -313,7 +316,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<RotateCcw size={16} />}
               label="Retry"
-              showLabel={false}
+              showLabel={isFullWidth}
               variant="primary"
               onClick={onRetry ?? onStart}
             />
@@ -396,28 +399,6 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
           justifyContent: 'flex-end',
         }}
       >
-        {/* Done button - only when paused with segments */}
-        <AnimatePresence mode="popLayout">
-          {isPaused && hasSegments && (
-            <motion.div
-              key="done"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.15 }}
-            >
-              <ControlsBarButton
-                label="Done"
-                icon={<Square size={14} />}
-                variant="secondary"
-                colorScheme="dark"
-                size="sm"
-                onClick={onStop}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Primary action button - uses UnifiedActionButton for smooth bar↔palette transitions */}
         {isIdle && (
           <UnifiedActionButton
@@ -433,7 +414,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
         {isRecording && (
           <UnifiedActionButton
             actionKey="primary"
-            icon={<Pause size={14} />}
+            icon={<Pause size={14} fill="currentColor" />}
             label="Pause"
             showLabel={true}
             variant="secondary"

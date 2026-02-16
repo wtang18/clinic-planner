@@ -45,8 +45,8 @@ function getCollapsedTier(currentTier: TierState): TierState {
   if (currentTier === 'bar') {
     return 'bar';
   }
-  // If at mini, stay at mini
-  return 'mini';
+  // If at anchor, stay at anchor
+  return 'anchor';
 }
 
 /**

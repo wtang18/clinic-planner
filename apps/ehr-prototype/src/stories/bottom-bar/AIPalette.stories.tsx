@@ -351,7 +351,7 @@ export const MinibarState: Story = {
  */
 export const MiniAnchorState: Story = {
   args: {
-    tier: 'mini',
+    tier: 'anchor',
     content: { type: 'idle' },
     patientName: 'Test Patient',
     badgeCount: 5,

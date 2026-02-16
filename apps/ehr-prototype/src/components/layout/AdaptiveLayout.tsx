@@ -9,11 +9,10 @@
  * the same element as the menu toggle button (just in expanded form).
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { colors, zIndex as zIndexTokens, transitions, glass, GLASS_BUTTON_RADIUS, GLASS_BUTTON_HEIGHT, LAYOUT } from '../../styles/foundations';
-import { LayoutStateProvider, useLayoutState } from '../../context/LayoutStateContext';
-import { CoordinationContext } from '../../hooks/useCoordination';
+import { useCoordination } from '../../hooks/useCoordination';
 import { CollapsiblePane } from './CollapsiblePane';
 import { FloatingNavRow } from './FloatingNavRow';
 
@@ -78,12 +77,10 @@ const OVERVIEW_WIDTH = LAYOUT.overviewWidth;
 const HEADER_HEIGHT = LAYOUT.headerHeight;
 
 // ============================================================================
-// Inner Component (needs context)
+// Component
 // ============================================================================
 
-interface AdaptiveLayoutInnerProps extends AdaptiveLayoutProps {}
-
-const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
+export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   menuPane,
   overviewPane,
   canvasPane,
@@ -104,11 +101,20 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   style,
   testID,
 }) => {
-  const {
-    collapsed,
-    setCollapsed,
-    togglePane,
-  } = useLayoutState();
+  // Menu collapse/expand: sourced from coordination state machine
+  const { state: coordState, dispatch } = useCoordination();
+  const menuCollapsed = !coordState.paneExpanded;
+
+  // Overview collapse/expand: purely local concern (no coordination involvement)
+  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+
+  const toggleMenu = useCallback(() => {
+    dispatch({ type: menuCollapsed ? 'PANE_EXPANDED' : 'PANE_COLLAPSED' });
+  }, [menuCollapsed, dispatch]);
+
+  const toggleOverview = useCallback(() => {
+    setOverviewCollapsed(prev => !prev);
+  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -121,62 +127,22 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
         return;
       }
 
+      // Cmd+Shift+\ to toggle overview (check first since it's a superset of Cmd+\)
+      if (e.metaKey && e.shiftKey && e.key === '\\') {
+        e.preventDefault();
+        toggleOverview();
+        return;
+      }
       // Cmd+\ to toggle menu
       if (e.metaKey && e.key === '\\') {
         e.preventDefault();
-        togglePane('menu');
-      }
-      // Cmd+Shift+\ to toggle overview
-      if (e.metaKey && e.shiftKey && e.key === '\\') {
-        e.preventDefault();
-        togglePane('overview');
+        toggleMenu();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePane]);
-
-  // Bidirectional bridge: sync menu collapse/expand ↔ coordination state machine
-  const coordContext = React.useContext(CoordinationContext);
-  const prevMenuCollapsedRef = useRef(collapsed.menu);
-  const programmaticMenuChangeRef = useRef(false);
-  const collapsedMenuRef = useRef(collapsed.menu);
-  collapsedMenuRef.current = collapsed.menu;
-
-  // Reverse bridge: coordination paneExpanded → collapsed.menu
-  useEffect(() => {
-    if (!coordContext) return;
-    const shouldBeOpen = coordContext.state.paneExpanded;
-    const isOpen = !collapsedMenuRef.current;
-    if (shouldBeOpen !== isOpen) {
-      programmaticMenuChangeRef.current = true;
-      setCollapsed('menu', !shouldBeOpen);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [coordContext?.state.paneExpanded, setCollapsed]);
-
-  // Forward bridge: collapsed.menu → coordination
-  useEffect(() => {
-    if (!coordContext) return;
-
-    // Skip if this menu change was driven by the reverse bridge
-    if (programmaticMenuChangeRef.current) {
-      programmaticMenuChangeRef.current = false;
-      prevMenuCollapsedRef.current = collapsed.menu;
-      return;
-    }
-
-    const prev = prevMenuCollapsedRef.current;
-    prevMenuCollapsedRef.current = collapsed.menu;
-    if (prev === collapsed.menu) return; // Skip initial render
-
-    if (collapsed.menu) {
-      coordContext.dispatch({ type: 'PANE_COLLAPSED' });
-    } else {
-      coordContext.dispatch({ type: 'PANE_EXPANDED' });
-    }
-  }, [collapsed.menu, coordContext]);
+  }, [toggleMenu, toggleOverview]);
 
   // ============================================================================
   // Styles
@@ -236,7 +202,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
     // NO paddingTop - scroll containers extend to top so content can scroll under nav
     // Margin when menu is open to keep content visible (not under menu)
     // Must account for menu inset: menuWidth + left inset
-    marginLeft: collapsed.menu ? 0 : menuWidth + MENU_INSET,
+    marginLeft: menuCollapsed ? 0 : menuWidth + MENU_INSET,
     transition: `margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1)`,
   };
 
@@ -262,10 +228,10 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
     borderRadius: GLASS_BUTTON_RADIUS, // All corners rounded (not just right side)
     border: '1px solid rgba(0, 0, 0, 0.08)', // Border on all sides
     // Animation - slide completely off-screen including inset
-    transform: collapsed.menu ? `translateX(calc(-100% - ${MENU_INSET}px))` : 'translateX(0)',
-    opacity: collapsed.menu ? 0 : 1,
+    transform: menuCollapsed ? `translateX(calc(-100% - ${MENU_INSET}px))` : 'translateX(0)',
+    opacity: menuCollapsed ? 0 : 1,
     transition: `transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1)`,
-    pointerEvents: collapsed.menu ? 'none' : 'auto',
+    pointerEvents: menuCollapsed ? 'none' : 'auto',
     display: 'flex',
     flexDirection: 'column',
   };
@@ -299,12 +265,10 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
       <div style={floatingLayerStyle}>
         {/* Floating Nav Row */}
         <FloatingNavRow
-          menuCollapsed={collapsed.menu}
-          overviewCollapsed={collapsed.overview}
-          aiDrawerOpen={false}
-          onToggleMenu={() => togglePane('menu')}
-          onToggleOverview={() => togglePane('overview')}
-          onToggleAIDrawer={() => {}}
+          menuCollapsed={menuCollapsed}
+          overviewCollapsed={overviewCollapsed}
+          onToggleMenu={toggleMenu}
+          onToggleOverview={toggleOverview}
           menuWidth={menuWidth}
           overviewWidth={overviewWidth}
           overviewHeaderContent={overviewHeaderContent}
@@ -327,14 +291,14 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
           data-testid="menu-pane"
           role="navigation"
           aria-label="Main navigation"
-          aria-hidden={collapsed.menu}
+          aria-hidden={menuCollapsed}
         >
           {/* Menu pane internal header with close toggle */}
           <div style={menuPaneHeaderStyle}>
             {menuPaneHeaderContent}
             <MenuToggleButton
               isOpen={true}
-              onClick={() => togglePane('menu')}
+              onClick={toggleMenu}
               aria-label="Close menu"
             />
           </div>
@@ -355,8 +319,8 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
             id="overview"
             width={overviewWidth}
             edge="left"
-            collapsed={collapsed.overview}
-            onToggle={() => togglePane('overview')}
+            collapsed={overviewCollapsed}
+            onToggle={toggleOverview}
             toggleLabel="Toggle patient overview"
             backgroundColor={colors.bg.neutral.min}
             testID="overview-pane"
@@ -433,19 +397,4 @@ const MenuToggleButton: React.FC<MenuToggleButtonProps> = ({
   );
 };
 
-// ============================================================================
-// Main Component (with Provider)
-// ============================================================================
-
-export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = (props) => {
-  return (
-    <LayoutStateProvider>
-      <AdaptiveLayoutInner {...props} />
-    </LayoutStateProvider>
-  );
-};
-
 AdaptiveLayout.displayName = 'AdaptiveLayout';
-
-// Export layout state hook for external use
-export { useLayoutState } from '../../context/LayoutStateContext';

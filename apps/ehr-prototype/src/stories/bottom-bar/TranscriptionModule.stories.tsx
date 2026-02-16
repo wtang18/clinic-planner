@@ -215,7 +215,7 @@ const ModuleWrapper: React.FC = () => {
       <div style={{ marginBottom: 16, color: '#fff', fontSize: 12 }}>
         Current tier: <strong>{tier}</strong>
         <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-          {(['mini', 'bar', 'palette', 'drawer'] as TierState[]).map((t) => (
+          {(['anchor', 'bar', 'palette', 'drawer'] as TierState[]).map((t) => (
             <button
               key={t}
               onClick={() => setTier(t)}
@@ -233,7 +233,7 @@ const ModuleWrapper: React.FC = () => {
           ))}
         </div>
       </div>
-      <div style={{ width: tier === 'mini' ? 48 : tier === 'bar' ? 200 : 500 }}>
+      <div style={{ width: tier === 'anchor' ? 48 : tier === 'bar' ? 200 : 500 }}>
         <TranscriptionModule
           tier={tier}
           session={session}
@@ -307,17 +307,17 @@ const Module3ContainerWrapper: React.FC<{
 // Mini tier stories
 export const ModuleMiniIdle: StoryObj = {
   name: 'Module: Mini - Idle',
-  render: () => <Module3ContainerWrapper tier="mini" status="idle" />,
+  render: () => <Module3ContainerWrapper tier="anchor" status="idle" />,
 };
 
 export const ModuleMiniRecording: StoryObj = {
   name: 'Module: Mini - Recording',
-  render: () => <Module3ContainerWrapper tier="mini" status="recording" duration={45} />,
+  render: () => <Module3ContainerWrapper tier="anchor" status="recording" duration={45} />,
 };
 
 export const ModuleMiniPaused: StoryObj = {
   name: 'Module: Mini - Paused',
-  render: () => <Module3ContainerWrapper tier="mini" status="paused" duration={120} />,
+  render: () => <Module3ContainerWrapper tier="anchor" status="paused" duration={120} />,
 };
 
 // Bar tier stories (3-container layout: Avatar | Content | Controls)

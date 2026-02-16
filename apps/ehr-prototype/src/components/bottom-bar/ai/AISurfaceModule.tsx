@@ -17,7 +17,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles,
   FileText,
-  Zap,
   X,
   CornerDownRight,
   Lightbulb,
@@ -46,6 +45,9 @@ import {
   shadows,
 } from '../../../styles/foundations';
 import type { Suggestion, Alert } from '../../../types/suggestions';
+import type { QuickAction } from '../../../hooks/useAIAssistant';
+import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
+import { SuggestionList } from '../../suggestions/SuggestionList';
 
 // ============================================================================
 // Constants
@@ -94,8 +96,8 @@ export interface AISurfaceModuleProps {
   onSuggestionDismiss?: (id: string) => void;
   onAlertAcknowledge?: (id: string) => void;
   onClearContext?: () => void;
-  onGenerateNote?: () => void;
-  onCheckInteractions?: () => void;
+  quickActions?: QuickAction[];
+  onQuickActionClick?: (actionId: string) => void;
   onSuggestionClick?: (id: string) => void;
   onCareGapClick?: (id: string) => void;
   badgeCount?: number;
@@ -419,13 +421,11 @@ interface PaletteContentProps {
   onOpenDrawer: () => void;
   onSuggestionAccept?: (id: string) => void;
   onSuggestionDismiss?: (id: string) => void;
-  onGenerateNote?: () => void;
-  onCheckInteractions?: () => void;
+  quickActions?: QuickAction[];
+  onQuickActionClick?: (actionId: string) => void;
   onClearContext?: () => void;
   isVisible: boolean;
 }
-
-const ACTION_TYPES = ['chart-item', 'care-gap-action'] as const;
 
 const PaletteContent: React.FC<PaletteContentProps> = ({
   patientName,
@@ -437,14 +437,14 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
   onOpenDrawer,
   onSuggestionAccept,
   onSuggestionDismiss,
-  onGenerateNote,
-  onCheckInteractions,
+  quickActions,
+  onQuickActionClick,
   onClearContext,
   isVisible,
 }) => {
   const activeSuggestions = suggestions.filter((s) => s.status === 'active');
   const actionSuggestions = activeSuggestions.filter((s) =>
-    ACTION_TYPES.includes(s.type as typeof ACTION_TYPES[number])
+    SUGGESTION_ACTION_TYPES.includes(s.type as typeof SUGGESTION_ACTION_TYPES[number])
   );
 
   // Context level popover state
@@ -557,46 +557,63 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
             <div style={{ fontSize: 11, fontWeight: typography.fontWeight.semibold, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
               Suggested Actions
             </div>
-            {actionSuggestions.slice(0, 3).map((s) => (
-              <div
-                key={s.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: 12,
-                  backgroundColor: 'rgba(255,255,255,0.04)',
-                  borderRadius: borderRadius.md,
-                  marginBottom: 8,
-                }}
-              >
-                <Lightbulb size={14} style={{ color: colors.fg.generative.spotReadable }} />
-                <span style={{ flex: 1, fontSize: 13, color: colors.fg.neutral.inversePrimary }}>{s.actionLabel || s.displayText}</span>
-                <button onClick={() => onSuggestionAccept(s.id)} style={{ fontSize: 12, padding: '4px 10px', backgroundColor: colors.fg.positive.secondary, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Add</button>
-                <button onClick={() => onSuggestionDismiss(s.id)} style={{ fontSize: 12, padding: '4px 10px', backgroundColor: 'transparent', color: 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer' }}>Dismiss</button>
-              </div>
-            ))}
+            <SuggestionList
+              suggestions={actionSuggestions.slice(0, 3)}
+              onAccept={(id) => onSuggestionAccept(id)}
+              onDismiss={(id) => onSuggestionDismiss(id)}
+              variant="compact"
+              theme="dark"
+              showHeader={false}
+            />
           </div>
         ) : (
           /* Quick Actions or Empty State */
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {onGenerateNote && (
-              <button onClick={onGenerateNote} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: borderRadius.md, color: colors.fg.neutral.inversePrimary, fontSize: 13, cursor: 'pointer' }}>
-                <FileText size={14} /> Generate Note
-              </button>
-            )}
-            {onCheckInteractions && (
-              <button onClick={onCheckInteractions} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: borderRadius.md, color: colors.fg.neutral.inversePrimary, fontSize: 13, cursor: 'pointer' }}>
-                <Zap size={14} /> Check Interactions
-              </button>
-            )}
-            {!onGenerateNote && !onCheckInteractions && activeSuggestions.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
-                <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
+          <>
+            {quickActions && quickActions.length > 0 && onQuickActionClick ? (
+              <div
+                className="ai-palette-actions"
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  overflowX: 'auto',
+                  margin: `0 -${spaceAround.default}px`,
+                  padding: `0 ${spaceAround.default}px`,
+                  scrollbarWidth: 'none',
+                }}
+              >
+                <style>{`.ai-palette-actions::-webkit-scrollbar { display: none; }`}</style>
+                {quickActions.map((action) => (
+                  <button
+                    key={action.id}
+                    onClick={() => onQuickActionClick(action.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 12px',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: borderRadius.md,
+                      color: colors.fg.neutral.inversePrimary,
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {action.label}
+                  </button>
+                ))}
               </div>
+            ) : (
+              activeSuggestions.length === 0 && (
+                <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
+                  <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
+                </div>
+              )
             )}
-          </div>
+          </>
         )}
       </div>
 
@@ -629,8 +646,8 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
   onSuggestionDismiss,
   onAlertAcknowledge,
   onClearContext,
-  onGenerateNote,
-  onCheckInteractions,
+  quickActions,
+  onQuickActionClick,
   onSuggestionClick,
   onCareGapClick,
   badgeCount,
@@ -639,7 +656,7 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
 }) => {
   // Initialize phase based on tier
   const getInitialPhase = (): AnimationPhase => {
-    if (tier === 'mini') return 'idle-mini';
+    if (tier === 'anchor') return 'idle-mini';
     if (tier === 'palette') return 'idle-palette';
     return 'idle-bar';
   };
@@ -648,7 +665,7 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Track where we're collapsing TO (bar or mini) - set when collapse starts
-  const collapseTargetRef = useRef<'bar' | 'mini'>('bar');
+  const collapseTargetRef = useRef<'bar' | 'anchor'>('bar');
 
   // Sync phase with external tier changes
   const prevTierRef = useRef(tier);
@@ -663,15 +680,15 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
     if (isAnimating) return;
 
     // Handle external tier changes
-    if (tier === 'mini' && phase !== 'idle-mini') {
+    if (tier === 'anchor' && phase !== 'idle-mini') {
       if (prevTier === 'palette' && phase === 'idle-palette') {
-        collapseTargetRef.current = 'mini';
+        collapseTargetRef.current = 'anchor';
         setPhase('collapsing-height');
       } else {
         setPhase('idle-mini');
       }
     } else if (tier === 'palette' && phase !== 'idle-palette') {
-      if (prevTier === 'mini' || prevTier === 'bar') {
+      if (prevTier === 'anchor' || prevTier === 'bar') {
         setPhase('expanding-height');
       } else {
         setPhase('idle-palette');
@@ -727,8 +744,8 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
         break;
 
       case 'collapsing-height':
-        if (collapseTargetRef.current === 'mini') {
-          onTierChange('mini');
+        if (collapseTargetRef.current === 'anchor') {
+          onTierChange('anchor');
           setPhase('idle-mini');
         } else {
           onTierChange('bar');
@@ -838,8 +855,8 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
           onOpenDrawer={() => onTierChange('drawer')}
           onSuggestionAccept={onSuggestionAccept}
           onSuggestionDismiss={onSuggestionDismiss}
-          onGenerateNote={onGenerateNote}
-          onCheckInteractions={onCheckInteractions}
+          quickActions={quickActions}
+          onQuickActionClick={onQuickActionClick}
           onClearContext={onClearContext}
           isVisible={isVisuallyPalette}
         />

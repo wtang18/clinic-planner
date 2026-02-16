@@ -12,11 +12,13 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PanelLeft } from 'lucide-react';
 import {
   colors,
   typography,
   spaceBetween,
   spaceAround,
+  borderRadius,
 } from '../../../../styles/foundations';
 import { AvatarWithBadge, PATIENT_COLORS } from '../AvatarWithBadge';
 import type { BadgeStatus } from '../StatusBadge';
@@ -33,6 +35,10 @@ export interface AvatarContainerProps {
   session: TranscriptionSession | null;
   /** Animation phase from parent - used for crossfade timing during transitions */
   animationPhase?: string;
+  /** Whether TM bar is full-width (AI in pane) */
+  isFullWidth?: boolean;
+  /** Called to expand to drawer/pane view */
+  onExpandToDrawer?: () => void;
   /** Patient's assigned color */
   patientColor?: string;
   /** Custom styles */
@@ -59,11 +65,13 @@ function toBadgeStatus(status: RecordingStatus): BadgeStatus {
 }
 
 /** Determine if patient name should be visible */
-function shouldShowName(tier: TierState, status: RecordingStatus): boolean {
+function shouldShowName(tier: TierState, status: RecordingStatus, isFullWidth?: boolean): boolean {
   // Always show in palette
   if (tier === 'palette') return true;
   // Never show in micro
-  if (tier === 'mini') return false;
+  if (tier === 'anchor') return false;
+  // In bar full-width: always show name (there's room)
+  if (isFullWidth) return true;
   // In bar: only show when idle
   return status === 'idle' || status === 'complete';
 }
@@ -91,13 +99,15 @@ export const AvatarContainer: React.FC<AvatarContainerProps> = ({
   tier,
   session,
   animationPhase,
+  isFullWidth,
+  onExpandToDrawer,
   patientColor = PATIENT_COLORS.blue,
   style,
   testID,
 }) => {
   const status = session?.status ?? 'idle';
   const showEncounter = false;  // Disabled - just show name for now
-  const isMicro = tier === 'mini';
+  const isMicro = tier === 'anchor';
   const isPalette = tier === 'palette';
 
   // Show badge for paused/error states in bar mode only
@@ -111,7 +121,7 @@ export const AvatarContainer: React.FC<AvatarContainerProps> = ({
     animationPhase.includes('expanding') ||
     animationPhase.includes('collapsing')
   );
-  const baseShowName = shouldShowName(tier, status);
+  const baseShowName = shouldShowName(tier, status, isFullWidth);
   // For palette, additionally hide during transitions
   const showNameWithCrossfade = isPalette
     ? baseShowName && !isTransitioning
@@ -133,8 +143,8 @@ export const AvatarContainer: React.FC<AvatarContainerProps> = ({
     overflow: 'hidden',
     flexShrink: 1,
     minWidth: 0,
-    // Reduce bottom margin in palette to bring content closer (8px reduction)
-    marginBottom: isPalette ? -spaceBetween.repeating : undefined,
+    // Reduce bottom margin in palette to bring content closer
+    marginBottom: isPalette ? -12 : undefined,
     ...style,
   };
 
@@ -209,6 +219,31 @@ export const AvatarContainer: React.FC<AvatarContainerProps> = ({
           </motion.span>
         )}
       </AnimatePresence>
+
+      {/* Expand to pane - palette only */}
+      {isPalette && onExpandToDrawer && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onExpandToDrawer(); }}
+          style={{
+            marginLeft: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 28,
+            height: 28,
+            borderRadius: borderRadius.full,
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: colors.fg.neutral.inversePrimary,
+            opacity: 0.6,
+            cursor: 'pointer',
+          }}
+          title="Open in pane"
+        >
+          <PanelLeft size={16} />
+        </button>
+      )}
     </div>
   );
 };

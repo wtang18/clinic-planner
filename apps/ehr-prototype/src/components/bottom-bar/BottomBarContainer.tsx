@@ -11,14 +11,18 @@
  * See: /docs/features/anchor-bar-palette-pane-system/COORDINATION_STATE_MACHINE.md
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { TranscriptionModule } from './transcription';
 import { AISurfaceModule } from './ai';
 import { useBottomBar, useTranscription, useTierControls } from '../../hooks/useBottomBar';
 import { useCoordination } from '../../hooks/useCoordination';
+import { useTranscription as useTranscriptionContext } from '../../context/TranscriptionContext';
 import { spaceAround, zIndex } from '../../styles/foundations';
 import type { AIMinibarContent } from '../ai-ui/AIMinibar';
 import type { Suggestion, Alert } from '../../types/suggestions';
+import type { ContextTarget, ContextTargetType } from './ai/AISurfaceModule';
+import type { QuickAction } from '../../hooks/useAIAssistant';
+import type { TranscriptionSession, RecordingStatus } from '../../state/bottomBar/types';
 
 // ============================================================================
 // Constants — CSS custom property values for coordination grid tokens
@@ -49,10 +53,18 @@ export interface BottomBarContainerProps {
   onSuggestionDismiss?: (id: string) => void;
   /** Called when an alert is acknowledged */
   onAlertAcknowledge?: (id: string) => void;
-  /** Called when generate note is clicked */
-  onGenerateNote?: () => void;
-  /** Called when check interactions is clicked */
-  onCheckInteractions?: () => void;
+  /** Patient name for AI palette context header */
+  patientName?: string;
+  /** Context target for AI palette */
+  contextTarget?: ContextTarget;
+  /** Available context levels for switching */
+  availableContextLevels?: ContextTargetType[];
+  /** Called when user selects a different context level */
+  onContextLevelChange?: (level: ContextTargetType) => void;
+  /** Quick actions for AI palette */
+  quickActions?: QuickAction[];
+  /** Called when a quick action is clicked */
+  onQuickActionClick?: (actionId: string) => void;
   /** Whether transcription is enabled */
   transcriptionEnabled?: boolean;
   /** Custom styles */
@@ -72,8 +84,12 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   onSuggestionAccept,
   onSuggestionDismiss,
   onAlertAcknowledge,
-  onGenerateNote,
-  onCheckInteractions,
+  patientName,
+  contextTarget,
+  availableContextLevels,
+  onContextLevelChange,
+  quickActions,
+  onQuickActionClick,
   transcriptionEnabled = true,
   style,
   testID = 'bottom-bar-container',
@@ -86,9 +102,67 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
     setAITier,
   } = useTierControls();
   const transcription = useTranscription();
+  const txCtx = useTranscriptionContext();
 
   // Coordination state — visibility, grid template, hidden flag
   const { bottomBarVisibility, gridTemplate: coordGridTemplate, isBottomBarHidden } = useCoordination();
+
+  // ---------------------------------------------------------------------------
+  // Bridge: overlay TranscriptionContext live data onto BottomBarProvider session
+  // so that recording started from the pane is visible in the bar, and vice versa.
+  // ---------------------------------------------------------------------------
+
+  const syncedSession = useMemo((): TranscriptionSession | null => {
+    if (!activeSession && txCtx.status === 'idle') return null;
+
+    // TranscriptionContext is active — overlay its live data
+    if (txCtx.status !== 'idle') {
+      return {
+        id: activeSession?.id ?? 'tx-ctx-bridge',
+        encounterId: activeSession?.encounterId ?? 'current',
+        patient: activeSession?.patient ?? { id: 'current', name: '', initials: '' },
+        startedAt: activeSession?.startedAt ?? null,
+        pausedAt: activeSession?.pausedAt ?? null,
+        pausedDuration: activeSession?.pausedDuration ?? 0,
+        error: activeSession?.error ?? null,
+        isDemo: activeSession?.isDemo ?? true,
+        // Overlay live TranscriptionContext state
+        status: txCtx.status as RecordingStatus,
+        duration: txCtx.duration,
+        segments: txCtx.segments,
+        currentSegment: null,
+      };
+    }
+
+    return activeSession;
+  }, [activeSession, txCtx.status, txCtx.duration, txCtx.segments]);
+
+  // Bridged controls: call both BottomBarProvider + TranscriptionContext
+  const bridgedStart = useCallback(async () => {
+    transcription.start();
+    await txCtx.start();
+  }, [transcription, txCtx]);
+
+  const bridgedPause = useCallback(() => {
+    transcription.pause();
+    txCtx.pause();
+  }, [transcription, txCtx]);
+
+  const bridgedResume = useCallback(() => {
+    transcription.resume();
+    txCtx.resume();
+  }, [transcription, txCtx]);
+
+  const bridgedStop = useCallback(async () => {
+    transcription.stop();
+    await txCtx.stop();
+  }, [transcription, txCtx]);
+
+  const bridgedDiscard = useCallback(() => {
+    transcription.discard();
+    // TranscriptionContext doesn't have discard — stop resets it
+    txCtx.stop();
+  }, [transcription, txCtx]);
 
   // Early return when both modules are in drawer
   if (isBottomBarHidden) return null;
@@ -96,15 +170,18 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   // Effective tiers: modules at drawer are hidden (not rendered), so only bar/anchor/palette matter
   const aiVisible = bottomBarVisibility.ai.visible;
   const tmVisible = bottomBarVisibility.transcription.visible;
-  const effectiveAITier = aiVisible ? (bottomBarVisibility.ai.tier === 'anchor' ? 'mini' : bottomBarVisibility.ai.tier!) : 'bar';
-  const effectiveTranscriptionTier = tmVisible ? (bottomBarVisibility.transcription.tier === 'anchor' ? 'mini' : bottomBarVisibility.transcription.tier!) : 'bar';
+  const effectiveAITier = aiVisible ? bottomBarVisibility.ai.tier! : 'bar';
+  const effectiveTranscriptionTier = tmVisible ? bottomBarVisibility.transcription.tier! : 'bar';
+
+  // TM is full-width when it's visible but AI is not (AI in pane)
+  const tmIsFullWidth = tmVisible && !aiVisible;
 
   // Handle tier changes
-  const handleAITierChange = useCallback((tier: 'bar' | 'mini' | 'palette' | 'drawer') => {
+  const handleAITierChange = useCallback((tier: 'anchor' | 'bar' | 'palette' | 'drawer') => {
     setAITier(tier);
   }, [setAITier]);
 
-  const handleTranscriptionTierChange = useCallback((tier: 'bar' | 'mini' | 'palette' | 'drawer') => {
+  const handleTranscriptionTierChange = useCallback((tier: 'anchor' | 'bar' | 'palette' | 'drawer') => {
     setTranscriptionTier(tier);
   }, [setTranscriptionTier]);
 
@@ -157,14 +234,15 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
               {tmVisible && (
                 <TranscriptionModule
                   tier={effectiveTranscriptionTier}
-                  session={activeSession}
+                  session={syncedSession}
                   onTierChange={handleTranscriptionTierChange}
-                  onStart={transcription.start}
-                  onPause={transcription.pause}
-                  onResume={transcription.resume}
-                  onStop={transcription.stop}
-                  onDiscard={transcription.discard}
+                  onStart={bridgedStart}
+                  onPause={bridgedPause}
+                  onResume={bridgedResume}
+                  onStop={bridgedStop}
+                  onDiscard={bridgedDiscard}
                   isEnabled={transcriptionEnabled}
+                  isFullWidth={tmIsFullWidth}
                   testID="transcription-module"
                 />
               )}
@@ -178,13 +256,17 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
                   tier={effectiveAITier}
                   content={aiContent}
                   onTierChange={handleAITierChange}
+                  patientName={patientName}
+                  contextTarget={contextTarget}
+                  availableContextLevels={availableContextLevels}
+                  onContextLevelChange={onContextLevelChange}
                   suggestions={suggestions}
                   alerts={alerts}
                   onSuggestionAccept={onSuggestionAccept}
                   onSuggestionDismiss={onSuggestionDismiss}
                   onAlertAcknowledge={onAlertAcknowledge}
-                  onGenerateNote={onGenerateNote}
-                  onCheckInteractions={onCheckInteractions}
+                  quickActions={quickActions}
+                  onQuickActionClick={onQuickActionClick}
                   badgeCount={badgeCount > 0 ? badgeCount : undefined}
                   testID="ai-module"
                 />

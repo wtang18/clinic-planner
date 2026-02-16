@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import { Menu, ChevronLeft, ChevronRight, Sparkles, Settings, User } from 'lucide-react';
+import { Menu, ChevronLeft, ChevronRight, Settings, User } from 'lucide-react';
 import { colors, borderRadius, spaceAround, spaceBetween, transitions, typography, zIndex as zIndexTokens } from '../../styles/foundations';
 import { FloatingToggleButton } from './FloatingToggleButton';
 
@@ -20,14 +20,10 @@ export interface UnifiedHeaderRowProps {
   menuCollapsed: boolean;
   /** Overview pane collapsed state */
   overviewCollapsed: boolean;
-  /** AI drawer open state */
-  aiDrawerOpen: boolean;
   /** Toggle menu pane */
   onToggleMenu: () => void;
   /** Toggle overview pane */
   onToggleOverview: () => void;
-  /** Toggle AI drawer */
-  onToggleAIDrawer: () => void;
   /** Menu pane width */
   menuWidth: number;
   /** Overview pane width */
@@ -59,10 +55,8 @@ const DEFAULT_HEIGHT = 52;
 export const UnifiedHeaderRow: React.FC<UnifiedHeaderRowProps> = ({
   menuCollapsed,
   overviewCollapsed,
-  aiDrawerOpen,
   onToggleMenu,
   onToggleOverview,
-  onToggleAIDrawer,
   menuWidth,
   overviewWidth,
   menuHeaderContent,
@@ -120,14 +114,6 @@ export const UnifiedHeaderRow: React.FC<UnifiedHeaderRowProps> = ({
     padding: `0 ${spaceAround.default}px`,
     borderLeft: `1px solid ${colors.border.neutral.low}`,
     overflow: 'hidden',
-  };
-
-  const aiDrawerSectionStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    padding: `0 ${spaceAround.compact}px`,
-    borderLeft: `1px solid ${colors.border.neutral.low}`,
-    flexShrink: 0,
   };
 
   const iconButtonStyle: React.CSSProperties = {
@@ -246,29 +232,6 @@ export const UnifiedHeaderRow: React.FC<UnifiedHeaderRowProps> = ({
         {/* Right side - mode selector and settings are passed in canvasHeaderContent */}
       </div>
 
-      {/* AI Drawer section */}
-      <div style={aiDrawerSectionStyle}>
-        <button
-          type="button"
-          style={{
-            ...iconButtonStyle,
-            backgroundColor: aiDrawerOpen ? colors.bg.accent.subtle : 'transparent',
-            color: aiDrawerOpen ? colors.fg.accent.primary : colors.fg.neutral.secondary,
-          }}
-          onClick={onToggleAIDrawer}
-          onMouseEnter={(e) => {
-            if (!aiDrawerOpen) handleButtonHover(e, true);
-          }}
-          onMouseLeave={(e) => {
-            if (!aiDrawerOpen) handleButtonHover(e, false);
-          }}
-          aria-label={aiDrawerOpen ? 'Close AI assistant' : 'Open AI assistant'}
-          aria-expanded={aiDrawerOpen}
-          title={aiDrawerOpen ? 'Close AI assistant' : 'Open AI assistant'}
-        >
-          <Sparkles size={18} />
-        </button>
-      </div>
     </header>
   );
 };

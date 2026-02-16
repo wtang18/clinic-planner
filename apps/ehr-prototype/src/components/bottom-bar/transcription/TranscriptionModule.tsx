@@ -53,6 +53,8 @@ export interface TranscriptionModuleProps {
   onDiscard: () => void;
   /** Whether transcription is available */
   isEnabled?: boolean;
+  /** Whether TM bar is full-width (AI in pane, not in bottom bar) */
+  isFullWidth?: boolean;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID prefix */
@@ -163,6 +165,7 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
   onStop,
   onDiscard,
   isEnabled = true,
+  isFullWidth = false,
   style,
   testID = 'transcription-module',
 }) => {
@@ -171,14 +174,14 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
 
   // Initialize phase based on tier
   const getInitialPhase = (): AnimationPhase => {
-    if (tier === 'mini') return 'idle-mini';
+    if (tier === 'anchor') return 'idle-mini';
     if (tier === 'palette') return 'idle-palette';
     return 'idle-bar';
   };
   const [phase, setPhase] = useState<AnimationPhase>(getInitialPhase);
 
   // Track where we're collapsing TO (bar or mini) - set when collapse starts
-  const collapseTargetRef = useRef<'bar' | 'mini'>('bar');
+  const collapseTargetRef = useRef<'bar' | 'anchor'>('bar');
 
   const isDrawer = tier === 'drawer';
 
@@ -198,15 +201,15 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
     if (isAnimating) return;
 
     // Handle external tier changes
-    if (tier === 'mini' && phase !== 'idle-mini') {
+    if (tier === 'anchor' && phase !== 'idle-mini') {
       if (prevTier === 'palette' && phase === 'idle-palette') {
-        collapseTargetRef.current = 'mini';
+        collapseTargetRef.current = 'anchor';
         setPhase('collapsing-height');
       } else {
         setPhase('idle-mini');
       }
     } else if (tier === 'palette' && phase !== 'idle-palette') {
-      if (prevTier === 'mini' || prevTier === 'bar') {
+      if (prevTier === 'anchor' || prevTier === 'bar') {
         setPhase('expanding-height');
       } else {
         setPhase('idle-palette');
@@ -264,8 +267,8 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
         break;
 
       case 'collapsing-height':
-        if (collapseTargetRef.current === 'mini') {
-          onTierChange('mini');
+        if (collapseTargetRef.current === 'anchor') {
+          onTierChange('anchor');
           setPhase('idle-mini');
         } else {
           onTierChange('bar');
@@ -429,6 +432,8 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
             tier={isVisuallyPalette ? 'palette' : 'bar'}
             session={session}
             animationPhase={phase}
+            isFullWidth={isFullWidth}
+            onExpandToDrawer={handleExpandToDrawer}
             testID={`${testID}-avatar`}
           />
 
@@ -446,6 +451,7 @@ export const TranscriptionModule: React.FC<TranscriptionModuleProps> = ({
             tier={isVisuallyPalette ? 'palette' : 'bar'}
             session={session}
             animationPhase={phase}
+            isFullWidth={isFullWidth}
             onStart={onStart}
             onPause={onPause}
             onResume={onResume}
