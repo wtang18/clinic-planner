@@ -7,7 +7,6 @@
  * - TranscriptionModule: Main component with 3-container architecture
  * - Containers: AvatarContainer, ContentContainer, ControlsContainer
  * - Support: WaveformIndicator, StatusBadge, AvatarWithBadge
- * - Legacy: TranscriptionBar, TranscriptionPalette (deprecated, use TranscriptionModule)
  */
 
 // Support components
@@ -41,9 +40,3 @@ export type { TranscriptionModuleProps } from './TranscriptionModule';
 export { TranscriptionDrawer, default as TranscriptionDrawerDefault } from './TranscriptionDrawer';
 export type { TranscriptionDrawerProps } from './TranscriptionDrawer';
 
-// Legacy (deprecated - use TranscriptionModule with tier prop)
-export { TranscriptionBar, default as TranscriptionBarDefault } from './TranscriptionBar';
-export type { TranscriptionBarProps } from './TranscriptionBar';
-
-export { TranscriptionPalette, default as TranscriptionPaletteDefault } from './TranscriptionPalette';
-export type { TranscriptionPaletteProps } from './TranscriptionPalette';

@@ -52,7 +52,6 @@ export { OverviewSection } from './layout/OverviewSection';
 export { CanvasPane } from './layout/CanvasPane';
 export { FloatingHeader } from './layout/FloatingHeader';
 export { EncounterContextBar } from './layout/EncounterContextBar';
-export { AIDrawer } from './layout/AIDrawer';
 export { MobileSheet } from './layout/MobileSheet';
 export { ModeSelector } from './layout/ModeSelector';
 
@@ -96,9 +95,6 @@ export { QuickAddInput } from './omni-add/QuickAddInput';
 // ============================================================================
 
 export { AlertCard } from './ai-ui/AlertCard';
-export { Minibar } from './ai-ui/Minibar';
-export { Palette } from './ai-ui/Palette';
-export { AIDrawerContent } from './ai-ui/AIDrawerContent';
 export { PatientIndicator } from './ai-ui/PatientIndicator';
 export { TranscriptionPill } from './ai-ui/TranscriptionPill';
 export { AIMinibar } from './ai-ui/AIMinibar';

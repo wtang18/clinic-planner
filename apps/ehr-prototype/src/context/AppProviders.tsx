@@ -15,7 +15,6 @@ import { TourTargetProvider } from '../tour/TourTargetRegistry';
 import { NetworkStatusBanner } from '../errors/NetworkStatusBanner';
 import { CoordinationProvider } from '../hooks/useCoordination';
 import { BottomBarProvider } from '../hooks/useBottomBar';
-import { LeftPaneProvider } from '../hooks/useLeftPane';
 import { AIKeyboardShortcutsProvider } from '../hooks/useAIKeyboardShortcuts';
 import type { EncounterState } from '../state/types';
 import type { AIServicesConfig } from '../services/ai/services/service-config';
@@ -59,8 +58,7 @@ export interface AppProvidersProps {
  * 6. TranscriptionProvider - transcription service
  * 7. CoordinationProvider - tier + pane coordination (single source of truth)
  * 8. BottomBarProvider - bottom bar session state
- * 9. LeftPaneProvider - no-op (kept for backward compat)
- * 10. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
+ * 9. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
  * 10. TourTargetProvider - tour target registration
  * 11. NetworkStatusBanner - offline/online status
  */
@@ -86,17 +84,15 @@ export const AppProviders: React.FC<AppProvidersProps> = ({
               >
                 <CoordinationProvider initialState={{ txEligible: true }}>
                   <BottomBarProvider demoMode={true}>
-                    <LeftPaneProvider>
-                      <AIKeyboardShortcutsProvider>
-                        <TourTargetProvider>
-                          {showNetworkStatus ? (
-                            <NetworkStatusBanner>{children}</NetworkStatusBanner>
-                          ) : (
-                            children
-                          )}
-                        </TourTargetProvider>
-                      </AIKeyboardShortcutsProvider>
-                    </LeftPaneProvider>
+                    <AIKeyboardShortcutsProvider>
+                      <TourTargetProvider>
+                        {showNetworkStatus ? (
+                          <NetworkStatusBanner>{children}</NetworkStatusBanner>
+                        ) : (
+                          children
+                        )}
+                      </TourTargetProvider>
+                    </AIKeyboardShortcutsProvider>
                   </BottomBarProvider>
                 </CoordinationProvider>
               </TranscriptionProvider>

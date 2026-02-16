@@ -5,8 +5,6 @@ import { MenuPane } from '../../components/layout/MenuPane';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
-import { AIDrawer } from '../../components/layout/AIDrawer';
-import { Minibar } from '../../components/ai-ui/Minibar';
 import { colors, spaceAround } from '../../styles/foundations';
 
 const meta: Meta<typeof AdaptiveLayout> = {
@@ -18,18 +16,15 @@ const meta: Meta<typeof AdaptiveLayout> = {
     docs: {
       description: {
         component: `
-The AdaptiveLayout implements a 3+1 pane architecture following iOS/iPadOS/macOS 26 conventions:
+The AdaptiveLayout implements a 3-pane architecture following iOS/iPadOS/macOS 26 conventions:
 
 - **Menu Pane** (left, 200px): Navigation with hubs, workspaces, and patient workspaces
 - **Patient Overview Pane** (left, 280px): Longitudinal patient data (allergies, meds, problems, vitals)
 - **Canvas Pane** (center, flex): Main charting area with floating header
-- **AI Drawer** (right, 320px, overlay): AI suggestions and context
 
 **Keyboard Shortcuts:**
 - \`Cmd+\\\` - Toggle menu pane
 - \`Cmd+Shift+\\\` - Toggle patient overview
-- \`Cmd+.\` - Toggle AI drawer
-- \`Escape\` - Close AI drawer
         `,
       },
     },
@@ -153,22 +148,6 @@ export const Default: Story = {
           >
             <PlaceholderContent />
           </CanvasPane>
-        }
-        aiDrawer={
-          <AIDrawer isOpen={false} onClose={() => {}} />
-        }
-        minibar={
-          <Minibar
-            transcriptionStatus="idle"
-            pendingReviewCount={3}
-            alertCount={1}
-            syncStatus="synced"
-            onTranscriptionToggle={() => {}}
-            onOpenPalette={() => {}}
-            onOpenTaskPane={() => {}}
-            patientName="John Smith"
-            patientInitials="JS"
-          />
         }
       />
     </div>

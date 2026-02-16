@@ -9,10 +9,10 @@
  * the same element as the menu toggle button (just in expanded form).
  */
 
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { colors, zIndex as zIndexTokens, transitions, glass, GLASS_BUTTON_RADIUS, GLASS_BUTTON_HEIGHT, LAYOUT } from '../../styles/foundations';
-import { LayoutStateProvider, useLayoutState, PaneId } from '../../context/LayoutStateContext';
+import { LayoutStateProvider, useLayoutState } from '../../context/LayoutStateContext';
 import { CoordinationContext } from '../../hooks/useCoordination';
 import { CollapsiblePane } from './CollapsiblePane';
 import { FloatingNavRow } from './FloatingNavRow';
@@ -28,15 +28,7 @@ export interface AdaptiveLayoutProps {
   overviewPane?: React.ReactNode;
   /** Main canvas content */
   canvasPane: React.ReactNode;
-  /** AI drawer content */
-  aiDrawer?: React.ReactNode;
-  /** @deprecated Use transcriptionPill and aiMinibar instead */
-  minibar?: React.ReactNode;
-  /** Transcription pill (left side of bottom bar) */
-  transcriptionPill?: React.ReactNode;
-  /** AI minibar (right side of bottom bar) */
-  aiMinibar?: React.ReactNode;
-  /** Unified AI control surface (replaces transcriptionPill + aiMinibar with morphing) */
+  /** Unified AI control surface (bottom bar container) */
   aiControlSurface?: React.ReactNode;
   /** Custom header content for overview section */
   overviewHeaderContent?: React.ReactNode;
@@ -69,8 +61,6 @@ export interface AdaptiveLayoutProps {
   menuWidth?: number;
   /** Overview pane width */
   overviewWidth?: number;
-  /** AI drawer width */
-  aiDrawerWidth?: number;
   /** Header row height */
   headerHeight?: number;
   /** Custom styles for the root container */
@@ -85,7 +75,6 @@ export interface AdaptiveLayoutProps {
 
 const MENU_WIDTH = LAYOUT.menuWidth;
 const OVERVIEW_WIDTH = LAYOUT.overviewWidth;
-const AI_DRAWER_WIDTH = LAYOUT.aiDrawerWidth;
 const HEADER_HEIGHT = LAYOUT.headerHeight;
 
 // ============================================================================
@@ -98,10 +87,6 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   menuPane,
   overviewPane,
   canvasPane,
-  aiDrawer,
-  minibar,
-  transcriptionPill,
-  aiMinibar,
   aiControlSurface,
   overviewHeaderContent,
   canvasHeaderContent,
@@ -115,17 +100,14 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   onBack,
   menuWidth = MENU_WIDTH,
   overviewWidth = OVERVIEW_WIDTH,
-  aiDrawerWidth = AI_DRAWER_WIDTH,
   headerHeight = HEADER_HEIGHT,
   style,
   testID,
 }) => {
   const {
     collapsed,
-    aiDrawerOpen,
+    setCollapsed,
     togglePane,
-    toggleAIDrawer,
-    closeAIDrawer,
   } = useLayoutState();
 
   // Keyboard shortcuts
@@ -136,12 +118,7 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
       // Ignore shortcuts when typing in input fields
       const target = e.target as HTMLElement;
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
-        // Only allow Escape to close drawer while typing
-        if (e.key === 'Escape' && aiDrawerOpen) {
-          e.preventDefault();
-          closeAIDrawer();
-        }
-        return; // Ignore other shortcuts while typing
+        return;
       }
 
       // Cmd+\ to toggle menu
@@ -154,28 +131,42 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
         e.preventDefault();
         togglePane('overview');
       }
-      // Cmd+. to toggle AI drawer
-      if (e.metaKey && e.key === '.') {
-        e.preventDefault();
-        toggleAIDrawer();
-      }
-      // Escape to close AI drawer
-      if (e.key === 'Escape' && aiDrawerOpen) {
-        e.preventDefault();
-        closeAIDrawer();
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [togglePane, toggleAIDrawer, closeAIDrawer, aiDrawerOpen]);
+  }, [togglePane]);
 
-  // Bridge: sync menu collapse/expand to coordination state machine
+  // Bidirectional bridge: sync menu collapse/expand ↔ coordination state machine
   const coordContext = React.useContext(CoordinationContext);
   const prevMenuCollapsedRef = useRef(collapsed.menu);
+  const programmaticMenuChangeRef = useRef(false);
+  const collapsedMenuRef = useRef(collapsed.menu);
+  collapsedMenuRef.current = collapsed.menu;
 
+  // Reverse bridge: coordination paneExpanded → collapsed.menu
   useEffect(() => {
-    if (!coordContext) return; // Storybook without CoordinationProvider
+    if (!coordContext) return;
+    const shouldBeOpen = coordContext.state.paneExpanded;
+    const isOpen = !collapsedMenuRef.current;
+    if (shouldBeOpen !== isOpen) {
+      programmaticMenuChangeRef.current = true;
+      setCollapsed('menu', !shouldBeOpen);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coordContext?.state.paneExpanded, setCollapsed]);
+
+  // Forward bridge: collapsed.menu → coordination
+  useEffect(() => {
+    if (!coordContext) return;
+
+    // Skip if this menu change was driven by the reverse bridge
+    if (programmaticMenuChangeRef.current) {
+      programmaticMenuChangeRef.current = false;
+      prevMenuCollapsedRef.current = collapsed.menu;
+      return;
+    }
+
     const prev = prevMenuCollapsedRef.current;
     prevMenuCollapsedRef.current = collapsed.menu;
     if (prev === collapsed.menu) return; // Skip initial render
@@ -293,61 +284,8 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
   const menuPaneContentStyle: React.CSSProperties = {
     flex: 1,
     overflow: 'hidden',
-  };
-
-  const aiDrawerOverlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    opacity: aiDrawerOpen ? 1 : 0,
-    pointerEvents: aiDrawerOpen ? 'auto' : 'none',
-    transition: `opacity ${transitions.base}`,
-    zIndex: zIndexTokens.overlay - 1,
-  };
-
-  const aiDrawerContainerStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: aiDrawerWidth,
-    backgroundColor: colors.bg.neutral.base,
-    borderLeft: `1px solid ${colors.border.neutral.low}`,
-    transform: aiDrawerOpen ? 'translateX(0)' : 'translateX(100%)',
-    transition: `transform 300ms cubic-bezier(0.4, 0, 0.2, 1)`,
-    zIndex: zIndexTokens.overlay,
     display: 'flex',
     flexDirection: 'column',
-  };
-
-  // Legacy minibar container (for backwards compatibility)
-  const minibarContainerStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: 16,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: zIndexTokens.docked,
-    maxWidth: 600,
-    width: 'calc(100% - 32px)',
-  };
-
-  // New dual control surface container
-  // Uses 25/75 split: TranscriptionPill (~25%, max 200px) + AIMinibar (~75%, flex-grow)
-  const dualControlSurfaceStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: 16,
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: zIndexTokens.docked,
-    display: 'flex',
-    alignItems: 'flex-end', // Align to bottom for palette expansion
-    justifyContent: 'center',
-    gap: 12,
-    maxWidth: 800,
-    width: 'calc(100% - 32px)',
   };
 
   return (
@@ -363,10 +301,10 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
         <FloatingNavRow
           menuCollapsed={collapsed.menu}
           overviewCollapsed={collapsed.overview}
-          aiDrawerOpen={aiDrawerOpen}
+          aiDrawerOpen={false}
           onToggleMenu={() => togglePane('menu')}
           onToggleOverview={() => togglePane('overview')}
-          onToggleAIDrawer={toggleAIDrawer}
+          onToggleAIDrawer={() => {}}
           menuWidth={menuWidth}
           overviewWidth={overviewWidth}
           overviewHeaderContent={overviewHeaderContent}
@@ -434,43 +372,8 @@ const AdaptiveLayoutInner: React.FC<AdaptiveLayoutInnerProps> = ({
         </div>
       </div>
 
-      {/* ================================================================== */}
-      {/* OVERLAYS                                                           */}
-      {/* ================================================================== */}
-
-      {/* AI Drawer Overlay */}
-      <div style={aiDrawerOverlayStyle} onClick={closeAIDrawer} aria-hidden="true" />
-
-      {/* AI Drawer */}
-      {aiDrawer && (
-        <aside
-          style={aiDrawerContainerStyle}
-          data-testid="ai-drawer"
-          role="complementary"
-          aria-label="AI Assistant"
-          aria-hidden={!aiDrawerOpen}
-        >
-          {aiDrawer}
-        </aside>
-      )}
-
-      {/* AI Control Surface (unified morphing component) - preferred */}
+      {/* AI Control Surface (bottom bar container) */}
       {aiControlSurface}
-
-      {/* Legacy Dual Control Surface - for backwards compatibility */}
-      {!aiControlSurface && (transcriptionPill || aiMinibar) && (
-        <div style={dualControlSurfaceStyle} data-testid="control-surface-container">
-          {transcriptionPill}
-          {aiMinibar}
-        </div>
-      )}
-
-      {/* Legacy Minibar (fallback for backwards compatibility) */}
-      {minibar && !transcriptionPill && !aiMinibar && (
-        <div style={minibarContainerStyle} data-testid="minibar-container">
-          {minibar}
-        </div>
-      )}
     </div>
   );
 };

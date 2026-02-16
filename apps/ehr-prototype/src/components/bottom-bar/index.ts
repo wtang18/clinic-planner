@@ -29,8 +29,6 @@ export {
   StatusBadge,
   AvatarWithBadge,
   PATIENT_COLORS,
-  TranscriptionBar,
-  TranscriptionPalette,
   TranscriptionDrawer,
   TranscriptionModule,
 } from './transcription';
@@ -39,8 +37,6 @@ export type {
   StatusBadgeProps,
   BadgeStatus,
   AvatarWithBadgeProps,
-  TranscriptionBarProps,
-  TranscriptionPaletteProps,
   TranscriptionDrawerProps,
   TranscriptionModuleProps,
 } from './transcription';
