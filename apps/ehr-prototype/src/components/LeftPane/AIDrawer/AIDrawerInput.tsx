@@ -92,7 +92,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      const minH = 24;
+      const minH = 44;
       if (!value || value.length === 0) {
         textarea.style.height = `${minH}px`;
         return;
@@ -153,7 +153,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
     display: 'flex',
     flexDirection: 'column',
     backgroundColor: colors.bg.neutral.subtle,
-    border: `1px solid ${isFocused ? colors.fg.accent.primary : colors.border.neutral.default}`,
+    border: `1px solid ${isFocused ? colors.fg.accent.primary : colors.border.neutral.low}`,
     borderRadius: borderRadius.md,
     overflow: 'hidden',
     transition: 'border-color 150ms ease',
@@ -161,7 +161,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
 
   const textareaStyle: React.CSSProperties = {
     width: '100%',
-    minHeight: 24,
+    minHeight: 44,
     maxHeight,
     padding: `${spaceAround.compact}px ${spaceAround.default}px`,
     backgroundColor: 'transparent',
@@ -220,6 +220,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
 
   return (
     <div style={containerStyle} data-testid={testID}>
+      <style>{`textarea[data-drawer-input]::placeholder { color: ${colors.fg.neutral.disabled}; }`}</style>
       <div style={inputContainerStyle}>
         <textarea
           ref={textareaRef as React.RefObject<HTMLTextAreaElement>}
@@ -231,6 +232,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
           style={textareaStyle}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          data-drawer-input
         />
 
         <div style={controlRowStyle}>

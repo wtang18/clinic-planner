@@ -5,11 +5,13 @@
  */
 
 import React from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { Ban, Sparkles } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { getSuggestionCategoryLabel } from '../../utils/suggestions';
 import { SuggestionChip } from './SuggestionChip';
 import { Button } from '../primitives/Button';
+import { IconButton } from '../primitives/IconButton';
 import { EmptyState } from '../primitives/EmptyState';
 
 // ============================================================================
@@ -31,6 +33,10 @@ export interface SuggestionListProps {
   onClearAll?: () => void;
   /** Whether to display as chips or cards */
   variant?: 'chips' | 'compact';
+  /** Whether to show the built-in header (Sparkles + count). Default true. */
+  showHeader?: boolean;
+  /** Color theme: 'light' for pane, 'dark' for palette overlay. Default 'light'. */
+  theme?: 'light' | 'dark';
   /** Custom styles */
   style?: React.CSSProperties;
 }
@@ -47,6 +53,8 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
   onModify,
   onClearAll,
   variant = 'chips',
+  showHeader = true,
+  theme = 'light',
   style,
 }) => {
   const [expanded, setExpanded] = React.useState(false);
@@ -54,9 +62,12 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
 
   // Filter active suggestions
   const activeSuggestions = suggestions.filter(s => s.status === 'active');
-  const visibleSuggestions = expanded
+  // When header is hidden, parent controls slicing — show all active
+  const visibleSuggestions = !showHeader
     ? activeSuggestions
-    : activeSuggestions.slice(0, maxVisible);
+    : expanded
+      ? activeSuggestions
+      : activeSuggestions.slice(0, maxVisible);
   const hiddenCount = activeSuggestions.length - maxVisible;
 
   // Handle accept with exit animation
@@ -133,12 +144,14 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
     gap: spaceBetween.coupled,
   };
 
+  const isDark = theme === 'dark';
+
   const compactItemStyle: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    backgroundColor: colors.bg.positive.subtle,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.bg.positive.subtle,
     borderRadius: borderRadius.sm,
     fontSize: 14,
     fontFamily: typography.fontFamily.sans,
@@ -168,22 +181,24 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
   return (
     <div data-testid="suggestion-list" style={containerStyle}>
       {/* Header */}
-      <div style={headerStyle}>
-        <div style={titleStyle}>
-          <Sparkles size={16} />
-          {activeSuggestions.length} suggestion{activeSuggestions.length !== 1 ? 's' : ''}
+      {showHeader && (
+        <div style={headerStyle}>
+          <div style={titleStyle}>
+            <Sparkles size={16} />
+            {activeSuggestions.length} suggestion{activeSuggestions.length !== 1 ? 's' : ''}
+          </div>
+          {onClearAll && activeSuggestions.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClearAll}
+              style={{ color: colors.fg.neutral.spotReadable }}
+            >
+              Clear all
+            </Button>
+          )}
         </div>
-        {onClearAll && activeSuggestions.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClearAll}
-            style={{ color: colors.fg.neutral.spotReadable }}
-          >
-            Clear all
-          </Button>
-        )}
-      </div>
+      )}
 
       {/* Chips variant */}
       {variant === 'chips' && (
@@ -203,7 +218,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
           ))}
 
           {/* More indicator */}
-          {!expanded && hiddenCount > 0 && (
+          {showHeader && !expanded && hiddenCount > 0 && (
             <div
               data-testid="show-more-btn"
               style={moreIndicatorStyle}
@@ -217,7 +232,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
           )}
 
           {/* Collapse button */}
-          {expanded && hiddenCount > 0 && (
+          {showHeader && expanded && hiddenCount > 0 && (
             <div
               style={moreIndicatorStyle}
               onClick={() => setExpanded(false)}
@@ -234,7 +249,11 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
       {/* Compact list variant */}
       {variant === 'compact' && (
         <div style={compactListStyle}>
-          {visibleSuggestions.map((suggestion) => (
+          {visibleSuggestions.map((suggestion) => {
+            const categoryLabel = getSuggestionCategoryLabel(suggestion);
+            const labelColor = isDark ? 'rgba(255, 255, 255, 0.5)' : colors.fg.neutral.spotReadable;
+            const textColor = isDark ? colors.fg.neutral.inversePrimary : colors.fg.neutral.secondary;
+            return (
             <div
               key={suggestion.id}
               style={{
@@ -244,55 +263,68 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
             >
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: spaceBetween.repeating,
+                alignItems: 'flex-start',
+                gap: 6,
                 minWidth: 0,
                 flex: 1,
               }}>
                 <span style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: borderRadius.full,
-                  backgroundColor: colors.fg.generative.spotReadable,
-                  flexShrink: 0,
-                }} />
-                <span style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  fontSize: 13,
+                  fontWeight: typography.fontWeight.semibold,
+                  color: labelColor,
                   whiteSpace: 'nowrap',
-                  color: colors.fg.neutral.secondary,
+                  flexShrink: 0,
+                  lineHeight: '28px',
+                  minHeight: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}>
+                  {categoryLabel}
+                </span>
+                <span style={{
+                  fontSize: 14,
+                  color: textColor,
+                  lineHeight: '28px',
+                  minHeight: 28,
+                  display: 'flex',
+                  alignItems: 'center',
                 }}>
                   {suggestion.displayText}
                 </span>
               </div>
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 gap: spaceBetween.coupled,
                 flexShrink: 0,
+                minHeight: 28,
               }}>
+                <IconButton
+                  icon={<Ban size={14} />}
+                  label="Dismiss"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDismiss(suggestion.id)}
+                  style={{ color: isDark ? 'rgba(255,255,255,0.5)' : colors.fg.neutral.spotReadable }}
+                />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => handleAccept(suggestion.id)}
-                  style={{ color: colors.fg.positive.secondary }}
+                  style={isDark
+                    ? { backgroundColor: colors.fg.positive.secondary, color: '#fff', borderRadius: 4, height: 28, padding: '0 10px' }
+                    : { color: colors.fg.positive.secondary, height: 28, padding: '0 10px' }
+                  }
                 >
-                  Accept
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDismiss(suggestion.id)}
-                  style={{ color: colors.fg.neutral.spotReadable }}
-                >
-                  <X size={14} />
+                  Add
                 </Button>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {/* More indicator */}
-          {!expanded && hiddenCount > 0 && (
+          {showHeader && !expanded && hiddenCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -307,7 +339,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
           )}
 
           {/* Collapse button */}
-          {expanded && hiddenCount > 0 && (
+          {showHeader && expanded && hiddenCount > 0 && (
             <Button
               variant="ghost"
               size="sm"

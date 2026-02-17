@@ -9,8 +9,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pause, Loader2, ArrowDown } from 'lucide-react';
-import { WaveformIndicator } from '../../bottom-bar/transcription/WaveformIndicator';
+import { Loader2, ArrowDown, Pause } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
 import type { RecordingStatus } from '../../../state/bottomBar/types';
 
@@ -92,11 +91,14 @@ export const ViewIndicatorPill: React.FC<ViewIndicatorPillProps> = ({
     if (isRecording) {
       return (
         <>
-          <WaveformIndicator
-            isAnimating={true}
-            barCount={3}
-            size="sm"
-            color={colors.fg.alert.secondary}
+          <motion.span
+            style={{
+              width: 6, height: 6,
+              borderRadius: '50%',
+              backgroundColor: colors.fg.alert.secondary,
+            }}
+            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
           />
           <span>Live</span>
         </>
@@ -106,7 +108,7 @@ export const ViewIndicatorPill: React.FC<ViewIndicatorPillProps> = ({
     if (isPaused) {
       return (
         <>
-          <Pause size={12} />
+          <Pause size={12} fill="currentColor" />
           <span>Paused</span>
         </>
       );

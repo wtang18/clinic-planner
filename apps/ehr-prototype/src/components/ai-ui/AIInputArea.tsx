@@ -92,7 +92,7 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
   const adjustHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      const minH = 24; // Single line height (without padding)
+      const minH = 36; // Single line height (matches one line of text scrollHeight)
       // When empty, force minimum height (fixes initial render issue)
       if (!value || value.length === 0) {
         textarea.style.height = `${minH}px`;
@@ -170,7 +170,7 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
 
   const textareaStyle: React.CSSProperties = {
     width: '100%',
-    minHeight: 24, // Single line content height
+    minHeight: 36, // Single line content height (matches one line scrollHeight)
     maxHeight,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
     backgroundColor: 'transparent',
@@ -251,6 +251,7 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
 
   return (
     <div style={containerStyle} data-testid={testID}>
+      <style>{`textarea[data-ai-input]::placeholder { color: rgba(255, 255, 255, 0.35); }`}</style>
       {/* Unified input container */}
       <div style={focusedInputContainerStyle}>
         {/* Growing textarea */}
@@ -264,6 +265,7 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
           style={textareaStyle}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          data-ai-input
         />
 
         {/* Control row - contained within input */}

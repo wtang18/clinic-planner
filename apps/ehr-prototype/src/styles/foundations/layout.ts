@@ -8,7 +8,7 @@
 
 export const LAYOUT = {
   // Pane widths
-  menuWidth: 320,
+  menuWidth: 360,
   overviewWidth: 360,
   aiDrawerWidth: 320,
 

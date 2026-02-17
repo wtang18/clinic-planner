@@ -12,13 +12,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Pause } from 'lucide-react';
 import {
-  colors,
-  borderRadius,
   typography,
   spaceBetween,
 } from '../../../styles/foundations';
+import { WaveformIndicator } from './WaveformIndicator';
 
 // ============================================================================
 // Types
@@ -44,10 +42,6 @@ export interface RecordingStatusGroupProps {
 // ============================================================================
 
 const INDICATOR_SIZE = 16;
-const DOT_SIZE = 6;
-
-// Brighter, more saturated red for visibility
-const RECORDING_DOT_COLOR = '#EF4444';
 
 // ============================================================================
 // Helpers
@@ -58,54 +52,6 @@ function formatDuration(seconds: number): string {
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
-
-// ============================================================================
-// Recording Dot Component
-// ============================================================================
-
-/**
- * Pulsing recording dot for palette mode
- * Animation matches micro mode StatusBadge: scale, opacity, and glow
- * Note: Bar mode doesn't show indicator (waveform from ContentContainer handles it)
- */
-const RecordingDot: React.FC = () => (
-  <motion.span
-    style={{
-      width: DOT_SIZE,
-      height: DOT_SIZE,
-      borderRadius: borderRadius.full,
-      backgroundColor: RECORDING_DOT_COLOR,
-    }}
-    animate={{
-      scale: [1, 1.25, 1],
-      opacity: [1, 0.75, 1],
-      boxShadow: [
-        '0 0 0 0 rgba(239, 68, 68, 0)',
-        '0 0 6px 3px rgba(239, 68, 68, 0.4)',
-        '0 0 0 0 rgba(239, 68, 68, 0)',
-      ],
-    }}
-    transition={{
-      duration: 1.2,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    }}
-  />
-);
-
-// ============================================================================
-// Pause Indicator Component
-// ============================================================================
-
-const PauseIndicator: React.FC = () => (
-  <Pause
-    size={14}
-    style={{
-      color: colors.fg.neutral.inversePrimary,
-      opacity: 0.5,
-    }}
-  />
-);
 
 // ============================================================================
 // Timer Display Component
@@ -164,23 +110,13 @@ export const RecordingStatusGroup: React.FC<RecordingStatusGroupProps> = ({
       }}
       data-testid={testID}
     >
-      {/* Status indicator - ONLY in palette mode (bar mode uses waveform from ContentContainer) */}
-      {showIndicator && variant === 'palette' && (
-        <motion.span
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.15 }}
-          style={{
-            width: INDICATOR_SIZE,
-            height: INDICATOR_SIZE,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {isRecording ? <RecordingDot /> : <PauseIndicator />}
-        </motion.span>
+      {/* Waveform indicator - shown in both bar and palette modes */}
+      {showIndicator && (
+        <WaveformIndicator
+          isAnimating={isRecording}
+          size="sm"
+          barCount={3}
+        />
       )}
 
       {/* Timer display */}

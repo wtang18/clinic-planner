@@ -116,7 +116,7 @@ export const QuickActionsRow: React.FC<QuickActionsRowProps> = ({
     gap: spaceBetween.coupled,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
     backgroundColor: colors.bg.neutral.subtle,
-    border: `1px solid ${colors.border.neutral.default}`,
+    border: `1px solid ${colors.border.neutral.low}`,
     borderRadius: borderRadius.md,
     fontSize: 13,
     fontFamily: typography.fontFamily.sans,
@@ -131,7 +131,7 @@ export const QuickActionsRow: React.FC<QuickActionsRowProps> = ({
 
   const chipHoverStyle: React.CSSProperties = {
     backgroundColor: colors.bg.accent.subtle,
-    borderColor: colors.fg.accent.primary,
+    borderColor: colors.border.accent.low,
     color: colors.fg.accent.primary,
   };
 
@@ -156,7 +156,7 @@ export const QuickActionsRow: React.FC<QuickActionsRowProps> = ({
           onMouseLeave={(e) => {
             if (!disabled) {
               e.currentTarget.style.backgroundColor = colors.bg.neutral.subtle;
-              e.currentTarget.style.borderColor = colors.border.neutral.default;
+              e.currentTarget.style.borderColor = colors.border.neutral.low;
               e.currentTarget.style.color = colors.fg.neutral.primary;
             }
           }}

@@ -9,8 +9,9 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, Pause, Play, Trash2, Square, Settings, RotateCcw, Loader2 } from 'lucide-react';
+import { Mic, Pause, Play, Trash2, Settings, RotateCcw, Loader2 } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
+import { WaveformIndicator } from '../../bottom-bar/transcription/WaveformIndicator';
 import type { RecordingStatus } from '../../../state/bottomBar/types';
 
 // ============================================================================
@@ -109,7 +110,7 @@ const ControlButton: React.FC<ControlButtonProps> = ({
     width: showLabel ? 'auto' : 32,
     minWidth: 32,
     borderRadius: showLabel ? borderRadius.md : borderRadius.full,
-    border: variant === 'secondary' ? `1px solid ${colors.border.neutral.default}` : 'none',
+    border: variant === 'secondary' ? `1px solid ${colors.border.neutral.low}` : 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.5 : 1,
     backgroundColor: getBackgroundColor(),
@@ -154,14 +155,6 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({ duration, isRecording, isPa
     gap: spaceBetween.coupled,
   };
 
-  const dotStyle: React.CSSProperties = {
-    width: 8,
-    height: 8,
-    borderRadius: borderRadius.full,
-    backgroundColor: isRecording ? colors.fg.alert.secondary : colors.fg.neutral.spotReadable,
-    animation: isRecording ? 'pulse 1.5s ease-in-out infinite' : 'none',
-  };
-
   const timeStyle: React.CSSProperties = {
     fontSize: 14,
     fontFamily: typography.fontFamily.mono,
@@ -171,16 +164,15 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({ duration, isRecording, isPa
 
   return (
     <div style={containerStyle}>
-      <span style={dotStyle} />
-      <span style={timeStyle}>{formatDuration(duration)}</span>
-      {isRecording && (
-        <style>{`
-          @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-          }
-        `}</style>
+      {(isRecording || isPaused) && (
+        <WaveformIndicator
+          isAnimating={isRecording}
+          size="sm"
+          barCount={3}
+          color={isRecording ? colors.fg.alert.secondary : colors.fg.neutral.spotReadable}
+        />
       )}
+      <span style={timeStyle}>{formatDuration(duration)}</span>
     </div>
   );
 };
@@ -196,7 +188,6 @@ export const TranscriptionControlsFooter: React.FC<TranscriptionControlsFooterPr
   onStart,
   onPause,
   onResume,
-  onStop,
   onDiscard,
   onRetry,
   onSettings,
@@ -341,29 +332,10 @@ export const TranscriptionControlsFooter: React.FC<TranscriptionControlsFooterPr
 
       {/* Right: Action buttons */}
       <div style={{ justifySelf: 'end', display: 'flex', gap: spaceBetween.relatedCompact }}>
-        {/* Done button (when paused with segments) */}
-        <AnimatePresence>
-          {isPaused && hasSegments && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.15 }}
-            >
-              <ControlButton
-                icon={<Square size={14} />}
-                label="Done"
-                onClick={onStop}
-                variant="secondary"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Primary action */}
         {isRecording && (
           <ControlButton
-            icon={<Pause size={14} />}
+            icon={<Pause size={14} fill="currentColor" />}
             label="Pause"
             onClick={onPause}
             variant="secondary"

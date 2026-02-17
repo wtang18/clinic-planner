@@ -5,10 +5,11 @@
  */
 
 import React from 'react';
-import { Check, X, Mic, Sparkles, Heart, ClipboardList } from 'lucide-react';
+import { Check, Ban } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
 import { colors, spaceAround, spaceBetween, borderRadius, transitions, typography } from '../../styles/foundations';
 import { getConfidenceColor } from '../../styles/utils';
+import { getSuggestionCategoryLabel } from '../../utils/suggestions';
 import { IconButton } from '../primitives/IconButton';
 
 // ============================================================================
@@ -29,25 +30,6 @@ export interface SuggestionChipProps {
 }
 
 // ============================================================================
-// Icons
-// ============================================================================
-
-const getSourceIcon = (source: Suggestion['source']): React.ReactNode => {
-  switch (source) {
-    case 'transcription':
-      return <Mic size={14} />;
-    case 'ai-analysis':
-      return <Sparkles size={14} />;
-    case 'care-gap':
-      return <Heart size={14} />;
-    case 'cds':
-      return <ClipboardList size={14} />;
-    default:
-      return <Sparkles size={14} />;
-  }
-};
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -60,6 +42,7 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
+  const categoryLabel = getSuggestionCategoryLabel(suggestion);
   const confidenceColor = getConfidenceColor(suggestion.confidence);
 
   // Calculate opacity based on TTL (fade as expiration approaches)
@@ -78,7 +61,7 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
 
   const containerStyle: React.CSSProperties = {
     display: 'inline-flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spaceBetween.repeating,
     padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
     backgroundColor: 'rgba(128, 128, 128, 0.06)',
@@ -95,21 +78,11 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
     ...style,
   };
 
-  const sourceIconStyle: React.CSSProperties = {
-    display: 'flex',
-    color: colors.fg.neutral.spotReadable,
-    flexShrink: 0,
-  };
-
   const textStyle: React.CSSProperties = {
     fontSize: 14,
     lineHeight: '20px',
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.secondary,
-    maxWidth: '200px',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
   };
 
   const actionsStyle: React.CSSProperties = {
@@ -135,9 +108,16 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
         if (e.key === 'd' || e.key === 'Escape') onDismiss();
       }}
     >
-      {/* Source icon */}
-      <span style={sourceIconStyle}>
-        {getSourceIcon(suggestion.source)}
+      {/* Category label */}
+      <span style={{
+        fontSize: 13,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.fg.neutral.spotReadable,
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        lineHeight: '20px',
+      }}>
+        {categoryLabel}
       </span>
 
       {/* Text */}
@@ -159,7 +139,7 @@ export const SuggestionChip: React.FC<SuggestionChipProps> = ({
         />
         <IconButton
           data-testid="chip-dismiss-btn"
-          icon={<X size={14} />}
+          icon={<Ban size={14} />}
           label="Dismiss suggestion"
           variant="ghost"
           size="sm"

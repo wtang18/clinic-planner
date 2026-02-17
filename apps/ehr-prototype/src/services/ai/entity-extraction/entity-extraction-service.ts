@@ -307,21 +307,16 @@ function buildItemTemplate(
 function getDisplayText(entity: ExtractedEntity, category: ItemCategory): string {
   switch (category) {
     case 'medication': {
-      const normalized = entity.normalizedValue as NormalizedMedication | null;
-      if (normalized?.dosage) {
-        return `Add ${normalized.name} ${normalized.dosage}`;
-      }
-      return `Add medication: ${normalized?.name || entity.text}`;
+      const n = entity.normalizedValue as NormalizedMedication | null;
+      const parts = [n?.name, n?.dosage, n?.route, n?.frequency].filter(Boolean);
+      return parts.length > 0 ? parts.join(' ') : entity.text;
     }
     case 'diagnosis': {
       const normalized = entity.normalizedValue as NormalizedDiagnosis | null;
-      return `Add diagnosis: ${normalized?.description || entity.text}`;
+      return normalized?.description || entity.text;
     }
     case 'lab':
-      return `Order lab: ${entity.text}`;
-    case 'allergy':
-      return `Add allergy: ${entity.normalizedValue || entity.text}`;
     default:
-      return `Add: ${entity.text}`;
+      return entity.text;
   }
 }

@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Suggestion } from '../../../types/suggestions';
 import { SuggestionList } from '../../suggestions/SuggestionList';
+import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
 
 // ============================================================================
@@ -47,13 +48,18 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Don't render if no suggestions
-  if (suggestions.length === 0) {
+  // Filter to action-type suggestions (same set shown in palette)
+  const actionSuggestions = suggestions.filter(s =>
+    SUGGESTION_ACTION_TYPES.includes(s.type as typeof SUGGESTION_ACTION_TYPES[number])
+  );
+
+  // Don't render if no action suggestions
+  if (actionSuggestions.length === 0) {
     return null;
   }
 
-  const visibleSuggestions = isExpanded ? suggestions : suggestions.slice(0, defaultVisible);
-  const hasMore = suggestions.length > defaultVisible;
+  const visibleSuggestions = isExpanded ? actionSuggestions : actionSuggestions.slice(0, defaultVisible);
+  const hasMore = actionSuggestions.length > defaultVisible;
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -132,7 +138,7 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
             <Sparkles size={16} />
           </span>
           <span style={titleStyle}>Suggestions</span>
-          <span style={countBadgeStyle}>{suggestions.length}</span>
+          <span style={countBadgeStyle}>{actionSuggestions.length}</span>
         </div>
 
         {/* Show all / Show less toggle */}
@@ -177,7 +183,8 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
               suggestions={visibleSuggestions}
               onAccept={onAccept}
               onDismiss={onDismiss}
-              variant="default"
+              variant="compact"
+              showHeader={false}
             />
           </motion.div>
         </AnimatePresence>

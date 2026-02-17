@@ -25,7 +25,7 @@ import {
 
 import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
 import { MenuPane } from '../../components/layout/MenuPane';
-import { LeftPaneContainer, ViewIconsRow } from '../../components/LeftPane';
+import { LeftPaneContainer, ViewIconsRow, AIDrawerFooter, type TranscriptSegment as DrawerTranscriptSegment } from '../../components/LeftPane';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
@@ -67,89 +67,32 @@ import { colors, spaceAround } from '../../styles/foundations';
 // Component
 // ============================================================================
 
-// ============================================================================
-// Debug Panel for Drawer Coordination
-// ============================================================================
-
-const CoordinationDebugPanel: React.FC = () => {
-  const { paneState, barState, actions } = useDrawerCoordination();
-
-  const panelStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 70,
-    right: 16,
-    zIndex: 9999,
-    padding: 12,
-    background: 'rgba(0,0,0,0.85)',
-    color: '#fff',
-    borderRadius: 8,
-    fontSize: 11,
-    fontFamily: 'monospace',
-    minWidth: 200,
-  };
-
-  const rowStyle: React.CSSProperties = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  };
-
-  const buttonRowStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: 4,
-    marginTop: 8,
-    flexWrap: 'wrap',
-  };
-
-  const btnStyle: React.CSSProperties = {
-    padding: '4px 8px',
-    fontSize: 10,
-    background: '#333',
-    color: '#fff',
-    border: '1px solid #555',
-    borderRadius: 4,
-    cursor: 'pointer',
-  };
-
-  return (
-    <div style={panelStyle}>
-      <div style={{ fontWeight: 'bold', marginBottom: 8, borderBottom: '1px solid #444', paddingBottom: 4 }}>
-        🔗 Coordination Debug
-      </div>
-      <div style={rowStyle}>
-        <span>Pane View:</span>
-        <span style={{ color: '#4ade80' }}>{paneState.activeView}</span>
-      </div>
-      <div style={rowStyle}>
-        <span>Expanded:</span>
-        <span style={{ color: paneState.isExpanded ? '#4ade80' : '#f87171' }}>
-          {paneState.isExpanded ? 'Yes' : 'No'}
-        </span>
-      </div>
-      <div style={rowStyle}>
-        <span>AI Tier:</span>
-        <span style={{ color: '#60a5fa' }}>{barState.aiTier}</span>
-      </div>
-      <div style={rowStyle}>
-        <span>TM Tier:</span>
-        <span style={{ color: '#fbbf24' }}>{barState.transcriptionTier}</span>
-      </div>
-      <div style={buttonRowStyle}>
-        <button style={btnStyle} onClick={() => actions.switchView('menu')}>Menu</button>
-        <button style={btnStyle} onClick={() => actions.switchView('ai')}>AI</button>
-        <button style={btnStyle} onClick={() => actions.switchView('transcript')}>TM</button>
-        <button style={btnStyle} onClick={() => actions.collapse()}>Collapse</button>
-        <button style={btnStyle} onClick={() => actions.expand()}>Expand</button>
-      </div>
-    </div>
-  );
-};
-
 export const CaptureView: React.FC = () => {
   const state = useEncounterState();
-  const { status: transcriptionStatus } = useTranscription();
+  const {
+    status: transcriptionStatus,
+    segments: transcriptSegments,
+    duration: recordingDuration,
+    start: startRecording,
+    pause: pauseRecording,
+    resume: resumeRecording,
+    stop: stopRecording,
+  } = useTranscription();
   const workspace = useWorkspace();
   const todoNav = useToDoNavigation();
+
+  // Map context segments to drawer segment format
+  const drawerSegments = useMemo<DrawerTranscriptSegment[]>(() =>
+    transcriptSegments.map((seg) => ({
+      id: seg.id,
+      speaker: (seg.speaker === 'other' ? 'unknown' : seg.speaker) || 'unknown',
+      speakerName: seg.speaker === 'provider' ? 'Provider' : seg.speaker === 'patient' ? 'Patient' : 'Unknown',
+      timestamp: seg.startTime,
+      text: seg.text,
+      confidence: seg.confidence,
+    })),
+    [transcriptSegments]
+  );
 
   // Selectors
   const viewData = selectCaptureViewData(state);
@@ -689,9 +632,6 @@ export const CaptureView: React.FC = () => {
       {/* Inject animations */}
       <style>{captureViewAnimations}</style>
 
-      {/* Debug panel for coordination testing - REMOVE after testing */}
-      <CoordinationDebugPanel />
-
       <AdaptiveLayout
         menuPane={
           <LeftPaneContainer
@@ -712,20 +652,40 @@ export const CaptureView: React.FC = () => {
             transcriptionDrawerProps={{
               patientName: patientOverviewData.name,
               patientInitials: patient.demographics.firstName[0] + patient.demographics.lastName[0],
-              status: transcriptionStatus,
-              segments: [], // TODO: Wire up real transcript segments
-              onToggleRecording: handleTranscriptionToggle,
-              onPause: () => {},
-              onResume: () => {},
+              status: transcriptionStatus ?? 'idle',
+              duration: recordingDuration,
+              segments: drawerSegments,
+              onStart: startRecording,
+              onPause: pauseRecording,
+              onResume: resumeRecording,
+              onStop: stopRecording,
+              onDiscard: handleTranscriptionToggle,
             }}
             aiDrawerProps={{
               scope: 'encounter',
               patientName: patientOverviewData.name,
               encounterLabel: state.context.visit?.chiefComplaint || encounter?.type,
               suggestions: activeSuggestions,
+              messages: [],
+              isLoading: aiState.isLoading,
               onSuggestionAccept: handleSuggestionAccept,
               onSuggestionDismiss: handleSuggestionDismiss,
+              availableContextLevels: ['encounter', 'patient', 'section'],
+              onContextLevelChange: (level: string) => console.log('Drawer context:', level),
             }}
+            aiDrawerFooter={
+              <AIDrawerFooter
+                quickActions={aiActions.getQuickActions()}
+                onQuickActionClick={(actionId) => {
+                  console.log('Quick action:', actionId);
+                }}
+                onSend={(message) => {
+                  console.log('AI message:', message);
+                }}
+                disabled={aiState.isLoading}
+                placeholder="Ask AI..."
+              />
+            }
           />
         }
         menuPaneHeaderContent={
@@ -1056,6 +1016,12 @@ export const CaptureView: React.FC = () => {
             suggestions={activeSuggestions}
             onSuggestionAccept={handleSuggestionAccept}
             onSuggestionDismiss={handleSuggestionDismiss}
+            patientName={patientOverviewData.name}
+            contextTarget={{ type: 'encounter', label: state.context.visit?.chiefComplaint || encounter?.type || 'Visit' }}
+            availableContextLevels={['encounter', 'patient', 'section']}
+            onContextLevelChange={(level) => console.log('Context level:', level)}
+            quickActions={aiActions.getQuickActions()}
+            onQuickActionClick={(actionId) => console.log('Quick action:', actionId)}
             transcriptionEnabled={true}
           />
         }

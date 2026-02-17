@@ -55,9 +55,7 @@ const variantStyles: Record<
   },
   ghost: {
     base: {
-      backgroundColor: 'rgba(128, 128, 128, 0.04)',
-      backdropFilter: 'blur(12px)',
-      WebkitBackdropFilter: 'blur(12px)',
+      backgroundColor: 'transparent',
       color: colors.fg.neutral.secondary,
     },
     hover: {

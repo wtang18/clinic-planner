@@ -68,6 +68,7 @@ export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
+    flexShrink: 0,
     backgroundColor: colors.bg.neutral.base,
     borderTop: `1px solid ${colors.border.neutral.low}`,
     ...style,

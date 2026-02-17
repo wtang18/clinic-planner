@@ -13,6 +13,7 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { AIContextHeader, type ContextScope } from './AIContextHeader';
+export type { ContextScope };
 import { SuggestionsSection } from './SuggestionsSection';
 import { ConversationHistory, type ConversationMessage } from './ConversationHistory';
 import type { Suggestion } from '../../../types/suggestions';
@@ -44,6 +45,10 @@ export interface AIDrawerViewProps {
     signedAt: Date;
     availableUntil: Date;
   };
+  /** Available context levels for switching */
+  availableContextLevels?: ContextScope[];
+  /** Called when user selects a different context level */
+  onContextLevelChange?: (level: ContextScope) => void;
   /** Called when activity log is opened */
   onOpenActivityLog?: () => void;
   /** Called when scope is broadened */
@@ -143,6 +148,8 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
   isLoading = false,
   isReadOnly = false,
   readOnlyInfo,
+  availableContextLevels,
+  onContextLevelChange,
   onOpenActivityLog,
   onBroadenScope,
   onSuggestionAccept,
@@ -175,6 +182,7 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
     backgroundColor: colors.bg.neutral.subtle,
     borderTop: `1px solid ${colors.border.neutral.low}`,
     textAlign: 'center',
+    flexShrink: 0,
   };
 
   const readOnlyTextStyle: React.CSSProperties = {
@@ -207,6 +215,8 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
         patientName={patientName}
         encounterLabel={encounterLabel}
         itemLabel={itemLabel}
+        availableContextLevels={availableContextLevels}
+        onContextLevelChange={onContextLevelChange}
         onOpenActivityLog={onOpenActivityLog}
         onBroadenScope={onBroadenScope}
       />
@@ -248,7 +258,7 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
           </p>
         </div>
       ) : (
-        children
+        <div style={{ flexShrink: 0 }}>{children}</div>
       )}
     </div>
   );

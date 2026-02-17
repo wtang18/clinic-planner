@@ -106,6 +106,7 @@ export const TranscriptionDrawerView: React.FC<TranscriptionDrawerViewProps> = (
   const floatingZoneStyle: React.CSSProperties = {
     position: 'relative',
     zIndex: 10,
+    flexShrink: 0,
   };
 
   // Scroll content area
@@ -147,18 +148,20 @@ export const TranscriptionDrawerView: React.FC<TranscriptionDrawerViewProps> = (
       />
 
       {/* Controls footer */}
-      <TranscriptionControlsFooter
-        status={status}
-        duration={duration}
-        hasSegments={hasSegments}
-        onStart={onStart}
-        onPause={onPause}
-        onResume={onResume}
-        onStop={onStop}
-        onDiscard={onDiscard}
-        onRetry={onRetry}
-        onSettings={onOpenSettings}
-      />
+      <div style={{ flexShrink: 0 }}>
+        <TranscriptionControlsFooter
+          status={status}
+          duration={duration}
+          hasSegments={hasSegments}
+          onStart={onStart}
+          onPause={onPause}
+          onResume={onResume}
+          onStop={onStop}
+          onDiscard={onDiscard}
+          onRetry={onRetry}
+          onSettings={onOpenSettings}
+        />
+      </div>
     </div>
   );
 };

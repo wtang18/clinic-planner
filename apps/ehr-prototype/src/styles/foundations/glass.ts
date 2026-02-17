@@ -60,13 +60,13 @@ export const glass = {
   },
   // Dark glass variant for AI surfaces - more translucent for background bleed
   glassDark: {
-    backgroundColor: 'rgba(20, 20, 20, 0.55)',
-    backdropFilter: 'blur(24px)',
-    WebkitBackdropFilter: 'blur(24px)',
+    backgroundColor: 'rgba(20, 20, 20, 0.85)',
+    backdropFilter: 'blur(32px)',
+    WebkitBackdropFilter: 'blur(32px)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
   },
   glassDarkHover: {
-    backgroundColor: 'rgba(20, 20, 20, 0.65)',
+    backgroundColor: 'rgba(20, 20, 20, 0.90)',
     border: '1px solid rgba(255, 255, 255, 0.15)',
   },
 } as const;
