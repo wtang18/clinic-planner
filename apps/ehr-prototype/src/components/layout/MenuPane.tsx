@@ -11,6 +11,11 @@ import {
   Calendar,
   Users,
   Search,
+  AlertTriangle,
+  Activity,
+  Clock,
+  Brain,
+  History,
 } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions, LAYOUT } from '../../styles/foundations';
 import { MenuSection } from './MenuSection';
@@ -40,6 +45,9 @@ export interface PatientWorkspace {
   recordingStatus?: RecordingStatus;
 }
 
+/** Registry view identifiers for population health navigation */
+export type RegistryViewId = 'all-patients' | 'high-risk' | 'chronic-care' | 'overdue-care' | 'mental-health' | 'recent';
+
 export interface MenuPaneProps {
   /** List of patient workspaces */
   patientWorkspaces?: PatientWorkspace[];
@@ -51,6 +59,8 @@ export interface MenuPaneProps {
   onNavItemSelect?: (itemId: string) => void;
   /** Called when a To-Do filter is selected */
   onToDoFilterSelect?: (categoryId: string, filterId: string) => void;
+  /** Called when a registry view is selected (population health views under My Patients) */
+  onRegistryViewSelect?: (viewId: RegistryViewId) => void;
   /** Called when a patient workspace is selected */
   onPatientSelect?: (patientId: string) => void;
   /** Called when a task is selected (legacy) */
@@ -77,6 +87,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
   selectedToDoFilter,
   onNavItemSelect,
   onToDoFilterSelect,
+  onRegistryViewSelect,
   onPatientSelect,
   onTaskSelect,
   onTabClick,
@@ -175,12 +186,6 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
           isSelected={selectedItemId === 'visits'}
           onClick={() => onNavItemSelect?.('visits')}
         />
-        <MenuNavItem
-          icon={<Users size={16} />}
-          label="My Patients"
-          isSelected={selectedItemId === 'my-patients'}
-          onClick={() => onNavItemSelect?.('my-patients')}
-        />
 
         <div style={sectionGapStyle} />
 
@@ -212,31 +217,74 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
 
         <div style={sectionGapStyle} />
 
-        {/* Patient Workspaces Section */}
+        {/* My Patients Section — registry / population health views */}
+        <MenuSection title="My Patients">
+          <MenuNavItem
+            icon={<Users size={16} />}
+            label="All Patients"
+            isSelected={selectedItemId === 'registry-all-patients'}
+            onClick={() => onRegistryViewSelect?.('all-patients')}
+          />
+          <MenuNavItem
+            icon={<AlertTriangle size={16} />}
+            label="High Risk"
+            isSelected={selectedItemId === 'registry-high-risk'}
+            onClick={() => onRegistryViewSelect?.('high-risk')}
+          />
+          <MenuNavItem
+            icon={<Activity size={16} />}
+            label="Chronic Care"
+            isSelected={selectedItemId === 'registry-chronic-care'}
+            onClick={() => onRegistryViewSelect?.('chronic-care')}
+          />
+          <MenuNavItem
+            icon={<Clock size={16} />}
+            label="Overdue Care"
+            isSelected={selectedItemId === 'registry-overdue-care'}
+            onClick={() => onRegistryViewSelect?.('overdue-care')}
+          />
+          <MenuNavItem
+            icon={<Brain size={16} />}
+            label="Mental Health"
+            isSelected={selectedItemId === 'registry-mental-health'}
+            onClick={() => onRegistryViewSelect?.('mental-health')}
+          />
+          <MenuNavItem
+            icon={<History size={16} />}
+            label="Recent"
+            isSelected={selectedItemId === 'registry-recent'}
+            onClick={() => onRegistryViewSelect?.('recent')}
+          />
+        </MenuSection>
+
+        {/* Patient Workspaces — open patient charts (source-agnostic) */}
         {patientWorkspaces.length > 0 && (
-          <MenuSection title="Patient Workspaces">
-            {patientWorkspaces.map((patient) => (
-              <PatientWorkspaceItem
-                key={patient.id}
-                name={patient.name}
-                initials={patient.initials}
-                avatarColor={patient.avatarColor}
-                tasks={patient.tasks}
-                workspaceTabs={patient.workspaceTabs}
-                activeTabId={patient.activeTabId}
-                currentVisit={patient.currentVisit}
-                recordingStatus={patient.recordingStatus}
-                isSelected={selectedItemId === `patient-${patient.id}`}
-                defaultExpanded={patientWorkspaces.length === 1}
-                onPatientClick={() => onPatientSelect?.(patient.id)}
-                onTaskClick={(taskId) => onTaskSelect?.(patient.id, taskId)}
-                onTabClick={(tabId) => onTabClick?.(patient.id, tabId)}
-                onTabClose={(tabId) => onTabClose?.(patient.id, tabId)}
-                onWorkspaceClose={() => onWorkspaceClose?.(patient.id)}
-                onVisitClick={() => onPatientSelect?.(patient.id)}
-              />
-            ))}
-          </MenuSection>
+          <>
+            <div style={sectionGapStyle} />
+            <MenuSection title="Patient Workspaces">
+              {patientWorkspaces.map((patient) => (
+                <PatientWorkspaceItem
+                  key={patient.id}
+                  name={patient.name}
+                  initials={patient.initials}
+                  avatarColor={patient.avatarColor}
+                  tasks={patient.tasks}
+                  workspaceTabs={patient.workspaceTabs}
+                  activeTabId={patient.activeTabId}
+                  currentVisit={patient.currentVisit}
+                  recordingStatus={patient.recordingStatus}
+                  isSelected={selectedItemId === `patient-${patient.id}`}
+                  defaultExpanded={patientWorkspaces.length === 1}
+                  onPatientClick={() => onPatientSelect?.(patient.id)}
+                  onTaskClick={(taskId) => onTaskSelect?.(patient.id, taskId)}
+                  onTabClick={(tabId) => onTabClick?.(patient.id, tabId)}
+                  onTabClose={(tabId) => onTabClose?.(patient.id, tabId)}
+                  onWorkspaceClose={() => onWorkspaceClose?.(patient.id)}
+                  onVisitClick={() => onPatientSelect?.(patient.id)}
+                />
+              ))}
+            </MenuSection>
+          </>
         )}
       </div>
     </div>
