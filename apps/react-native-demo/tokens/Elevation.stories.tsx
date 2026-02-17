@@ -9,7 +9,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import React from 'react';
 import { View, Text, ScrollView, Platform } from 'react-native';
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 const meta: Meta = {
   title: 'Design System/Semantics/Elevation',
@@ -59,7 +59,7 @@ const meta: Meta = {
 ## Usage
 
 \`\`\`tsx
-import * as elevation from '@/design-system/tokens/build/react-native/elevation';
+import * as elevation from '@carbon-health/design-tokens/react-native/elevation';
 
 // ✅ Use semantic elevation levels (these ARE the primitives in RN)
 <View style={[{ backgroundColor: '#fff', borderRadius: 12 }, elevation.md]}>

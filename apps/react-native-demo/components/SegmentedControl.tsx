@@ -8,7 +8,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleProp, ViewStyle, StyleSheet } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../theme';
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 export interface SegmentOption {
   value: string;

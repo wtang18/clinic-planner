@@ -268,7 +268,7 @@ import {
   colorFgNeutralPrimary,
   dimensionSpaceAroundMd,
   dimensionRadiusMd,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 // Use in StyleSheet
 const styles = StyleSheet.create({
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
 ### Elevation (Shadows)
 
 ```typescript
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 const styles = StyleSheet.create({
   card: {

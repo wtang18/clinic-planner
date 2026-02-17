@@ -63,7 +63,7 @@ import {
   textLineHeightHeadingLg,
   textFontSizeHeading2xl,
   textLineHeightHeading2xl,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 // Components
 import { Card } from '../components/Card';

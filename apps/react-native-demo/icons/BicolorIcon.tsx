@@ -8,7 +8,7 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
-import { smallBicolorIconMap, mediumBicolorIconMap } from '@design-system/icons/bicolor-icon-map';
+import { smallBicolorIconMap, mediumBicolorIconMap } from '@carbon-health/design-icons/bicolor-icon-map.rn';
 import {
   colorFgNeutralPrimary,
   colorFgNeutralInversePrimary,
@@ -21,7 +21,7 @@ import {
   colorBgInputLowAccented,
   colorBgInputHighAccented,
   colorBgNeutralLowAccented,
-} from '@design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 export type BicolorIconSize = 'small' | 'medium';
 

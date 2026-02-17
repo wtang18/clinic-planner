@@ -19,8 +19,8 @@ import {
   dimensionSpaceAroundLg,
   dimensionSpaceBetweenRelatedSm,
   dimensionRadiusMd,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+} from '@carbon-health/design-tokens/react-native';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 // Import components
 import { Card } from '../components/Card';

@@ -16,8 +16,8 @@
 ```typescript
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleProp, ViewStyle, TextStyle } from 'react-native';
-import { colorBgX, colorFgX, dimensionX } from '../../../src/design-system/tokens/build/react-native/tokens';
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { colorBgX, colorFgX, dimensionX } from '@carbon-health/design-tokens/react-native';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 import type { IconName } from '../icons';
 import { Icon } from '../icons';
 ```

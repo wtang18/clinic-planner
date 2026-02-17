@@ -17,7 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import { Button } from './Button';
 import { SegmentedControl } from './SegmentedControl';
-import { dimensionSpaceAroundDefault } from '../../../src/design-system/tokens/build/react-native/tokens';
+import { dimensionSpaceAroundDefault } from '@carbon-health/design-tokens/react-native';
 import { useNavigationHandlers } from '../contexts/NavigationContext';
 
 export interface FloatingHeaderProps {

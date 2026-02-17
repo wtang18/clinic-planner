@@ -7,8 +7,8 @@
 
 import React from 'react';
 import { Platform, View, ViewStyle } from 'react-native';
-import type { IconName } from '@design-system/icons/icon-names';
-import { smallIconMap, mediumIconMap } from '@design-system/icons/icon-map';
+import type { IconName } from '@carbon-health/design-icons/icon-names';
+import { smallIconMap, mediumIconMap } from '@carbon-health/design-icons/icon-map.rn';
 import { SvgXml } from 'react-native-svg';
 
 export type IconSize = 'small' | 'medium';

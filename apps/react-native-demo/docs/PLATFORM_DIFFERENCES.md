@@ -213,7 +213,7 @@ backgroundColor: colorBgNeutralBase  // "#181818"
 **Platform Detection:**
 ```javascript
 import { Platform } from 'react-native';
-import { elevation } from '@/design-system/tokens/elevation';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 // Automatically applies correct shadow based on platform
 <View style={elevation.md} />

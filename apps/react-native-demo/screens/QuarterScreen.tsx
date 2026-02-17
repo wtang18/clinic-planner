@@ -40,7 +40,7 @@ import {
   textLineHeightBodyXs,
   textFontSizeHeadingLg,
   textLineHeightHeadingLg,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 // Import design system components
 import { Button } from '../components/Button';

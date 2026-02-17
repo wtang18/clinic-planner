@@ -14,7 +14,7 @@ import {
   colorFgNeutralSecondary,
   dimensionSpaceAroundMd,
   dimensionSpaceAroundLg,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 export default function SettingsScreen() {
   return (

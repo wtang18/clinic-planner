@@ -18,8 +18,8 @@ import { BlurView } from 'expo-blur';
 import type { IconName, BicolorIconName } from '../icons';
 import { Icon, BicolorIcon } from '../icons';
 import { useTheme, ThemeTokens } from '../theme';
-import { dimensionRadiusFull } from '../../../src/design-system/tokens/build/react-native/tokens';
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { dimensionRadiusFull } from '@carbon-health/design-tokens/react-native';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 export type ButtonType =
   | 'primary'

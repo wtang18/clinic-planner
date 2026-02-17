@@ -12,6 +12,9 @@
     "./css": "./dist/index.css",
     "./css/*": "./dist/*.css",
     "./react-native": "./dist/react-native/tokens.js",
+    "./react-native/elevation": "./dist/react-native/elevation.ts",
+    "./react-native/text-styles": "./dist/react-native/text-styles.ts",
+    "./react-native/fonts": "./dist/react-native/fonts.ts",
     "./react-native/*": "./dist/react-native/*"
   },
   "files": [

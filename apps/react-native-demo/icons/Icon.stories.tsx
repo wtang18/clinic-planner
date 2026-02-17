@@ -7,7 +7,7 @@ import type { Meta, StoryObj } from '@storybook/react-native';
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { Icon } from './Icon';
-import { SMALL_ICON_NAMES, MEDIUM_ICON_NAMES, ALL_ICON_NAMES } from '@design-system/icons/icon-names';
+import { SMALL_ICON_NAMES, MEDIUM_ICON_NAMES, ALL_ICON_NAMES } from '@carbon-health/design-icons/icon-names';
 
 const meta: Meta<typeof Icon> = {
   title: 'Design System/Icons/Icon',

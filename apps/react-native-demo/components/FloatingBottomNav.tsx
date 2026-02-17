@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/native';
 import MaskedView from '@react-native-masked-view/masked-view';
 
 import { SegmentedControl } from './SegmentedControl';
-import { dimensionSpaceAroundDefault } from '../../../src/design-system/tokens/build/react-native/tokens';
+import { dimensionSpaceAroundDefault } from '@carbon-health/design-tokens/react-native';
 
 export interface FloatingBottomNavProps {
   /** Currently active view */

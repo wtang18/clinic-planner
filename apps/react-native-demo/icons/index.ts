@@ -12,4 +12,4 @@ export { Icon, type IconProps, type IconSize } from './Icon';
 export { BicolorIcon, type BicolorIconProps, type BicolorIconSize, type BicolorIconName } from './BicolorIcon';
 
 // Re-export icon names type from web design system
-export type { IconName } from '@design-system/icons/icon-names';
+export type { IconName } from '@carbon-health/design-icons/icon-names';

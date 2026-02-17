@@ -39,7 +39,7 @@ import {
   colorFgNeutralPrimary,
   colorFgNeutralSecondary,
   colorBgBrandPrimary,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();

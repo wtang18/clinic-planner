@@ -13,7 +13,7 @@ import {
   dimensionRadiusMd,
   dimensionRadiusLg,
   dimensionRadiusFull,
-} from '../../../src/design-system/tokens/build/react-native/tokens';
+} from '@carbon-health/design-tokens/react-native';
 
 const meta: Meta = {
   title: 'Design System/Semantics/Border Radius',
@@ -48,7 +48,7 @@ Border radius creates visual hierarchy and affects perceived friendliness:
 ## Usage
 
 \`\`\`tsx
-import { dimensionRadiusMd } from '@/design-system/tokens/build/react-native/tokens';
+import { dimensionRadiusMd } from '@carbon-health/design-tokens/react-native';
 
 <View style={{
   borderRadius: dimensionRadiusMd.scale, // Uses scale for RN

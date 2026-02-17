@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 
 // Import elevation tokens (shadows require native handling in RN)
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 import { useTheme } from '../theme';
 
 export interface CardProps {

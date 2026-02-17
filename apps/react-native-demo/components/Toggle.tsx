@@ -7,7 +7,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleProp, ViewStyle, Animated } from 'react-native';
 import { useTheme } from '../theme';
-import { dimensionSpaceAroundNudge2 } from '../../../src/design-system/tokens/build/react-native/tokens';
+import { dimensionSpaceAroundNudge2 } from '@carbon-health/design-tokens/react-native';
 
 export interface ToggleProps {
   /** Whether the toggle is checked/on */

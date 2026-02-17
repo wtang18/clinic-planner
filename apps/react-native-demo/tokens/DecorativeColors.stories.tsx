@@ -6,7 +6,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native';
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
-import * as tokens from '../../../src/design-system/tokens/build/react-native/tokens';
+import * as tokens from '@carbon-health/design-tokens/react-native';
 
 const meta: Meta = {
   title: 'Design System/Decorative/Colors',

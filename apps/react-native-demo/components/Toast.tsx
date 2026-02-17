@@ -10,7 +10,7 @@ import { Icon, IconName } from '../icons';
 import { BicolorIcon, BicolorIconName } from '../icons';
 import { Button } from './Button';
 import { useTheme } from '../theme';
-import { elevation } from '../../../src/design-system/tokens/build/react-native/elevation';
+import { elevation } from '@carbon-health/design-tokens/react-native/elevation';
 
 export type ToastType = 'positive' | 'alert' | 'attention' | 'info' | 'icon' | 'no-icon';
 
