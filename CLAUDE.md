@@ -113,62 +113,18 @@ Documentation follows these patterns:
 | Theme Overrides | `/packages/design-tokens/sd-input/themes/` |
 | Build Output | `/packages/design-tokens/dist/` |
 
-## Workflow Processes
+## Project-Specific Workflow
 
-These are automatic behaviors — follow them without being asked.
+These supplement the global workflow processes in `~/.claude/CLAUDE.md`.
 
-### After Any Code Change (EHR Prototype)
-- Run `npm run test:run` from `apps/ehr-prototype` and report the result
-- If the change affects type signatures (hook returns, state shapes, action types), also run `npx tsc --noEmit` from `apps/ehr-prototype`
-- If tests fail, fix before moving on — don't leave broken tests behind
+### Test Commands (EHR Prototype)
+- Test suite: `cd apps/ehr-prototype && npm run test:run`
+- Type check: `cd apps/ehr-prototype && npx tsc --noEmit`
 
-### After Any Refactor That Deletes or Renames
-- Grep for the old names across the codebase to catch orphaned references
-- Check for unused imports in modified files
-- Flag anything found; clean it up or note it
-
-### When Adding Hooks, Reducers, or Complex Logic
-- Write tests alongside the code, not as a follow-up task
+### EHR Test Conventions
 - For new adapter hooks: test initial shape, dispatch round-trip, and cross-hook consistency
-- For new reducer actions: test the transition and verify invariant coverage
-
-### When Introducing a New Pattern for the First Time
-- Include a brief "what and why" explanation alongside the code
-- Cover: what the pattern is, why it was chosen over alternatives, when to use it again
-- Subsequent uses of the same pattern don't need the explanation
-
-### After Completing a Task or Phase
-- Summarize what changed: files modified, tests added/changed, lines removed (concrete numbers)
-- Report current state: tests passing, any warnings or known issues
-- Suggest next steps if obvious from context
-- Surface any implicit decisions made that might warrant review
-- Update `MEMORY.md`: current status, test counts, move "next" marker forward
-
-### At Major Milestones (Feature Complete, Cleanup Done)
-- Trim `MEMORY.md`: archive resolved phase details to topic files in `memory/`
-- Keep `MEMORY.md` focused on: current status, active decisions, active gotchas, key files
-- Remove details about completed phases that are now just history
-- Check that referenced documentation (TEST_ROADMAP.md, STATUS.md, etc.) is still accurate
-
-### Commit Cadence
-- Offer to commit after each natural boundary:
-  - Feature or fix complete and tests pass
-  - Refactor done (before starting the next one)
-  - Dead code cleanup finished
-  - New tests added and passing
-  - Before starting something risky or experimental
-- Don't commit mid-work, after partial changes, or when tests are failing
-- Don't push unless explicitly asked
-
-### When Encountering Stale Documentation
-- If reading a doc file during work and it's outdated, flag it immediately
-- Offer to update it as a side task or note it for later
-- Don't silently continue past stale docs
-
-### After Schema or State Shape Changes
-- Verify invariant tests still cover all valid/forbidden states
-- If new states were added, add corresponding invariant test cases
-- Run the full test suite, not just the new tests
+- For new reducer actions: test the transition and verify invariant coverage (8 invariants in `src/state/coordination/invariants.ts`)
+- Use `createWrapper()` pattern for provider nesting: CoordinationProvider → BottomBarProvider
 
 ## Important Notes
 
