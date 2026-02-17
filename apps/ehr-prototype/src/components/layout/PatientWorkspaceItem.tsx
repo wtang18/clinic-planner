@@ -136,7 +136,19 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     marginLeft: 'auto', // Push chevron to right
   };
 
+  // Whether to show close icon in place of avatar (on hover when closeable)
+  const showCloseOnAvatar = isHovered && !!onWorkspaceClose;
+
+  const avatarWrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    width: 24,
+    height: 24,
+    flexShrink: 0,
+  };
+
   const avatarStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -148,7 +160,23 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     fontSize: 10,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.semibold,
-    flexShrink: 0,
+    opacity: showCloseOnAvatar ? 0 : 1,
+    transition: `opacity 150ms ease`,
+  };
+
+  const avatarCloseStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+    backgroundColor: colors.bg.neutral.medium,
+    borderRadius: borderRadius.full,
+    opacity: showCloseOnAvatar ? 1 : 0,
+    transition: `opacity 150ms ease`,
+    cursor: 'pointer',
   };
 
   const nameStyle: React.CSSProperties = {
@@ -236,17 +264,12 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     };
   };
 
-  const closeButtonStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 16,
-    height: 16,
-    marginLeft: 'auto',
-    borderRadius: borderRadius.xs,
-    cursor: 'pointer',
-    opacity: 0.6,
-    transition: `opacity ${transitions.fast}`,
+  // Styles for tab icon / close crossfade
+  const tabIconWrapperStyle: React.CSSProperties = {
+    position: 'relative',
+    width: 14,
+    height: 14,
+    flexShrink: 0,
   };
 
   return (
@@ -266,46 +289,28 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
           }
         }}
       >
-        <span style={avatarStyle}>{displayInitials}</span>
+        {/* Avatar / close crossfade — both occupy the same 24px slot */}
+        <span style={avatarWrapperStyle}>
+          <span style={avatarStyle}>{displayInitials}</span>
+          <span
+            style={avatarCloseStyle}
+            onClick={(e) => {
+              e.stopPropagation();
+              onWorkspaceClose?.();
+            }}
+          >
+            <X size={12} color={colors.fg.neutral.secondary} />
+          </span>
+        </span>
         <span style={nameStyle}>{name}</span>
-        {/* Recording status indicator - uses TranscriptionIndicator for consistency */}
+        {/* Recording status indicator */}
         {recordingStatus !== 'none' && (
           <TranscriptionIndicator
             status={recordingStatus === 'complete' ? 'complete' : recordingStatus}
             size="sm"
           />
         )}
-        {/* Close workspace button - shown on hover */}
-        {isHovered && onWorkspaceClose && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 18,
-              height: 18,
-              borderRadius: borderRadius.xs,
-              cursor: 'pointer',
-              marginLeft: 'auto',
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onWorkspaceClose();
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = colors.bg.neutral.medium;
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-            }}
-          >
-            <X size={12} color={colors.fg.neutral.secondary} />
-          </div>
-        )}
-        <span style={{
-          ...expandButtonStyle,
-          marginLeft: isHovered && onWorkspaceClose ? spaceBetween.relatedCompact : 'auto',
-        }}>
+        <span style={expandButtonStyle}>
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </span>
       </div>
@@ -315,6 +320,8 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
         {hasWorkspaceTabs && workspaceTabs.map((tab) => {
           const isActive = tab.id === activeTabId;
           const isTabHovered = tab.id === hoveredTabId;
+          const canClose = tab.type !== 'overview';
+          const showTabClose = canClose && isTabHovered;
           return (
             <div
               key={tab.id}
@@ -328,7 +335,40 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
               role="button"
               tabIndex={0}
             >
-              {getTabIcon(tab.type, isActive)}
+              {/* Icon / close crossfade — both in the same 14px slot */}
+              <span style={tabIconWrapperStyle}>
+                <span style={{
+                  position: 'absolute',
+                  inset: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: showTabClose ? 0 : 1,
+                  transition: 'opacity 150ms ease',
+                }}>
+                  {getTabIcon(tab.type, isActive)}
+                </span>
+                {canClose && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: showTabClose ? 1 : 0,
+                      transition: 'opacity 150ms ease',
+                      cursor: 'pointer',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTabClose?.(tab.id);
+                    }}
+                  >
+                    <X size={12} color={colors.fg.neutral.secondary} />
+                  </span>
+                )}
+              </span>
               <span
                 style={{
                   fontSize: 13,
@@ -349,24 +389,6 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
                   status={recordingStatusToIndicator(tabRecordingStatuses[tab.id])}
                   size="sm"
                 />
-              )}
-              {/* Close button (not for overview tab) */}
-              {tab.type !== 'overview' && isTabHovered && (
-                <div
-                  style={closeButtonStyle}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTabClose?.(tab.id);
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.opacity = '1';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.opacity = '0.6';
-                  }}
-                >
-                  <X size={12} color={colors.fg.neutral.secondary} />
-                </div>
               )}
             </div>
           );
