@@ -14,8 +14,8 @@ const meta: Meta<typeof MenuPane> = {
 The MenuPane provides navigation structure with:
 
 - **Hubs**: Home and Visits for global navigation
-- **Workspaces**: Agent, To Do, and My Patients
-- **Patient Workspaces**: Expandable tree showing active patients with their tasks and visits
+- **To Do**: Collapsible task categories with filters
+- **My Patients**: Registry views (All, High Risk, Chronic Care, Overdue Care) plus open patient workspaces
 
 The menu is 200px wide and collapses completely (not to an icon-only state).
         `,
@@ -61,10 +61,11 @@ const mockPatientWorkspaces = [
 export const Default: Story = {
   args: {
     patientWorkspaces: mockPatientWorkspaces,
-    todoCount: 12,
     onNavItemSelect: fn(),
+    onRegistryViewSelect: fn(),
     onPatientSelect: fn(),
     onTaskSelect: fn(),
+    onWorkspaceClose: fn(),
   },
 };
 
@@ -72,23 +73,24 @@ export const WithSelectedItem: Story = {
   name: 'With Selected Item',
   args: {
     patientWorkspaces: mockPatientWorkspaces,
-    todoCount: 5,
-    selectedItemId: 'todo',
+    selectedItemId: 'registry-all-patients',
     onNavItemSelect: fn(),
+    onRegistryViewSelect: fn(),
+    onWorkspaceClose: fn(),
   },
 };
 
 export const NoPatients: Story = {
-  name: 'No Patient Workspaces',
+  name: 'No Open Workspaces',
   args: {
     patientWorkspaces: [],
-    todoCount: 0,
     onNavItemSelect: fn(),
+    onRegistryViewSelect: fn(),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Menu when no patients are currently open in workspaces.',
+        story: 'Menu with no open patient workspaces. Registry views (All Patients, High Risk, etc.) remain visible under My Patients.',
       },
     },
   },
@@ -98,8 +100,9 @@ export const ManyTasks: Story = {
   name: 'High Task Count',
   args: {
     patientWorkspaces: mockPatientWorkspaces,
-    todoCount: 99,
     onNavItemSelect: fn(),
+    onRegistryViewSelect: fn(),
+    onWorkspaceClose: fn(),
   },
   parameters: {
     docs: {

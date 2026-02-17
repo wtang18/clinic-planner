@@ -24,7 +24,7 @@ import {
 } from '../../state/selectors/views';
 
 import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
-import { MenuPane } from '../../components/layout/MenuPane';
+import { MenuPane, type RegistryViewId } from '../../components/layout/MenuPane';
 import { LeftPaneContainer, ViewIconsRow, AIDrawerFooter, type TranscriptSegment as DrawerTranscriptSegment } from '../../components/LeftPane';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
@@ -215,12 +215,20 @@ export const CaptureView: React.FC = () => {
   const handleNavItemSelect = (id: string) => {
     setSelectedNavItem(id);
     // If selecting a hub or workspace, switch back to patient view
-    if (id === 'home' || id === 'visits' || id === 'agent' || id === 'my-patients') {
+    if (id === 'home' || id === 'visits' || id === 'agent') {
       setViewMode('patient');
       setTodoViewState(null);
       // Clear navigation context when navigating via menu
       todoNav.clearNavigation();
     }
+  };
+
+  // Handle registry view selection (population health views under My Patients)
+  const handleRegistryViewSelect = (viewId: RegistryViewId) => {
+    setSelectedNavItem(`registry-${viewId}`);
+    setViewMode('patient');
+    setTodoViewState(null);
+    todoNav.clearNavigation();
   };
 
   // Handle patient/workspace selection
@@ -641,6 +649,7 @@ export const CaptureView: React.FC = () => {
               selectedToDoFilter: todoViewState ? `${todoViewState.categoryId}/${todoViewState.filterId}` : undefined,
               onNavItemSelect: handleNavItemSelect,
               onToDoFilterSelect: handleToDoFilterSelect,
+              onRegistryViewSelect: handleRegistryViewSelect,
               onPatientSelect: handlePatientSelect,
               onTabClick: handleTabClick,
               onTabClose: handleTabClose,

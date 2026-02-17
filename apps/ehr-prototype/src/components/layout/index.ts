@@ -34,7 +34,7 @@ export { FloatingNavRow } from './FloatingNavRow';
 export type { FloatingNavRowProps } from './FloatingNavRow';
 
 export { MenuPane } from './MenuPane';
-export type { MenuPaneProps } from './MenuPane';
+export type { MenuPaneProps, RegistryViewId } from './MenuPane';
 
 export { MenuSection } from './MenuSection';
 export type { MenuSectionProps } from './MenuSection';
