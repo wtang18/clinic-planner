@@ -115,7 +115,7 @@ export const noteGenerationService: AIService = {
         details: 'AI-generated visit note from ambient recording',
       }],
       _meta: {
-        syncStatus: 'pending',
+        syncStatus: 'local',
         aiGenerated: true,
         aiConfidence: generatedNote.confidence,
         requiresReview: true,

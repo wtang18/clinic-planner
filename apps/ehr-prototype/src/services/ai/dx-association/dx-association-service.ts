@@ -134,7 +134,7 @@ export const dxAssociationService: AIService = {
         id: `task-${nanoid(8)}`,
         type: 'dx-association' as TaskType,
         status: 'pending-review' as TaskStatus,
-        priority: 'medium',
+        priority: 'normal',
         trigger: {
           action: trigger.action.type,
           itemId: item.id,

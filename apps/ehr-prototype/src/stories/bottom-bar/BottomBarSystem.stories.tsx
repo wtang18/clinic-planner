@@ -291,7 +291,6 @@ export const FullSystem: StoryObj = {
       onSuggestionAccept={(id) => console.log('Accept:', id)}
       onSuggestionDismiss={(id) => console.log('Dismiss:', id)}
       onAlertAcknowledge={(id) => console.log('Acknowledge:', id)}
-      onGenerateNote={() => console.log('Generate note')}
     >
       <div style={{ minHeight: '100vh', backgroundColor: '#1a1a1a', padding: 24 }}>
         <div style={{ maxWidth: 800, margin: '0 auto', paddingBottom: 100 }}>

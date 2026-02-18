@@ -128,7 +128,7 @@ export const drugInteractionService: AIService = {
       status: contraindicated.length > 0 || severe.length > 0
         ? 'pending-review' as TaskStatus
         : 'completed' as TaskStatus,
-      priority: contraindicated.length > 0 ? 'urgent' : severe.length > 0 ? 'high' : 'medium',
+      priority: contraindicated.length > 0 ? 'urgent' : severe.length > 0 ? 'high' : 'normal',
       trigger: {
         action: trigger.action.type,
         itemId: medication.id,

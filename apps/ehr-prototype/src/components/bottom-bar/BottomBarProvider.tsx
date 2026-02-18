@@ -50,10 +50,6 @@ export interface BottomBarSystemProps {
   onSuggestionDismiss?: (id: string) => void;
   /** Called when an alert is acknowledged */
   onAlertAcknowledge?: (id: string) => void;
-  /** Called when generate note is clicked */
-  onGenerateNote?: () => void;
-  /** Called when check interactions is clicked */
-  onCheckInteractions?: () => void;
   /** Called when workspace is navigated away */
   onWorkspaceNavigateAway?: () => void;
   /** Whether transcription is enabled */
@@ -78,8 +74,6 @@ interface BottomBarInnerProps {
   onSuggestionAccept?: (id: string) => void;
   onSuggestionDismiss?: (id: string) => void;
   onAlertAcknowledge?: (id: string) => void;
-  onGenerateNote?: () => void;
-  onCheckInteractions?: () => void;
   transcriptionEnabled?: boolean;
   showBottomBar?: boolean;
 }
@@ -94,8 +88,6 @@ const BottomBarInner: React.FC<BottomBarInnerProps> = ({
   onSuggestionAccept,
   onSuggestionDismiss,
   onAlertAcknowledge,
-  onGenerateNote,
-  onCheckInteractions,
   transcriptionEnabled,
   showBottomBar = true,
 }) => {
@@ -128,8 +120,6 @@ const BottomBarInner: React.FC<BottomBarInnerProps> = ({
           onSuggestionAccept={onSuggestionAccept}
           onSuggestionDismiss={onSuggestionDismiss}
           onAlertAcknowledge={onAlertAcknowledge}
-          onGenerateNote={onGenerateNote}
-          onCheckInteractions={onCheckInteractions}
           transcriptionEnabled={transcriptionEnabled}
         />
       )}
@@ -151,8 +141,6 @@ export const BottomBarSystem: React.FC<BottomBarSystemProps> = ({
   onSuggestionAccept,
   onSuggestionDismiss,
   onAlertAcknowledge,
-  onGenerateNote,
-  onCheckInteractions,
   onWorkspaceNavigateAway,
   transcriptionEnabled = true,
   initialState,
@@ -170,8 +158,6 @@ export const BottomBarSystem: React.FC<BottomBarSystemProps> = ({
         onSuggestionAccept={onSuggestionAccept}
         onSuggestionDismiss={onSuggestionDismiss}
         onAlertAcknowledge={onAlertAcknowledge}
-        onGenerateNote={onGenerateNote}
-        onCheckInteractions={onCheckInteractions}
         transcriptionEnabled={transcriptionEnabled}
         showBottomBar={showBottomBar}
       >

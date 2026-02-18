@@ -46,9 +46,7 @@ export function rootReducer(
       const { itemTemplate, category } = suggestion.content;
       const now = new Date();
       const newItem: ChartItem = {
-        id: `from-suggestion-${suggestion.id}`,
         category,
-        status: 'confirmed',
         displayText: itemTemplate.displayText || suggestion.displayText,
         createdAt: now,
         createdBy: { id: 'system', name: 'AI System' },
