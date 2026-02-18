@@ -16,7 +16,7 @@ import { Card } from '../../components/primitives/Card';
 // ============================================================================
 
 export interface SignOffBlocker {
-  type: 'unreviewed-ai' | 'incomplete-item' | 'missing-dx' | 'pending-task' | 'missing-note';
+  type: 'unreviewed-ai' | 'incomplete-item' | 'missing-dx' | 'pending-task' | 'missing-note' | 'safety-critical';
   message: string;
   itemId?: string;
   severity: 'error' | 'warning';

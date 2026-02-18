@@ -95,7 +95,19 @@ export function sessionReducer(
         transcription: createInitialTranscriptionState(),
       };
     }
-    
+
+    case 'ENCOUNTER_SIGNED': {
+      // Stop transcription when encounter is signed
+      return {
+        ...state,
+        transcription: {
+          ...state.transcription,
+          status: 'idle',
+          currentSegment: undefined,
+        },
+      };
+    }
+
     default:
       return state;
   }

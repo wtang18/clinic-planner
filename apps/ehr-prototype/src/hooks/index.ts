@@ -223,4 +223,12 @@ export type {
   UseCoordinationReturn,
 } from './useCoordination';
 
+// Safety Alert Hooks
+export { useSafetyAlerts } from './useSafetyAlerts';
+export type { UseSafetyAlertsResult } from './useSafetyAlerts';
+
+// Encounter Lifecycle Hooks
+export { useEncounterLifecycle } from './useEncounterLifecycle';
+export type { EncounterPhase, UseEncounterLifecycleResult } from './useEncounterLifecycle';
+
 // Note: useSynchronizedTransition removed - using CSS Grid transitions instead

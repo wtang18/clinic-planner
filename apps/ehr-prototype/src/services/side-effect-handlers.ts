@@ -217,6 +217,18 @@ export const cleanupExpiredSuggestionsHandler: SideEffectHandler = (action, stat
   }
 };
 
+/**
+ * Handler: When encounter is signed, stop recording if active
+ */
+export const encounterSignedHandler: SideEffectHandler = (action, state, dispatch) => {
+  if (action.type !== 'ENCOUNTER_SIGNED') return;
+
+  // If transcription was recording, dispatch stop
+  if (state.session.transcription.status === 'recording') {
+    dispatch({ type: 'TRANSCRIPTION_STOPPED', payload: {} });
+  }
+};
+
 // ============================================================================
 // Exports
 // ============================================================================
@@ -231,6 +243,7 @@ export const DEFAULT_SIDE_EFFECT_HANDLERS: SideEffectHandler[] = [
   taskCompletedHandler,
   itemConfirmedHandler,
   cleanupExpiredSuggestionsHandler,
+  encounterSignedHandler,
 ];
 
 /**

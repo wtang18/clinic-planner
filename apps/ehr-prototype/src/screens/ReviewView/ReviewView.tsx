@@ -2,126 +2,105 @@
  * ReviewView Screen
  *
  * The final review interface before signing the encounter.
- * Shows items organized by clinical category with sign-off controls.
+ * Shows items organized by clinical category with:
+ * - Section completeness indicators
+ * - "+Add" buttons on empty sections (scoped OmniAddBar)
+ * - Inline DetailsPane editing (no mode switch)
+ * - Safety alert banners on medication cards
+ * - Sign-off with safety-critical blockers
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   useEncounterState,
-  useDispatch,
-  useChartItems,
   useOpenCareGaps,
-  usePendingTasks,
-  useItemsRequiringReview,
-  useDiagnoses,
+  useItemActions,
 } from '../../hooks';
-import { selectReviewViewData } from '../../state/selectors/views';
 import type { ChartItem, ItemCategory } from '../../types';
-import type { Mode } from '../../state/types';
 
 import { AppShell } from '../../components/layout/AppShell';
 import { PatientHeader } from '../../components/layout/PatientHeader';
 import { ModeSelector } from '../../components/layout/ModeSelector';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { CareGapList } from '../../components/care-gaps/CareGapList';
+import { DetailsPane } from '../../components/details-pane';
+import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
+import { SafetyAlertBanner } from '../../components/safety/SafetyAlertBanner';
 import { FileText } from 'lucide-react';
-import { CollapsibleGroup } from '../../components/primitives/CollapsibleGroup';
 
-import { SignOffSection, SignOffBlocker } from './SignOffSection';
+import { SignOffSection } from './SignOffSection';
+import { ReviewSectionHeader } from './ReviewSectionHeader';
+import { useReviewView, REVIEW_SECTIONS } from './useReviewView';
 import { EmptyState } from '../../components/primitives/EmptyState';
 import { SectionTitle } from '../../components/primitives/SectionTitle';
-import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
-
-// ============================================================================
-// Section Categories
-// ============================================================================
-
-interface ReviewSectionConfig {
-  id: string;
-  title: string;
-  categories: ItemCategory[];
-}
-
-const REVIEW_SECTIONS: ReviewSectionConfig[] = [
-  {
-    id: 'cc-hpi',
-    title: 'Chief Complaint / HPI',
-    categories: ['chief-complaint', 'hpi'],
-  },
-  {
-    id: 'ros',
-    title: 'Review of Systems',
-    categories: ['ros'],
-  },
-  {
-    id: 'pe',
-    title: 'Physical Exam',
-    categories: ['physical-exam'],
-  },
-  {
-    id: 'vitals',
-    title: 'Vitals',
-    categories: ['vitals'],
-  },
-  {
-    id: 'assessment',
-    title: 'Assessment',
-    categories: ['diagnosis'],
-  },
-  {
-    id: 'plan',
-    title: 'Plan',
-    categories: ['medication', 'lab', 'imaging', 'referral', 'procedure', 'instruction'],
-  },
-  {
-    id: 'note',
-    title: 'Visit Note',
-    categories: ['note'],
-  },
-];
+import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
 
 // ============================================================================
 // ReviewSection Component
 // ============================================================================
 
 interface ReviewSectionProps {
+  sectionId: string;
   title: string;
   items: ChartItem[];
-  defaultExpanded?: boolean;
-  onItemEdit?: (id: string) => void;
+  status: 'documented' | 'incomplete' | 'not-documented';
+  safetyAlertsForItem: (itemId: string) => import('../../services/safety/types').SafetyAlert[];
+  onItemEdit: (id: string) => void;
+  onAdd: () => void;
+  onAcknowledgeAlert: (alertId: string, itemId: string) => void;
 }
 
 const ReviewSection: React.FC<ReviewSectionProps> = ({
+  sectionId,
   title,
   items,
-  defaultExpanded = true,
+  status,
+  safetyAlertsForItem,
   onItemEdit,
+  onAdd,
+  onAcknowledgeAlert,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(!defaultExpanded);
-
-  if (items.length === 0) return null;
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div style={styles.section}>
-      <CollapsibleGroup
+    <div style={styles.section} data-testid={`review-section-${sectionId}`}>
+      <ReviewSectionHeader
         title={title}
-        isCollapsed={isCollapsed}
-        onToggle={() => setIsCollapsed(!isCollapsed)}
-        badge={{ label: `${items.length} item${items.length !== 1 ? 's' : ''}`, variant: 'default' }}
-        style={styles.sectionHeader}
-      >
+        status={status}
+        itemCount={items.length}
+        onAdd={onAdd}
+      />
+
+      {!isCollapsed && (
         <div style={styles.sectionContent}>
-          {items.map((item) => (
-            <div key={item.id} style={styles.itemWrapper}>
-              <ChartItemCard
-                item={item}
-                variant="expanded"
-                onEdit={onItemEdit ? () => onItemEdit(item.id) : undefined}
-              />
+          {items.length === 0 ? (
+            <div style={styles.emptySection}>
+              <span style={styles.emptySectionText}>Not documented</span>
             </div>
-          ))}
+          ) : (
+            items.map((item) => {
+              const alerts = safetyAlertsForItem(item.id);
+              return (
+                <div key={item.id} style={styles.itemWrapper}>
+                  <ChartItemCard
+                    item={item}
+                    variant="expanded"
+                    showActions
+                    onEdit={() => onItemEdit(item.id)}
+                  />
+                  {alerts.length > 0 && alerts.map((alert) => (
+                    <SafetyAlertBanner
+                      key={alert.id}
+                      alert={alert}
+                      onAcknowledge={() => onAcknowledgeAlert(alert.id, item.id)}
+                    />
+                  ))}
+                </div>
+              );
+            })
+          )}
         </div>
-      </CollapsibleGroup>
+      )}
     </div>
   );
 };
@@ -132,131 +111,83 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
 
 export const ReviewView: React.FC = () => {
   const state = useEncounterState();
-  const dispatch = useDispatch();
-  const allItems = useChartItems();
   const openCareGaps = useOpenCareGaps();
-  const pendingTasks = usePendingTasks();
-  const itemsRequiringReview = useItemsRequiringReview();
-  const diagnoses = useDiagnoses();
+  const { addItem } = useItemActions();
 
-  const [isSigningOff, setIsSigningOff] = useState(false);
-
-  // Get view data
-  const viewData = selectReviewViewData(state);
+  const {
+    itemsBySection,
+    sectionStatuses,
+    selectedItem,
+    scopedAddCategory,
+    safetyAlerts,
+    signOffBlockers,
+    isSigningOff,
+    handleItemEdit,
+    handleItemUpdate,
+    handleItemRemove,
+    handleCloseDetailsPane,
+    handleScopedAdd,
+    handleCancelScopedAdd,
+    handleSignOff,
+    handleModeChange,
+    acknowledgeAlert,
+  } = useReviewView();
 
   // Patient and encounter context
   const patient = state.context.patient;
   const encounter = state.context.encounter;
 
-  // Group items by section
-  const itemsBySection = useMemo(() => {
-    const grouped: Record<string, ChartItem[]> = {};
-
-    for (const section of REVIEW_SECTIONS) {
-      const sectionItems = allItems.filter((item) =>
-        section.categories.includes(item.category)
-      );
-      grouped[section.id] = sectionItems;
-    }
-
-    return grouped;
-  }, [allItems]);
-
-  // Calculate sign-off blockers
-  const signOffBlockers = useMemo((): SignOffBlocker[] => {
-    const blockers: SignOffBlocker[] = [];
-
-    // Check for unreviewed AI content
-    if (itemsRequiringReview.length > 0) {
-      blockers.push({
-        type: 'unreviewed-ai',
-        message: `${itemsRequiringReview.length} AI-generated item${itemsRequiringReview.length !== 1 ? 's' : ''} require${itemsRequiringReview.length === 1 ? 's' : ''} review`,
-        severity: 'error',
-      });
-    }
-
-    // Check for pending tasks
-    if (pendingTasks.length > 0) {
-      blockers.push({
-        type: 'pending-task',
-        message: `${pendingTasks.length} task${pendingTasks.length !== 1 ? 's' : ''} still pending`,
-        severity: 'error',
-      });
-    }
-
-    // Check for missing diagnosis
-    if (diagnoses.length === 0) {
-      blockers.push({
-        type: 'missing-dx',
-        message: 'No diagnosis documented',
-        severity: 'warning',
-      });
-    }
-
-    // Check for missing visit note
-    const noteItems = allItems.filter((i) => i.category === 'note');
-    if (noteItems.length === 0) {
-      blockers.push({
-        type: 'missing-note',
-        message: 'No visit note generated',
-        severity: 'warning',
-      });
-    }
-
-    // Check for incomplete items
-    const incompleteItems = allItems.filter(
-      (item) => item.status === 'pending-review'
-    );
-    if (incompleteItems.length > 0) {
-      blockers.push({
-        type: 'incomplete-item',
-        message: `${incompleteItems.length} item${incompleteItems.length !== 1 ? 's' : ''} pending review`,
-        severity: 'warning',
-      });
-    }
-
-    return blockers;
-  }, [itemsRequiringReview, pendingTasks, diagnoses, allItems]);
-
-  // Handle mode change
-  const handleModeChange = useCallback(
-    (mode: Mode) => {
-      dispatch({
-        type: 'MODE_CHANGED',
-        payload: { to: mode, trigger: 'user' },
-      });
-    },
-    [dispatch]
+  // Get alerts for a specific item
+  const getAlertsForItem = useCallback(
+    (itemId: string) => safetyAlerts.filter((a) => a.relatedItemId === itemId),
+    [safetyAlerts]
   );
 
-  // Handle sign off
-  const handleSignOff = useCallback(async () => {
-    setIsSigningOff(true);
-
-    try {
-      dispatch({
-        type: 'ENCOUNTER_SIGNED',
-        payload: {
-          signedAt: new Date(),
-        },
-      });
-    } catch (error) {
-      console.error('Sign-off failed:', error);
-    } finally {
-      setIsSigningOff(false);
-    }
-  }, [dispatch]);
-
-  // Handle item edit
-  const handleItemEdit = useCallback(
-    (itemId: string) => {
-      // Switch to capture mode for editing
-      dispatch({
-        type: 'MODE_CHANGED',
-        payload: { to: 'capture', trigger: 'user' },
-      });
+  // Handle scoped add — determine the first category for the section
+  const handleSectionAdd = useCallback(
+    (sectionCategories: ItemCategory[]) => {
+      handleScopedAdd(sectionCategories[0]);
     },
-    [dispatch]
+    [handleScopedAdd]
+  );
+
+  // Handle scoped item add from OmniAddBar
+  const handleScopedItemAdd = useCallback(
+    (item: Partial<ChartItem>) => {
+      const now = new Date();
+      const fullItem: ChartItem = {
+        id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        category: item.category || 'note',
+        displayText: item.displayText || '',
+        displaySubtext: item.displaySubtext,
+        createdAt: now,
+        createdBy: { id: 'current-user', name: 'Current User' },
+        modifiedAt: now,
+        modifiedBy: { id: 'current-user', name: 'Current User' },
+        source: { type: 'manual' },
+        status: 'confirmed' as const,
+        tags: item.tags || [],
+        linkedDiagnoses: item.linkedDiagnoses || [],
+        linkedEncounters: item.linkedEncounters || [],
+        activityLog: [{
+          timestamp: now,
+          action: 'created',
+          actor: 'Current User',
+          details: `Added in Review mode (${item.category || 'note'})`,
+        }],
+        _meta: {
+          syncStatus: 'pending' as const,
+          aiGenerated: false,
+          requiresReview: false,
+          reviewed: true,
+        },
+        ...item,
+      } as ChartItem;
+
+      addItem(fullItem, { type: 'manual' });
+      handleCancelScopedAdd();
+    },
+    [addItem, handleCancelScopedAdd]
   );
 
   // If no patient/encounter loaded, show empty state
@@ -296,11 +227,33 @@ export const ReviewView: React.FC = () => {
           {REVIEW_SECTIONS.map((section) => (
             <ReviewSection
               key={section.id}
+              sectionId={section.id}
               title={section.title}
               items={itemsBySection[section.id]}
+              status={sectionStatuses[section.id]}
+              safetyAlertsForItem={getAlertsForItem}
               onItemEdit={handleItemEdit}
+              onAdd={() => handleSectionAdd(section.categories)}
+              onAcknowledgeAlert={acknowledgeAlert}
             />
           ))}
+
+          {/* Scoped Add Bar */}
+          {scopedAddCategory && (
+            <div style={styles.scopedAddContainer} data-testid="scoped-add-bar">
+              <OmniAddBar
+                onItemAdd={handleScopedItemAdd}
+                initialCategory={scopedAddCategory}
+              />
+              <button
+                type="button"
+                onClick={handleCancelScopedAdd}
+                style={styles.cancelAddButton}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
 
           {/* Care Gaps Summary */}
           {openCareGaps.length > 0 && (
@@ -336,7 +289,12 @@ export const ReviewView: React.FC = () => {
       }
     />
   );
+
+  // DetailsPane is not rendered here — we use the same approach as CaptureView
+  // The DetailsPane is rendered as a sibling at the root level
 };
+
+ReviewView.displayName = 'ReviewView';
 
 // ============================================================================
 // Styles
@@ -362,10 +320,6 @@ const styles: Record<string, React.CSSProperties> = {
   section: {
     marginBottom: spaceAround.defaultPlus,
   },
-  sectionHeader: {
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    backgroundColor: colors.bg.neutral.subtle,
-  },
   sectionContent: {
     padding: spaceAround.default,
     paddingTop: spaceAround.compact,
@@ -373,10 +327,34 @@ const styles: Record<string, React.CSSProperties> = {
   itemWrapper: {
     marginBottom: spaceAround.compact,
   },
+  emptySection: {
+    padding: `${spaceAround.default}px`,
+    textAlign: 'center' as const,
+  },
+  emptySectionText: {
+    fontSize: 14,
+    color: colors.fg.neutral.disabled,
+    fontStyle: 'italic',
+  },
   emptyContainer: {
     height: '100%',
     backgroundColor: colors.bg.neutral.min,
   },
+  scopedAddContainer: {
+    marginBottom: spaceAround.defaultPlus,
+    padding: spaceAround.default,
+    backgroundColor: colors.bg.neutral.min,
+    borderRadius: borderRadius.sm,
+    border: `1px solid ${colors.border.neutral.low}`,
+  },
+  cancelAddButton: {
+    display: 'block',
+    margin: `${spaceAround.compact}px auto 0`,
+    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
+    fontSize: 13,
+    color: colors.fg.neutral.spotReadable,
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+  },
 };
-
-ReviewView.displayName = 'ReviewView';

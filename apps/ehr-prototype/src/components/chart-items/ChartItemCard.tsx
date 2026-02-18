@@ -249,6 +249,9 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
             {item._meta.requiresReview && (
               <Badge variant="warning" size="sm">Review</Badge>
             )}
+            {isUnreviewed && item.source.type === 'maHandoff' && (
+              <Badge variant="default" size="sm">Unreviewed</Badge>
+            )}
           </div>
 
           {item.displaySubtext && (

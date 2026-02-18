@@ -53,6 +53,8 @@ export interface OmniAddBarProps {
   onUndo?: (itemId: string) => void;
   /** Whether the bar is disabled */
   disabled?: boolean;
+  /** Pre-select a category on mount (for scoped add from ReviewView) */
+  initialCategory?: ItemCategory;
   /** Custom styles */
   style?: React.CSSProperties;
 }
@@ -87,9 +89,19 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
   onItemAdd,
   onUndo,
   disabled = false,
+  initialCategory,
   style,
 }) => {
   const [state, dispatch] = React.useReducer(omniAddReducer, INITIAL_STATE);
+
+  // Pre-select category on mount when initialCategory is provided (scoped add)
+  React.useEffect(() => {
+    if (initialCategory && state.step === 'root') {
+      dispatch({ type: 'SELECT_CATEGORY', category: initialCategory });
+    }
+    // Only run on mount (initialCategory changes trigger a new OmniAddBar instance)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── Keyboard shortcuts (Cmd+Z for undo, global when at root) ──
 

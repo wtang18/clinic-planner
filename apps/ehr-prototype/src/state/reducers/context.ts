@@ -32,7 +32,22 @@ export function contextReducer(
         visit: null,
       };
     }
-    
+
+    case 'ENCOUNTER_SIGNED': {
+      if (!state.encounter) return state;
+      return {
+        ...state,
+        encounter: {
+          ...state.encounter,
+          status: 'signed',
+          signedAt: action.payload.signedAt,
+          signedBy: action.payload.signedBy
+            ? { id: action.payload.signedBy, name: action.payload.signedBy }
+            : state.encounter.signedBy,
+        },
+      };
+    }
+
     default:
       return state;
   }
