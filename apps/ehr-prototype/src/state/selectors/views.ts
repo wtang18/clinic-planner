@@ -17,6 +17,7 @@ import type {
   MedicationItem,
   AllergyItem,
 } from '../../types';
+import type { AIDraft } from '../../types';
 import {
   selectAllItems,
   selectAllCareGaps,
@@ -30,6 +31,18 @@ import {
   selectAllergies,
   selectItemsGroupedByCategory,
 } from './derived';
+import {
+  selectProcessViewBatches,
+  selectProcessViewDrafts,
+  selectCompletenessChecklist,
+  selectMockEMLevel,
+  selectOutstandingItemCount,
+} from './process-view';
+import type {
+  ProcessBatch,
+  ChecklistItem,
+  EMLevel,
+} from './process-view';
 
 // ============================================================================
 // Capture View
@@ -176,6 +189,29 @@ export const selectCareGapsPanelData = (
     overdue: allGaps.filter(g => g.status === 'open' && g.dueBy && g.dueBy < now),
   };
 };
+
+// ============================================================================
+// Process View
+// ============================================================================
+
+export interface ProcessViewData {
+  batches: ProcessBatch[];
+  drafts: AIDraft[];
+  checklist: ChecklistItem[];
+  emLevel: EMLevel;
+  outstandingCount: number;
+}
+
+/**
+ * Select data for the process view
+ */
+export const selectProcessViewData = (state: EncounterState): ProcessViewData => ({
+  batches: selectProcessViewBatches(state),
+  drafts: selectProcessViewDrafts(state),
+  checklist: selectCompletenessChecklist(state),
+  emLevel: selectMockEMLevel(state),
+  outstandingCount: selectOutstandingItemCount(state),
+});
 
 // ============================================================================
 // Session Info

@@ -132,6 +132,10 @@ export {
 export { useDraftEngine } from './useDraftEngine';
 export type { UseDraftEngineOptions, UseDraftEngineReturn } from './useDraftEngine';
 
+// Process View Hook
+export { useProcessView } from './useProcessView';
+export type { UseProcessViewResult } from './useProcessView';
+
 // Layout Hooks
 export {
   useBreakpoint,

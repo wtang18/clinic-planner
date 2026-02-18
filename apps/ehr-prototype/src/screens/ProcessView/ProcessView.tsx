@@ -1,113 +1,42 @@
 /**
  * ProcessView Screen
  *
- * The batch review interface for processing pending tasks.
- * Shows tasks grouped by status with a detail pane for the selected task.
+ * Operational batch view for completing outstanding work and signing off.
+ * Shows items organized by batch (AI Drafts, Prescriptions, Labs, Imaging, Referrals)
+ * with a sign-off section at the bottom.
+ *
+ * Phase 5: Replaces the task-status-oriented layout with operational batches.
  */
 
-import React, { useState, useCallback } from 'react';
-import {
-  useEncounterState,
-  useDispatch,
-  useTasks,
-  useTaskActions,
-} from '../../hooks';
-import { selectTaskPaneData } from '../../state/selectors/views';
+import React, { useCallback } from 'react';
+import { useEncounterState, useOpenCareGaps } from '../../hooks';
+import { useProcessView } from '../../hooks/useProcessView';
+import type { ItemCategory } from '../../types';
+import type { BatchType } from '../../types/drafts';
+import type { Mode } from '../../state/types';
 
 import { AppShell } from '../../components/layout/AppShell';
 import { PatientHeader } from '../../components/layout/PatientHeader';
 import { ModeSelector } from '../../components/layout/ModeSelector';
-import { SplitPane } from '../../components/layout/SplitPane';
-import { TaskList } from '../../components/tasks/TaskList';
-import { CollapsibleGroup } from '../../components/primitives/CollapsibleGroup';
-import { Button } from '../../components/primitives/Button';
-
-import { Send, List } from 'lucide-react';
-
-import { TaskDetailPane } from './TaskDetailPane';
+import { DetailsPane } from '../../components/details-pane/DetailsPane';
+import { BatchSection } from '../../components/process-view/BatchSection';
+import { DraftSection } from '../../components/process-view/DraftSection';
+import { SignOff } from '../../components/process-view/SignOff';
 import { EmptyState } from '../../components/primitives/EmptyState';
-import { colors, spaceAround } from '../../styles/foundations';
+
+import { List, Plus } from 'lucide-react';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, zIndex } from '../../styles/foundations';
 
 // ============================================================================
-// Types
+// Batch → Category Mapping
 // ============================================================================
 
-interface TaskSectionProps {
-  title: string;
-  count: number;
-  tasks: import('../../types').BackgroundTask[];
-  badgeVariant?: 'default' | 'success' | 'warning' | 'error' | 'info';
-  selectedId: string | null;
-  onTaskSelect: (id: string) => void;
-  batchAction?: {
-    label: string;
-    onClick: () => void;
-  };
-  collapsible?: boolean;
-  defaultCollapsed?: boolean;
-  onApprove?: (id: string) => void;
-  onReject?: (id: string, reason?: string) => void;
-  onRetry?: (id: string) => void;
-}
-
-// ============================================================================
-// TaskSection Component
-// ============================================================================
-
-const TaskSection: React.FC<TaskSectionProps> = ({
-  title,
-  count,
-  tasks,
-  badgeVariant = 'default',
-  selectedId,
-  onTaskSelect,
-  batchAction,
-  collapsible = false,
-  defaultCollapsed = false,
-  onApprove,
-  onReject,
-  onRetry,
-}) => {
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-
-  if (count === 0) return null;
-
-  const batchActionButton = batchAction && !isCollapsed ? (
-    <div onClick={(e) => e.stopPropagation()}>
-      <Button
-        variant="primary"
-        size="sm"
-        leftIcon={<Send size={14} />}
-        onClick={batchAction.onClick}
-        data-testid="batch-send-btn"
-      >
-        {batchAction.label}
-      </Button>
-    </div>
-  ) : undefined;
-
-  const sectionTestId = `task-section-${title.toLowerCase().replace(/\s+/g, '-')}`;
-
-  return (
-    <div style={styles.section} data-testid={sectionTestId}>
-      <CollapsibleGroup
-        title={title}
-        isCollapsed={collapsible ? isCollapsed : false}
-        onToggle={collapsible ? () => setIsCollapsed(!isCollapsed) : () => {}}
-        badge={{ label: count, variant: badgeVariant }}
-        trailing={batchActionButton}
-        style={styles.sectionHeader}
-      >
-        <TaskList
-          tasks={tasks}
-          groupBy="none"
-          onApprove={onApprove ?? (() => {})}
-          onReject={onReject ?? (() => {})}
-          onRetry={onRetry}
-        />
-      </CollapsibleGroup>
-    </div>
-  );
+const BATCH_TO_CATEGORY: Record<BatchType, ItemCategory> = {
+  'ai-drafts': 'note', // drafts are narrative; "+" doesn't apply to this section
+  'prescriptions': 'medication',
+  'labs': 'lab',
+  'imaging': 'imaging',
+  'referrals': 'referral',
 };
 
 // ============================================================================
@@ -116,88 +45,101 @@ const TaskSection: React.FC<TaskSectionProps> = ({
 
 export const ProcessView: React.FC = () => {
   const state = useEncounterState();
-  const dispatch = useDispatch();
-  const allTasks = useTasks();
-  const { approveTask, rejectTask, batchApprove } = useTaskActions();
+  const openCareGaps = useOpenCareGaps();
+  const {
+    batches,
+    drafts,
+    checklist,
+    emLevel,
+    outstandingCount,
+    signOffBlockers,
+    isSigningOff,
+    selectedItemId,
+    scopedAddCategory,
+    handleItemSelect,
+    handleCloseDetailsPane,
+    handleAcceptDraft,
+    handleEditDraft,
+    handleDismissDraft,
+    handleBatchAction,
+    handleSignOff,
+    handleModeChange,
+    handleScopedAdd,
+    handleClearScopedAdd,
+  } = useProcessView();
 
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
-
-  // Get task pane data (grouped by status)
-  const taskData = selectTaskPaneData(state);
-
-  // Patient and encounter context
   const patient = state.context.patient;
   const encounter = state.context.encounter;
 
-  // Get selected task and related item
-  const selectedTask = selectedTaskId
-    ? state.entities.tasks[selectedTaskId]
+  // Get selected item for details pane
+  const selectedItem = selectedItemId
+    ? state.entities.items[selectedItemId] ?? null
     : null;
-  const relatedItem =
-    selectedTask?.trigger.itemId
-      ? state.entities.items[selectedTask.trigger.itemId]
-      : null;
 
-  // Handle mode change
-  const handleModeChange = useCallback(
-    (mode: import('../../state/types').Mode) => {
-      dispatch({
-        type: 'MODE_CHANGED',
-        payload: { to: mode, trigger: 'user' },
-      });
+  // Handle item update from details pane
+  const handleItemUpdate = useCallback(
+    (id: string, changes: Partial<import('../../types').ChartItem>) => {
+      // Dispatch update — uses same pattern as CaptureView
+      // This will be handled by the entities reducer
     },
-    [dispatch]
+    []
   );
 
-  // Handle batch send
-  const handleBatchSend = useCallback(
-    (ids: string[]) => {
-      batchApprove(ids);
-    },
-    [batchApprove]
-  );
-
-  // Handle task approve
-  const handleApprove = useCallback(
+  // Handle item remove from details pane
+  const handleItemRemove = useCallback(
     (id: string) => {
-      approveTask(id);
+      handleCloseDetailsPane();
     },
-    [approveTask]
+    [handleCloseDetailsPane]
   );
 
-  // Handle task reject
-  const handleReject = useCallback(
-    (id: string, reason?: string) => {
-      rejectTask(id, reason);
+  // Handle scoped add from batch section "+"
+  const handleBatchScopedAdd = useCallback(
+    (batchType: BatchType) => {
+      const category = BATCH_TO_CATEGORY[batchType];
+      if (category) {
+        handleScopedAdd(category);
+        // Switch to capture mode with the scoped category
+        handleModeChange('capture');
+      }
     },
-    [rejectTask]
+    [handleScopedAdd, handleModeChange]
   );
 
-  // Handle task retry (re-approve the failed task)
-  const handleRetry = useCallback(
-    (id: string) => {
-      approveTask(id);
+  // Handle item action (review, send, associate-dx, retry)
+  const handleItemAction = useCallback(
+    (actionType: string, taskId?: string) => {
+      if (taskId) {
+        // Task-level actions delegate to batch handler
+        handleBatchAction('prescriptions', actionType, [taskId]);
+      }
     },
-    [approveTask]
+    [handleBatchAction]
   );
 
-  // If no patient/encounter loaded, show empty state
+  // Handle checklist section tap → navigate to capture mode
+  const handleChecklistSectionTap = useCallback(
+    (sectionId: string) => {
+      handleModeChange('capture');
+    },
+    [handleModeChange]
+  );
+
+  // Empty state: no patient/encounter
   if (!patient || !encounter) {
     return (
       <EmptyState
         icon={<List size={64} />}
         title="No Encounter Loaded"
-        description="Select a patient and encounter to view tasks."
+        description="Select a patient and encounter to process."
         size="lg"
         style={styles.emptyContainer}
       />
     );
   }
 
-  // Calculate open care gap count for header
-  const openCareGaps = Object.values(state.entities.careGaps).filter(
-    (g) => g.status === 'open'
-  );
+  // Check if there's any content at all
+  const hasContent = drafts.length > 0 || batches.some(b => b.totalCount > 0);
 
   return (
     <AppShell
@@ -218,104 +160,72 @@ export const ProcessView: React.FC = () => {
         </div>
       }
       main={
-        <SplitPane
-          left={
-            <div style={styles.taskListContainer}>
-              {/* Needs Review */}
-              <TaskSection
-                title="Needs Review"
-                count={taskData.needsReview.length}
-                tasks={taskData.needsReview}
-                badgeVariant="warning"
-                selectedId={selectedTaskId}
-                onTaskSelect={setSelectedTaskId}
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
+        <div style={styles.mainContent}>
+          {/* AI Drafts section */}
+          <DraftSection
+            drafts={drafts}
+            onAcceptDraft={handleAcceptDraft}
+            onEditDraft={handleEditDraft}
+            onDismissDraft={handleDismissDraft}
+          />
 
-              {/* Ready to Send */}
-              <TaskSection
-                title="Ready to Send"
-                count={taskData.readyToSend.length}
-                tasks={taskData.readyToSend}
-                badgeVariant="success"
-                selectedId={selectedTaskId}
-                onTaskSelect={setSelectedTaskId}
-                batchAction={
-                  taskData.readyToSend.length > 1
-                    ? {
-                        label: 'Send All',
-                        onClick: () =>
-                          handleBatchSend(
-                            taskData.readyToSend.map((t) => t.id)
-                          ),
-                      }
-                    : undefined
-                }
-                onApprove={handleApprove}
-              />
-
-              {/* Processing */}
-              <TaskSection
-                title="Processing"
-                count={taskData.processing.length}
-                tasks={taskData.processing}
-                badgeVariant="info"
-                selectedId={selectedTaskId}
-                onTaskSelect={setSelectedTaskId}
-                collapsible
-              />
-
-              {/* Failed */}
-              <TaskSection
-                title="Failed"
-                count={taskData.failed.length}
-                tasks={taskData.failed}
-                badgeVariant="error"
-                selectedId={selectedTaskId}
-                onTaskSelect={setSelectedTaskId}
-                onRetry={handleRetry}
-              />
-
-              {/* Completed */}
-              <TaskSection
-                title="Completed"
-                count={taskData.completed.length}
-                tasks={taskData.completed}
-                badgeVariant="default"
-                selectedId={selectedTaskId}
-                onTaskSelect={setSelectedTaskId}
-                collapsible
-                defaultCollapsed
-              />
-
-              {/* Empty state */}
-              {allTasks.length === 0 && (
-                <EmptyState
-                  icon={<List size={64} />}
-                  title="No Tasks"
-                  description="Tasks will appear here as you chart in Capture mode."
-                  size="lg"
-                  style={styles.taskListEmpty}
-                />
-              )}
-            </div>
-          }
-          right={
-            <TaskDetailPane
-              task={selectedTask}
-              relatedItem={relatedItem}
-              onApprove={() => selectedTaskId && handleApprove(selectedTaskId)}
-              onReject={(reason) =>
-                selectedTaskId && handleReject(selectedTaskId, reason)
-              }
-              onRetry={() => selectedTaskId && handleRetry(selectedTaskId)}
+          {/* Operational batch sections */}
+          {batches.map((batch) => (
+            <BatchSection
+              key={batch.type}
+              batch={batch}
+              onScopedAdd={handleBatchScopedAdd}
+              onItemSelect={handleItemSelect}
+              onItemAction={handleItemAction}
+              onBatchAction={handleBatchAction}
             />
-          }
-          defaultSplit={40}
-          minLeft={25}
-          minRight={30}
-        />
+          ))}
+
+          {/* Empty state when no items at all */}
+          {!hasContent && (
+            <EmptyState
+              icon={<List size={48} />}
+              title="No Items to Process"
+              description="Chart items will appear here as you add them in Capture mode."
+              size="md"
+              style={styles.emptyState}
+            />
+          )}
+
+          {/* Sign-Off section */}
+          <SignOff
+            encounter={encounter}
+            checklist={checklist}
+            emLevel={emLevel}
+            outstandingCount={outstandingCount}
+            blockers={signOffBlockers}
+            isSigningOff={isSigningOff}
+            onSignOff={handleSignOff}
+            onChecklistSectionTap={handleChecklistSectionTap}
+          />
+
+          {/* Bottom spacing */}
+          <div style={{ height: spaceBetween.separated }} />
+
+          {/* Details Pane overlay */}
+          <DetailsPane
+            item={selectedItem}
+            onClose={handleCloseDetailsPane}
+            onUpdate={handleItemUpdate}
+            onRemove={handleItemRemove}
+          />
+
+          {/* Minified OmniAdd FAB — switches to capture with OmniAdd open */}
+          <button
+            type="button"
+            style={styles.fab}
+            onClick={() => handleModeChange('capture')}
+            title="Add chart item"
+            data-testid="process-fab"
+          >
+            <Plus size={24} color="#fff" />
+          </button>
+        </div>
       }
     />
   );
@@ -337,31 +247,34 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: colors.bg.neutral.base,
     borderBottom: `1px solid ${colors.border.neutral.low}`,
   },
-  taskListContainer: {
-    height: '100%',
-    overflow: 'auto',
-    padding: spaceAround.default,
-    backgroundColor: colors.bg.neutral.min,
+  mainContent: {
+    padding: spaceAround.defaultPlus,
+    maxWidth: 900,
+    margin: '0 auto',
+    position: 'relative',
   },
-  taskListEmpty: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spaceAround.generous,
-    color: colors.fg.neutral.spotReadable,
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: spaceAround.defaultPlus,
-  },
-  sectionHeader: {
-    marginBottom: spaceAround.compact,
-    backgroundColor: colors.bg.neutral.subtle,
+  emptyState: {
+    padding: spaceAround.spacious,
   },
   emptyContainer: {
     height: '100%',
     backgroundColor: colors.bg.neutral.min,
+  },
+  fab: {
+    position: 'fixed',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: '50%',
+    backgroundColor: colors.fg.accent.primary,
+    border: 'none',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    zIndex: 100,
   },
 };
 
