@@ -237,8 +237,6 @@ const InteractiveDemo: React.FC = () => {
         onSuggestionAccept={(id) => console.log('Accept suggestion:', id)}
         onSuggestionDismiss={(id) => console.log('Dismiss suggestion:', id)}
         onAlertAcknowledge={(id) => console.log('Acknowledge alert:', id)}
-        onGenerateNote={() => console.log('Generate note')}
-        onCheckInteractions={() => console.log('Check interactions')}
       />
     </div>
   );

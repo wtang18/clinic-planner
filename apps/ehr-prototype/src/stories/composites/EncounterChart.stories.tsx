@@ -20,16 +20,17 @@ import { fn } from 'storybook/test';
 // Mock Data - Full Encounter
 // ============================================================================
 
-const baseMeta = { syncStatus: 'synced' as const, aiGenerated: false, requiresReview: false };
+const baseMeta = { syncStatus: 'synced' as const, aiGenerated: false, requiresReview: false, reviewed: false };
 const baseItem = {
   createdAt: new Date('2024-01-15T10:30:00'),
-  createdBy: { id: 'dr-1', name: 'Dr. Smith', role: 'physician' as const },
+  createdBy: { id: 'dr-1', name: 'Dr. Smith', role: 'provider' as const },
   modifiedAt: new Date('2024-01-15T10:30:00'),
-  modifiedBy: { id: 'dr-1', name: 'Dr. Smith', role: 'physician' as const },
+  modifiedBy: { id: 'dr-1', name: 'Dr. Smith', role: 'provider' as const },
   source: { type: 'manual' as const },
   linkedDiagnoses: ['dx-1'],
   linkedEncounters: ['enc-1'],
   tags: [] as any[],
+  activityLog: [],
 };
 
 const mockVitals: VitalsItem = {
@@ -238,9 +239,9 @@ const EncounterView: React.FC = () => (
 
     {/* Footer Actions */}
     <div style={{ display: 'flex', gap: '8px', borderTop: `1px solid ${colors.border.neutral.subtle}`, paddingTop: '16px' }}>
-      <Button variant="primary" onPress={fn()}>Sign & Close</Button>
-      <Button variant="secondary" onPress={fn()}>Save Draft</Button>
-      <Button variant="ghost" onPress={fn()}>Review</Button>
+      <Button variant="primary" onClick={fn()}>Sign & Close</Button>
+      <Button variant="secondary" onClick={fn()}>Save Draft</Button>
+      <Button variant="ghost" onClick={fn()}>Review</Button>
     </div>
   </div>
 );

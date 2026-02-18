@@ -127,7 +127,6 @@ export const Default: Story = {
         menuPane={
           <MenuPane
             patientWorkspaces={mockPatientWorkspaces}
-            todoCount={5}
           />
         }
         overviewPane={

@@ -12,7 +12,7 @@ const mockQueued: BackgroundTask = {
   id: 'task-1',
   type: 'drug-interaction',
   status: 'queued',
-  priority: 'medium',
+  priority: 'normal',
   trigger: { action: 'medication-added', itemId: 'med-1' },
   createdAt: new Date(Date.now() - 30 * 1000),
   displayTitle: 'Drug Interaction Check',
@@ -37,7 +37,7 @@ const mockPendingReview: BackgroundTask = {
   id: 'task-3',
   type: 'dx-association',
   status: 'pending-review',
-  priority: 'medium',
+  priority: 'normal',
   trigger: { action: 'medication-added', itemId: 'med-1' },
   result: {
     suggestions: [
@@ -69,7 +69,7 @@ const mockCompleted: BackgroundTask = {
   id: 'task-5',
   type: 'lab-send',
   status: 'completed',
-  priority: 'medium',
+  priority: 'normal',
   trigger: { action: 'order-lab', itemId: 'lab-1' },
   createdAt: new Date(Date.now() - 300 * 1000),
   startedAt: new Date(Date.now() - 270 * 1000),

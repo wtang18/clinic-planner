@@ -27,7 +27,7 @@ const meta: Meta<typeof Button> = {
     },
   },
   args: {
-    onPress: fn(),
+    onClick: fn(),
   },
 };
 
@@ -94,9 +94,9 @@ export const ClinicalActions: Story = {
   name: 'Clinical Actions',
   render: () => (
     <div style={{ display: 'flex', gap: '8px' }}>
-      <Button variant="primary" onPress={fn()}>Confirm</Button>
-      <Button variant="secondary" onPress={fn()}>Edit</Button>
-      <Button variant="danger" onPress={fn()}>Cancel Order</Button>
+      <Button variant="primary" onClick={fn()}>Confirm</Button>
+      <Button variant="secondary" onClick={fn()}>Edit</Button>
+      <Button variant="danger" onClick={fn()}>Cancel Order</Button>
     </div>
   ),
 };

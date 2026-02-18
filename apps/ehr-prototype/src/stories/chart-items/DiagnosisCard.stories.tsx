@@ -12,17 +12,19 @@ const baseMeta = {
   syncStatus: 'synced' as const,
   aiGenerated: false,
   requiresReview: false,
+  reviewed: false,
 };
 
 const baseItem = {
   createdAt: new Date('2024-01-15T10:30:00'),
-  createdBy: { id: 'dr-1', name: 'Dr. Smith', role: 'physician' as const },
+  createdBy: { id: 'dr-1', name: 'Dr. Smith', role: 'provider' as const },
   modifiedAt: new Date('2024-01-15T10:30:00'),
-  modifiedBy: { id: 'dr-1', name: 'Dr. Smith', role: 'physician' as const },
+  modifiedBy: { id: 'dr-1', name: 'Dr. Smith', role: 'provider' as const },
   source: { type: 'manual' as const },
   linkedDiagnoses: [],
   linkedEncounters: ['enc-1'],
   tags: [] as any[],
+  activityLog: [],
 };
 
 const mockURI: DiagnosisItem = {
@@ -82,12 +84,13 @@ const mockAISuggested: DiagnosisItem = {
   category: 'diagnosis',
   status: 'pending-review',
   displayText: 'Cough',
-  source: { type: 'ai-generated' as const },
+  source: { type: 'aiSuggestion' as const },
   _meta: {
     syncStatus: 'synced' as const,
     aiGenerated: true,
     aiConfidence: 0.78,
     requiresReview: true,
+    reviewed: false,
   },
   data: {
     description: 'Cough',

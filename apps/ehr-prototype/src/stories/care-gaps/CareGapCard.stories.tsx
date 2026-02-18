@@ -76,7 +76,7 @@ const mockPending: CareGapInstance = {
   statusReason: 'Colonoscopy scheduled for Feb 1',
   openedAt: new Date('2023-06-01'),
   closureAttempts: [
-    { attemptedAt: new Date('2024-01-10'), itemId: 'ref-1', successful: false, reason: 'Rescheduled by patient' },
+    { attemptedAt: new Date('2024-01-10'), itemId: 'ref-1', itemType: 'referral', result: 'failed' as const, failureReason: 'Rescheduled by patient' },
   ],
   excluded: false,
   addressedThisEncounter: true,

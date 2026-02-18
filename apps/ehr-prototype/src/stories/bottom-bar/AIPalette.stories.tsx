@@ -72,8 +72,6 @@ export const QuickActionsOnly: Story = {
     content: { type: 'idle' },
     patientName: 'Maria Garcia',
     suggestions: [],
-    onGenerateNote: () => console.log('Generate note'),
-    onCheckInteractions: () => console.log('Check interactions'),
   },
 };
 
@@ -281,7 +279,6 @@ export const WithContextTarget: Story = {
       label: 'Lisinopril 10mg',
     },
     onClearContext: () => console.log('Clear context'),
-    onGenerateNote: () => console.log('Generate note'),
   },
 };
 
@@ -322,8 +319,6 @@ export const ContextTargetEncounter: Story = {
       label: 'Current Visit',
     },
     onClearContext: () => console.log('Clear context'),
-    onGenerateNote: () => console.log('Generate note'),
-    onCheckInteractions: () => console.log('Check interactions'),
   },
 };
 

@@ -12,17 +12,19 @@ const baseMeta = {
   syncStatus: 'synced' as const,
   aiGenerated: false,
   requiresReview: false,
+  reviewed: false,
 };
 
 const baseItem = {
   createdAt: new Date('2024-01-15T10:30:00'),
-  createdBy: { id: 'dr-1', name: 'Dr. Smith', role: 'physician' as const },
+  createdBy: { id: 'dr-1', name: 'Dr. Smith', role: 'provider' as const },
   modifiedAt: new Date('2024-01-15T10:30:00'),
-  modifiedBy: { id: 'dr-1', name: 'Dr. Smith', role: 'physician' as const },
+  modifiedBy: { id: 'dr-1', name: 'Dr. Smith', role: 'provider' as const },
   source: { type: 'manual' as const },
   linkedDiagnoses: [],
   linkedEncounters: ['enc-1'],
   tags: [] as any[],
+  activityLog: [],
 };
 
 const mockCBC: LabItem = {
