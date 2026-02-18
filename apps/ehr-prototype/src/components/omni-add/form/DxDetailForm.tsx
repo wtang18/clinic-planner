@@ -21,6 +21,8 @@ export interface DxDetailFormProps {
   initialData: Partial<ChartItem>;
   onSubmit: (item: Partial<ChartItem>) => void;
   onCancel: () => void;
+  /** 'create' for OmniAdd flow, 'edit' for DetailsPane editing */
+  mode?: 'create' | 'edit';
 }
 
 // ============================================================================
@@ -57,6 +59,7 @@ export const DxDetailForm: React.FC<DxDetailFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
+  mode = 'create',
 }) => {
   const data = (initialData as Record<string, unknown>) || {};
 
@@ -189,10 +192,10 @@ export const DxDetailForm: React.FC<DxDetailFormProps> = ({
       {/* Actions */}
       <div style={actionsStyle}>
         <Button variant="ghost" size="sm" onClick={onCancel} type="button" data-testid="item-form-cancel">
-          Cancel
+          {mode === 'edit' ? 'Discard' : 'Cancel'}
         </Button>
         <Button variant="primary" size="sm" type="submit" data-testid="add-item-btn">
-          Add Dx
+          {mode === 'edit' ? 'Save Changes' : 'Add Dx'}
         </Button>
       </div>
     </form>

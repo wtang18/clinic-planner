@@ -43,10 +43,11 @@ export const itemAdded = (
 export const itemUpdated = (
   id: string,
   changes: Partial<ChartItem>,
-  reason: 'user-edit' | 'ai-enrichment' | 'external-update' | 'result-received'
+  reason: 'user-edit' | 'ai-enrichment' | 'external-update' | 'result-received',
+  actor?: string
 ): ChartItemAction => ({
   type: 'ITEM_UPDATED',
-  payload: { id, changes, reason },
+  payload: { id, changes, reason, ...(actor !== undefined && { actor }) },
 });
 
 export const itemConfirmed = (id: string): ChartItemAction => ({
@@ -67,6 +68,11 @@ export const itemDxLinked = (itemId: string, dxId: string): ChartItemAction => (
 export const itemDxUnlinked = (itemId: string, dxId: string): ChartItemAction => ({
   type: 'ITEM_DX_UNLINKED',
   payload: { itemId, dxId },
+});
+
+export const itemDeleted = (id: string): ChartItemAction => ({
+  type: 'ITEM_DELETED',
+  payload: { id },
 });
 
 export const itemSent = (

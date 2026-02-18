@@ -24,6 +24,8 @@ export interface LabDetailFormProps {
   initialData: Partial<ChartItem>;
   onSubmit: (item: Partial<ChartItem>) => void;
   onCancel: () => void;
+  /** 'create' for OmniAdd flow, 'edit' for DetailsPane editing */
+  mode?: 'create' | 'edit';
 }
 
 // ============================================================================
@@ -55,6 +57,7 @@ export const LabDetailForm: React.FC<LabDetailFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
+  mode = 'create',
 }) => {
   const data = (initialData as Record<string, unknown>) || {};
 
@@ -201,10 +204,10 @@ export const LabDetailForm: React.FC<LabDetailFormProps> = ({
       {/* Actions */}
       <div style={actionsStyle}>
         <Button variant="ghost" size="sm" onClick={onCancel} type="button" data-testid="item-form-cancel">
-          Cancel
+          {mode === 'edit' ? 'Discard' : 'Cancel'}
         </Button>
         <Button variant="primary" size="sm" type="submit" data-testid="add-item-btn">
-          Add Lab
+          {mode === 'edit' ? 'Save Changes' : 'Add Lab'}
         </Button>
       </div>
     </form>

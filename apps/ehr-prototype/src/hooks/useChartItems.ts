@@ -24,6 +24,7 @@ import {
   itemUpdated,
   itemConfirmed,
   itemCancelled,
+  itemDeleted,
   itemDxLinked,
   itemDxUnlinked,
 } from '../state/actions/creators';
@@ -113,6 +114,8 @@ export interface ChartItemActions {
   confirmItem: (id: string) => void;
   /** Cancel/delete an item */
   cancelItem: (id: string, reason?: string) => void;
+  /** Remove an item from the chart */
+  deleteItem: (id: string) => void;
   /** Link an item to a diagnosis */
   linkToDiagnosis: (itemId: string, diagnosisId: string) => void;
   /** Unlink an item from a diagnosis */
@@ -141,6 +144,10 @@ export function useItemActions(): ChartItemActions {
 
       cancelItem: (id: string, reason?: string) => {
         dispatch(itemCancelled(id, reason));
+      },
+
+      deleteItem: (id: string) => {
+        dispatch(itemDeleted(id));
       },
 
       linkToDiagnosis: (itemId: string, diagnosisId: string) => {

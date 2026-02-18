@@ -36,6 +36,7 @@ import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
+import { DetailsPane } from '../../components/details-pane';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
 import {
@@ -318,13 +319,17 @@ export const CaptureView: React.FC = () => {
 
   // Capture view logic
   const {
+    selectedItemId,
     isPaletteOpen,
     setIsPaletteOpen,
     isTaskPaneOpen,
     setIsTaskPaneOpen,
     handleItemAdd,
     handleUndo,
-    handleEditItem,
+    handleItemSelect,
+    handleItemUpdate,
+    handleItemRemove,
+    handleCloseDetailsPane,
     handleSuggestionAccept,
     handleSuggestionDismiss,
     handleTranscriptionToggle,
@@ -427,6 +432,11 @@ export const CaptureView: React.FC = () => {
   const sortedItems = [...items].sort(
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
   );
+
+  // Selected item for details pane
+  const selectedItem = selectedItemId
+    ? items.find(i => i.id === selectedItemId) ?? null
+    : null;
 
   // Build patient overview data
   const patientOverviewData = {
@@ -913,7 +923,8 @@ export const CaptureView: React.FC = () => {
                               <ChartItemCard
                                 item={item}
                                 variant="compact"
-                                onEdit={() => handleEditItem(item.id)}
+                                selected={item.id === selectedItemId}
+                                onSelect={() => handleItemSelect(item.id)}
                               />
                             </div>
                           ))
@@ -1003,7 +1014,8 @@ export const CaptureView: React.FC = () => {
                             <ChartItemCard
                               item={item}
                               variant="compact"
-                              onEdit={() => handleEditItem(item.id)}
+                              selected={item.id === selectedItemId}
+                              onSelect={() => handleItemSelect(item.id)}
                             />
                           </div>
                         ))
@@ -1035,6 +1047,14 @@ export const CaptureView: React.FC = () => {
             transcriptionEnabled={true}
           />
         }
+      />
+
+      {/* Details pane overlay */}
+      <DetailsPane
+        item={selectedItem}
+        onClose={handleCloseDetailsPane}
+        onUpdate={handleItemUpdate}
+        onRemove={handleItemRemove}
       />
 
       {/* Task pane overlay */}

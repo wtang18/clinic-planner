@@ -25,6 +25,8 @@ export interface RxDetailFormProps {
   initialData: Partial<ChartItem>;
   onSubmit: (item: Partial<ChartItem>) => void;
   onCancel: () => void;
+  /** 'create' for OmniAdd flow, 'edit' for DetailsPane editing */
+  mode?: 'create' | 'edit';
 }
 
 // ============================================================================
@@ -70,6 +72,7 @@ export const RxDetailForm: React.FC<RxDetailFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
+  mode = 'create',
 }) => {
   const data = (initialData as Record<string, unknown>) || {};
 
@@ -344,10 +347,10 @@ export const RxDetailForm: React.FC<RxDetailFormProps> = ({
       {/* Actions */}
       <div style={actionsStyle}>
         <Button variant="ghost" size="sm" onClick={onCancel} type="button" data-testid="item-form-cancel">
-          Cancel
+          {mode === 'edit' ? 'Discard' : 'Cancel'}
         </Button>
         <Button variant="primary" size="sm" type="submit" data-testid="add-item-btn">
-          Add Rx
+          {mode === 'edit' ? 'Save Changes' : 'Add Rx'}
         </Button>
       </div>
     </form>

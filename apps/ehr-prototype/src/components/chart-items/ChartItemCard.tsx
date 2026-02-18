@@ -119,6 +119,7 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
   const categoryColors = getCategoryColor(item.category);
   const isCompact = variant === 'compact';
   const isAIGenerated = item._meta.aiGenerated;
+  const isUnreviewed = !item._meta.reviewed;
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
@@ -128,6 +129,10 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     padding: isCompact ? spaceAround.compact : spaceAround.default,
     cursor: onSelect ? 'pointer' : 'default',
     transition: `all ${transitions.fast}`,
+    // Unreviewed indicator: subtle left border for MA handoff items
+    ...(isUnreviewed && {
+      borderLeft: `3px solid ${colors.fg.attention.secondary}`,
+    }),
     ...(selected && {
       backgroundColor: colors.bg.accent.subtle,
       boxShadow: shadows.focus,

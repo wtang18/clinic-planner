@@ -4,13 +4,23 @@
 
 import type { ChartItem, Suggestion, BackgroundTask, CareGapInstance } from '../../types';
 import type { EncounterAction } from '../actions/types';
+import { createLogEntry, describeFieldChanges } from '../../utils/activity-log';
 
 // ============================================================================
 // Items Reducer
 // ============================================================================
 
+/** Helper to append a log entry to an item's activity log */
+function withLog(item: ChartItem, action: string, actor: string, details?: string): ChartItem {
+  return {
+    ...item,
+    activityLog: [...item.activityLog, createLogEntry(action, actor, details)],
+  };
+}
+
 /**
- * Reducer for chart items collection
+ * Reducer for chart items collection.
+ * Auto-appends activity log entries for each mutation.
  */
 export function itemsReducer(
   state: Record<string, ChartItem>,
@@ -24,22 +34,53 @@ export function itemsReducer(
         [item.id]: item,
       };
     }
-    
+
     case 'ITEM_UPDATED': {
-      const { id, changes } = action.payload;
+      const { id, changes, reason, actor } = action.payload;
       const existing = state[id];
       if (!existing) return state;
-      
+
+      const actorName = actor || 'System';
+      const now = new Date();
+
+      let logAction: string;
+      let logDetails: string | undefined;
+
+      switch (reason) {
+        case 'user-edit': {
+          logAction = 'edited';
+          logDetails = describeFieldChanges(
+            existing as unknown as Record<string, unknown>,
+            changes as Record<string, unknown>
+          );
+          if (!logDetails) logDetails = undefined; // Empty string → no details
+          break;
+        }
+        case 'ai-enrichment':
+          logAction = 'ai_enriched';
+          logDetails = 'AI enriched from ambient recording';
+          break;
+        case 'result-received':
+          logAction = 'result_received';
+          logDetails = 'Results received';
+          break;
+        default:
+          logAction = 'updated';
+          break;
+      }
+
+      const merged = {
+        ...existing,
+        ...changes,
+        modifiedAt: now,
+      } as ChartItem;
+
       return {
         ...state,
-        [id]: {
-          ...existing,
-          ...changes,
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [id]: withLog(merged, logAction, actorName, logDetails),
       };
     }
-    
+
     case 'ITEM_DELETED': {
       const { id } = action.payload;
       const { [id]: _, ...remaining } = state;
@@ -50,134 +91,148 @@ export function itemsReducer(
       const { id } = action.payload;
       const existing = state[id];
       if (!existing) return state;
-      
+
+      const updated = {
+        ...existing,
+        status: 'confirmed' as const,
+        _meta: {
+          ...existing._meta,
+          requiresReview: false,
+        },
+        modifiedAt: new Date(),
+      } as ChartItem;
+
       return {
         ...state,
-        [id]: {
-          ...existing,
-          status: 'confirmed',
-          _meta: {
-            ...existing._meta,
-            requiresReview: false,
-          },
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [id]: withLog(updated, 'confirmed', 'Current User'),
       };
     }
-    
+
     case 'ITEM_CANCELLED': {
-      const { id } = action.payload;
+      const { id, reason } = action.payload;
       const existing = state[id];
       if (!existing) return state;
-      
+
+      const updated = {
+        ...existing,
+        status: 'cancelled' as const,
+        modifiedAt: new Date(),
+      } as ChartItem;
+
       return {
         ...state,
-        [id]: {
-          ...existing,
-          status: 'cancelled',
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [id]: withLog(updated, 'cancelled', 'Current User', reason),
       };
     }
-    
+
     case 'ITEM_DX_LINKED': {
       const { itemId, dxId } = action.payload;
       const existing = state[itemId];
       if (!existing) return state;
       if (existing.linkedDiagnoses.includes(dxId)) return state;
-      
+
+      const updated = {
+        ...existing,
+        linkedDiagnoses: [...existing.linkedDiagnoses, dxId],
+        modifiedAt: new Date(),
+      } as ChartItem;
+
       return {
         ...state,
-        [itemId]: {
-          ...existing,
-          linkedDiagnoses: [...existing.linkedDiagnoses, dxId],
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [itemId]: withLog(updated, 'dx_associated', 'Current User', `Dx associated: ${dxId}`),
       };
     }
-    
+
     case 'ITEM_DX_UNLINKED': {
       const { itemId, dxId } = action.payload;
       const existing = state[itemId];
       if (!existing) return state;
-      
+
+      const updated = {
+        ...existing,
+        linkedDiagnoses: existing.linkedDiagnoses.filter(id => id !== dxId),
+        modifiedAt: new Date(),
+      } as ChartItem;
+
       return {
         ...state,
-        [itemId]: {
-          ...existing,
-          linkedDiagnoses: existing.linkedDiagnoses.filter(id => id !== dxId),
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [itemId]: withLog(updated, 'dx_removed', 'Current User', `Dx removed: ${dxId}`),
       };
     }
-    
+
     case 'ITEM_SENT': {
-      const { id } = action.payload;
+      const { id, destination, method } = action.payload;
       const existing = state[id];
       if (!existing) return state;
-      
+
+      const updated = {
+        ...existing,
+        status: 'ordered' as const,
+        modifiedAt: new Date(),
+      } as ChartItem;
+
       return {
         ...state,
-        [id]: {
-          ...existing,
-          status: 'ordered',
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [id]: withLog(updated, 'sent', 'Current User', `Sent to ${destination} via ${method}`),
       };
     }
-    
+
     case 'ITEMS_BATCH_SENT': {
-      const { ids } = action.payload;
+      const { ids, destination } = action.payload;
       const updates: Record<string, ChartItem> = {};
       const now = new Date();
-      
+
       for (const id of ids) {
         const existing = state[id];
         if (existing) {
-          updates[id] = {
+          const updated = {
             ...existing,
-            status: 'ordered',
+            status: 'ordered' as const,
             modifiedAt: now,
           } as ChartItem;
+          updates[id] = withLog(updated, 'sent', 'Current User', `Batch sent to ${destination}`);
         }
       }
-      
+
       return { ...state, ...updates };
     }
-    
+
     case 'ITEM_RESULT_RECEIVED': {
       const { id, result } = action.payload;
       const existing = state[id];
       if (!existing) return state;
-      
+
       // Handle lab items specifically
       if (existing.category === 'lab') {
+        const updated = {
+          ...existing,
+          status: 'completed' as const,
+          data: {
+            ...existing.data,
+            orderStatus: 'resulted' as const,
+            resultedAt: new Date(),
+            results: result as typeof existing.data.results,
+          },
+          modifiedAt: new Date(),
+        };
         return {
           ...state,
-          [id]: {
-            ...existing,
-            status: 'completed',
-            data: {
-              ...existing.data,
-              orderStatus: 'resulted',
-              resultedAt: new Date(),
-              results: result as typeof existing.data.results,
-            },
-            modifiedAt: new Date(),
-          },
+          [id]: withLog(updated as ChartItem, 'result_received', 'System', 'Results received'),
         };
       }
-      
+
+      const updated = {
+        ...existing,
+        status: 'completed' as const,
+        modifiedAt: new Date(),
+      } as ChartItem;
+
       return {
         ...state,
-        [id]: {
-          ...existing,
-          status: 'completed',
-          modifiedAt: new Date(),
-        } as ChartItem,
+        [id]: withLog(updated, 'result_received', 'System', 'Results received'),
       };
     }
-    
+
     case 'ENCOUNTER_CLOSED': {
       // Clear all items when encounter closes without save
       if (!action.payload.save) {
@@ -185,7 +240,7 @@ export function itemsReducer(
       }
       return state;
     }
-    
+
     default:
       return state;
   }

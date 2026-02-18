@@ -16,10 +16,10 @@ import { useTranscription } from '../../context/TranscriptionContext';
 // ============================================================================
 
 export interface UseCaptureViewResult {
-  /** Currently editing item ID */
-  editingItemId: string | null;
-  /** Set the editing item ID */
-  setEditingItemId: (id: string | null) => void;
+  /** Currently selected item ID (opens details pane) */
+  selectedItemId: string | null;
+  /** Set the selected item ID */
+  setSelectedItemId: (id: string | null) => void;
   /** Whether the palette is open */
   isPaletteOpen: boolean;
   /** Set palette open state */
@@ -32,8 +32,14 @@ export interface UseCaptureViewResult {
   handleItemAdd: (item: Partial<ChartItem>, source?: ItemSource) => void;
   /** Handle undo (remove last added item) */
   handleUndo: (itemId: string) => void;
-  /** Handle editing an item */
-  handleEditItem: (itemId: string) => void;
+  /** Handle selecting an item (opens details pane) */
+  handleItemSelect: (itemId: string) => void;
+  /** Handle updating an item from the details pane */
+  handleItemUpdate: (itemId: string, changes: Partial<ChartItem>) => void;
+  /** Handle removing an item from the chart */
+  handleItemRemove: (itemId: string) => void;
+  /** Handle closing the details pane */
+  handleCloseDetailsPane: () => void;
   /** Handle accepting a suggestion */
   handleSuggestionAccept: (suggestionId: string) => void;
   /** Handle dismissing a suggestion */
@@ -50,12 +56,12 @@ export interface UseCaptureViewResult {
 
 export function useCaptureView(): UseCaptureViewResult {
   const dispatch = useDispatch();
-  const { addItem } = useItemActions();
+  const { addItem, updateItem, deleteItem } = useItemActions();
   const { acceptSuggestion, dismissSuggestion } = useSuggestionActions();
   const transcription = useTranscription();
 
   // Local state
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isTaskPaneOpen, setIsTaskPaneOpen] = useState(false);
 
@@ -98,21 +104,43 @@ export function useCaptureView(): UseCaptureViewResult {
     [addItem]
   );
 
-  // Handle undo (remove last added item)
-  // Note: Full item removal requires a store action (future work).
-  // For now, we log the undo intent. The OmniAdd state machine tracks
-  // its own undo stack; the parent is responsible for actual removal.
+  // Handle undo — now uses deleteItem
   const handleUndo = useCallback(
-    (_itemId: string) => {
-      // TODO: dispatch REMOVE_ITEM action when the store supports it
-      console.debug('[CaptureView] Undo requested for item:', _itemId);
+    (itemId: string) => {
+      deleteItem(itemId);
+    },
+    [deleteItem]
+  );
+
+  // Handle selecting an item — opens details pane
+  // If the item is unreviewed (MA handoff), auto-marks it as reviewed.
+  const handleItemSelect = useCallback(
+    (itemId: string) => {
+      setSelectedItemId(itemId);
     },
     []
   );
 
-  // Handle editing an item
-  const handleEditItem = useCallback((itemId: string) => {
-    setEditingItemId(itemId);
+  // Handle updating an item from the details pane
+  const handleItemUpdate = useCallback(
+    (itemId: string, changes: Partial<ChartItem>) => {
+      updateItem(itemId, changes);
+    },
+    [updateItem]
+  );
+
+  // Handle removing an item from the chart
+  const handleItemRemove = useCallback(
+    (itemId: string) => {
+      deleteItem(itemId);
+      setSelectedItemId(null);
+    },
+    [deleteItem]
+  );
+
+  // Handle closing the details pane
+  const handleCloseDetailsPane = useCallback(() => {
+    setSelectedItemId(null);
   }, []);
 
   // Handle accepting a suggestion
@@ -154,15 +182,18 @@ export function useCaptureView(): UseCaptureViewResult {
   );
 
   return {
-    editingItemId,
-    setEditingItemId,
+    selectedItemId,
+    setSelectedItemId,
     isPaletteOpen,
     setIsPaletteOpen,
     isTaskPaneOpen,
     setIsTaskPaneOpen,
     handleItemAdd,
     handleUndo,
-    handleEditItem,
+    handleItemSelect,
+    handleItemUpdate,
+    handleItemRemove,
+    handleCloseDetailsPane,
     handleSuggestionAccept,
     handleSuggestionDismiss,
     handleTranscriptionToggle,

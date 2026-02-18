@@ -40,6 +40,7 @@ export type ChartItemAction =
         id: string;
         changes: Partial<ChartItem>;
         reason: 'user-edit' | 'ai-enrichment' | 'external-update' | 'result-received';
+        actor?: string;
       };
     }
   | { type: 'ITEM_CONFIRMED'; payload: { id: string } }
