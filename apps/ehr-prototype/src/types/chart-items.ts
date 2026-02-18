@@ -129,10 +129,14 @@ export interface MedicationItem extends ChartItemBase {
     quantity?: number;
     refills?: number;
     
+    // Sig & dispensing
+    sig?: string;            // Human-readable instructions (auto-generated or custom)
+    daw?: boolean;           // Dispense as Written (brand-name only)
+
     // Classification
     isControlled: boolean;
     controlSchedule?: 'II' | 'III' | 'IV' | 'V';
-    
+
     // Prescription routing
     prescriptionType: 'new' | 'refill' | 'change' | 'discontinue';
     pharmacy?: PharmacyReference;
@@ -170,6 +174,10 @@ export interface LabItem extends ChartItemBase {
     collectionType: 'in-house' | 'send-out';
     labVendor?: string;      // "Quest", "LabCorp"
     
+    // Additional order details
+    fastingRequired?: boolean;
+    specialInstructions?: string;
+
     // Status tracking
     orderStatus: 'draft' | 'ordered' | 'collected' | 'processing' | 'resulted';
     requisitionId?: string;

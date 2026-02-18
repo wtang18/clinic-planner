@@ -29,6 +29,9 @@ import { CategorySelector } from './CategorySelector';
 import { QuickPickChips } from './QuickPickChips';
 import { QuickAddInput } from './QuickAddInput';
 import { ItemDetailForm } from './ItemDetailForm';
+import { RxDetailForm } from './form/RxDetailForm';
+import { LabDetailForm } from './form/LabDetailForm';
+import { DxDetailForm } from './form/DxDetailForm';
 import { NarrativeInput } from './NarrativeInput';
 import { VitalsInput } from './VitalsInput';
 import type { VitalsData } from './VitalsInput';
@@ -244,19 +247,32 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
           />
         );
 
-      case 'detail':
-        return (
-          <ItemDetailForm
-            category={state.category!}
-            initialData={{
-              displayText: state.selectedItem?.label,
-              category: state.category!,
-              ...state.selectedItem?.data,
-            } as Partial<ChartItem>}
-            onSubmit={handleDetailSubmit}
-            onCancel={handleBack}
-          />
-        );
+      case 'detail': {
+        const detailData = {
+          displayText: state.selectedItem?.label,
+          category: state.category!,
+          ...state.selectedItem?.data,
+        } as Partial<ChartItem>;
+
+        // Route to category-specific form for Rx, Lab, Dx; generic fallback for others
+        switch (state.category) {
+          case 'medication':
+            return <RxDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          case 'lab':
+            return <LabDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          case 'diagnosis':
+            return <DxDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          default:
+            return (
+              <ItemDetailForm
+                category={state.category!}
+                initialData={detailData}
+                onSubmit={handleDetailSubmit}
+                onCancel={handleBack}
+              />
+            );
+        }
+      }
 
       case 'text-input':
         return (
