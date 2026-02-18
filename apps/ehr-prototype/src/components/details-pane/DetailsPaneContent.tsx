@@ -10,6 +10,11 @@ import type { ChartItem } from '../../types/chart-items';
 import { RxDetailForm } from '../omni-add/form/RxDetailForm';
 import { LabDetailForm } from '../omni-add/form/LabDetailForm';
 import { DxDetailForm } from '../omni-add/form/DxDetailForm';
+import { ImagingDetailForm } from '../omni-add/form/ImagingDetailForm';
+import { ProcedureDetailForm } from '../omni-add/form/ProcedureDetailForm';
+import { AllergyDetailForm } from '../omni-add/form/AllergyDetailForm';
+import { ReferralDetailForm } from '../omni-add/form/ReferralDetailForm';
+import { InstructionEditor } from './InstructionEditor';
 import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
 
 // ============================================================================
@@ -26,7 +31,7 @@ export interface DetailsPaneContentProps {
 // ============================================================================
 
 const NARRATIVE_CATEGORIES = new Set([
-  'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'instruction', 'note',
+  'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'note',
 ]);
 
 // ============================================================================
@@ -65,6 +70,49 @@ export const DetailsPaneContent: React.FC<DetailsPaneContentProps> = ({ item, on
           mode="edit"
         />
       );
+
+    case 'imaging':
+      return (
+        <ImagingDetailForm
+          initialData={item as unknown as Partial<ChartItem>}
+          onSubmit={(changes) => onUpdate(changes)}
+          onCancel={() => {}}
+          mode="edit"
+        />
+      );
+
+    case 'procedure':
+      return (
+        <ProcedureDetailForm
+          initialData={item as unknown as Partial<ChartItem>}
+          onSubmit={(changes) => onUpdate(changes)}
+          onCancel={() => {}}
+          mode="edit"
+        />
+      );
+
+    case 'allergy':
+      return (
+        <AllergyDetailForm
+          initialData={item as unknown as Partial<ChartItem>}
+          onSubmit={(changes) => onUpdate(changes)}
+          onCancel={() => {}}
+          mode="edit"
+        />
+      );
+
+    case 'referral':
+      return (
+        <ReferralDetailForm
+          initialData={item as unknown as Partial<ChartItem>}
+          onSubmit={(changes) => onUpdate(changes)}
+          onCancel={() => {}}
+          mode="edit"
+        />
+      );
+
+    case 'instruction':
+      return <InstructionEditor item={item} onUpdate={onUpdate} />;
 
     default:
       if (NARRATIVE_CATEGORIES.has(item.category)) {

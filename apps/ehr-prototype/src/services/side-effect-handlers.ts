@@ -58,6 +58,22 @@ export const itemAddedHandler: SideEffectHandler = async (action, state, dispatc
     }
   }
 
+  // Referrals: Create processing tasks (dx-association, prior-auth)
+  if (item.category === 'referral') {
+    const tasks = TASK_TEMPLATES.referralAdded(item.id, item.displayText);
+    for (const task of tasks) {
+      dispatch(taskCreated(task, item.id));
+    }
+  }
+
+  // Procedures: Create processing tasks (dx-association)
+  if (item.category === 'procedure') {
+    const tasks = TASK_TEMPLATES.procedureAdded(item.id, item.displayText);
+    for (const task of tasks) {
+      dispatch(taskCreated(task, item.id));
+    }
+  }
+
   // Diagnosis: Check for care gap implications
   if (item.category === 'diagnosis') {
     // New diagnosis might open or close care gaps

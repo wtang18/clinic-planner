@@ -282,6 +282,17 @@ export const TASK_TEMPLATES = {
     generatePriorAuthTask(itemId, studyName),
   ],
 
+  // Standard tasks after adding a referral
+  referralAdded: (itemId: string, specialty: string): BackgroundTask[] => [
+    generateDxAssociationTask(itemId, `${specialty} referral`),
+    generatePriorAuthTask(itemId, `${specialty} referral`),
+  ],
+
+  // Standard tasks after adding a procedure
+  procedureAdded: (itemId: string, procedureName: string): BackgroundTask[] => [
+    generateDxAssociationTask(itemId, procedureName),
+  ],
+
   // Tasks for completing an encounter
   encounterCompletion: (encounterId: string): BackgroundTask[] => [
     generateNoteGenerationTask(encounterId),

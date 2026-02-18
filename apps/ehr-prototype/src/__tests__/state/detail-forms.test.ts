@@ -334,3 +334,217 @@ describe('Smart defaults', () => {
     }
   });
 });
+
+// ============================================================================
+// Mock Data Completeness: Imaging (Phase 6)
+// ============================================================================
+
+describe('Imaging mock data', () => {
+  const imaging = getQuickPicks('imaging');
+
+  it('has at least 6 items', () => {
+    expect(imaging.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('all items have required imaging fields', () => {
+    for (const img of imaging) {
+      expect(img.id).toBeTruthy();
+      expect(img.label).toBeTruthy();
+      expect(img.chipLabel).toBeTruthy();
+      expect(img.category).toBe('imaging');
+      expect(img.data.studyType).toBeTruthy();
+      expect(img.data.bodyPart).toBeTruthy();
+      expect(img.data.indication).toBeTruthy();
+      expect(['routine', 'urgent', 'stat']).toContain(img.data.priority);
+      expect(typeof img.data.requiresAuth).toBe('boolean');
+      expect(img.data.orderStatus).toBe('draft');
+    }
+  });
+
+  it('CT studies require auth', () => {
+    const ctStudies = imaging.filter(i => String(i.data.studyType) === 'CT');
+    expect(ctStudies.length).toBeGreaterThanOrEqual(2);
+    for (const ct of ctStudies) {
+      expect(ct.data.requiresAuth).toBe(true);
+    }
+  });
+
+  it('X-ray studies do not require auth', () => {
+    const xrayStudies = imaging.filter(i => String(i.data.studyType) === 'X-ray');
+    for (const xr of xrayStudies) {
+      expect(xr.data.requiresAuth).toBe(false);
+    }
+  });
+});
+
+// ============================================================================
+// Mock Data Completeness: Procedures (Phase 6)
+// ============================================================================
+
+describe('Procedure mock data', () => {
+  const procedures = getQuickPicks('procedure');
+
+  it('has at least 6 items', () => {
+    expect(procedures.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('all items have required procedure fields', () => {
+    for (const proc of procedures) {
+      expect(proc.id).toBeTruthy();
+      expect(proc.label).toBeTruthy();
+      expect(proc.chipLabel).toBeTruthy();
+      expect(proc.category).toBe('procedure');
+      expect(proc.data.procedureName).toBeTruthy();
+      expect(proc.data.indication).toBeTruthy();
+      expect(proc.data.procedureStatus).toBe('planned');
+    }
+  });
+
+  it('most procedures have CPT codes', () => {
+    const withCpt = procedures.filter(p => p.data.cptCode);
+    expect(withCpt.length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+// ============================================================================
+// Mock Data Completeness: Allergies (Phase 6)
+// ============================================================================
+
+describe('Allergy mock data', () => {
+  const allergies = getQuickPicks('allergy');
+
+  it('has at least 8 items', () => {
+    expect(allergies.length).toBeGreaterThanOrEqual(8);
+  });
+
+  it('all items have required allergy fields', () => {
+    for (const allergy of allergies) {
+      expect(allergy.id).toBeTruthy();
+      expect(allergy.label).toBeTruthy();
+      expect(allergy.chipLabel).toBeTruthy();
+      expect(allergy.category).toBe('allergy');
+      expect(allergy.data.allergen).toBeTruthy();
+      expect(['drug', 'food', 'environmental', 'other']).toContain(allergy.data.allergenType);
+      expect(['mild', 'moderate', 'severe', 'unknown']).toContain(allergy.data.severity);
+      expect(['patient', 'caregiver', 'external-record']).toContain(allergy.data.reportedBy);
+      expect(['unverified', 'confirmed', 'refuted']).toContain(allergy.data.verificationStatus);
+    }
+  });
+
+  it('NKDA item is confirmed', () => {
+    const nkda = allergies.find(a => a.id === 'allergy-nkda');
+    expect(nkda).toBeDefined();
+    expect(nkda!.data.verificationStatus).toBe('confirmed');
+  });
+
+  it('includes multiple allergen types', () => {
+    const types = new Set(allergies.map(a => a.data.allergenType));
+    expect(types.size).toBeGreaterThanOrEqual(3); // drug, food, environmental
+  });
+
+  it('severe allergies are confirmed', () => {
+    const severe = allergies.filter(a => a.data.severity === 'severe');
+    expect(severe.length).toBeGreaterThanOrEqual(1);
+    for (const allergy of severe) {
+      expect(allergy.data.verificationStatus).toBe('confirmed');
+    }
+  });
+});
+
+// ============================================================================
+// Mock Data Completeness: Referrals (Phase 6)
+// ============================================================================
+
+describe('Referral mock data', () => {
+  const referrals = getQuickPicks('referral');
+
+  it('has at least 6 items', () => {
+    expect(referrals.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('all items have required referral fields', () => {
+    for (const ref of referrals) {
+      expect(ref.id).toBeTruthy();
+      expect(ref.label).toBeTruthy();
+      expect(ref.chipLabel).toBeTruthy();
+      expect(ref.category).toBe('referral');
+      expect(ref.data.specialty).toBeTruthy();
+      expect(ref.data.reason).toBeTruthy();
+      expect(['routine', 'urgent', 'emergent']).toContain(ref.data.urgency);
+      expect(ref.data.referralStatus).toBe('draft');
+      expect(typeof ref.data.requiresAuth).toBe('boolean');
+    }
+  });
+
+  it('urgent referrals exist', () => {
+    const urgent = referrals.filter(r => r.data.urgency === 'urgent');
+    expect(urgent.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('some referrals require auth', () => {
+    const needsAuth = referrals.filter(r => r.data.requiresAuth === true);
+    expect(needsAuth.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ============================================================================
+// Search: Expanded categories (Phase 6)
+// ============================================================================
+
+describe('Search with Phase 6 categories', () => {
+  it('cross-category search finds imaging items', () => {
+    const results = searchAllCategories('chest');
+    const imagingResults = results.filter(r => r.category === 'imaging');
+    expect(imagingResults.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('imaging search filters correctly', () => {
+    const results = searchCategory('imaging', 'sinus');
+    expect(results.length).toBe(1);
+    expect(results[0].data.bodyPart).toBe('Sinuses');
+  });
+
+  it('allergy search finds by allergen name', () => {
+    const results = searchCategory('allergy', 'penicillin');
+    expect(results.length).toBe(1);
+    expect(results[0].id).toBe('allergy-penicillin');
+  });
+
+  it('referral search finds by specialty', () => {
+    const results = searchCategory('referral', 'cardiology');
+    expect(results.length).toBe(1);
+    expect(results[0].data.specialty).toBe('Cardiology');
+  });
+
+  it('procedure search finds by name', () => {
+    const results = searchCategory('procedure', 'spirometry');
+    expect(results.length).toBe(1);
+    expect(results[0].data.cptCode).toBe('94010');
+  });
+});
+
+// ============================================================================
+// Side-Effect Task Templates (Phase 6)
+// ============================================================================
+
+describe('Side-effect task templates', () => {
+  // Import is deferred to avoid circular deps in test; test the exported object shape
+  it('referralAdded template creates dx-association + prior-auth tasks', async () => {
+    const { TASK_TEMPLATES } = await import('../../mocks/generators/tasks');
+    const tasks = TASK_TEMPLATES.referralAdded('ref-1', 'Cardiology');
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].type).toBe('dx-association');
+    expect(tasks[0].displayTitle).toContain('Cardiology referral');
+    // Second task should be prior auth
+    expect(tasks[1].type).toBe('prior-auth-check');
+    expect(tasks[1].displayTitle).toContain('Cardiology referral');
+  });
+
+  it('procedureAdded template creates dx-association task', async () => {
+    const { TASK_TEMPLATES } = await import('../../mocks/generators/tasks');
+    const tasks = TASK_TEMPLATES.procedureAdded('proc-1', 'Spirometry');
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].type).toBe('dx-association');
+    expect(tasks[0].displayTitle).toContain('Spirometry');
+  });
+});

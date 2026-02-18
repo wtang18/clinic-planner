@@ -32,6 +32,10 @@ import { ItemDetailForm } from './ItemDetailForm';
 import { RxDetailForm } from './form/RxDetailForm';
 import { LabDetailForm } from './form/LabDetailForm';
 import { DxDetailForm } from './form/DxDetailForm';
+import { ImagingDetailForm } from './form/ImagingDetailForm';
+import { ProcedureDetailForm } from './form/ProcedureDetailForm';
+import { AllergyDetailForm } from './form/AllergyDetailForm';
+import { ReferralDetailForm } from './form/ReferralDetailForm';
 import { NarrativeInput } from './NarrativeInput';
 import { VitalsInput } from './VitalsInput';
 import type { VitalsData } from './VitalsInput';
@@ -262,6 +266,14 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
             return <LabDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
           case 'diagnosis':
             return <DxDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          case 'imaging':
+            return <ImagingDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          case 'procedure':
+            return <ProcedureDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          case 'allergy':
+            return <AllergyDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
+          case 'referral':
+            return <ReferralDetailForm initialData={detailData} onSubmit={handleDetailSubmit} onCancel={handleBack} />;
           default:
             return (
               <ItemDetailForm
