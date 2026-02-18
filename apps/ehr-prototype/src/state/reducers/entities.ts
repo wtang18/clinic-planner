@@ -6,6 +6,9 @@ import type { ChartItem, Suggestion, BackgroundTask, CareGapInstance } from '../
 import type { EncounterAction } from '../actions/types';
 import { createLogEntry, describeFieldChanges } from '../../utils/activity-log';
 
+// Re-export drafts reducer from its own file
+export { draftsReducer } from './drafts';
+
 // ============================================================================
 // Items Reducer
 // ============================================================================

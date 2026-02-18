@@ -20,6 +20,7 @@ import type {
 } from '../../types';
 import type { Mode, User } from '../types';
 import type { Role } from '../../types/common';
+import type { DraftAction } from './draft-actions';
 
 // ============================================================================
 // Chart Item Actions
@@ -197,7 +198,10 @@ export type EncounterAction =
   | CareGapAction
   | SessionAction
   | CollaborationAction
-  | SyncAction;
+  | SyncAction
+  | DraftAction;
+
+export type { DraftAction } from './draft-actions';
 
 // ============================================================================
 // Action Type Constants
@@ -269,3 +273,5 @@ export const SYNC_ACTION_TYPES = [
   'SYNC_CONFLICT_DETECTED',
   'SYNC_CONFLICT_RESOLVED',
 ] as const;
+
+export { DRAFT_ACTION_TYPES } from './draft-actions';

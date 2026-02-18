@@ -11,6 +11,7 @@ export const LAYOUT = {
   menuWidth: 360,
   overviewWidth: 360,
   aiDrawerWidth: 320,
+  railWidth: 200,
 
   // Floating inset (menu pane distance from viewport edges)
   floatingInset: 8,

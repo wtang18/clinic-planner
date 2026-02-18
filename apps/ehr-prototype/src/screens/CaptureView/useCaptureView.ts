@@ -8,8 +8,10 @@ import { useCallback, useState } from 'react';
 import type { ChartItem, ItemSource } from '../../types';
 import type { Mode } from '../../state/types';
 import { useDispatch } from '../../hooks';
-import { useItemActions, useSuggestionActions } from '../../hooks';
+import { useItemActions, useSuggestionActions, useDraftActions } from '../../hooks';
 import { useTranscription } from '../../context/TranscriptionContext';
+import { useStore } from '../../hooks/useEncounterState';
+import { selectDraft } from '../../state/selectors/drafts';
 
 // ============================================================================
 // Types
@@ -48,6 +50,16 @@ export interface UseCaptureViewResult {
   handleTranscriptionToggle: () => void;
   /** Handle mode change */
   handleModeChange: (mode: Mode) => void;
+  /** Whether the processing rail is open */
+  isRailOpen: boolean;
+  /** Toggle the processing rail */
+  setIsRailOpen: (open: boolean) => void;
+  /** Accept an AI draft — promotes to chart item */
+  handleAcceptDraft: (draftId: string) => void;
+  /** Edit an AI draft — opens details pane with draft content */
+  handleEditDraft: (draftId: string) => void;
+  /** Dismiss an AI draft */
+  handleDismissDraft: (draftId: string) => void;
 }
 
 // ============================================================================
@@ -56,14 +68,17 @@ export interface UseCaptureViewResult {
 
 export function useCaptureView(): UseCaptureViewResult {
   const dispatch = useDispatch();
+  const store = useStore();
   const { addItem, updateItem, deleteItem } = useItemActions();
   const { acceptSuggestion, dismissSuggestion } = useSuggestionActions();
+  const { acceptDraft: acceptDraftAction, dismissDraft: dismissDraftAction } = useDraftActions();
   const transcription = useTranscription();
 
   // Local state
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isTaskPaneOpen, setIsTaskPaneOpen] = useState(false);
+  const [isRailOpen, setIsRailOpen] = useState(true);
 
   // Handle adding a new item
   const handleItemAdd = useCallback(
@@ -181,6 +196,100 @@ export function useCaptureView(): UseCaptureViewResult {
     [dispatch]
   );
 
+  // Handle accepting an AI draft — promotes to chart item
+  const handleAcceptDraft = useCallback(
+    (draftId: string) => {
+      const state = store.getState();
+      const draft = selectDraft(state, draftId);
+      if (!draft) return;
+
+      // Mark draft as accepted
+      acceptDraftAction(draftId);
+
+      if (draft.enrichesItemId) {
+        // Update existing MA-documented item with AI-enriched content
+        updateItem(draft.enrichesItemId, {
+          displayText: draft.content,
+          source: { type: 'aiDraft', draftId },
+        });
+      } else {
+        // Create new chart item from draft content
+        handleItemAdd(
+          {
+            category: draft.category,
+            displayText: draft.content,
+            displaySubtext: draft.label,
+            _meta: {
+              syncStatus: 'pending' as const,
+              aiGenerated: true,
+              requiresReview: false,
+              reviewed: true,
+            },
+          } as unknown as Partial<ChartItem>,
+          { type: 'aiDraft', draftId }
+        );
+      }
+    },
+    [store, acceptDraftAction, updateItem, handleItemAdd]
+  );
+
+  // Handle editing an AI draft — accept + create item + open details pane
+  const handleEditDraft = useCallback(
+    (draftId: string) => {
+      const state = store.getState();
+      const draft = selectDraft(state, draftId);
+      if (!draft) return;
+
+      // Accept and create the item (same as accept flow)
+      acceptDraftAction(draftId);
+
+      const itemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const now = new Date();
+
+      const item: ChartItem = {
+        id: itemId,
+        category: draft.category,
+        displayText: draft.content,
+        displaySubtext: draft.label,
+        createdAt: now,
+        createdBy: { id: 'current-user', name: 'Current User' },
+        modifiedAt: now,
+        modifiedBy: { id: 'current-user', name: 'Current User' },
+        source: { type: 'aiDraft', draftId },
+        status: 'active',
+        tags: [],
+        linkedDiagnoses: [],
+        linkedEncounters: [],
+        activityLog: [{
+          timestamp: now,
+          action: 'created',
+          actor: 'Current User',
+          details: `AI-generated from ambient, editing (${draft.category})`,
+        }],
+        _meta: {
+          syncStatus: 'pending' as const,
+          aiGenerated: true,
+          requiresReview: true,
+          reviewed: false,
+        },
+      } as unknown as ChartItem;
+
+      addItem(item, { type: 'aiDraft', draftId });
+
+      // Open details pane for editing
+      setSelectedItemId(itemId);
+    },
+    [store, acceptDraftAction, addItem]
+  );
+
+  // Handle dismissing an AI draft
+  const handleDismissDraft = useCallback(
+    (draftId: string) => {
+      dismissDraftAction(draftId);
+    },
+    [dismissDraftAction]
+  );
+
   return {
     selectedItemId,
     setSelectedItemId,
@@ -198,5 +307,10 @@ export function useCaptureView(): UseCaptureViewResult {
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
+    isRailOpen,
+    setIsRailOpen,
+    handleAcceptDraft,
+    handleEditDraft,
+    handleDismissDraft,
   };
 }

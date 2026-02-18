@@ -105,6 +105,33 @@ export {
 } from './useCareGaps';
 export type { CareGapActions } from './useCareGaps';
 
+// Draft Hooks
+export {
+  useDrafts,
+  useDraft,
+  useDraftsByStatus,
+  useDraftsByCategory,
+  usePendingDrafts,
+  useGeneratingDrafts,
+  useActiveDrafts,
+  usePendingDraftCount,
+  useHasDraftForCategory,
+  useDraftActions,
+  useDraftsWithActions,
+} from './useDrafts';
+export type { DraftActions } from './useDrafts';
+
+// Processing Batch Hooks
+export {
+  useProcessingBatches,
+  useNonEmptyBatches,
+  useTotalNeedsAttentionCount,
+} from './useProcessingBatches';
+
+// Draft Engine Hook
+export { useDraftEngine } from './useDraftEngine';
+export type { UseDraftEngineOptions, UseDraftEngineReturn } from './useDraftEngine';
+
 // Layout Hooks
 export {
   useBreakpoint,

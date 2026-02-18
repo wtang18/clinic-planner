@@ -37,6 +37,7 @@ import { useAIAssistant } from '../../hooks/useAIAssistant';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { DetailsPane } from '../../components/details-pane';
+import { ProcessingRail, RAIL_WIDTH } from '../../components/processing-rail';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
 import {
@@ -334,6 +335,11 @@ export const CaptureView: React.FC = () => {
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
+    isRailOpen,
+    setIsRailOpen,
+    handleAcceptDraft,
+    handleEditDraft,
+    handleDismissDraft,
   } = useCaptureView();
 
   // Patient and encounter context
@@ -899,42 +905,53 @@ export const CaptureView: React.FC = () => {
                   );
                 }
 
-                // Current encounter patient - show chart items
+                // Current encounter patient - show chart items + processing rail
                 return (
                   <>
                     {contextBar}
-                    <div style={captureViewStyles.contentWrapper}>
-                      {/* Chart items list */}
-                      <div style={captureViewStyles.chartItemsList}>
-                        {sortedItems.length === 0 ? (
-                          <div style={captureViewStyles.chartItemsEmpty}>
-                            <ClipboardList size={64} color={colors.border.neutral.medium} style={{ marginBottom: spaceAround.default }} />
-                            <div style={captureViewStyles.emptyTitle}>
-                              Start Your Encounter
+                    <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+                      <div style={{ ...captureViewStyles.contentWrapper, flex: 1, minWidth: 0 }}>
+                        {/* Chart items list */}
+                        <div style={captureViewStyles.chartItemsList}>
+                          {sortedItems.length === 0 ? (
+                            <div style={captureViewStyles.chartItemsEmpty}>
+                              <ClipboardList size={64} color={colors.border.neutral.medium} style={{ marginBottom: spaceAround.default }} />
+                              <div style={captureViewStyles.emptyTitle}>
+                                Start Your Encounter
+                              </div>
+                              <div style={captureViewStyles.emptyDescription}>
+                                Choose a category below to add items to the chart.
+                                AI will help with suggestions as you go.
+                              </div>
                             </div>
-                            <div style={captureViewStyles.emptyDescription}>
-                              Choose a category below to add items to the chart.
-                              AI will help with suggestions as you go.
-                            </div>
-                          </div>
-                        ) : (
-                          sortedItems.map((item) => (
-                            <div key={item.id} style={captureViewStyles.chartItemCard}>
-                              <ChartItemCard
-                                item={item}
-                                variant="compact"
-                                selected={item.id === selectedItemId}
-                                onSelect={() => handleItemSelect(item.id)}
-                              />
-                            </div>
-                          ))
-                        )}
+                          ) : (
+                            sortedItems.map((item) => (
+                              <div key={item.id} style={captureViewStyles.chartItemCard}>
+                                <ChartItemCard
+                                  item={item}
+                                  variant="compact"
+                                  selected={item.id === selectedItemId}
+                                  onSelect={() => handleItemSelect(item.id)}
+                                />
+                              </div>
+                            ))
+                          )}
+                        </div>
+
+                        {/* OmniAdd bar (always open) */}
+                        <div style={{ marginTop: spaceAround.default }}>
+                          <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
+                        </div>
                       </div>
 
-                      {/* OmniAdd bar (always open) */}
-                      <div style={{ marginTop: spaceAround.default }}>
-                        <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
-                      </div>
+                      {/* Processing Rail */}
+                      <ProcessingRail
+                        isOpen={isRailOpen}
+                        onToggle={() => setIsRailOpen(!isRailOpen)}
+                        onAcceptDraft={handleAcceptDraft}
+                        onEditDraft={handleEditDraft}
+                        onDismissDraft={handleDismissDraft}
+                      />
                     </div>
                   </>
                 );
@@ -991,41 +1008,52 @@ export const CaptureView: React.FC = () => {
                 );
               }
 
-              // Fallback - show overview
+              // Fallback - show overview with processing rail
               return (
                 <>
                   {contextBar}
-                  <div style={captureViewStyles.contentWrapper}>
-                    <div style={captureViewStyles.chartItemsList}>
-                      {sortedItems.length === 0 ? (
-                        <div style={captureViewStyles.chartItemsEmpty}>
-                          <ClipboardList size={64} color={colors.border.neutral.medium} style={{ marginBottom: spaceAround.default }} />
-                          <div style={captureViewStyles.emptyTitle}>
-                            Start Your Encounter
+                  <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+                    <div style={{ ...captureViewStyles.contentWrapper, flex: 1, minWidth: 0 }}>
+                      <div style={captureViewStyles.chartItemsList}>
+                        {sortedItems.length === 0 ? (
+                          <div style={captureViewStyles.chartItemsEmpty}>
+                            <ClipboardList size={64} color={colors.border.neutral.medium} style={{ marginBottom: spaceAround.default }} />
+                            <div style={captureViewStyles.emptyTitle}>
+                              Start Your Encounter
+                            </div>
+                            <div style={captureViewStyles.emptyDescription}>
+                              Choose a category below to add items to the chart.
+                              AI will help with suggestions as you go.
+                            </div>
                           </div>
-                          <div style={captureViewStyles.emptyDescription}>
-                            Choose a category below to add items to the chart.
-                            AI will help with suggestions as you go.
-                          </div>
-                        </div>
-                      ) : (
-                        sortedItems.map((item) => (
-                          <div key={item.id} style={captureViewStyles.chartItemCard}>
-                            <ChartItemCard
-                              item={item}
-                              variant="compact"
-                              selected={item.id === selectedItemId}
-                              onSelect={() => handleItemSelect(item.id)}
-                            />
-                          </div>
-                        ))
-                      )}
+                        ) : (
+                          sortedItems.map((item) => (
+                            <div key={item.id} style={captureViewStyles.chartItemCard}>
+                              <ChartItemCard
+                                item={item}
+                                variant="compact"
+                                selected={item.id === selectedItemId}
+                                onSelect={() => handleItemSelect(item.id)}
+                              />
+                            </div>
+                          ))
+                        )}
+                      </div>
+
+                      {/* OmniAdd bar (always open) */}
+                      <div style={{ marginTop: spaceAround.default }}>
+                        <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
+                      </div>
                     </div>
 
-                    {/* OmniAdd bar (always open) */}
-                    <div style={{ marginTop: spaceAround.default }}>
-                      <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
-                    </div>
+                    {/* Processing Rail */}
+                    <ProcessingRail
+                      isOpen={isRailOpen}
+                      onToggle={() => setIsRailOpen(!isRailOpen)}
+                      onAcceptDraft={handleAcceptDraft}
+                      onEditDraft={handleEditDraft}
+                      onDismissDraft={handleDismissDraft}
+                    />
                   </div>
                 </>
               );

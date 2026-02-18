@@ -9,7 +9,8 @@ import type { EncounterState } from '../state/types';
 import type { EncounterAction } from '../state/actions/types';
 import type { Dispatch } from '../state/store/types';
 import { selectItem, selectAllSuggestions } from '../state/selectors/entities';
-import { suggestionExpired } from '../state/actions/creators';
+import { suggestionExpired, taskCreated } from '../state/actions/creators';
+import { TASK_TEMPLATES } from '../mocks/generators/tasks';
 
 // ============================================================================
 // Types
@@ -33,15 +34,28 @@ export const itemAddedHandler: SideEffectHandler = async (action, state, dispatc
 
   const item = action.payload.item;
 
-  // Medications: Additional processing handled by AI services
+  // Medications: Create processing tasks (dx-association, drug-interaction, formulary-check)
   if (item.category === 'medication') {
-    // Drug interaction checks are auto-triggered by AI service
-    // Additional custom logic can go here
+    const tasks = TASK_TEMPLATES.medicationAdded(item.id, item.displayText);
+    for (const task of tasks) {
+      dispatch(taskCreated(task, item.id));
+    }
   }
 
-  // Labs/Imaging: Check for care gap matches
-  if (['lab', 'imaging'].includes(item.category)) {
-    // Care gap evaluation is auto-triggered by AI service
+  // Labs: Create processing tasks (dx-association, care-gap-evaluation)
+  if (item.category === 'lab') {
+    const tasks = TASK_TEMPLATES.labAdded(item.id, item.displayText);
+    for (const task of tasks) {
+      dispatch(taskCreated(task, item.id));
+    }
+  }
+
+  // Imaging: Create processing tasks (dx-association, prior-auth)
+  if (item.category === 'imaging') {
+    const tasks = TASK_TEMPLATES.imagingAdded(item.id, item.displayText);
+    for (const task of tasks) {
+      dispatch(taskCreated(task, item.id));
+    }
   }
 
   // Diagnosis: Check for care gap implications

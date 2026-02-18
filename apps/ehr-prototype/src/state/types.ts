@@ -7,6 +7,7 @@ import type {
   Suggestion,
   BackgroundTask,
   CareGapInstance,
+  AIDraft,
   EncounterMeta,
   PatientContext,
   VisitMeta,
@@ -28,6 +29,7 @@ export interface EncounterState {
     suggestions: Record<string, Suggestion>;
     tasks: Record<string, BackgroundTask>;
     careGaps: Record<string, CareGapInstance>;
+    drafts: Record<string, AIDraft>;
   };
   
   /** Explicit relationships between entities */

@@ -39,6 +39,8 @@ export interface ChartItemCardProps {
   selected?: boolean;
   /** Whether to show action buttons */
   showActions?: boolean;
+  /** Processing status dot indicator (from related background tasks) */
+  processingStatus?: 'needs-attention' | 'in-progress' | 'complete';
   /** Called when the card is selected */
   onSelect?: () => void;
   /** Called when edit is clicked */
@@ -111,6 +113,7 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
   variant = 'compact',
   selected = false,
   showActions = false,
+  processingStatus,
   onSelect,
   onEdit,
   onDelete,
@@ -220,6 +223,21 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
         <div style={contentStyle}>
           <div style={headerStyle}>
             <p style={titleStyle}>{item.displayText}</p>
+            {processingStatus && (
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  flexShrink: 0,
+                  backgroundColor:
+                    processingStatus === 'needs-attention' ? colors.fg.attention.primary
+                    : processingStatus === 'in-progress' ? colors.fg.information.primary
+                    : colors.fg.positive.primary,
+                }}
+                title={processingStatus === 'needs-attention' ? 'Needs attention' : processingStatus === 'in-progress' ? 'Processing' : 'Complete'}
+              />
+            )}
             {isAIGenerated && (
               <div style={aiIndicatorStyle}>
                 <Sparkles size={14} />

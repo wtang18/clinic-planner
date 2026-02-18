@@ -40,6 +40,7 @@ export function createInitialState(): EncounterState {
       suggestions: {},
       tasks: {},
       careGaps: {},
+      drafts: {},
     },
     
     // Empty relationships

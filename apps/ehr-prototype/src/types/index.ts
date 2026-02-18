@@ -25,6 +25,9 @@ export * from './care-gaps';
 // Suggestion and task types
 export * from './suggestions';
 
+// AI draft types
+export * from './drafts';
+
 // Transcription types
 export * from './transcription';
 

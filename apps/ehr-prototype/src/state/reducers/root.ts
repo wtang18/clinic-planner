@@ -10,6 +10,7 @@ import {
   suggestionsReducer,
   tasksReducer,
   careGapsReducer,
+  draftsReducer,
 } from './entities';
 import { relationshipsReducer } from './relationships';
 import { contextReducer } from './context';
@@ -30,6 +31,7 @@ export function rootReducer(
     suggestions: suggestionsReducer(state.entities.suggestions, action),
     tasks: tasksReducer(state.entities.tasks, action),
     careGaps: careGapsReducer(state.entities.careGaps, action),
+    drafts: draftsReducer(state.entities.drafts, action),
   };
   
   // Handle other slices
