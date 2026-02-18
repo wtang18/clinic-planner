@@ -38,3 +38,7 @@ storybook-static/
 # Playwright
 playwright-report/
 test-results/
+
+# Local reference & working files
+reference/
+resources/
