@@ -1,58 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
-import type { Suggestion } from '../../types/suggestions';
 import { colors } from '../../styles/foundations';
 import { fn } from 'storybook/test';
-
-// ============================================================================
-// Mock Data
-// ============================================================================
-
-const mockSuggestions: Suggestion[] = [
-  {
-    id: 'sug-1',
-    type: 'chart-item',
-    status: 'active',
-    source: 'transcription',
-    confidence: 0.92,
-    createdAt: new Date(),
-    displayText: 'Add: Amoxicillin 500mg TID',
-    content: {
-      type: 'new-item',
-      category: 'medication',
-      itemTemplate: { displayText: 'Amoxicillin 500mg' },
-    },
-  },
-  {
-    id: 'sug-2',
-    type: 'chart-item',
-    status: 'active',
-    source: 'ai-analysis',
-    confidence: 0.78,
-    createdAt: new Date(),
-    displayText: 'Order: CBC w/ Diff',
-    content: {
-      type: 'new-item',
-      category: 'lab',
-      itemTemplate: { displayText: 'CBC with Differential' },
-    },
-  },
-  {
-    id: 'sug-3',
-    type: 'care-gap-action',
-    status: 'active',
-    source: 'care-gap',
-    confidence: 0.85,
-    createdAt: new Date(),
-    displayText: 'A1c - Due',
-    content: {
-      type: 'care-gap-action',
-      careGapId: 'cg-1',
-      actionTemplate: { displayText: 'Order A1c' },
-    },
-  },
-];
 
 // ============================================================================
 // Storybook Meta
@@ -70,8 +20,7 @@ const meta: Meta<typeof OmniAddBar> = {
   },
   args: {
     onItemAdd: fn(),
-    onSuggestionAccept: fn(),
-    onSuggestionDismiss: fn(),
+    onUndo: fn(),
   },
   parameters: {
     layout: 'padded',
@@ -82,15 +31,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  name: 'Default (Collapsed)',
+  name: 'Default (Touch Mode)',
   args: {},
-};
-
-export const WithSuggestions: Story = {
-  name: 'With Active Suggestions',
-  args: {
-    activeSuggestions: mockSuggestions,
-  },
 };
 
 export const Disabled: Story = {
@@ -132,9 +74,7 @@ export const InContext: Story = {
       {/* OmniAdd Bar */}
       <OmniAddBar
         onItemAdd={fn()}
-        activeSuggestions={mockSuggestions.slice(0, 2)}
-        onSuggestionAccept={fn()}
-        onSuggestionDismiss={fn()}
+        onUndo={fn()}
       />
     </div>
   ),

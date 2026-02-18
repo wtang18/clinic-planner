@@ -13,6 +13,7 @@ const baseMeta = {
   syncStatus: 'synced' as const,
   aiGenerated: false,
   requiresReview: false,
+  reviewed: true,
 };
 
 const baseItem = {
@@ -23,6 +24,7 @@ const baseItem = {
   source: { type: 'manual' as const },
   linkedDiagnoses: [],
   linkedEncounters: ['enc-1'],
+  activityLog: [],
   tags: [] as any[],
 };
 

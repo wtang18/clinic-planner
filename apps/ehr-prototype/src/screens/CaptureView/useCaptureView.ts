@@ -30,6 +30,8 @@ export interface UseCaptureViewResult {
   setIsTaskPaneOpen: (open: boolean) => void;
   /** Handle adding a new item */
   handleItemAdd: (item: Partial<ChartItem>, source?: ItemSource) => void;
+  /** Handle undo (remove last added item) */
+  handleUndo: (itemId: string) => void;
   /** Handle editing an item */
   handleEditItem: (itemId: string) => void;
   /** Handle accepting a suggestion */
@@ -76,10 +78,17 @@ export function useCaptureView(): UseCaptureViewResult {
         tags: partialItem.tags || [],
         linkedDiagnoses: partialItem.linkedDiagnoses || [],
         linkedEncounters: partialItem.linkedEncounters || [],
+        activityLog: [{
+          timestamp: now,
+          action: 'created',
+          actor: 'Current User',
+          details: `Added via OmniAdd (${partialItem.category || 'note'})`,
+        }],
         _meta: {
           syncStatus: 'pending',
           aiGenerated: false,
           requiresReview: false,
+          reviewed: true,
         },
         ...partialItem,
       } as ChartItem;
@@ -87,6 +96,18 @@ export function useCaptureView(): UseCaptureViewResult {
       addItem(item, source);
     },
     [addItem]
+  );
+
+  // Handle undo (remove last added item)
+  // Note: Full item removal requires a store action (future work).
+  // For now, we log the undo intent. The OmniAdd state machine tracks
+  // its own undo stack; the parent is responsible for actual removal.
+  const handleUndo = useCallback(
+    (_itemId: string) => {
+      // TODO: dispatch REMOVE_ITEM action when the store supports it
+      console.debug('[CaptureView] Undo requested for item:', _itemId);
+    },
+    []
   );
 
   // Handle editing an item
@@ -140,6 +161,7 @@ export function useCaptureView(): UseCaptureViewResult {
     isTaskPaneOpen,
     setIsTaskPaneOpen,
     handleItemAdd,
+    handleUndo,
     handleEditItem,
     handleSuggestionAccept,
     handleSuggestionDismiss,

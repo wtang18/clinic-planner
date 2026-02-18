@@ -1,18 +1,39 @@
 /**
  * OmniAddBar Component
  *
- * The primary input mechanism for adding chart items during encounters.
+ * Primary input mechanism for adding chart items during encounters.
+ * Rebuilt to use the tree-based OmniAdd state machine with dual input modes:
+ *
+ * - Touch mode: progressive disclosure through CategorySelector → QuickPickChips → detail/search
+ * - Keyboard mode: CommandPalette with type-to-search, prefix shortcuts, single-key shortcuts
+ *
+ * State management: `useReducer(omniAddReducer, INITIAL_STATE)` — all navigation,
+ * breadcrumbs, batch mode, and undo are driven by the state machine.
  */
 
 import React from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { Keyboard, Hand, Repeat, Undo2 } from 'lucide-react';
 import type { ChartItem, ItemCategory } from '../../types/chart-items';
-import { colors, spaceAround, spaceBetween, typography } from '../../styles/foundations';
+import type { QuickPickItem } from '../../data/mock-quick-picks';
+import { getQuickPicks, searchCategory } from '../../data/mock-quick-picks';
+import {
+  omniAddReducer,
+  INITIAL_STATE,
+  getCategoryMeta,
+  type OmniAddState,
+  type SelectedItem,
+} from './omni-add-machine';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { Card } from '../primitives/Card';
 import { CategorySelector } from './CategorySelector';
+import { QuickPickChips } from './QuickPickChips';
 import { QuickAddInput } from './QuickAddInput';
 import { ItemDetailForm } from './ItemDetailForm';
-import { Button } from '../primitives/Button';
-import { Card } from '../primitives/Card';
+import { NarrativeInput } from './NarrativeInput';
+import { VitalsInput } from './VitalsInput';
+import type { VitalsData } from './VitalsInput';
+import { OmniAddBreadcrumb } from './OmniAddBreadcrumb';
+import { CommandPalette } from './CommandPalette';
 
 // ============================================================================
 // Types
@@ -21,22 +42,35 @@ import { Card } from '../primitives/Card';
 export interface OmniAddBarProps {
   /** Called when an item is added */
   onItemAdd: (item: Partial<ChartItem>) => void;
-  /** Recent items for quick re-add */
-  recentItems?: ChartItem[];
+  /** Called when undo is requested (parent removes last item) */
+  onUndo?: (itemId: string) => void;
   /** Whether the bar is disabled */
   disabled?: boolean;
   /** Custom styles */
   style?: React.CSSProperties;
-  // Legacy props (kept for backwards compatibility, no longer used)
-  /** @deprecated No longer displayed since OmniAdd is always open */
-  activeSuggestions?: unknown[];
-  /** @deprecated No longer displayed since OmniAdd is always open */
-  onSuggestionAccept?: (id: string) => void;
-  /** @deprecated No longer displayed since OmniAdd is always open */
-  onSuggestionDismiss?: (id: string) => void;
 }
 
-type OmniAddState = 'category-select' | 'search' | 'detail-entry';
+// ============================================================================
+// Helpers
+// ============================================================================
+
+/** Convert a QuickPickItem to the SelectedItem shape used by the state machine */
+function toSelectedItem(pick: QuickPickItem): SelectedItem {
+  return { id: pick.id, label: pick.label, data: pick.data };
+}
+
+/** Build a Partial<ChartItem> from machine state for the onItemAdd callback */
+function buildChartItem(
+  state: OmniAddState,
+  extra?: Record<string, unknown>,
+): Partial<ChartItem> {
+  return {
+    category: state.category!,
+    displayText: state.selectedItem?.label || '',
+    ...state.selectedItem?.data,
+    ...extra,
+  } as Partial<ChartItem>;
+}
 
 // ============================================================================
 // Component
@@ -44,176 +78,340 @@ type OmniAddState = 'category-select' | 'search' | 'detail-entry';
 
 export const OmniAddBar: React.FC<OmniAddBarProps> = ({
   onItemAdd,
-  recentItems = [],
+  onUndo,
   disabled = false,
   style,
 }) => {
-  const [state, setState] = React.useState<OmniAddState>('category-select');
-  const [selectedCategory, setSelectedCategory] = React.useState<ItemCategory | null>(null);
-  const [selectedItem, setSelectedItem] = React.useState<Partial<ChartItem> | null>(null);
+  const [state, dispatch] = React.useReducer(omniAddReducer, INITIAL_STATE);
 
-  // Reset state (returns to category-select since OmniAdd is always open)
-  const reset = () => {
-    setState('category-select');
-    setSelectedCategory(null);
-    setSelectedItem(null);
-  };
+  // ── Keyboard shortcuts (Cmd+Z for undo, global when at root) ──
 
-  // Handle category selection
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+Z for undo
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && state.undoStack.length > 0) {
+        e.preventDefault();
+        const lastId = state.undoStack[state.undoStack.length - 1];
+        dispatch({ type: 'UNDO' });
+        onUndo?.(lastId);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.undoStack, onUndo]);
+
+  // ── Handlers ──
+
   const handleCategorySelect = (category: ItemCategory) => {
-    setSelectedCategory(category);
-    setState('search');
+    dispatch({ type: 'SELECT_CATEGORY', category });
   };
 
-  // Handle item selection from search
-  const handleItemSelect = (template: Partial<ChartItem>) => {
-    setSelectedItem(template);
-    setState('detail-entry');
+  const handleQuickPickSelect = (pick: QuickPickItem) => {
+    dispatch({ type: 'SELECT_QUICK_PICK', item: toSelectedItem(pick) });
   };
 
-  // Handle final item submission
-  const handleSubmit = (item: Partial<ChartItem>) => {
-    onItemAdd(item);
-    reset();
+  const handleSearchResultSelect = (pick: QuickPickItem) => {
+    dispatch({ type: 'SELECT_SEARCH_RESULT', item: toSelectedItem(pick) });
   };
+
+  const handleDetailSubmit = (item: Partial<ChartItem>) => {
+    dispatch({ type: 'SUBMIT_DETAIL' });
+    // Merge machine state data with form data; cast needed because ChartItem is a discriminated union
+    const merged = { ...buildChartItem(state), ...item } as Partial<ChartItem>;
+    onItemAdd(merged);
+    const itemId = `item-${Date.now()}`;
+    dispatch({ type: 'ITEM_ADDED', itemId });
+  };
+
+  const handleNarrativeSubmit = (text: string) => {
+    dispatch({ type: 'SUBMIT_TEXT', text });
+    onItemAdd({
+      category: state.category!,
+      displayText: text,
+    });
+    const itemId = `item-${Date.now()}`;
+    dispatch({ type: 'ITEM_ADDED', itemId });
+  };
+
+  const handleVitalsSubmit = (data: VitalsData) => {
+    dispatch({ type: 'SUBMIT_DATA_ENTRY' });
+    // Format vitals for display
+    const parts: string[] = [];
+    if (data.systolicBP && data.diastolicBP) parts.push(`BP ${data.systolicBP}/${data.diastolicBP}`);
+    if (data.heartRate) parts.push(`HR ${data.heartRate}`);
+    if (data.temperature) parts.push(`Temp ${data.temperature}\u00B0F`);
+    if (data.spO2) parts.push(`SpO2 ${data.spO2}%`);
+    if (data.respiratoryRate) parts.push(`RR ${data.respiratoryRate}`);
+    onItemAdd({
+      category: 'vitals',
+      displayText: parts.join(' \u00B7 ') || 'Vitals',
+      ...data,
+    } as Partial<ChartItem>);
+    const itemId = `item-${Date.now()}`;
+    dispatch({ type: 'ITEM_ADDED', itemId });
+  };
+
+  const handleBreadcrumbNavigate = (index: number) => {
+    dispatch({ type: 'NAVIGATE_TO_BREADCRUMB', index });
+  };
+
+  const handleBack = () => {
+    dispatch({ type: 'NAVIGATE_BACK' });
+  };
+
+  const handleSearchOpen = () => {
+    dispatch({ type: 'OPEN_SEARCH' });
+  };
+
+  const handleToggleInputMode = () => {
+    dispatch({
+      type: 'SET_INPUT_MODE',
+      mode: state.inputMode === 'touch' ? 'keyboard' : 'touch',
+    });
+  };
+
+  const handleToggleBatchMode = () => {
+    dispatch({ type: 'TOGGLE_BATCH_MODE' });
+  };
+
+  // ── Render step-specific content ──
+
+  const renderStepContent = () => {
+    // Keyboard mode at root or category level
+    if (state.inputMode === 'keyboard' && (state.step === 'root' || state.step === 'quick-pick' || state.step === 'search')) {
+      return (
+        <CommandPalette
+          category={state.category}
+          onSelectItem={(pick) => {
+            if (state.category) {
+              handleSearchResultSelect(pick);
+            } else {
+              // From root — select category first, then the item
+              dispatch({ type: 'SELECT_CATEGORY', category: pick.category });
+              // Need a slight delay for state to update, then select the item
+              setTimeout(() => {
+                dispatch({ type: 'SELECT_QUICK_PICK', item: toSelectedItem(pick) });
+              }, 0);
+            }
+          }}
+          onSelectCategory={handleCategorySelect}
+          onSubmitText={handleNarrativeSubmit}
+          onEscape={handleBack}
+          isNarrative={state.variant === 'narrative'}
+        />
+      );
+    }
+
+    switch (state.step) {
+      case 'root':
+        return (
+          <CategorySelector
+            onSelect={handleCategorySelect}
+            moreExpanded={state.moreExpanded}
+            onToggleMore={() => dispatch({ type: 'TOGGLE_MORE' })}
+            disabled={disabled}
+          />
+        );
+
+      case 'quick-pick':
+        return (
+          <QuickPickChips
+            items={getQuickPicks(state.category!)}
+            onSelect={handleQuickPickSelect}
+            onOpenSearch={handleSearchOpen}
+            categoryLabel={getCategoryMeta(state.category!).label}
+            disabled={disabled}
+          />
+        );
+
+      case 'search':
+        return (
+          <QuickAddInput
+            category={state.category!}
+            onSelect={(template) => {
+              // Convert old QuickAddInput template to our flow
+              dispatch({
+                type: 'SELECT_SEARCH_RESULT',
+                item: {
+                  id: `search-${Date.now()}`,
+                  label: template.displayText || '',
+                  data: template as Record<string, unknown>,
+                },
+              });
+            }}
+            onCancel={handleBack}
+          />
+        );
+
+      case 'detail':
+        return (
+          <ItemDetailForm
+            category={state.category!}
+            initialData={{
+              displayText: state.selectedItem?.label,
+              category: state.category!,
+              ...state.selectedItem?.data,
+            } as Partial<ChartItem>}
+            onSubmit={handleDetailSubmit}
+            onCancel={handleBack}
+          />
+        );
+
+      case 'text-input':
+        return (
+          <NarrativeInput
+            category={state.category!}
+            onSubmit={handleNarrativeSubmit}
+            onCancel={handleBack}
+          />
+        );
+
+      case 'data-entry':
+        return (
+          <VitalsInput
+            onSubmit={handleVitalsSubmit}
+            onCancel={handleBack}
+          />
+        );
+
+      case 'adding':
+        return null; // Transient — will immediately transition via ITEM_ADDED
+
+      default:
+        return null;
+    }
+  };
+
+  // ── Styles ──
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
     ...style,
   };
 
-  const expandedContainerStyle: React.CSSProperties = {
+  const contentStyle: React.CSSProperties = {
     padding: spaceAround.default,
   };
 
-  const headerStyle: React.CSSProperties = {
+  const toolbarStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spaceAround.compact,
   };
 
-  const headerLeftStyle: React.CSSProperties = {
+  const toolbarLeftStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.repeating,
+    flex: 1,
+    minWidth: 0,
   };
 
-  const breadcrumbStyle: React.CSSProperties = {
+  const toolbarRightStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.coupled,
-    fontSize: 12,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.spotReadable,
   };
 
-  // Always-open OmniAdd (no collapsed state)
+  const iconButtonStyle = (isActive: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 28,
+    height: 28,
+    padding: 0,
+    backgroundColor: isActive ? colors.bg.neutral.subtle : 'transparent',
+    border: `1px solid ${isActive ? colors.border.neutral.medium : 'transparent'}`,
+    borderRadius: borderRadius.sm,
+    cursor: 'pointer',
+    transition: `all ${transitions.fast}`,
+    color: isActive ? colors.fg.neutral.primary : colors.fg.neutral.spotReadable,
+  });
+
+  const batchBadgeStyle: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: spaceBetween.coupled,
+    padding: `2px ${spaceAround.nudge6}px`,
+    fontSize: 11,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.fg.accent.primary,
+    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+    borderRadius: borderRadius.full,
+  };
+
   return (
     <div style={containerStyle} data-testid="omni-add-bar">
       <Card variant="elevated" padding="none" data-testid="omni-add-expanded">
-        <div style={expandedContainerStyle}>
-          {/* Header */}
-          <div style={headerStyle}>
-            <div style={headerLeftStyle}>
-              {state !== 'category-select' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (state === 'detail-entry') {
-                      setState('search');
-                      setSelectedItem(null);
-                    } else {
-                      setState('category-select');
-                      setSelectedCategory(null);
-                    }
-                  }}
-                  leftIcon={<ChevronLeft size={14} />}
-                  data-testid="omni-add-back"
-                >
-                  Back
-                </Button>
+        <div style={contentStyle}>
+          {/* Toolbar: breadcrumb + mode toggles */}
+          <div style={toolbarStyle}>
+            <div style={toolbarLeftStyle}>
+              <OmniAddBreadcrumb
+                segments={state.breadcrumbs}
+                onNavigate={handleBreadcrumbNavigate}
+              />
+              {state.batchMode && (
+                <span style={batchBadgeStyle}>
+                  <Repeat size={10} />
+                  Batch
+                </span>
               )}
-              {/* Breadcrumb */}
-              <div style={breadcrumbStyle}>
-                <span>Add Item</span>
-                {selectedCategory && (
-                  <>
-                    <span>&rsaquo;</span>
-                    <span style={{ color: colors.fg.neutral.secondary }}>
-                      {getCategoryLabel(selectedCategory)}
-                    </span>
-                  </>
-                )}
-              </div>
+            </div>
+
+            <div style={toolbarRightStyle}>
+              {/* Undo button */}
+              {state.undoStack.length > 0 && (
+                <button
+                  type="button"
+                  style={iconButtonStyle(false)}
+                  onClick={() => {
+                    const lastId = state.undoStack[state.undoStack.length - 1];
+                    dispatch({ type: 'UNDO' });
+                    onUndo?.(lastId);
+                  }}
+                  title="Undo last add (Cmd+Z)"
+                  data-testid="omni-add-undo"
+                >
+                  <Undo2 size={14} />
+                </button>
+              )}
+
+              {/* Batch mode toggle (visible when in a category) */}
+              {state.category && (
+                <button
+                  type="button"
+                  style={iconButtonStyle(state.batchMode)}
+                  onClick={handleToggleBatchMode}
+                  title={state.batchMode ? 'Exit batch mode' : 'Enable batch mode (stay in category after add)'}
+                  data-testid="omni-add-batch-toggle"
+                >
+                  <Repeat size={14} />
+                </button>
+              )}
+
+              {/* Input mode toggle */}
+              <button
+                type="button"
+                style={iconButtonStyle(false)}
+                onClick={handleToggleInputMode}
+                title={state.inputMode === 'touch' ? 'Switch to keyboard mode' : 'Switch to touch mode'}
+                data-testid="omni-add-mode-toggle"
+              >
+                {state.inputMode === 'touch' ? <Keyboard size={14} /> : <Hand size={14} />}
+              </button>
             </div>
           </div>
 
-          {/* Category selection */}
-          {state === 'category-select' && (
-            <CategorySelector
-              onSelect={handleCategorySelect}
-              disabled={disabled}
-            />
-          )}
-
-          {/* Search input */}
-          {state === 'search' && selectedCategory && (
-            <QuickAddInput
-              category={selectedCategory}
-              onSelect={handleItemSelect}
-              onCancel={() => {
-                setState('category-select');
-                setSelectedCategory(null);
-              }}
-              recentItems={recentItems
-                .filter(item => item.category === selectedCategory)
-                .slice(0, 3)
-              }
-            />
-          )}
-
-          {/* Detail form */}
-          {state === 'detail-entry' && selectedCategory && selectedItem && (
-            <ItemDetailForm
-              category={selectedCategory}
-              initialData={selectedItem}
-              onSubmit={handleSubmit}
-              onCancel={() => {
-                setState('search');
-                setSelectedItem(null);
-              }}
-            />
-          )}
+          {/* Step content */}
+          {renderStepContent()}
         </div>
       </Card>
     </div>
   );
 };
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function getCategoryLabel(category: ItemCategory): string {
-  const labels: Record<ItemCategory, string> = {
-    'chief-complaint': 'Chief Complaint',
-    'hpi': 'HPI',
-    'ros': 'ROS',
-    'physical-exam': 'Physical Exam',
-    'vitals': 'Vitals',
-    'medication': 'Medication',
-    'allergy': 'Allergy',
-    'lab': 'Lab',
-    'imaging': 'Imaging',
-    'procedure': 'Procedure',
-    'diagnosis': 'Diagnosis',
-    'plan': 'Plan',
-    'instruction': 'Instruction',
-    'note': 'Note',
-    'referral': 'Referral',
-  };
-  return labels[category] || category;
-}
 
 OmniAddBar.displayName = 'OmniAddBar';

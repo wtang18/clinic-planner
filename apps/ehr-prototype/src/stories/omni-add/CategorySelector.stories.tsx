@@ -12,9 +12,15 @@ const meta: Meta<typeof CategorySelector> = {
       control: 'boolean',
       description: 'Disabled state',
     },
+    moreExpanded: {
+      control: 'boolean',
+      description: 'Whether secondary categories are shown',
+    },
   },
   args: {
     onSelect: fn(),
+    onToggleMore: fn(),
+    moreExpanded: false,
   },
 };
 
@@ -25,17 +31,10 @@ export const Default: Story = {
   args: {},
 };
 
-export const WithRecentCategories: Story = {
-  name: 'With Recent Categories',
+export const MoreExpanded: Story = {
+  name: 'More Categories Expanded',
   args: {
-    recentCategories: ['medication', 'lab', 'diagnosis'],
-  },
-};
-
-export const WithSelection: Story = {
-  name: 'Selected Category',
-  args: {
-    selected: 'medication',
+    moreExpanded: true,
   },
 };
 

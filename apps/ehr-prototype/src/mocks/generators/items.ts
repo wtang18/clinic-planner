@@ -47,10 +47,16 @@ function createBaseItem(
     tags: [],
     linkedDiagnoses: [],
     linkedEncounters: [],
+    activityLog: [{
+      timestamp: now,
+      action: 'created',
+      actor: DEFAULT_USER.name,
+    }],
     _meta: {
       syncStatus: 'synced',
       aiGenerated: false,
       requiresReview: false,
+      reviewed: true,
     },
     ...overrides,
   } as Omit<ChartItem, 'data' | 'actions'>;

@@ -86,7 +86,8 @@ describe('Mode Transitions Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               description: 'Acute bronchitis',
               icdCode: 'J20.9',
@@ -202,7 +203,8 @@ describe('Mode Transitions Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               description: 'Acute bronchitis',
               icdCode: 'J20.9',
@@ -230,7 +232,8 @@ describe('Mode Transitions Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               text: 'Full visit note...',
               format: 'plain' as const,
@@ -268,11 +271,12 @@ describe('Mode Transitions Integration', () => {
             createdBy: { id: 'system', name: 'AI System' },
             modifiedAt: new Date(),
             modifiedBy: { id: 'system', name: 'AI System' },
-            source: { type: 'ai-generated' },
+            source: { type: 'aiDraft' },
             tags: [{ label: 'AI Suggested', type: 'ai' as const }],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: true, requiresReview: true },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: true, requiresReview: true, reviewed: false },
             data: {
               description: 'Pneumonia',
               icdCode: 'J18.9',
@@ -280,7 +284,7 @@ describe('Mode Transitions Integration', () => {
               clinicalStatus: 'active' as const,
             },
           },
-          source: { type: 'ai-generated' },
+          source: { type: 'aiDraft' },
         },
       } as EncounterAction);
 
@@ -348,7 +352,8 @@ describe('Mode Transitions Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               drugName: 'Test Drug',
               dosage: '100mg',
@@ -426,7 +431,8 @@ describe('Mode Transitions Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               description: 'Acute bronchitis',
               icdCode: 'J20.9',

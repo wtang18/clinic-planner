@@ -35,7 +35,8 @@ const TEST_SCENARIO: Scenario = {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               measurements: [{ type: 'pulse', value: 72, unit: 'bpm' }],
               capturedAt: new Date(),

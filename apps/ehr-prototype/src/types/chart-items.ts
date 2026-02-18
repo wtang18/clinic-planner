@@ -27,14 +27,26 @@ export type ItemCategory =
   | 'note'
   | 'referral';
 
-/** How the item was created */
+/**
+ * How the item was created — tracks clinical provenance.
+ * Answers "who/what initiated this chart item?" for audit trails,
+ * AI transparency, and the activity log.
+ */
 export type ItemSource =
   | { type: 'manual' }
-  | { type: 'transcription'; segmentId: string; confidence: number }
-  | { type: 'suggestion'; suggestionId: string }
-  | { type: 'import'; sourceSystem: string; sourceId: string }
-  | { type: 'device'; deviceId: string }
-  | { type: 'ai-generated' };
+  | { type: 'aiSuggestion'; suggestionId?: string; confidence?: number }
+  | { type: 'aiDraft'; draftId?: string }
+  | { type: 'protocol'; protocolId?: string; recommendationId?: string }
+  | { type: 'orderSet'; orderSetId?: string }
+  | { type: 'maHandoff' };
+
+/** Activity log entry — append-only audit trail per chart item */
+export interface ActivityLogEntry {
+  timestamp: Date;
+  action: string;
+  actor: string;
+  details?: string;
+}
 
 /** Item status in workflow */
 export type ItemStatus =
@@ -83,12 +95,16 @@ export interface ChartItemBase {
   linkedDiagnoses: string[];   // IDs of associated Dx items
   linkedEncounters: string[];  // For longitudinal tracking
   
+  // Activity log (append-only audit trail)
+  activityLog: ActivityLogEntry[];
+
   // Metadata
   _meta: {
     syncStatus: SyncStatus;
     aiGenerated: boolean;
     aiConfidence?: number;     // 0-1 if AI-generated
     requiresReview: boolean;
+    reviewed: boolean;         // Whether provider has reviewed (for MA handoff items)
   };
 }
 

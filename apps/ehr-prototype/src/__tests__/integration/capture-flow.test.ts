@@ -61,7 +61,8 @@ describe('Capture Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               text: 'Productive cough x 5 days',
               format: 'plain' as const,
@@ -92,11 +93,12 @@ describe('Capture Flow Integration', () => {
             createdBy: { id: 'user-1', name: 'Dr. Smith' },
             modifiedAt: new Date(),
             modifiedBy: { id: 'user-1', name: 'Dr. Smith' },
-            source: { type: 'ai-generated' },
+            source: { type: 'aiDraft' },
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: true, requiresReview: true },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: true, requiresReview: true, reviewed: false },
             data: {
               description: 'Acute bronchitis',
               icdCode: 'J20.9',
@@ -104,7 +106,7 @@ describe('Capture Flow Integration', () => {
               clinicalStatus: 'active' as const,
             },
           },
-          source: { type: 'ai-generated' },
+          source: { type: 'aiDraft' },
         },
       } as EncounterAction);
 
@@ -138,7 +140,8 @@ describe('Capture Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               drugName: 'Benzonatate',
               dosage: '100mg',

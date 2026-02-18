@@ -75,7 +75,8 @@ describe('Task Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               drugName: 'Benzonatate',
               dosage: '100mg',
@@ -131,7 +132,8 @@ describe('Task Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               testName: 'CBC with Differential',
               testCode: '85025',
@@ -187,7 +189,8 @@ describe('Task Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               drugName: 'Amoxicillin',
               dosage: '500mg',
@@ -299,7 +302,8 @@ describe('Task Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               specialty: 'Pulmonology',
               reason: 'Chronic cough evaluation',
@@ -357,11 +361,12 @@ describe('Task Flow Integration', () => {
             createdBy: { id: 'system', name: 'AI System' },
             modifiedAt: new Date(),
             modifiedBy: { id: 'system', name: 'AI System' },
-            source: { type: 'ai-generated' },
+            source: { type: 'aiDraft' },
             tags: [{ label: 'AI Suggested', type: 'ai' as const }],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: true, aiConfidence: 0.8, requiresReview: true },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: true, aiConfidence: 0.8, requiresReview: true, reviewed: false },
             data: {
               drugName: 'Ibuprofen',
               dosage: '400mg',
@@ -372,7 +377,7 @@ describe('Task Flow Integration', () => {
             },
             actions: ['e-prescribe' as const],
           },
-          source: { type: 'ai-generated' },
+          source: { type: 'aiDraft' },
         },
       } as EncounterAction);
 

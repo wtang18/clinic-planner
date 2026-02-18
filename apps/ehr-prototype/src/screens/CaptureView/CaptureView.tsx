@@ -323,6 +323,7 @@ export const CaptureView: React.FC = () => {
     isTaskPaneOpen,
     setIsTaskPaneOpen,
     handleItemAdd,
+    handleUndo,
     handleEditItem,
     handleSuggestionAccept,
     handleSuggestionDismiss,
@@ -921,7 +922,7 @@ export const CaptureView: React.FC = () => {
 
                       {/* OmniAdd bar (always open) */}
                       <div style={{ marginTop: spaceAround.default }}>
-                        <OmniAddBar onItemAdd={handleItemAdd} />
+                        <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
                       </div>
                     </div>
                   </>
@@ -1011,7 +1012,7 @@ export const CaptureView: React.FC = () => {
 
                     {/* OmniAdd bar (always open) */}
                     <div style={{ marginTop: spaceAround.default }}>
-                      <OmniAddBar onItemAdd={handleItemAdd} />
+                      <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
                     </div>
                   </div>
                 </>

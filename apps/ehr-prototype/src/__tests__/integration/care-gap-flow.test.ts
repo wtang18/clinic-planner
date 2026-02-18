@@ -167,7 +167,8 @@ describe('Care Gap Flow Integration', () => {
             tags: [],
             linkedDiagnoses: [],
             linkedEncounters: [],
-            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false },
+            activityLog: [],
+            _meta: { syncStatus: 'local', aiGenerated: false, requiresReview: false, reviewed: true },
             data: {
               testName: 'Hemoglobin A1C',
               testCode: '83036',

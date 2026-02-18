@@ -90,14 +90,15 @@ export const noteGenerationService: AIService = {
     );
 
     // Create note item
+    const now = new Date();
     const noteItem: NarrativeItem = {
       id: `item-${nanoid(8)}`,
       category: 'note',
-      createdAt: new Date(),
+      createdAt: now,
       createdBy: { id: 'system', name: 'AI Assistant' },
-      modifiedAt: new Date(),
+      modifiedAt: now,
       modifiedBy: { id: 'system', name: 'AI Assistant' },
-      source: { type: 'ai-generated' },
+      source: { type: 'aiDraft' },
       status: 'pending-review',
       displayText: 'Visit Note',
       displaySubtext: `${generatedNote.sections.length} sections generated`,
@@ -107,11 +108,18 @@ export const noteGenerationService: AIService = {
       ],
       linkedDiagnoses: [],
       linkedEncounters: [encounter.id],
+      activityLog: [{
+        timestamp: now,
+        action: 'created',
+        actor: 'AI Assistant',
+        details: 'AI-generated visit note from ambient recording',
+      }],
       _meta: {
         syncStatus: 'pending',
         aiGenerated: true,
         aiConfidence: generatedNote.confidence,
         requiresReview: true,
+        reviewed: false,
       },
       data: {
         text: generatedNote.text,
@@ -128,7 +136,7 @@ export const noteGenerationService: AIService = {
       type: 'ITEM_ADDED',
       payload: {
         item: noteItem,
-        source: { type: 'ai-generated' },
+        source: { type: 'aiDraft' },
       },
     });
 

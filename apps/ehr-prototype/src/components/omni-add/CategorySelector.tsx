@@ -2,11 +2,14 @@
  * CategorySelector Component
  *
  * Category button row for selecting chart item type.
+ * Sources metadata from the OmniAdd state machine (PRIMARY_CATEGORIES, SECONDARY_CATEGORIES).
+ * Controlled: moreExpanded and onToggleMore are driven by the parent state machine.
  */
 
 import React from 'react';
 import { Pill, FlaskConical, Activity, ScanLine, CircleDot, Plus, ChevronDown } from 'lucide-react';
 import type { ItemCategory } from '../../types/chart-items';
+import { PRIMARY_CATEGORIES, SECONDARY_CATEGORIES } from './omni-add-machine';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 
 // ============================================================================
@@ -16,40 +19,13 @@ import { colors, spaceAround, spaceBetween, borderRadius, typography, transition
 export interface CategorySelectorProps {
   /** Called when a category is selected */
   onSelect: (category: ItemCategory) => void;
-  /** Recently used categories (shown first) */
-  recentCategories?: ItemCategory[];
+  /** Whether the "More" row is expanded (controlled) */
+  moreExpanded: boolean;
+  /** Toggle the "More" row (controlled) */
+  onToggleMore: () => void;
   /** Whether the selector is disabled */
   disabled?: boolean;
-  /** Currently selected category */
-  selected?: ItemCategory | null;
-  /** Custom styles */
-  style?: React.CSSProperties;
 }
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-const PRIMARY_CATEGORIES: { category: ItemCategory; label: string; shortcut: string }[] = [
-  { category: 'medication', label: 'Rx', shortcut: 'M' },
-  { category: 'lab', label: 'Lab', shortcut: 'L' },
-  { category: 'diagnosis', label: 'Dx', shortcut: 'D' },
-  { category: 'imaging', label: 'Imaging', shortcut: 'I' },
-  { category: 'procedure', label: 'Proc', shortcut: 'P' },
-];
-
-const SECONDARY_CATEGORIES: { category: ItemCategory; label: string }[] = [
-  { category: 'vitals', label: 'Vitals' },
-  { category: 'allergy', label: 'Allergy' },
-  { category: 'referral', label: 'Referral' },
-  { category: 'instruction', label: 'Instruction' },
-  { category: 'note', label: 'Note' },
-  { category: 'chief-complaint', label: 'Chief Complaint' },
-  { category: 'hpi', label: 'HPI' },
-  { category: 'ros', label: 'ROS' },
-  { category: 'physical-exam', label: 'Physical Exam' },
-  { category: 'plan', label: 'Plan' },
-];
 
 // ============================================================================
 // Icons
@@ -78,77 +54,47 @@ const getCategoryIcon = (category: ItemCategory): React.ReactNode => {
 
 export const CategorySelector: React.FC<CategorySelectorProps> = ({
   onSelect,
-  recentCategories = [],
+  moreExpanded,
+  onToggleMore,
   disabled = false,
-  selected,
-  style,
 }) => {
-  const [showMore, setShowMore] = React.useState(false);
   const [hoveredCategory, setHoveredCategory] = React.useState<ItemCategory | null>(null);
-
-  // Keyboard shortcuts
-  React.useEffect(() => {
-    if (disabled) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-
-      const key = e.key.toUpperCase();
-      const category = PRIMARY_CATEGORIES.find(c => c.shortcut === key);
-      if (category) {
-        e.preventDefault();
-        onSelect(category.category);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [disabled, onSelect]);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.repeating,
-    ...style,
   };
 
-  const primaryRowStyle: React.CSSProperties = {
+  const rowStyle: React.CSSProperties = {
     display: 'flex',
     gap: spaceBetween.repeating,
     flexWrap: 'wrap',
   };
 
   const secondaryRowStyle: React.CSSProperties = {
-    display: 'flex',
-    gap: spaceBetween.repeating,
-    flexWrap: 'wrap',
+    ...rowStyle,
     paddingTop: spaceAround.tight,
   };
 
-  const buttonStyle = (category: ItemCategory, isHovered: boolean, isSelected: boolean): React.CSSProperties => {
-    return {
-      display: 'flex',
-      alignItems: 'center',
-      gap: spaceBetween.repeating,
-      padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-      backgroundColor: isSelected
-        ? colors.bg.neutral.subtle
-        : isHovered
-        ? 'rgba(128, 128, 128, 0.12)'
-        : 'rgba(128, 128, 128, 0.06)',
-      backdropFilter: isSelected ? 'none' : 'blur(12px)',
-      WebkitBackdropFilter: isSelected ? 'none' : 'blur(12px)',
-      border: `1px solid ${isSelected ? colors.border.neutral.medium : colors.border.neutral.low}`,
-      borderRadius: borderRadius.sm,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      transition: `all ${transitions.fast}`,
-      opacity: disabled ? 0.5 : 1,
-      fontSize: 14,
-      fontFamily: typography.fontFamily.sans,
-      fontWeight: typography.fontWeight.medium,
-      color: isSelected ? colors.fg.neutral.primary : colors.fg.neutral.secondary,
-    };
-  };
+  const buttonStyle = (isHovered: boolean): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: spaceBetween.repeating,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    backgroundColor: isHovered ? 'rgba(128, 128, 128, 0.12)' : 'rgba(128, 128, 128, 0.06)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    border: `1px solid ${colors.border.neutral.low}`,
+    borderRadius: borderRadius.sm,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: `all ${transitions.fast}`,
+    opacity: disabled ? 0.5 : 1,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.fg.neutral.secondary,
+  });
 
   const shortcutStyle: React.CSSProperties = {
     fontSize: 12,
@@ -176,44 +122,42 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   return (
     <div style={containerStyle} data-testid="category-selector">
       {/* Primary categories */}
-      <div style={primaryRowStyle}>
-        {PRIMARY_CATEGORIES.map(({ category, label, shortcut }) => {
-          const isHovered = hoveredCategory === category;
-          const isSelected = selected === category;
-
+      <div style={rowStyle}>
+        {PRIMARY_CATEGORIES.map((meta) => {
+          const isHovered = hoveredCategory === meta.category;
           return (
             <button
-              key={category}
+              key={meta.category}
               type="button"
-              style={buttonStyle(category, isHovered, isSelected)}
-              onMouseEnter={() => setHoveredCategory(category)}
+              style={buttonStyle(isHovered)}
+              onMouseEnter={() => setHoveredCategory(meta.category)}
               onMouseLeave={() => setHoveredCategory(null)}
-              onClick={() => !disabled && onSelect(category)}
+              onClick={() => !disabled && onSelect(meta.category)}
               disabled={disabled}
-              aria-label={`Add ${label}`}
-              data-testid={`category-${category}`}
+              aria-label={`Add ${meta.label}`}
+              data-testid={`category-${meta.category}`}
             >
               <span style={{ display: 'flex', color: colors.fg.neutral.spotReadable }}>
-                {getCategoryIcon(category)}
+                {getCategoryIcon(meta.category)}
               </span>
-              <span>{label}</span>
-              <span style={shortcutStyle}>{shortcut}</span>
+              <span>{meta.label}</span>
+              {meta.shortcut && <span style={shortcutStyle}>{meta.shortcut}</span>}
             </button>
           );
         })}
 
-        {/* More button */}
+        {/* More toggle */}
         <button
           type="button"
           style={moreButtonStyle}
-          onClick={() => setShowMore(!showMore)}
+          onClick={() => !disabled && onToggleMore()}
           disabled={disabled}
           data-testid="category-more"
         >
-          {showMore ? 'Less' : 'More'}
+          {moreExpanded ? 'Less' : 'More'}
           <span style={{
             display: 'flex',
-            transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)',
+            transform: moreExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: `transform ${transitions.fast}`,
           }}>
             <ChevronDown size={14} />
@@ -221,26 +165,24 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
         </button>
       </div>
 
-      {/* Secondary categories (expandable) */}
-      {showMore && (
+      {/* Secondary categories */}
+      {moreExpanded && (
         <div style={secondaryRowStyle}>
-          {SECONDARY_CATEGORIES.map(({ category, label }) => {
-            const isHovered = hoveredCategory === category;
-            const isSelected = selected === category;
-
+          {SECONDARY_CATEGORIES.map((meta) => {
+            const isHovered = hoveredCategory === meta.category;
             return (
               <button
-                key={category}
+                key={meta.category}
                 type="button"
-                style={buttonStyle(category, isHovered, isSelected)}
-                onMouseEnter={() => setHoveredCategory(category)}
+                style={buttonStyle(isHovered)}
+                onMouseEnter={() => setHoveredCategory(meta.category)}
                 onMouseLeave={() => setHoveredCategory(null)}
-                onClick={() => !disabled && onSelect(category)}
+                onClick={() => !disabled && onSelect(meta.category)}
                 disabled={disabled}
-                aria-label={`Add ${label}`}
-                data-testid={`category-${category}`}
+                aria-label={`Add ${meta.label}`}
+                data-testid={`category-${meta.category}`}
               >
-                <span>{label}</span>
+                <span>{meta.label}</span>
               </button>
             );
           })}
