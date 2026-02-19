@@ -7,7 +7,7 @@
 
 import React from 'react';
 import type { DraftStatus } from '../../types/drafts';
-import { colors, spaceAround, spaceBetween, body, label as labelStyle, borderRadius } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, borderRadius } from '../../styles/foundations';
 
 export interface DraftItemRowProps {
   draftId: string;
@@ -90,22 +90,20 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   label: {
-    ...labelStyle.sm,
+    fontSize: 12,
+    lineHeight: '16px',
     fontWeight: 600,
     color: colors.fg.neutral.primary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
+    wordBreak: 'break-word' as const,
   },
   preview: {
-    ...body.xs,
+    fontSize: 12,
+    lineHeight: '16px',
+    fontWeight: 400,
     color: colors.fg.neutral.secondary,
     margin: 0,
     marginBottom: spaceBetween.coupled,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
-    maxWidth: '100%',
+    wordBreak: 'break-word' as const,
   },
   actions: {
     display: 'flex',

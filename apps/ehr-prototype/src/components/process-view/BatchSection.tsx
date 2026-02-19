@@ -1,19 +1,18 @@
 /**
  * BatchSection Component
  *
- * A collapsible section for one operational batch (Prescriptions, Labs, etc.).
- * Renders sub-groups, item cards, status indicator, inline "+" button,
- * and batch action buttons.
+ * A section for one operational batch (Prescriptions, Labs, etc.).
+ * Uses shared SectionHeader and ChartItemCard for cross-view consistency.
  */
 
-import React, { useState } from 'react';
-import { Plus, Send, Link2, FlaskConical } from 'lucide-react';
+import React from 'react';
+import { Send, Link2, FlaskConical } from 'lucide-react';
 import type { ProcessBatch, SubGroup } from '../../state/selectors/process-view';
 import type { BatchType } from '../../types/drafts';
-import { ProcessItemCard } from './ProcessItemCard';
-import { CollapsibleGroup } from '../primitives/CollapsibleGroup';
+import { ChartItemCard } from '../chart-items/ChartItemCard';
+import { SectionHeader } from '../primitives/SectionHeader';
 import { Button } from '../primitives/Button';
-import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -35,33 +34,6 @@ export interface BatchSectionProps {
 // ============================================================================
 // Helpers
 // ============================================================================
-
-function getStatusDotColor(status: ProcessBatch['aggregateStatus']): string {
-  switch (status) {
-    case 'needs-attention':
-      return colors.fg.attention.secondary;
-    case 'in-progress':
-      return colors.fg.information.secondary;
-    case 'complete':
-      return colors.fg.positive.secondary;
-    case 'idle':
-    default:
-      return colors.fg.neutral.disabled;
-  }
-}
-
-function getBadgeVariant(status: ProcessBatch['aggregateStatus']): 'default' | 'success' | 'warning' | 'info' {
-  switch (status) {
-    case 'needs-attention':
-      return 'warning';
-    case 'in-progress':
-      return 'info';
-    case 'complete':
-      return 'success';
-    default:
-      return 'default';
-  }
-}
 
 /** Get batch action config for a batch type */
 function getBatchActions(batch: ProcessBatch): { label: string; action: string; icon: React.ReactNode }[] {
@@ -122,109 +94,70 @@ export const BatchSection: React.FC<BatchSectionProps> = ({
   onBatchAction,
   style,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   // Empty state
   if (batch.totalCount === 0) {
     return (
-      <div style={{ ...styles.emptySection, ...style }} data-testid={`batch-${batch.type}`}>
-        <div style={styles.emptyHeader}>
-          <span style={styles.emptyLabel}>{batch.label}</span>
-          {onScopedAdd && (
-            <button
-              type="button"
-              style={styles.addButton}
-              onClick={() => onScopedAdd(batch.type)}
-              title={`Add ${batch.label}`}
-              data-testid={`add-${batch.type}`}
-            >
-              <Plus size={14} />
-            </button>
-          )}
-        </div>
-        <span style={styles.emptyText}>No {batch.label.toLowerCase()}</span>
+      <div style={{ ...styles.section, ...style }} data-testid={`batch-${batch.type}`}>
+        <SectionHeader
+          title={batch.label}
+          count="None"
+          onAdd={onScopedAdd ? () => onScopedAdd(batch.type) : undefined}
+          addLabel={`Add ${batch.label}`}
+          testID={`batch-header-${batch.type}`}
+        />
       </div>
     );
   }
 
   const batchActions = getBatchActions(batch);
 
-  const trailingContent = (
-    <div style={styles.headerTrailing}>
-      {/* Status dot */}
-      <span
-        style={{
-          ...styles.statusDot,
-          backgroundColor: getStatusDotColor(batch.aggregateStatus),
-        }}
-        data-testid="batch-status-dot"
-      />
-      {/* Inline "+" button */}
-      {onScopedAdd && (
-        <button
-          type="button"
-          style={styles.addButton}
-          onClick={(e) => {
-            e.stopPropagation();
-            onScopedAdd(batch.type);
-          }}
-          title={`Add ${batch.label}`}
-          data-testid={`add-${batch.type}`}
-        >
-          <Plus size={14} />
-        </button>
-      )}
-    </div>
-  );
-
   return (
     <div style={{ ...styles.section, ...style }} data-testid={`batch-${batch.type}`}>
-      <CollapsibleGroup
+      <SectionHeader
         title={batch.label}
-        isCollapsed={isCollapsed}
-        onToggle={() => setIsCollapsed(!isCollapsed)}
-        badge={{ label: batch.totalCount, variant: getBadgeVariant(batch.aggregateStatus) }}
-        trailing={trailingContent}
-        style={styles.sectionHeader}
-      >
-        <div style={styles.sectionContent}>
-          {/* Batch actions */}
-          {batchActions.length > 0 && (
-            <div style={styles.batchActions} data-testid="batch-actions">
-              {batchActions.map((action) => {
-                const readyTaskIds = batch.subGroups
-                  .flatMap(g => g.items)
-                  .flatMap(i => i.tasks.filter(t => t.status === 'ready'))
-                  .map(t => t.id);
+        count={`${batch.totalCount}`}
+        onAdd={onScopedAdd ? () => onScopedAdd(batch.type) : undefined}
+        addLabel={`Add ${batch.label}`}
+        testID={`batch-header-${batch.type}`}
+      />
 
-                return (
-                  <Button
-                    key={action.action}
-                    variant="secondary"
-                    size="sm"
-                    leftIcon={action.icon}
-                    onClick={() => onBatchAction?.(batch.type, action.action, readyTaskIds)}
-                    data-testid={`batch-action-${action.action}`}
-                  >
-                    {action.label}
-                  </Button>
-                );
-              })}
-            </div>
-          )}
+      <div style={styles.sectionContent}>
+        {/* Batch actions */}
+        {batchActions.length > 0 && (
+          <div style={styles.batchActions} data-testid="batch-actions">
+            {batchActions.map((action) => {
+              const readyTaskIds = batch.subGroups
+                .flatMap(g => g.items)
+                .flatMap(i => i.tasks.filter(t => t.status === 'ready'))
+                .map(t => t.id);
 
-          {/* Sub-groups */}
-          {batch.subGroups.map((subGroup) => (
-            <SubGroupSection
-              key={subGroup.key}
-              subGroup={subGroup}
-              showSubHeader={batch.subGroups.length > 1}
-              onItemSelect={onItemSelect}
-              onItemAction={onItemAction}
-            />
-          ))}
-        </div>
-      </CollapsibleGroup>
+              return (
+                <Button
+                  key={action.action}
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={action.icon}
+                  onClick={() => onBatchAction?.(batch.type, action.action, readyTaskIds)}
+                  data-testid={`batch-action-${action.action}`}
+                >
+                  {action.label}
+                </Button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Sub-groups */}
+        {batch.subGroups.map((subGroup) => (
+          <SubGroupSection
+            key={subGroup.key}
+            subGroup={subGroup}
+            showSubHeader={batch.subGroups.length > 1}
+            onItemSelect={onItemSelect}
+            onItemAction={onItemAction}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -248,9 +181,12 @@ const SubGroupSection: React.FC<{
     )}
     <div style={styles.itemList}>
       {subGroup.items.map((processItem) => (
-        <ProcessItemCard
+        <ChartItemCard
           key={processItem.item.id}
-          processItem={processItem}
+          item={processItem.item}
+          variant="expanded"
+          processingSteps={processItem.processingSteps}
+          nextAction={processItem.nextAction}
           onSelect={() => onItemSelect?.(processItem.item.id)}
           onAction={onItemAction}
         />
@@ -267,36 +203,8 @@ const styles: Record<string, React.CSSProperties> = {
   section: {
     marginBottom: spaceAround.defaultPlus,
   },
-  sectionHeader: {
-    backgroundColor: colors.bg.neutral.subtle,
-  },
   sectionContent: {
-    padding: spaceAround.default,
     paddingTop: spaceAround.compact,
-  },
-  headerTrailing: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.repeating,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    display: 'inline-block',
-  },
-  addButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 24,
-    height: 24,
-    border: `1px solid ${colors.border.neutral.low}`,
-    borderRadius: borderRadius.sm,
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    color: colors.fg.neutral.secondary,
-    padding: 0,
   },
   batchActions: {
     display: 'flex',
@@ -328,27 +236,6 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.repeating,
-  },
-  emptySection: {
-    marginBottom: spaceAround.defaultPlus,
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    backgroundColor: colors.bg.neutral.subtle,
-    borderRadius: borderRadius.sm,
-  },
-  emptyHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spaceAround.nudge4,
-  },
-  emptyLabel: {
-    fontSize: 14,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.fg.neutral.secondary,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: colors.fg.neutral.disabled,
   },
 };
 

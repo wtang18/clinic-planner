@@ -54,6 +54,8 @@ export interface CoordinationState {
   paneExpanded: boolean;
   /** Whether transcription is eligible (derived from encounter context). Gates TM column. */
   txEligible: boolean;
+  /** Whether the overview pane is expanded (visible). Independent of coordination invariants. */
+  overviewExpanded: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +81,11 @@ export type CoordinationAction =
   // Context changes (spec §10)
   | { type: 'ENCOUNTER_ENTERED'; payload: { encounterId: string; patientId: string } }
   | { type: 'ENCOUNTER_EXITED' }
-  | { type: 'ENCOUNTER_SWITCHED'; payload: { encounterId: string; patientId: string } };
+  | { type: 'ENCOUNTER_SWITCHED'; payload: { encounterId: string; patientId: string } }
+
+  // Overview pane (independent of coordination invariants)
+  | { type: 'OVERVIEW_COLLAPSED' }
+  | { type: 'OVERVIEW_EXPANDED' };
 
 // ---------------------------------------------------------------------------
 // Derived Types

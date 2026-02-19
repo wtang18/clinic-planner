@@ -43,7 +43,6 @@ export const captureViewStyles = {
   chartItemsList: {
     flex: 1,
     overflowY: 'auto',
-    padding: spaceAround.default,
     paddingBottom: '160px', // Space for OmniAdd + Minibar
   } as React.CSSProperties,
 
@@ -87,7 +86,7 @@ export const captureViewStyles = {
   } as React.CSSProperties,
 
   chartItemCard: {
-    marginBottom: spaceAround.compact,
+    marginBottom: spaceBetween.repeating,
   } as React.CSSProperties,
 
   omniAddContainer: {

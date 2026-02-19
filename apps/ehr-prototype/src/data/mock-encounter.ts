@@ -104,11 +104,11 @@ export const MOCK_VISIT: VisitMeta = {
 // MA Handoff Items
 // ============================================================================
 
-const MA_SOURCE: ItemSource = { type: 'maHandoff' };
+export const MA_SOURCE: ItemSource = { type: 'maHandoff' };
 const MA_ACTOR = 'Sarah K. (MA)';
 const NOW = new Date();
 
-function maItem(overrides: Partial<ChartItem> & { id: string; category: ChartItem['category']; displayText: string }): ChartItem {
+export function maItem(overrides: Partial<ChartItem> & { id: string; category: ChartItem['category']; displayText: string }): ChartItem {
   const base = {
     createdAt: NOW,
     createdBy: { id: MA_USER.id, name: MA_USER.name, role: 'ma' as const },
@@ -264,6 +264,116 @@ export const MA_HANDOFF_ITEMS: ChartItem[] = [
     },
   } as Partial<ChartItem> & { id: string; category: 'medication'; displayText: string }),
 ];
+
+// ============================================================================
+// Scenario-Aware Item Builder
+// ============================================================================
+
+interface VitalsInput {
+  bpSystolic: number;
+  bpDiastolic: number;
+  pulse: number;
+  temp: number;
+  tempFlag?: 'normal' | 'high' | 'low';
+  spo2: number;
+}
+
+/**
+ * Build MA handoff items from patient data and visit context.
+ * Generates vitals, CC, HPI, allergy confirmations, and med reconciliation
+ * based on the actual patient clinical summary.
+ */
+export function buildMAItemsForPatient(
+  patient: PatientContext,
+  visit: VisitMeta,
+  vitals: VitalsInput,
+  hpiText?: string,
+): ChartItem[] {
+  const items: ChartItem[] = [];
+  let idCounter = 1;
+  const nextId = (prefix: string) => `ma-${prefix}-${String(idCounter++).padStart(3, '0')}`;
+
+  // 1. Vitals
+  const bpFlag = vitals.bpSystolic >= 140 || vitals.bpDiastolic >= 90 ? 'high' : 'normal';
+  items.push(maItem({
+    id: nextId('vitals'),
+    category: 'vitals',
+    displayText: `BP ${vitals.bpSystolic}/${vitals.bpDiastolic} \u00B7 HR ${vitals.pulse} \u00B7 Temp ${vitals.temp}\u00B0F \u00B7 SpO2 ${vitals.spo2}%`,
+    data: {
+      measurements: [
+        { type: 'bp-systolic', value: vitals.bpSystolic, unit: 'mmHg', flag: bpFlag },
+        { type: 'bp-diastolic', value: vitals.bpDiastolic, unit: 'mmHg', flag: bpFlag },
+        { type: 'pulse', value: vitals.pulse, unit: 'bpm', flag: 'normal' },
+        { type: 'temp', value: vitals.temp, unit: '\u00B0F', flag: vitals.tempFlag ?? 'normal' },
+        { type: 'spo2', value: vitals.spo2, unit: '%', flag: 'normal' },
+      ],
+      capturedAt: NOW,
+      position: 'sitting',
+    },
+  } as Partial<ChartItem> & { id: string; category: 'vitals'; displayText: string }));
+
+  // 2. Chief Complaint
+  const ccText = visit.chiefComplaint ?? 'General visit';
+  items.push(maItem({
+    id: nextId('cc'),
+    category: 'chief-complaint',
+    displayText: ccText,
+    data: { text: ccText, format: 'plain' },
+  } as Partial<ChartItem> & { id: string; category: 'chief-complaint'; displayText: string }));
+
+  // 3. HPI (if provided)
+  if (hpiText) {
+    items.push(maItem({
+      id: nextId('hpi'),
+      category: 'hpi',
+      displayText: hpiText,
+      data: { text: hpiText, format: 'plain' },
+    } as Partial<ChartItem> & { id: string; category: 'hpi'; displayText: string }));
+  }
+
+  // 4. Allergy confirmations (from patient clinical summary)
+  const allergies = patient.clinicalSummary?.allergies ?? [];
+  for (const allergy of allergies) {
+    items.push(maItem({
+      id: nextId('allergy'),
+      category: 'allergy',
+      displayText: `${allergy.allergen} \u2014 ${allergy.reaction ?? 'unknown'} (${allergy.severity})`,
+      displaySubtext: 'Confirmed active',
+      data: {
+        allergen: allergy.allergen,
+        allergenType: 'drug',
+        reaction: (allergy.reaction ?? 'unknown').toLowerCase(),
+        severity: allergy.severity,
+        reportedBy: 'patient',
+        verificationStatus: 'confirmed',
+      },
+    } as Partial<ChartItem> & { id: string; category: 'allergy'; displayText: string }));
+  }
+
+  // 5. Medication reconciliation (from patient clinical summary)
+  const medications = patient.clinicalSummary?.medications ?? [];
+  for (const med of medications) {
+    items.push(maItem({
+      id: nextId('med'),
+      category: 'medication',
+      displayText: `${med.name} ${med.dosage} ${med.frequency}`,
+      displaySubtext: 'Confirmed active',
+      data: {
+        drugName: med.name,
+        dosage: med.dosage,
+        route: 'PO',
+        frequency: med.frequency,
+        duration: 'ongoing',
+        isControlled: false,
+        prescriptionType: 'refill',
+        reportedBy: 'patient',
+        verificationStatus: 'verified',
+      },
+    } as Partial<ChartItem> & { id: string; category: 'medication'; displayText: string }));
+  }
+
+  return items;
+}
 
 // ============================================================================
 // Loader

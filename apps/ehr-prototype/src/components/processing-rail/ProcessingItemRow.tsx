@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { colors, spaceAround, spaceBetween, body, label as labelStyle } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 
 export interface ProcessingItemRowProps {
   taskId: string;
@@ -52,18 +52,18 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
   },
   label: {
-    ...labelStyle.sm,
+    fontSize: 12,
+    lineHeight: '16px',
+    fontWeight: 600,
     color: colors.fg.neutral.primary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
+    wordBreak: 'break-word' as const,
   },
   status: {
-    ...body.xs,
+    fontSize: 11,
+    lineHeight: '16px',
+    fontWeight: 400,
     color: colors.fg.neutral.secondary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
+    wordBreak: 'break-word' as const,
   },
   detailsButton: {
     display: 'flex',

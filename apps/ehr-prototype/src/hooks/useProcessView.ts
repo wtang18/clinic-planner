@@ -10,6 +10,7 @@ import type { ChartItem, ItemSource, ItemCategory, AIDraft } from '../types';
 import type { Mode } from '../state/types';
 import type { BatchType } from '../types/drafts';
 import type { SignOffBlocker } from '../screens/ReviewView/SignOffSection';
+import { useNavigation } from '../navigation/NavigationContext';
 import {
   selectProcessViewBatches,
   selectProcessViewDrafts,
@@ -81,6 +82,7 @@ export function useProcessView(): UseProcessViewResult {
   const state = useEncounterState();
   const dispatch = useDispatch();
   const store = useStore();
+  const { setMode: setNavigationMode } = useNavigation();
   const { addItem, updateItem } = useItemActions();
   const { approveTask, batchApprove } = useTaskActions();
   const { acceptDraft: acceptDraftAction, dismissDraft: dismissDraftAction } = useDraftActions();
@@ -303,8 +305,9 @@ export function useProcessView(): UseProcessViewResult {
         type: 'MODE_CHANGED',
         payload: { to: mode, trigger: 'user' },
       });
+      setNavigationMode(mode);
     },
-    [dispatch]
+    [dispatch, setNavigationMode]
   );
 
   const handleScopedAdd = useCallback((category: ItemCategory) => {

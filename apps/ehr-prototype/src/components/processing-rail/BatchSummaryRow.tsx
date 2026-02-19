@@ -6,13 +6,15 @@
  */
 
 import React from 'react';
-import type { BatchSummary, BatchAggregateStatus, BatchItem } from '../../types/drafts';
+import type { BatchSummary } from '../../types/drafts';
 import { ProcessingItemRow } from './ProcessingItemRow';
 import { DraftItemRow } from './DraftItemRow';
 import { colors, spaceAround, spaceBetween, body, label as labelStyle, borderRadius } from '../../styles/foundations';
 
 export interface BatchSummaryRowProps {
   batch: BatchSummary;
+  /** Whether this is the last row (omits bottom border) */
+  isLast?: boolean;
   onAcceptDraft?: (draftId: string) => void;
   onEditDraft?: (draftId: string) => void;
   onDismissDraft?: (draftId: string) => void;
@@ -21,6 +23,7 @@ export interface BatchSummaryRowProps {
 
 export function BatchSummaryRow({
   batch,
+  isLast = false,
   onAcceptDraft,
   onEditDraft,
   onDismissDraft,
@@ -30,7 +33,7 @@ export function BatchSummaryRow({
   const isEmpty = batch.count === 0;
 
   return (
-    <div style={styles.container}>
+    <div style={isLast ? styles.containerLast : styles.container}>
       <button
         onClick={() => !isEmpty && setExpanded(e => !e)}
         style={{
@@ -42,10 +45,6 @@ export function BatchSummaryRow({
         aria-expanded={expanded}
       >
         <span style={styles.headerLeft}>
-          <span style={{
-            ...styles.statusDot,
-            backgroundColor: statusColor(batch.aggregateStatus),
-          }} />
           <span style={styles.label}>{batch.label}</span>
         </span>
         <span style={styles.headerRight}>
@@ -91,23 +90,12 @@ export function BatchSummaryRow({
   );
 }
 
-function statusColor(status: BatchAggregateStatus): string {
-  switch (status) {
-    case 'needs-attention':
-      return colors.fg.attention.primary;
-    case 'in-progress':
-      return colors.fg.information.primary;
-    case 'complete':
-      return colors.fg.positive.primary;
-    case 'idle':
-    default:
-      return colors.fg.neutral.secondary;
-  }
-}
-
 const styles: Record<string, React.CSSProperties> = {
   container: {
     borderBottom: `1px solid ${colors.border.neutral.low}`,
+  },
+  containerLast: {
+    // No bottom border on last row
   },
   header: {
     display: 'flex',
@@ -131,19 +119,11 @@ const styles: Record<string, React.CSSProperties> = {
     gap: spaceBetween.coupled,
     flexShrink: 0,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    flexShrink: 0,
-  },
   label: {
-    ...labelStyle.md,
+    fontSize: 12,
     fontWeight: 500,
     color: colors.fg.neutral.primary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap' as const,
+    wordBreak: 'break-word' as const,
   },
   countBadge: {
     ...labelStyle.sm,

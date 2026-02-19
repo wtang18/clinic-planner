@@ -231,4 +231,7 @@ export type { UseSafetyAlertsResult } from './useSafetyAlerts';
 export { useEncounterLifecycle } from './useEncounterLifecycle';
 export type { EncounterPhase, UseEncounterLifecycleResult } from './useEncounterLifecycle';
 
+// Encounter Layout Hook
+export { useEncounterLayout } from './useEncounterLayout';
+
 // Note: useSynchronizedTransition removed - using CSS Grid transitions instead

@@ -11,6 +11,7 @@ import { useDispatch } from '../../hooks';
 import { useItemActions, useSuggestionActions, useDraftActions } from '../../hooks';
 import { useTranscription } from '../../context/TranscriptionContext';
 import { useStore } from '../../hooks/useEncounterState';
+import { useNavigation } from '../../navigation/NavigationContext';
 import { selectDraft } from '../../state/selectors/drafts';
 
 // ============================================================================
@@ -50,10 +51,6 @@ export interface UseCaptureViewResult {
   handleTranscriptionToggle: () => void;
   /** Handle mode change */
   handleModeChange: (mode: Mode) => void;
-  /** Whether the processing rail is open */
-  isRailOpen: boolean;
-  /** Toggle the processing rail */
-  setIsRailOpen: (open: boolean) => void;
   /** Accept an AI draft — promotes to chart item */
   handleAcceptDraft: (draftId: string) => void;
   /** Edit an AI draft — opens details pane with draft content */
@@ -69,6 +66,7 @@ export interface UseCaptureViewResult {
 export function useCaptureView(): UseCaptureViewResult {
   const dispatch = useDispatch();
   const store = useStore();
+  const { setMode: setNavigationMode } = useNavigation();
   const { addItem, updateItem, deleteItem } = useItemActions();
   const { acceptSuggestion, dismissSuggestion } = useSuggestionActions();
   const { acceptDraft: acceptDraftAction, dismissDraft: dismissDraftAction } = useDraftActions();
@@ -78,7 +76,6 @@ export function useCaptureView(): UseCaptureViewResult {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isTaskPaneOpen, setIsTaskPaneOpen] = useState(false);
-  const [isRailOpen, setIsRailOpen] = useState(true);
 
   // Handle adding a new item
   const handleItemAdd = useCallback(
@@ -192,8 +189,9 @@ export function useCaptureView(): UseCaptureViewResult {
         type: 'MODE_CHANGED',
         payload: { to: mode, trigger: 'user' },
       });
+      setNavigationMode(mode);
     },
-    [dispatch]
+    [dispatch, setNavigationMode]
   );
 
   // Handle accepting an AI draft — promotes to chart item
@@ -307,8 +305,6 @@ export function useCaptureView(): UseCaptureViewResult {
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
-    isRailOpen,
-    setIsRailOpen,
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,

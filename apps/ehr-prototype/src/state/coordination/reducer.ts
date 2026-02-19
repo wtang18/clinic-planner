@@ -20,6 +20,7 @@ export const initialCoordinationState: CoordinationState = {
   paneView: 'menu',
   paneExpanded: true,
   txEligible: false,
+  overviewExpanded: true,
 };
 
 // ---------------------------------------------------------------------------
@@ -566,6 +567,12 @@ export function coordinationReducer(
       break;
     case 'ENCOUNTER_SWITCHED':
       next = handleEncounterSwitched(state);
+      break;
+    case 'OVERVIEW_COLLAPSED':
+      next = state.overviewExpanded ? { ...state, overviewExpanded: false } : state;
+      break;
+    case 'OVERVIEW_EXPANDED':
+      next = !state.overviewExpanded ? { ...state, overviewExpanded: true } : state;
       break;
     default:
       next = state;

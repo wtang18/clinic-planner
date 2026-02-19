@@ -7,9 +7,6 @@
 export { BatchSection } from './BatchSection';
 export type { BatchSectionProps } from './BatchSection';
 
-export { ProcessItemCard } from './ProcessItemCard';
-export type { ProcessItemCardProps } from './ProcessItemCard';
-
 export { DraftSection } from './DraftSection';
 export type { DraftSectionProps } from './DraftSection';
 

@@ -335,8 +335,6 @@ export const CaptureView: React.FC = () => {
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
-    isRailOpen,
-    setIsRailOpen,
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
@@ -939,15 +937,13 @@ export const CaptureView: React.FC = () => {
                         </div>
 
                         {/* OmniAdd bar (always open) */}
-                        <div style={{ marginTop: spaceAround.default }}>
+                        <div style={{ marginTop: spaceAround.spacious }}>
                           <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
                         </div>
                       </div>
 
                       {/* Processing Rail */}
                       <ProcessingRail
-                        isOpen={isRailOpen}
-                        onToggle={() => setIsRailOpen(!isRailOpen)}
                         onAcceptDraft={handleAcceptDraft}
                         onEditDraft={handleEditDraft}
                         onDismissDraft={handleDismissDraft}
@@ -1041,15 +1037,13 @@ export const CaptureView: React.FC = () => {
                       </div>
 
                       {/* OmniAdd bar (always open) */}
-                      <div style={{ marginTop: spaceAround.default }}>
+                      <div style={{ marginTop: spaceAround.spacious }}>
                         <OmniAddBar onItemAdd={handleItemAdd} onUndo={handleUndo} />
                       </div>
                     </div>
 
                     {/* Processing Rail */}
                     <ProcessingRail
-                      isOpen={isRailOpen}
-                      onToggle={() => setIsRailOpen(!isRailOpen)}
                       onAcceptDraft={handleAcceptDraft}
                       onEditDraft={handleEditDraft}
                       onDismissDraft={handleDismissDraft}

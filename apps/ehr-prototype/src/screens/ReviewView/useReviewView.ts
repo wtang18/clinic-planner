@@ -11,6 +11,7 @@ import type { ChartItem, ItemCategory } from '../../types';
 import type { Mode } from '../../state/types';
 import type { SafetyAlert } from '../../services/safety/types';
 import type { SignOffBlocker } from './SignOffSection';
+import { useNavigation } from '../../navigation/NavigationContext';
 import {
   useEncounterState,
   useDispatch,
@@ -90,6 +91,7 @@ export function useReviewView(): UseReviewViewResult {
   const state = useEncounterState();
   const dispatch = useDispatch();
   const store = useStore();
+  const { setMode: setNavigationMode } = useNavigation();
   const allItems = useChartItems();
   const openCareGaps = useOpenCareGaps();
   const pendingTasks = usePendingTasks();
@@ -264,7 +266,8 @@ export function useReviewView(): UseReviewViewResult {
       type: 'MODE_CHANGED',
       payload: { to: mode, trigger: 'user' },
     });
-  }, [dispatch]);
+    setNavigationMode(mode);
+  }, [dispatch, setNavigationMode]);
 
   return {
     itemsBySection,

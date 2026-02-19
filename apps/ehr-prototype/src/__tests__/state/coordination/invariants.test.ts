@@ -17,25 +17,25 @@ import type { CoordinationState } from '../../../state/coordination/types';
 /** All 15 valid states from the spec. */
 const VALID_STATES: Record<string, CoordinationState> = {
   // Non-encounter states (§5)
-  N1: { aiTier: 'bar',     txTier: 'bar', paneView: 'menu',   paneExpanded: true,  txEligible: false },
-  N2: { aiTier: 'bar',     txTier: 'bar', paneView: 'menu',   paneExpanded: false, txEligible: false },
-  N3: { aiTier: 'palette', txTier: 'bar', paneView: 'menu',   paneExpanded: true,  txEligible: false },
-  N4: { aiTier: 'palette', txTier: 'bar', paneView: 'menu',   paneExpanded: false, txEligible: false },
-  N5: { aiTier: 'drawer',  txTier: 'bar', paneView: 'ai',     paneExpanded: true,  txEligible: false },
+  N1: { aiTier: 'bar',     txTier: 'bar', paneView: 'menu',   paneExpanded: true,  txEligible: false, overviewExpanded: true },
+  N2: { aiTier: 'bar',     txTier: 'bar', paneView: 'menu',   paneExpanded: false, txEligible: false, overviewExpanded: true },
+  N3: { aiTier: 'palette', txTier: 'bar', paneView: 'menu',   paneExpanded: true,  txEligible: false, overviewExpanded: true },
+  N4: { aiTier: 'palette', txTier: 'bar', paneView: 'menu',   paneExpanded: false, txEligible: false, overviewExpanded: true },
+  N5: { aiTier: 'drawer',  txTier: 'bar', paneView: 'ai',     paneExpanded: true,  txEligible: false, overviewExpanded: true },
 
   // Encounter states — both in bottom bar (§6)
-  E1: { aiTier: 'bar',     txTier: 'bar',     paneView: 'menu', paneExpanded: true,  txEligible: true },
-  E2: { aiTier: 'bar',     txTier: 'bar',     paneView: 'menu', paneExpanded: false, txEligible: true },
-  E3: { aiTier: 'palette', txTier: 'anchor',  paneView: 'menu', paneExpanded: true,  txEligible: true },
-  E4: { aiTier: 'palette', txTier: 'anchor',  paneView: 'menu', paneExpanded: false, txEligible: true },
-  E5: { aiTier: 'anchor',  txTier: 'palette', paneView: 'menu', paneExpanded: true,  txEligible: true },
-  E6: { aiTier: 'anchor',  txTier: 'palette', paneView: 'menu', paneExpanded: false, txEligible: true },
+  E1: { aiTier: 'bar',     txTier: 'bar',     paneView: 'menu', paneExpanded: true,  txEligible: true, overviewExpanded: true },
+  E2: { aiTier: 'bar',     txTier: 'bar',     paneView: 'menu', paneExpanded: false, txEligible: true, overviewExpanded: true },
+  E3: { aiTier: 'palette', txTier: 'anchor',  paneView: 'menu', paneExpanded: true,  txEligible: true, overviewExpanded: true },
+  E4: { aiTier: 'palette', txTier: 'anchor',  paneView: 'menu', paneExpanded: false, txEligible: true, overviewExpanded: true },
+  E5: { aiTier: 'anchor',  txTier: 'palette', paneView: 'menu', paneExpanded: true,  txEligible: true, overviewExpanded: true },
+  E6: { aiTier: 'anchor',  txTier: 'palette', paneView: 'menu', paneExpanded: false, txEligible: true, overviewExpanded: true },
 
   // Encounter states — one in drawer (§6)
-  E7:  { aiTier: 'drawer',  txTier: 'bar',     paneView: 'ai',         paneExpanded: true, txEligible: true },
-  E8:  { aiTier: 'drawer',  txTier: 'palette', paneView: 'ai',         paneExpanded: true, txEligible: true },
-  E9:  { aiTier: 'bar',     txTier: 'drawer',  paneView: 'transcript', paneExpanded: true, txEligible: true },
-  E10: { aiTier: 'palette', txTier: 'drawer',  paneView: 'transcript', paneExpanded: true, txEligible: true },
+  E7:  { aiTier: 'drawer',  txTier: 'bar',     paneView: 'ai',         paneExpanded: true, txEligible: true, overviewExpanded: true },
+  E8:  { aiTier: 'drawer',  txTier: 'palette', paneView: 'ai',         paneExpanded: true, txEligible: true, overviewExpanded: true },
+  E9:  { aiTier: 'bar',     txTier: 'drawer',  paneView: 'transcript', paneExpanded: true, txEligible: true, overviewExpanded: true },
+  E10: { aiTier: 'palette', txTier: 'drawer',  paneView: 'transcript', paneExpanded: true, txEligible: true, overviewExpanded: true },
 };
 
 describe('Invariant Validation — Valid States', () => {
@@ -54,55 +54,55 @@ describe('Invariant Validation — Valid States', () => {
 
 const FORBIDDEN_STATES: Record<string, { state: CoordinationState; expectedInvariant: string }> = {
   'drawer without pane lock (AI drawer, pane=menu)': {
-    state: { aiTier: 'drawer', txTier: 'bar', paneView: 'menu', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'drawer', txTier: 'bar', paneView: 'menu', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-1',
   },
   'drawer with collapsed pane (AI)': {
-    state: { aiTier: 'drawer', txTier: 'bar', paneView: 'ai', paneExpanded: false, txEligible: true },
+    state: { aiTier: 'drawer', txTier: 'bar', paneView: 'ai', paneExpanded: false, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-1', // also INV-6
   },
   'drawer without pane lock (TM drawer, pane=menu)': {
-    state: { aiTier: 'bar', txTier: 'drawer', paneView: 'menu', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'bar', txTier: 'drawer', paneView: 'menu', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-1',
   },
   'drawer wrong view (TM drawer, pane=ai)': {
-    state: { aiTier: 'bar', txTier: 'drawer', paneView: 'ai', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'bar', txTier: 'drawer', paneView: 'ai', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-1',
   },
   'both at anchor': {
-    state: { aiTier: 'anchor', txTier: 'anchor', paneView: 'menu', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'anchor', txTier: 'anchor', paneView: 'menu', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-2',
   },
   'anchor without palette (AI anchor, TM bar)': {
-    state: { aiTier: 'anchor', txTier: 'bar', paneView: 'menu', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'anchor', txTier: 'bar', paneView: 'menu', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-2',
   },
   'anchor with drawer (AI anchor, TM drawer)': {
-    state: { aiTier: 'anchor', txTier: 'drawer', paneView: 'transcript', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'anchor', txTier: 'drawer', paneView: 'transcript', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-2', // also INV-5
   },
   'anchor without palette (TM anchor, AI bar)': {
-    state: { aiTier: 'bar', txTier: 'anchor', paneView: 'menu', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'bar', txTier: 'anchor', paneView: 'menu', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-2',
   },
   'two palettes': {
-    state: { aiTier: 'palette', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'palette', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-3',
   },
   'two drawers': {
-    state: { aiTier: 'drawer', txTier: 'drawer', paneView: 'ai', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'drawer', txTier: 'drawer', paneView: 'ai', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-4', // also INV-1
   },
   'drawer forces anchor (AI drawer, TM anchor)': {
-    state: { aiTier: 'drawer', txTier: 'anchor', paneView: 'ai', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'drawer', txTier: 'anchor', paneView: 'ai', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-5', // also INV-2
   },
   'drawer forces anchor reversed (TM drawer, AI anchor)': {
-    state: { aiTier: 'anchor', txTier: 'drawer', paneView: 'transcript', paneExpanded: true, txEligible: true },
+    state: { aiTier: 'anchor', txTier: 'drawer', paneView: 'transcript', paneExpanded: true, txEligible: true, overviewExpanded: true },
     expectedInvariant: 'INV-5', // also INV-2
   },
   'transcript view without eligibility': {
-    state: { aiTier: 'bar', txTier: 'bar', paneView: 'transcript', paneExpanded: true, txEligible: false },
+    state: { aiTier: 'bar', txTier: 'bar', paneView: 'transcript', paneExpanded: true, txEligible: false, overviewExpanded: true },
     expectedInvariant: 'INV-7',
   },
 };

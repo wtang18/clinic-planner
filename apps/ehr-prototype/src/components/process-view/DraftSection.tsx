@@ -5,12 +5,12 @@
  * and prominent Accept/Edit/Dismiss actions.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Sparkles, Check, Edit2, X, Loader } from 'lucide-react';
 import type { AIDraft } from '../../types';
-import { CollapsibleGroup } from '../primitives/CollapsibleGroup';
+import { SectionHeader } from '../primitives/SectionHeader';
 import { Button } from '../primitives/Button';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -126,43 +126,33 @@ export const DraftSection: React.FC<DraftSectionProps> = ({
   onDismissDraft,
   style,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
   if (drafts.length === 0) {
     return null; // Don't show empty AI Drafts section
   }
 
-  const pendingCount = drafts.filter(d => d.status === 'pending').length;
-  const generatingCount = drafts.filter(d => d.status === 'generating').length;
-
-  const badgeVariant = pendingCount > 0 ? 'warning' : generatingCount > 0 ? 'info' : 'default';
-
   return (
     <div style={{ ...styles.section, ...style }} data-testid="batch-ai-drafts">
-      <CollapsibleGroup
+      <SectionHeader
         title="AI Drafts"
-        isCollapsed={isCollapsed}
-        onToggle={() => setIsCollapsed(!isCollapsed)}
-        badge={{ label: drafts.length, variant: badgeVariant }}
+        count={`${drafts.length}`}
         trailing={
           <span style={styles.sparkleHeader}>
             <Sparkles size={16} color={colors.fg.accent.primary} />
           </span>
         }
-        style={styles.sectionHeader}
-      >
-        <div style={styles.sectionContent}>
-          {drafts.map((draft) => (
-            <DraftCard
-              key={draft.id}
-              draft={draft}
-              onAccept={() => onAcceptDraft?.(draft.id)}
-              onEdit={() => onEditDraft?.(draft.id)}
-              onDismiss={() => onDismissDraft?.(draft.id)}
-            />
-          ))}
-        </div>
-      </CollapsibleGroup>
+        testID="draft-section-header"
+      />
+      <div style={styles.sectionContent}>
+        {drafts.map((draft) => (
+          <DraftCard
+            key={draft.id}
+            draft={draft}
+            onAccept={() => onAcceptDraft?.(draft.id)}
+            onEdit={() => onEditDraft?.(draft.id)}
+            onDismiss={() => onDismissDraft?.(draft.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 };
@@ -174,9 +164,6 @@ export const DraftSection: React.FC<DraftSectionProps> = ({
 const styles: Record<string, React.CSSProperties> = {
   section: {
     marginBottom: spaceAround.defaultPlus,
-  },
-  sectionHeader: {
-    backgroundColor: colors.bg.accent.subtle,
   },
   sectionContent: {
     padding: spaceAround.default,

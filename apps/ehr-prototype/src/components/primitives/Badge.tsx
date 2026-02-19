@@ -62,17 +62,17 @@ const variantColors: Record<
     dot: colors.fg.information.secondary,
   },
   ai: {
-    bg: colors.bg.positive.subtle,
-    text: colors.bg.generative.high,
-    dot: colors.fg.generative.spotReadable,
+    bg: colors.bg.neutral.subtle,
+    text: colors.fg.neutral.secondary,
+    dot: colors.fg.neutral.spotReadable,
   },
 };
 
 const sizeStyles: Record<'sm' | 'md', React.CSSProperties> = {
   sm: {
-    padding: `${spaceAround.nudge2}px ${spaceAround.nudge6}px`,
-    fontSize: 12,
-    lineHeight: '20px',
+    padding: `1px 5px`,
+    fontSize: 11,
+    lineHeight: '16px',
   },
   md: {
     padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,

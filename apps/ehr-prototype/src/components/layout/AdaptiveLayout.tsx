@@ -9,7 +9,7 @@
  * the same element as the menu toggle button (just in expanded form).
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { colors, zIndex as zIndexTokens, transitions, glass, GLASS_BUTTON_RADIUS, GLASS_BUTTON_HEIGHT, LAYOUT } from '../../styles/foundations';
 import { useCoordination } from '../../hooks/useCoordination';
@@ -105,16 +105,16 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   const { state: coordState, dispatch } = useCoordination();
   const menuCollapsed = !coordState.paneExpanded;
 
-  // Overview collapse/expand: purely local concern (no coordination involvement)
-  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+  // Overview collapse/expand: sourced from coordination state (persists across view switches)
+  const overviewCollapsed = !coordState.overviewExpanded;
 
   const toggleMenu = useCallback(() => {
     dispatch({ type: menuCollapsed ? 'PANE_EXPANDED' : 'PANE_COLLAPSED' });
   }, [menuCollapsed, dispatch]);
 
   const toggleOverview = useCallback(() => {
-    setOverviewCollapsed(prev => !prev);
-  }, []);
+    dispatch({ type: overviewCollapsed ? 'OVERVIEW_EXPANDED' : 'OVERVIEW_COLLAPSED' });
+  }, [overviewCollapsed, dispatch]);
 
   // Keyboard shortcuts
   useEffect(() => {

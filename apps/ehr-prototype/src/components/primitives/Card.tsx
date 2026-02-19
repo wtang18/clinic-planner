@@ -46,12 +46,12 @@ const paddingStyles: Record<'none' | 'sm' | 'md' | 'lg', number> = {
 const variantStyles: Record<'default' | 'outlined' | 'elevated', React.CSSProperties> = {
   default: {
     backgroundColor: colors.bg.neutral.base,
-    border: '1px solid rgba(0, 0, 0, 0.04)',
-    boxShadow: shadows.xs,
+    border: '1px solid rgba(0, 0, 0, 0.06)',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
   },
   outlined: {
-    backgroundColor: 'transparent',
-    border: `1px solid ${colors.border.neutral.medium}`,
+    backgroundColor: colors.bg.neutral.base,
+    border: '1px solid rgba(0, 0, 0, 0.08)',
     boxShadow: 'none',
   },
   elevated: {
@@ -88,14 +88,13 @@ export const Card: React.FC<CardProps> = ({
     ...variantStyles[variant],
     ...(selected ? {
       borderColor: colors.fg.accent.primary,
-      boxShadow: `0 0 0 2px ${colors.border.accent.low}`,
+      boxShadow: `0 0 0 1.5px ${colors.border.accent.low}`,
     } : {}),
     ...(isClickable ? {
       cursor: 'pointer',
     } : {}),
     ...(isClickable && isHovered ? {
       backgroundColor: colors.bg.neutral.min,
-      borderColor: colors.border.neutral.medium,
     } : {}),
     ...style,
   };

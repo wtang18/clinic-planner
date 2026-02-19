@@ -8,6 +8,8 @@ import React, { useEffect, useState } from 'react';
 import { Loader, AlertCircle } from 'lucide-react';
 import { useDispatch } from '../hooks';
 import { ENCOUNTER_TEMPLATES } from '../mocks';
+import { buildMAItemsForPatient, MA_SOURCE } from '../data/mock-encounter';
+import type { EncounterContext } from '../mocks/generators/encounters';
 import { colors, spaceAround, typography } from '../styles/foundations';
 
 // ============================================================================
@@ -25,26 +27,62 @@ export interface EncounterLoaderProps {
 // Helper: Get Mock Data
 // ============================================================================
 
-function getMockDataForEncounter(encounterId: string) {
+function getMockDataForEncounter(encounterId: string): EncounterContext {
   // Map encounter IDs to mock scenarios
   if (encounterId === 'uc-cough' || encounterId === 'demo-uc') {
-    const context = ENCOUNTER_TEMPLATES.ucCough();
-    return context;
+    return ENCOUNTER_TEMPLATES.ucCough();
   }
 
   if (encounterId === 'pc-diabetes' || encounterId === 'demo-pc') {
-    const context = ENCOUNTER_TEMPLATES.pcDiabetes();
-    return context;
+    return ENCOUNTER_TEMPLATES.pcDiabetes();
   }
 
   if (encounterId === 'demo-healthy' || encounterId === 'healthy') {
-    const context = ENCOUNTER_TEMPLATES.annualWellness();
-    return context;
+    return ENCOUNTER_TEMPLATES.annualWellness();
   }
 
   // Default to UC Cough scenario
-  const context = ENCOUNTER_TEMPLATES.ucCough();
-  return context;
+  return ENCOUNTER_TEMPLATES.ucCough();
+}
+
+/**
+ * Get MA handoff items for a given scenario.
+ * Each scenario has scenario-specific vitals and HPI text;
+ * allergy confirmations and med reconciliation are derived from patient data.
+ */
+function getMAItemsForScenario(encounterId: string, mockData: EncounterContext) {
+  if (encounterId === 'uc-cough' || encounterId === 'demo-uc') {
+    return buildMAItemsForPatient(
+      mockData.patient,
+      mockData.visit,
+      { bpSystolic: 128, bpDiastolic: 82, pulse: 78, temp: 99.1, tempFlag: 'high', spo2: 98 },
+      'Onset 5 days ago, productive yellow sputum, tried OTC Robitussin without relief. Worse at night, no hemoptysis. Low-grade fever at home. No SOB at rest.',
+    );
+  }
+
+  if (encounterId === 'pc-diabetes' || encounterId === 'demo-pc') {
+    return buildMAItemsForPatient(
+      mockData.patient,
+      mockData.visit,
+      { bpSystolic: 142, bpDiastolic: 88, pulse: 72, temp: 98.2, spo2: 97 },
+      'Here for quarterly DM/HTN follow-up. Reports morning fasting glucose running 140-160. Occasional headaches, attributes to stress. Adherent to medications, sometimes forgets evening metformin.',
+    );
+  }
+
+  if (encounterId === 'demo-healthy' || encounterId === 'healthy') {
+    return buildMAItemsForPatient(
+      mockData.patient,
+      mockData.visit,
+      { bpSystolic: 118, bpDiastolic: 72, pulse: 68, temp: 98.4, spo2: 99 },
+    );
+  }
+
+  // Default: UC Cough
+  return buildMAItemsForPatient(
+    mockData.patient,
+    mockData.visit,
+    { bpSystolic: 128, bpDiastolic: 82, pulse: 78, temp: 99.1, tempFlag: 'high', spo2: 98 },
+  );
 }
 
 // ============================================================================
@@ -81,6 +119,15 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
             visit: mockData.visit,
           },
         });
+
+        // Dispatch MA handoff items
+        const maItems = getMAItemsForScenario(encounterId, mockData);
+        for (const item of maItems) {
+          dispatch({
+            type: 'ITEM_ADDED',
+            payload: { item, source: MA_SOURCE },
+          });
+        }
 
         setIsLoading(false);
       } catch (err) {

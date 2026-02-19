@@ -307,10 +307,10 @@ describe('BatchSection', () => {
 });
 
 // ============================================================================
-// 6. ProcessItemCard Logic
+// 6. Processing Steps + Next Action Logic
 // ============================================================================
 
-describe('ProcessItemCard', () => {
+describe('Processing steps + next action', () => {
   it('derives step status correctly', () => {
     const steps = [
       { label: 'Link Dx', status: 'complete' as const },

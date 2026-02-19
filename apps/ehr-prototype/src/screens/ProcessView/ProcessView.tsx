@@ -5,27 +5,27 @@
  * Shows items organized by batch (AI Drafts, Prescriptions, Labs, Imaging, Referrals)
  * with a sign-off section at the bottom.
  *
- * Phase 5: Replaces the task-status-oriented layout with operational batches.
+ * Renders inside AdaptiveLayout (same as CaptureView) to keep overview pane,
+ * floating nav, and bottom bar visible.
  */
 
 import React, { useCallback } from 'react';
-import { useEncounterState, useOpenCareGaps } from '../../hooks';
+import { useEncounterState } from '../../hooks';
 import { useProcessView } from '../../hooks/useProcessView';
+import { useEncounterLayout } from '../../hooks/useEncounterLayout';
 import type { ItemCategory } from '../../types';
 import type { BatchType } from '../../types/drafts';
-import type { Mode } from '../../state/types';
 
-import { AppShell } from '../../components/layout/AppShell';
-import { PatientHeader } from '../../components/layout/PatientHeader';
-import { ModeSelector } from '../../components/layout/ModeSelector';
+import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
+import { CanvasPane } from '../../components/layout/CanvasPane';
 import { DetailsPane } from '../../components/details-pane/DetailsPane';
 import { BatchSection } from '../../components/process-view/BatchSection';
 import { DraftSection } from '../../components/process-view/DraftSection';
 import { SignOff } from '../../components/process-view/SignOff';
 import { EmptyState } from '../../components/primitives/EmptyState';
 
-import { List, Plus } from 'lucide-react';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, zIndex } from '../../styles/foundations';
+import { List } from 'lucide-react';
+import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 
 // ============================================================================
 // Batch → Category Mapping
@@ -45,7 +45,6 @@ const BATCH_TO_CATEGORY: Record<BatchType, ItemCategory> = {
 
 export const ProcessView: React.FC = () => {
   const state = useEncounterState();
-  const openCareGaps = useOpenCareGaps();
   const {
     batches,
     drafts,
@@ -67,6 +66,8 @@ export const ProcessView: React.FC = () => {
     handleScopedAdd,
     handleClearScopedAdd,
   } = useProcessView();
+
+  const layout = useEncounterLayout(handleModeChange);
 
   const patient = state.context.patient;
   const encounter = state.context.encounter;
@@ -142,92 +143,77 @@ export const ProcessView: React.FC = () => {
   const hasContent = drafts.length > 0 || batches.some(b => b.totalCount > 0);
 
   return (
-    <AppShell
-      testID="process-view"
-      header={
-        <div style={styles.headerContainer}>
-          <PatientHeader
-            patient={patient}
-            encounter={encounter}
-            careGapCount={openCareGaps.length}
-          />
-          <div style={styles.modeSelectorContainer}>
-            <ModeSelector
-              currentMode={state.session.mode}
-              onModeChange={handleModeChange}
-            />
-          </div>
-        </div>
-      }
-      main={
-        <div style={styles.mainContent}>
-          {/* AI Drafts section */}
-          <DraftSection
-            drafts={drafts}
-            onAcceptDraft={handleAcceptDraft}
-            onEditDraft={handleEditDraft}
-            onDismissDraft={handleDismissDraft}
-          />
+    <>
+      <AdaptiveLayout
+        testID="process-view"
+        menuPane={layout.menuPane}
+        menuPaneHeaderContent={layout.menuPaneHeaderContent}
+        overviewPane={layout.overviewPane}
+        overviewHeaderContent={layout.overviewHeaderContent}
+        canvasHeaderContent={layout.canvasHeaderContent}
+        patientIdentity={layout.patientIdentity}
+        aiControlSurface={layout.aiControlSurface}
+        canvasPane={
+          <CanvasPane headerContent={layout.canvasPaneHeader} compactHeaderContent={layout.compactCanvasPaneHeader}>
+            <div style={styles.mainContent}>
+              {/* AI Drafts section */}
+              <DraftSection
+                drafts={drafts}
+                onAcceptDraft={handleAcceptDraft}
+                onEditDraft={handleEditDraft}
+                onDismissDraft={handleDismissDraft}
+              />
 
-          {/* Operational batch sections */}
-          {batches.map((batch) => (
-            <BatchSection
-              key={batch.type}
-              batch={batch}
-              onScopedAdd={handleBatchScopedAdd}
-              onItemSelect={handleItemSelect}
-              onItemAction={handleItemAction}
-              onBatchAction={handleBatchAction}
-            />
-          ))}
+              {/* Operational batch sections */}
+              {batches.map((batch) => (
+                <BatchSection
+                  key={batch.type}
+                  batch={batch}
+                  onScopedAdd={handleBatchScopedAdd}
+                  onItemSelect={handleItemSelect}
+                  onItemAction={handleItemAction}
+                  onBatchAction={handleBatchAction}
+                />
+              ))}
 
-          {/* Empty state when no items at all */}
-          {!hasContent && (
-            <EmptyState
-              icon={<List size={48} />}
-              title="No Items to Process"
-              description="Chart items will appear here as you add them in Capture mode."
-              size="md"
-              style={styles.emptyState}
-            />
-          )}
+              {/* Empty state when no items at all */}
+              {!hasContent && (
+                <EmptyState
+                  icon={<List size={48} />}
+                  title="No Items to Process"
+                  description="Chart items will appear here as you add them in Capture mode."
+                  size="md"
+                  style={styles.emptyState}
+                />
+              )}
 
-          {/* Sign-Off section */}
-          <SignOff
-            encounter={encounter}
-            checklist={checklist}
-            emLevel={emLevel}
-            outstandingCount={outstandingCount}
-            blockers={signOffBlockers}
-            isSigningOff={isSigningOff}
-            onSignOff={handleSignOff}
-            onChecklistSectionTap={handleChecklistSectionTap}
-          />
+              {/* Sign-Off section */}
+              <SignOff
+                encounter={encounter}
+                checklist={checklist}
+                emLevel={emLevel}
+                outstandingCount={outstandingCount}
+                blockers={signOffBlockers}
+                isSigningOff={isSigningOff}
+                onSignOff={handleSignOff}
+                onChecklistSectionTap={handleChecklistSectionTap}
+              />
 
-          {/* Bottom spacing */}
-          <div style={{ height: spaceBetween.separated }} />
+              {/* Bottom spacing */}
+              <div style={{ height: spaceBetween.separated }} />
+            </div>
+          </CanvasPane>
+        }
+      />
 
-          {/* Details Pane overlay */}
-          <DetailsPane
-            item={selectedItem}
-            onClose={handleCloseDetailsPane}
-            onUpdate={handleItemUpdate}
-            onRemove={handleItemRemove}
-          />
-
-          {/* Minified OmniAdd FAB — switches to capture with OmniAdd open */}
-          <button
-            type="button"
-            style={styles.fab}
-            onClick={() => handleModeChange('capture')}
-            title="Add chart item"
-            data-testid="process-fab"
-          >
-            <Plus size={24} color="#fff" />
-          </button>
-        </div>
-      }
-    />
+      {/* Details Pane overlay */}
+      <DetailsPane
+        item={selectedItem}
+        onClose={handleCloseDetailsPane}
+        onUpdate={handleItemUpdate}
+        onRemove={handleItemRemove}
+      />
+    </>
   );
 };
 
@@ -236,19 +222,7 @@ export const ProcessView: React.FC = () => {
 // ============================================================================
 
 const styles: Record<string, React.CSSProperties> = {
-  headerContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  modeSelectorContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    backgroundColor: colors.bg.neutral.base,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
-  },
   mainContent: {
-    padding: spaceAround.defaultPlus,
     maxWidth: 900,
     margin: '0 auto',
     position: 'relative',
@@ -259,22 +233,6 @@ const styles: Record<string, React.CSSProperties> = {
   emptyContainer: {
     height: '100%',
     backgroundColor: colors.bg.neutral.min,
-  },
-  fab: {
-    position: 'fixed',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: '50%',
-    backgroundColor: colors.fg.accent.primary,
-    border: 'none',
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    zIndex: 100,
   },
 };
 

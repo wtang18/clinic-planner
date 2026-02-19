@@ -8,32 +8,34 @@
  * - Inline DetailsPane editing (no mode switch)
  * - Safety alert banners on medication cards
  * - Sign-off with safety-critical blockers
+ *
+ * Renders inside AdaptiveLayout (same as CaptureView) to keep overview pane,
+ * floating nav, and bottom bar visible.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   useEncounterState,
-  useOpenCareGaps,
   useItemActions,
 } from '../../hooks';
+import { useEncounterLayout } from '../../hooks/useEncounterLayout';
 import type { ChartItem, ItemCategory } from '../../types';
 
-import { AppShell } from '../../components/layout/AppShell';
-import { PatientHeader } from '../../components/layout/PatientHeader';
-import { ModeSelector } from '../../components/layout/ModeSelector';
+import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
+import { CanvasPane } from '../../components/layout/CanvasPane';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { CareGapList } from '../../components/care-gaps/CareGapList';
 import { DetailsPane } from '../../components/details-pane';
 import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
 import { SafetyAlertBanner } from '../../components/safety/SafetyAlertBanner';
-import { FileText } from 'lucide-react';
+import { FileText, Check, AlertTriangle, Circle } from 'lucide-react';
 
 import { SignOffSection } from './SignOffSection';
-import { ReviewSectionHeader } from './ReviewSectionHeader';
+import { SectionHeader } from '../../components/primitives/SectionHeader';
 import { useReviewView, REVIEW_SECTIONS } from './useReviewView';
 import { EmptyState } from '../../components/primitives/EmptyState';
 import { SectionTitle } from '../../components/primitives/SectionTitle';
-import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, borderRadius } from '../../styles/foundations';
 
 // ============================================================================
 // ReviewSection Component
@@ -50,6 +52,18 @@ interface ReviewSectionProps {
   onAcknowledgeAlert: (alertId: string, itemId: string) => void;
 }
 
+/** Map section status to a small inline icon */
+const getStatusIcon = (status: ReviewSectionProps['status']) => {
+  switch (status) {
+    case 'documented':
+      return <Check size={14} color={colors.fg.positive.secondary} />;
+    case 'incomplete':
+      return <AlertTriangle size={14} color={colors.fg.attention.secondary} />;
+    case 'not-documented':
+      return <Circle size={14} color={colors.fg.neutral.disabled} />;
+  }
+};
+
 const ReviewSection: React.FC<ReviewSectionProps> = ({
   sectionId,
   title,
@@ -60,47 +74,49 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
   onAdd,
   onAcknowledgeAlert,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const countLabel = items.length > 0
+    ? `${items.length} item${items.length !== 1 ? 's' : ''}`
+    : 'Not documented';
 
   return (
     <div style={styles.section} data-testid={`review-section-${sectionId}`}>
-      <ReviewSectionHeader
+      <SectionHeader
         title={title}
-        status={status}
-        itemCount={items.length}
+        count={countLabel}
+        statusIcon={getStatusIcon(status)}
         onAdd={onAdd}
+        addLabel={`Add to ${title}`}
+        testID={`review-section-header-${sectionId}`}
       />
 
-      {!isCollapsed && (
-        <div style={styles.sectionContent}>
-          {items.length === 0 ? (
-            <div style={styles.emptySection}>
-              <span style={styles.emptySectionText}>Not documented</span>
-            </div>
-          ) : (
-            items.map((item) => {
-              const alerts = safetyAlertsForItem(item.id);
-              return (
-                <div key={item.id} style={styles.itemWrapper}>
-                  <ChartItemCard
-                    item={item}
-                    variant="expanded"
-                    showActions
-                    onEdit={() => onItemEdit(item.id)}
+      <div style={styles.sectionContent}>
+        {items.length === 0 ? (
+          <div style={styles.emptySection}>
+            <span style={styles.emptySectionText}>Not documented</span>
+          </div>
+        ) : (
+          items.map((item) => {
+            const alerts = safetyAlertsForItem(item.id);
+            return (
+              <div key={item.id} style={styles.itemWrapper}>
+                <ChartItemCard
+                  item={item}
+                  variant="expanded"
+                  showActions
+                  onEdit={() => onItemEdit(item.id)}
+                />
+                {alerts.length > 0 && alerts.map((alert) => (
+                  <SafetyAlertBanner
+                    key={alert.id}
+                    alert={alert}
+                    onAcknowledge={() => onAcknowledgeAlert(alert.id, item.id)}
                   />
-                  {alerts.length > 0 && alerts.map((alert) => (
-                    <SafetyAlertBanner
-                      key={alert.id}
-                      alert={alert}
-                      onAcknowledge={() => onAcknowledgeAlert(alert.id, item.id)}
-                    />
-                  ))}
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+                ))}
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
@@ -111,7 +127,6 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
 
 export const ReviewView: React.FC = () => {
   const state = useEncounterState();
-  const openCareGaps = useOpenCareGaps();
   const { addItem } = useItemActions();
 
   const {
@@ -133,9 +148,16 @@ export const ReviewView: React.FC = () => {
     acknowledgeAlert,
   } = useReviewView();
 
+  const layout = useEncounterLayout(handleModeChange);
+
   // Patient and encounter context
   const patient = state.context.patient;
   const encounter = state.context.encounter;
+
+  // Derived data
+  const openCareGaps = state.entities.careGaps
+    ? Object.values(state.entities.careGaps).filter(g => g && g.status === 'open')
+    : [];
 
   // Get alerts for a specific item
   const getAlertsForItem = useCallback(
@@ -204,94 +226,95 @@ export const ReviewView: React.FC = () => {
   }
 
   return (
-    <AppShell
-      testID="review-view"
-      header={
-        <div style={styles.headerContainer}>
-          <PatientHeader
-            patient={patient}
-            encounter={encounter}
-            careGapCount={openCareGaps.length}
-          />
-          <div style={styles.modeSelectorContainer}>
-            <ModeSelector
-              currentMode={state.session.mode}
-              onModeChange={handleModeChange}
-            />
-          </div>
-        </div>
-      }
-      main={
-        <div style={styles.mainContent}>
-          {/* Review Sections */}
-          {REVIEW_SECTIONS.map((section) => (
-            <ReviewSection
-              key={section.id}
-              sectionId={section.id}
-              title={section.title}
-              items={itemsBySection[section.id]}
-              status={sectionStatuses[section.id]}
-              safetyAlertsForItem={getAlertsForItem}
-              onItemEdit={handleItemEdit}
-              onAdd={() => handleSectionAdd(section.categories)}
-              onAcknowledgeAlert={acknowledgeAlert}
-            />
-          ))}
-
-          {/* Scoped Add Bar */}
-          {scopedAddCategory && (
-            <div style={styles.scopedAddContainer} data-testid="scoped-add-bar">
-              <OmniAddBar
-                onItemAdd={handleScopedItemAdd}
-                initialCategory={scopedAddCategory}
-              />
-              <button
-                type="button"
-                onClick={handleCancelScopedAdd}
-                style={styles.cancelAddButton}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-
-          {/* Care Gaps Summary */}
-          {openCareGaps.length > 0 && (
-            <div style={styles.section} data-testid="care-gap-summary">
-              <SectionTitle
-                title="Care Gaps"
-                count={`${openCareGaps.length} open`}
-                style={{ marginBottom: spaceAround.compact }}
-              />
-              <div style={styles.sectionContent}>
-                <CareGapList
-                  gaps={openCareGaps}
-                  groupBy="status"
-                  compact
-                  onAction={() => {}}
-                  onExclude={() => {}}
+    <>
+      <AdaptiveLayout
+        testID="review-view"
+        menuPane={layout.menuPane}
+        menuPaneHeaderContent={layout.menuPaneHeaderContent}
+        overviewPane={layout.overviewPane}
+        overviewHeaderContent={layout.overviewHeaderContent}
+        canvasHeaderContent={layout.canvasHeaderContent}
+        patientIdentity={layout.patientIdentity}
+        aiControlSurface={layout.aiControlSurface}
+        canvasPane={
+          <CanvasPane headerContent={layout.canvasPaneHeader} compactHeaderContent={layout.compactCanvasPaneHeader}>
+            <div style={styles.mainContent}>
+              {/* Review Sections */}
+              {REVIEW_SECTIONS.map((section) => (
+                <ReviewSection
+                  key={section.id}
+                  sectionId={section.id}
+                  title={section.title}
+                  items={itemsBySection[section.id]}
+                  status={sectionStatuses[section.id]}
+                  safetyAlertsForItem={getAlertsForItem}
+                  onItemEdit={handleItemEdit}
+                  onAdd={() => handleSectionAdd(section.categories)}
+                  onAcknowledgeAlert={acknowledgeAlert}
                 />
-              </div>
+              ))}
+
+              {/* Scoped Add Bar */}
+              {scopedAddCategory && (
+                <div style={styles.scopedAddContainer} data-testid="scoped-add-bar">
+                  <OmniAddBar
+                    onItemAdd={handleScopedItemAdd}
+                    initialCategory={scopedAddCategory}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCancelScopedAdd}
+                    style={styles.cancelAddButton}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              {/* Care Gaps Summary */}
+              {openCareGaps.length > 0 && (
+                <div style={styles.section} data-testid="care-gap-summary">
+                  <SectionTitle
+                    title="Care Gaps"
+                    count={`${openCareGaps.length} open`}
+                    style={{ marginBottom: spaceAround.compact }}
+                  />
+                  <div style={styles.sectionContent}>
+                    <CareGapList
+                      gaps={openCareGaps}
+                      groupBy="status"
+                      compact
+                      onAction={() => {}}
+                      onExclude={() => {}}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Sign-off Section */}
+              <SignOffSection
+                encounter={encounter}
+                onSignOff={handleSignOff}
+                blockers={signOffBlockers}
+                isSigningOff={isSigningOff}
+              />
+
+              {/* Bottom spacing */}
+              <div style={{ height: spaceBetween.separated }} />
             </div>
-          )}
+          </CanvasPane>
+        }
+      />
 
-          {/* Sign-off Section */}
-          <SignOffSection
-            encounter={encounter}
-            onSignOff={handleSignOff}
-            blockers={signOffBlockers}
-            isSigningOff={isSigningOff}
-          />
-
-          {/* Bottom spacing */}
-          <div style={{ height: spaceBetween.separated }} />
-        </div>
-      }
-    />
+      {/* Details Pane overlay */}
+      <DetailsPane
+        item={selectedItem}
+        onClose={handleCloseDetailsPane}
+        onUpdate={handleItemUpdate}
+        onRemove={handleItemRemove}
+      />
+    </>
   );
-
-  // DetailsPane is not rendered here — we use the same approach as CaptureView
-  // The DetailsPane is rendered as a sibling at the root level
 };
 
 ReviewView.displayName = 'ReviewView';
@@ -301,19 +324,7 @@ ReviewView.displayName = 'ReviewView';
 // ============================================================================
 
 const styles: Record<string, React.CSSProperties> = {
-  headerContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  modeSelectorContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    backgroundColor: colors.bg.neutral.base,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
-  },
   mainContent: {
-    padding: spaceAround.defaultPlus,
     maxWidth: '900px',
     margin: '0 auto',
   },

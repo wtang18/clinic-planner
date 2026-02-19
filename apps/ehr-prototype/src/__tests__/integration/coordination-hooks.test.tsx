@@ -63,6 +63,7 @@ describe('CoordinationProvider + useCoordination', () => {
       paneView: 'menu',
       paneExpanded: true,
       txEligible: false,
+      overviewExpanded: true,
     });
   });
 

@@ -34,17 +34,17 @@ export interface CategorySelectorProps {
 const getCategoryIcon = (category: ItemCategory): React.ReactNode => {
   switch (category) {
     case 'medication':
-      return <Pill size={18} />;
+      return <Pill size={14} />;
     case 'lab':
-      return <FlaskConical size={18} />;
+      return <FlaskConical size={14} />;
     case 'diagnosis':
-      return <Activity size={18} />;
+      return <Activity size={14} />;
     case 'imaging':
-      return <ScanLine size={18} />;
+      return <ScanLine size={14} />;
     case 'procedure':
-      return <CircleDot size={18} />;
+      return <CircleDot size={14} />;
     default:
-      return <Plus size={18} />;
+      return <Plus size={14} />;
   }
 };
 
@@ -80,8 +80,8 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
   const buttonStyle = (isHovered: boolean): React.CSSProperties => ({
     display: 'flex',
     alignItems: 'center',
-    gap: spaceBetween.repeating,
-    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    gap: spaceBetween.coupled,
+    padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
     backgroundColor: isHovered ? 'rgba(128, 128, 128, 0.12)' : 'rgba(128, 128, 128, 0.06)',
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
@@ -90,31 +90,31 @@ export const CategorySelector: React.FC<CategorySelectorProps> = ({
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: `all ${transitions.fast}`,
     opacity: disabled ? 0.5 : 1,
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
     color: colors.fg.neutral.secondary,
   });
 
   const shortcutStyle: React.CSSProperties = {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.disabled,
-    marginLeft: spaceAround.nudge4,
+    marginLeft: spaceBetween.coupled,
   };
 
   const moreButtonStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.coupled,
-    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
     backgroundColor: colors.bg.neutral.base,
     border: `1px solid ${colors.border.neutral.low}`,
     borderRadius: borderRadius.sm,
     cursor: disabled ? 'not-allowed' : 'pointer',
     transition: `all ${transitions.fast}`,
     opacity: disabled ? 0.5 : 1,
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.spotReadable,
   };
