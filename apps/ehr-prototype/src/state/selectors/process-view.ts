@@ -398,7 +398,7 @@ function buildMedicationBatch(
 
   for (const med of medications) {
     const pvi = buildProcessViewItem(med, tasksByItemId);
-    const pharmacy = med.data.pharmacy;
+    const pharmacy = med.data?.pharmacy;
 
     if (!pharmacy || pharmacy.name.toLowerCase().includes('in-house') || pharmacy.name.toLowerCase().includes('dispensary')) {
       inHouse.push(pvi);
@@ -445,10 +445,10 @@ function buildLabBatch(
 
   for (const lab of labs) {
     const pvi = buildProcessViewItem(lab, tasksByItemId);
-    if (lab.data.collectionType === 'in-house') {
+    if (lab.data?.collectionType === 'in-house') {
       inHouse.push(pvi);
     } else {
-      const vendor = lab.data.labVendor || 'Send-Out';
+      const vendor = lab.data?.labVendor || 'Send-Out';
       if (!byVendor[vendor]) byVendor[vendor] = [];
       byVendor[vendor].push(pvi);
     }
@@ -480,7 +480,7 @@ function buildImagingBatch(
 
   for (const img of imagingItems) {
     const pvi = buildProcessViewItem(img, tasksByItemId);
-    const facility = img.data.facility;
+    const facility = img.data?.facility;
     if (!facility || facility.name.toLowerCase().includes('in-house')) {
       inHouse.push(pvi);
     } else {

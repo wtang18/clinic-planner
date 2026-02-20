@@ -16,7 +16,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   /** Visual variant */
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Size */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   /** Disabled state */
   disabled?: boolean;
   /** Loading state */
@@ -49,7 +49,12 @@ const baseStyles: React.CSSProperties = {
   outline: 'none',
 };
 
-const sizeStyles: Record<'sm' | 'md' | 'lg', React.CSSProperties> = {
+const sizeStyles: Record<'xs' | 'sm' | 'md' | 'lg', React.CSSProperties> = {
+  xs: {
+    height: '24px',
+    padding: `0 ${spaceAround.tight}px`,
+    fontSize: 12,
+  },
   sm: {
     height: '32px',
     padding: `0 ${spaceAround.compact}px`,
@@ -196,13 +201,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ) : (
           <>
             {leftIcon && (
-              <span style={{ display: 'flex', alignItems: 'center', width: { sm: 14, md: 16, lg: 18 }[size], height: { sm: 14, md: 16, lg: 18 }[size], flexShrink: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', width: { xs: 12, sm: 14, md: 16, lg: 18 }[size], height: { xs: 12, sm: 14, md: 16, lg: 18 }[size], flexShrink: 0 }}>
                 {leftIcon}
               </span>
             )}
             {children}
             {rightIcon && (
-              <span style={{ display: 'flex', alignItems: 'center', width: { sm: 14, md: 16, lg: 18 }[size], height: { sm: 14, md: 16, lg: 18 }[size], flexShrink: 0 }}>
+              <span style={{ display: 'flex', alignItems: 'center', width: { xs: 12, sm: 14, md: 16, lg: 18 }[size], height: { xs: 12, sm: 14, md: 16, lg: 18 }[size], flexShrink: 0 }}>
                 {rightIcon}
               </span>
             )}

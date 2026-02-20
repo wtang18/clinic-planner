@@ -61,9 +61,8 @@ export const ProblemsSection: React.FC<ProblemsSectionProps> = ({
   const displayProblems = showAll ? sortedProblems : sortedProblems.slice(0, maxItems);
   const hasMore = sortedProblems.length > maxItems;
 
-  // Generate collapsed summary
-  const collapsedSummary =
-    activeProblems.length > 0 ? `${activeProblems.length} active` : undefined;
+  // Collapsed summary — omitted when it would just restate the inline count
+  const collapsedSummary = undefined;
 
   const listStyle: React.CSSProperties = {
     display: 'flex',
@@ -77,7 +76,7 @@ export const ProblemsSection: React.FC<ProblemsSectionProps> = ({
     alignItems: 'flex-start',
     gap: spaceBetween.relatedCompact,
     padding: `${spaceAround.tight}px`,
-    backgroundColor: colors.bg.neutral.subtle,
+    backgroundColor: colors.bg.neutral.min,
     borderRadius: borderRadius.xs,
     cursor: onProblemClick ? 'pointer' : 'default',
   };
@@ -154,6 +153,8 @@ export const ProblemsSection: React.FC<ProblemsSectionProps> = ({
                   <span
                     style={{
                       fontSize: 14,
+                      lineHeight: '20px',
+                      letterSpacing: -0.5,
                       fontFamily: typography.fontFamily.sans,
                       fontWeight: typography.fontWeight.medium,
                       color: colors.fg.neutral.primary,

@@ -9,8 +9,9 @@
  * - Safety alert banners on medication cards
  * - Sign-off with safety-critical blockers
  *
- * Renders inside AdaptiveLayout (same as CaptureView) to keep overview pane,
- * floating nav, and bottom bar visible.
+ * ReviewCanvas is the canvas-only content rendered inside CaptureView's
+ * single AdaptiveLayout. ReviewView is the legacy wrapper (kept for
+ * backwards compat) that renders its own AdaptiveLayout.
  */
 
 import React, { useCallback } from 'react';
@@ -18,11 +19,8 @@ import {
   useEncounterState,
   useItemActions,
 } from '../../hooks';
-import { useEncounterLayout } from '../../hooks/useEncounterLayout';
 import type { ChartItem, ItemCategory } from '../../types';
 
-import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
-import { CanvasPane } from '../../components/layout/CanvasPane';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { CareGapList } from '../../components/care-gaps/CareGapList';
 import { DetailsPane } from '../../components/details-pane';
@@ -30,6 +28,7 @@ import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
 import { SafetyAlertBanner } from '../../components/safety/SafetyAlertBanner';
 import { FileText, Check, AlertTriangle, Circle } from 'lucide-react';
 
+import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
 import { SignOffSection } from './SignOffSection';
 import { SectionHeader } from '../../components/primitives/SectionHeader';
 import { useReviewView, REVIEW_SECTIONS } from './useReviewView';
@@ -89,21 +88,15 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
         testID={`review-section-header-${sectionId}`}
       />
 
-      <div style={styles.sectionContent}>
-        {items.length === 0 ? (
-          <div style={styles.emptySection}>
-            <span style={styles.emptySectionText}>Not documented</span>
-          </div>
-        ) : (
-          items.map((item) => {
+      {items.length > 0 && (
+        <div style={styles.sectionContent}>
+          {items.map((item) => {
             const alerts = safetyAlertsForItem(item.id);
             return (
               <div key={item.id} style={styles.itemWrapper}>
                 <ChartItemCard
                   item={item}
-                  variant="expanded"
-                  showActions
-                  onEdit={() => onItemEdit(item.id)}
+                  onSelect={() => onItemEdit(item.id)}
                 />
                 {alerts.length > 0 && alerts.map((alert) => (
                   <SafetyAlertBanner
@@ -114,18 +107,18 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                 ))}
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 };
 
 // ============================================================================
-// ReviewView Component
+// ReviewCanvas — canvas-only content (no AdaptiveLayout)
 // ============================================================================
 
-export const ReviewView: React.FC = () => {
+export const ReviewCanvas: React.FC = () => {
   const state = useEncounterState();
   const { addItem } = useItemActions();
 
@@ -147,8 +140,6 @@ export const ReviewView: React.FC = () => {
     handleModeChange,
     acknowledgeAlert,
   } = useReviewView();
-
-  const layout = useEncounterLayout(handleModeChange);
 
   // Patient and encounter context
   const patient = state.context.patient;
@@ -227,84 +218,78 @@ export const ReviewView: React.FC = () => {
 
   return (
     <>
-      <AdaptiveLayout
-        testID="review-view"
-        menuPane={layout.menuPane}
-        menuPaneHeaderContent={layout.menuPaneHeaderContent}
-        overviewPane={layout.overviewPane}
-        overviewHeaderContent={layout.overviewHeaderContent}
-        canvasHeaderContent={layout.canvasHeaderContent}
-        patientIdentity={layout.patientIdentity}
-        aiControlSurface={layout.aiControlSurface}
-        canvasPane={
-          <CanvasPane headerContent={layout.canvasPaneHeader} compactHeaderContent={layout.compactCanvasPaneHeader}>
-            <div style={styles.mainContent}>
-              {/* Review Sections */}
-              {REVIEW_SECTIONS.map((section) => (
-                <ReviewSection
-                  key={section.id}
-                  sectionId={section.id}
-                  title={section.title}
-                  items={itemsBySection[section.id]}
-                  status={sectionStatuses[section.id]}
-                  safetyAlertsForItem={getAlertsForItem}
-                  onItemEdit={handleItemEdit}
-                  onAdd={() => handleSectionAdd(section.categories)}
-                  onAcknowledgeAlert={acknowledgeAlert}
-                />
-              ))}
+      <div style={styles.mainContent}>
+        <EncounterContextBar
+          encounter={encounter}
+          chiefComplaint={state.context.visit?.chiefComplaint}
+          providerName={state.session.currentUser?.name}
+          providerCredentials={state.session.currentUser?.credentials?.join(', ')}
+          style={{ paddingLeft: 0, paddingRight: 0 }}
+        />
 
-              {/* Scoped Add Bar */}
-              {scopedAddCategory && (
-                <div style={styles.scopedAddContainer} data-testid="scoped-add-bar">
-                  <OmniAddBar
-                    onItemAdd={handleScopedItemAdd}
-                    initialCategory={scopedAddCategory}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCancelScopedAdd}
-                    style={styles.cancelAddButton}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
+        {/* Review Sections */}
+        {REVIEW_SECTIONS.map((section) => (
+          <ReviewSection
+            key={section.id}
+            sectionId={section.id}
+            title={section.title}
+            items={itemsBySection[section.id]}
+            status={sectionStatuses[section.id]}
+            safetyAlertsForItem={getAlertsForItem}
+            onItemEdit={handleItemEdit}
+            onAdd={() => handleSectionAdd(section.categories)}
+            onAcknowledgeAlert={acknowledgeAlert}
+          />
+        ))}
 
-              {/* Care Gaps Summary */}
-              {openCareGaps.length > 0 && (
-                <div style={styles.section} data-testid="care-gap-summary">
-                  <SectionTitle
-                    title="Care Gaps"
-                    count={`${openCareGaps.length} open`}
-                    style={{ marginBottom: spaceAround.compact }}
-                  />
-                  <div style={styles.sectionContent}>
-                    <CareGapList
-                      gaps={openCareGaps}
-                      groupBy="status"
-                      compact
-                      onAction={() => {}}
-                      onExclude={() => {}}
-                    />
-                  </div>
-                </div>
-              )}
+        {/* Scoped Add Bar */}
+        {scopedAddCategory && (
+          <div style={styles.scopedAddContainer} data-testid="scoped-add-bar">
+            <OmniAddBar
+              onItemAdd={handleScopedItemAdd}
+              initialCategory={scopedAddCategory}
+            />
+            <button
+              type="button"
+              onClick={handleCancelScopedAdd}
+              style={styles.cancelAddButton}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
-              {/* Sign-off Section */}
-              <SignOffSection
-                encounter={encounter}
-                onSignOff={handleSignOff}
-                blockers={signOffBlockers}
-                isSigningOff={isSigningOff}
+        {/* Care Gaps Summary */}
+        {openCareGaps.length > 0 && (
+          <div style={styles.section} data-testid="care-gap-summary">
+            <SectionTitle
+              title="Care Gaps"
+              count={`${openCareGaps.length} open`}
+              style={{ marginBottom: spaceAround.compact }}
+            />
+            <div style={styles.sectionContent}>
+              <CareGapList
+                gaps={openCareGaps}
+                groupBy="status"
+                compact
+                onAction={() => {}}
+                onExclude={() => {}}
               />
-
-              {/* Bottom spacing */}
-              <div style={{ height: spaceBetween.separated }} />
             </div>
-          </CanvasPane>
-        }
-      />
+          </div>
+        )}
+
+        {/* Sign-off Section */}
+        <SignOffSection
+          encounter={encounter}
+          onSignOff={handleSignOff}
+          blockers={signOffBlockers}
+          isSigningOff={isSigningOff}
+        />
+
+        {/* Bottom spacing */}
+        <div style={{ height: spaceBetween.separated }} />
+      </div>
 
       {/* Details Pane overlay */}
       <DetailsPane
@@ -317,6 +302,14 @@ export const ReviewView: React.FC = () => {
   );
 };
 
+ReviewCanvas.displayName = 'ReviewCanvas';
+
+// ============================================================================
+// ReviewView — legacy wrapper (backwards compat, renders own layout)
+// ============================================================================
+
+export const ReviewView: React.FC = () => <ReviewCanvas />;
+
 ReviewView.displayName = 'ReviewView';
 
 // ============================================================================
@@ -327,25 +320,19 @@ const styles: Record<string, React.CSSProperties> = {
   mainContent: {
     maxWidth: '900px',
     margin: '0 auto',
+    paddingBottom: 80,
   },
   section: {
-    marginBottom: spaceAround.defaultPlus,
+    borderTop: `1px solid ${colors.border.neutral.low}`,
+    paddingTop: spaceAround.default,
+    paddingBottom: spaceAround.default,
   },
   sectionContent: {
-    padding: spaceAround.default,
-    paddingTop: spaceAround.compact,
+    paddingTop: spaceAround.tight,
+    paddingBottom: spaceAround.tight,
   },
   itemWrapper: {
-    marginBottom: spaceAround.compact,
-  },
-  emptySection: {
-    padding: `${spaceAround.default}px`,
-    textAlign: 'center' as const,
-  },
-  emptySectionText: {
-    fontSize: 14,
-    color: colors.fg.neutral.disabled,
-    fontStyle: 'italic',
+    marginBottom: spaceBetween.repeating,
   },
   emptyContainer: {
     height: '100%',

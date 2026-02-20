@@ -7,7 +7,7 @@
 import React from 'react';
 import { AlertTriangle, CheckCircle, PenTool } from 'lucide-react';
 import type { EncounterMeta } from '../../types';
-import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, heading, body } from '../../styles/foundations';
 import { Button } from '../../components/primitives/Button';
 import { Card } from '../../components/primitives/Card';
 
@@ -56,7 +56,7 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
   return (
     <Card
       variant="elevated"
-      padding="lg"
+      padding="md"
       data-testid="sign-off-section"
       style={{
         ...styles.container,
@@ -66,7 +66,7 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerIcon}>
-          <PenTool size={24} />
+          <PenTool size={16} />
         </div>
         <div>
           <h3 style={styles.title}>Sign Encounter</h3>
@@ -87,8 +87,9 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
                   <AlertTriangle size={16} />
                 </span>
                 <span style={styles.blockerSectionTitle}>
-                  Required Items ({errorBlockers.length})
+                  Required Items
                 </span>
+                <span style={styles.blockerCount}>{errorBlockers.length}</span>
               </div>
               <ul style={styles.blockerList}>
                 {errorBlockers.map((blocker, i) => (
@@ -115,8 +116,9 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
                   <AlertTriangle size={16} />
                 </span>
                 <span style={styles.blockerSectionTitle}>
-                  Recommended Items ({warningBlockers.length})
+                  Recommended Items
                 </span>
+                <span style={styles.blockerCount}>{warningBlockers.length}</span>
               </div>
               <ul style={styles.blockerList}>
                 {warningBlockers.map((blocker, i) => (
@@ -140,7 +142,7 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
       {!hasBlockers && (
         <div style={styles.readyState}>
           <div style={styles.readyIcon}>
-            <CheckCircle size={24} />
+            <CheckCircle size={16} />
           </div>
           <p style={styles.readyText}>
             All documentation is complete. Ready to sign.
@@ -189,12 +191,12 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex',
     alignItems: 'flex-start',
-    gap: spaceBetween.related,
-    marginBottom: spaceAround.defaultPlus,
+    gap: spaceBetween.repeating,
+    marginBottom: spaceAround.default,
   },
   headerIcon: {
-    width: '48px',
-    height: '48px',
+    width: 32,
+    height: 32,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -204,14 +206,21 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   title: {
-    fontSize: 20,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: heading.md.medium.fontFamily,
+    fontSize: heading.md.medium.fontSize,
+    lineHeight: `${heading.md.medium.lineHeight}px`,
+    fontWeight: heading.md.medium.fontWeight,
+    letterSpacing: heading.md.medium.letterSpacing,
     color: colors.fg.neutral.primary,
     margin: 0,
-    marginBottom: spaceAround.nudge4,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: 14,
+    fontFamily: body.xs.regular.fontFamily,
+    fontSize: body.xs.regular.fontSize,
+    lineHeight: `${body.xs.regular.lineHeight}px`,
+    fontWeight: body.xs.regular.fontWeight,
+    letterSpacing: body.xs.regular.letterSpacing,
     color: colors.fg.neutral.spotReadable,
     margin: 0,
   },
@@ -240,6 +249,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: typography.fontWeight.semibold,
     color: colors.fg.neutral.secondary,
   },
+  blockerCount: {
+    fontSize: 12,
+    fontWeight: typography.fontWeight.regular,
+    color: colors.fg.neutral.spotReadable,
+  },
   blockerList: {
     margin: 0,
     paddingLeft: spaceAround.spacious,
@@ -259,8 +273,8 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: spaceAround.defaultPlus,
   },
   readyIcon: {
-    width: '24px',
-    height: '24px',
+    width: 16,
+    height: 16,
     display: 'flex',
     color: colors.fg.positive.secondary,
   },

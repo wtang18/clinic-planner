@@ -60,7 +60,6 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
   const scrollContainerStyle: React.CSSProperties = {
     flex: 1,
     overflowY: 'auto',
-    overflowX: 'hidden',
     position: 'relative',
     // Padding at top so content starts below nav row, but scroll area extends under it
     paddingTop: LAYOUT.headerHeight,

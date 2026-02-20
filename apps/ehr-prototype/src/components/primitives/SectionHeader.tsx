@@ -61,18 +61,20 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
         {count && (
           <span style={styles.count}>{count}</span>
         )}
-        {trailing}
       </div>
-      {onAdd && (
-        <IconButton
-          icon={<Plus size={14} />}
-          label={addLabel || `Add ${title}`}
-          variant="ghost"
-          size="sm"
-          onClick={onAdd}
-          data-testid={testID ? `${testID}-add` : undefined}
-        />
-      )}
+      <div style={styles.right}>
+        {trailing}
+        {onAdd && (
+          <IconButton
+            icon={<Plus size={14} />}
+            label={addLabel || `Add ${title}`}
+            variant="ghost"
+            size="sm"
+            onClick={onAdd}
+            data-testid={testID ? `${testID}-add` : undefined}
+          />
+        )}
+      </div>
     </div>
   );
 };
@@ -86,10 +88,14 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${spaceAround.compact}px 0`,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
+    padding: `${spaceAround.tight}px 0`,
   },
   left: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spaceBetween.repeating,
+  },
+  right: {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.repeating,

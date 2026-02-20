@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { colors, borderRadius, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
+import { Badge } from '../primitives/Badge';
 
 // ============================================================================
 // Types
@@ -84,21 +85,6 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
     flex: 1,
   };
 
-  const badgeStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 18,
-    height: 18,
-    padding: '0 6px',
-    backgroundColor: colors.bg.neutral.medium,
-    color: colors.fg.neutral.primary,
-    borderRadius: 9,
-    fontSize: 11,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.semibold,
-  };
-
   const contentStyle: React.CSSProperties = {
     display: isCollapsed ? 'none' : 'flex',
     flexDirection: 'column',
@@ -130,7 +116,7 @@ export const MenuSection: React.FC<MenuSectionProps> = ({
       >
         <span style={titleStyle}>{title}</span>
         {isCollapsed && collapsedBadge !== undefined && collapsedBadge > 0 && (
-          <span style={badgeStyle}>{collapsedBadge}</span>
+          <Badge count={collapsedBadge} size="sm" />
         )}
         {collapsible && (
           <span style={chevronStyle}>

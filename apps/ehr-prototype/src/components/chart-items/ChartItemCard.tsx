@@ -2,13 +2,19 @@
  * ChartItemCard Component
  *
  * Base card component that renders any chart item with category-specific styling.
+ *
+ * Layout:
+ *   [icon] [Title ........................] [Trailing action / status]
+ *          [Clinical subtext]
+ *          [Source · Status · Attribution]            ← conditional
+ *          [tag] [tag] [tag]                          ← deduped
+ *          [step] [step] [step]                       ← process view only
  */
 
 import React from 'react';
 import {
   Pencil,
   Trash2,
-  Sparkles,
   Pill,
   FlaskConical,
   Activity,
@@ -25,9 +31,7 @@ import type { ChartItem, Tag } from '../../types/chart-items';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { getTagColor } from '../../styles/utils';
 import { Card } from '../primitives/Card';
-import { Badge } from '../primitives/Badge';
 import { IconButton } from '../primitives/IconButton';
-import { CardIconContainer } from '../primitives/CardIconContainer';
 
 // ============================================================================
 // Types
@@ -60,6 +64,8 @@ export interface ChartItemCardProps {
   processingSteps?: CardProcessingStep[];
   /** Next action button in trailing area (Process view) */
   nextAction?: CardNextAction;
+  /** Custom trailing action (ReactNode) — overrides default trailing behavior */
+  trailingAction?: React.ReactNode;
   /** Called when the card is selected */
   onSelect?: () => void;
   /** Called when edit is clicked */
@@ -76,7 +82,6 @@ export interface ChartItemCardProps {
 // Icons
 // ============================================================================
 
-// Category icons
 const getCategoryIcon = (category: ChartItem['category'], size: number): React.ReactNode => {
   switch (category) {
     case 'medication':
@@ -99,6 +104,55 @@ const getCategoryIcon = (category: ChartItem['category'], size: number): React.R
 };
 
 // ============================================================================
+// Attribution Helpers
+// ============================================================================
+
+/** Derive attribution text from item source */
+function getAttributionText(item: ChartItem): string | null {
+  switch (item.source.type) {
+    case 'aiDraft':
+      return 'AI Draft';
+    case 'aiSuggestion':
+      return 'AI Suggestion';
+    case 'maHandoff': {
+      const firstActor = item.activityLog[0]?.actor;
+      return `Added by ${firstActor || 'MA'}`;
+    }
+    case 'protocol':
+      return 'From protocol';
+    case 'orderSet':
+      return 'From order set';
+    case 'manual':
+    default:
+      return null;
+  }
+}
+
+/** Derive status suffix — appended to attribution when non-obvious */
+function getStatusSuffix(item: ChartItem): string | null {
+  // Omit "confirmed" on manual items (obvious)
+  if (item.source.type === 'manual' && item.status === 'confirmed') return null;
+  // Omit for drafts (redundant with attribution)
+  if (item.status === 'draft') return null;
+
+  const labels: Record<string, string> = {
+    'pending-review': 'Pending review',
+    'confirmed': 'Confirmed',
+    'ordered': 'Ordered',
+    'completed': 'Completed',
+    'cancelled': 'Cancelled',
+  };
+  return labels[item.status] || null;
+}
+
+/** Tags to filter out (now covered by attribution + trailing status) */
+const DEDUPED_TAG_LABELS = new Set(['ai generated', 'needs review']);
+
+function filterTags(tags: Tag[]): Tag[] {
+  return tags.filter(t => !DEDUPED_TAG_LABELS.has(t.label.toLowerCase()));
+}
+
+// ============================================================================
 // Helper Components
 // ============================================================================
 
@@ -113,7 +167,7 @@ const TagDisplay: React.FC<{ tag: Tag }> = ({ tag }) => {
         padding: `1px ${spaceAround.nudge6}px`,
         backgroundColor: tagColors.bgColor,
         color: tagColors.color,
-        fontSize: 11,
+        fontSize: 12,
         lineHeight: '16px',
         fontWeight: typography.fontWeight.medium,
         borderRadius: borderRadius.xs,
@@ -156,21 +210,39 @@ const stepStyle: React.CSSProperties = {
 };
 
 const stepLabelStyle: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   color: colors.fg.neutral.secondary,
 };
 
-const nextActionButtonStyle: React.CSSProperties = {
-  alignSelf: 'flex-start',
-  marginTop: spaceAround.tight,
-  padding: `${spaceAround.nudge4}px ${spaceAround.compact}px`,
-  fontSize: 12,
+const trailingActionButtonStyle: React.CSSProperties = {
+  height: 20,
+  padding: `0 ${spaceAround.nudge6}px`,
+  fontSize: 11,
+  lineHeight: '20px',
   fontWeight: typography.fontWeight.medium,
   color: colors.fg.accent.primary,
   backgroundColor: colors.bg.accent.subtle,
   border: `1px solid ${colors.border.accent.low}`,
-  borderRadius: borderRadius.sm,
+  borderRadius: borderRadius.xs,
   cursor: 'pointer',
+  whiteSpace: 'nowrap',
+};
+
+const attributionStyle: React.CSSProperties = {
+  fontSize: 12,
+  lineHeight: '16px',
+  fontFamily: typography.fontFamily.sans,
+  color: colors.fg.neutral.spotReadable,
+};
+
+const trailingStatusStyle: React.CSSProperties = {
+  fontSize: 12,
+  lineHeight: '20px',
+  fontFamily: typography.fontFamily.sans,
+  fontWeight: typography.fontWeight.medium,
+  color: colors.fg.attention.primary,
+  whiteSpace: 'nowrap',
+  flexShrink: 0,
 };
 
 // ============================================================================
@@ -179,27 +251,65 @@ const nextActionButtonStyle: React.CSSProperties = {
 
 export const ChartItemCard: React.FC<ChartItemCardProps> = ({
   item,
-  variant = 'compact',
+  variant: _variant,
   selected = false,
   showActions = false,
   processingSteps,
   nextAction,
+  trailingAction,
   onSelect,
   onEdit,
   onDelete,
   onAction,
   style,
 }) => {
-  const isCompact = variant === 'compact';
-  const isAIGenerated = item._meta.aiGenerated;
   const isUnreviewed = !item._meta.reviewed;
+
+  // Attribution line
+  const attribution = getAttributionText(item);
+  const statusSuffix = getStatusSuffix(item);
+  const attributionLine = [attribution, statusSuffix].filter(Boolean).join(' \u00B7 ');
+
+  // Trailing content: explicit trailingAction > nextAction button > "Needs review" text
+  const needsReview = item._meta.requiresReview || (isUnreviewed && item.source.type === 'maHandoff');
+
+  const renderTrailing = (): React.ReactNode => {
+    if (trailingAction) return trailingAction;
+
+    if (nextAction && onAction) {
+      return (
+        <button
+          type="button"
+          style={trailingActionButtonStyle}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAction(nextAction.actionType, nextAction.taskId);
+          }}
+          data-testid={`action-${nextAction.actionType}`}
+        >
+          {nextAction.label}
+        </button>
+      );
+    }
+
+    if (needsReview) {
+      return <span style={trailingStatusStyle}>Needs review</span>;
+    }
+
+    return null;
+  };
+
+  const trailing = renderTrailing();
+
+  // Filtered tags
+  const filteredTags = filterTags(item.tags);
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
     display: 'flex',
-    alignItems: isCompact ? 'center' : 'flex-start',
-    gap: isCompact ? spaceBetween.repeating : spaceBetween.relatedCompact,
-    padding: isCompact ? spaceAround.tight : spaceAround.compact,
+    alignItems: 'flex-start',
+    gap: spaceBetween.repeating,
+    padding: spaceAround.tight,
     cursor: onSelect ? 'pointer' : 'default',
     transition: `all ${transitions.fast}`,
     ...style,
@@ -210,26 +320,29 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     minWidth: 0,
     display: 'flex',
     flexDirection: 'column',
-    gap: isCompact ? spaceBetween.coupled : spaceBetween.repeating,
+    gap: spaceBetween.coupled,
+    paddingTop: 1,
   };
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spaceBetween.repeating,
-    flexWrap: 'wrap',
   };
 
   const titleStyle: React.CSSProperties = {
-    fontSize: isCompact ? 13 : 15,
-    lineHeight: isCompact ? '18px' : '22px',
+    fontSize: 14,
+    lineHeight: '20px',
+    letterSpacing: -0.5,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
     color: colors.fg.neutral.primary,
     margin: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: isCompact ? 'nowrap' : 'normal',
+    whiteSpace: 'normal',
+    flex: 1,
+    minWidth: 0,
   };
 
   const subtextStyle: React.CSSProperties = {
@@ -240,14 +353,13 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     margin: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: isCompact ? 'nowrap' : 'normal',
+    whiteSpace: 'normal',
   };
 
   const tagsContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexWrap: 'wrap',
     gap: spaceBetween.coupled,
-    marginTop: isCompact ? 0 : spaceAround.tight,
   };
 
   const actionsStyle: React.CSSProperties = {
@@ -255,14 +367,6 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     alignItems: 'center',
     gap: spaceBetween.coupled,
     flexShrink: 0,
-  };
-
-  const aiIndicatorStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.coupled,
-    color: colors.fg.neutral.spotReadable,
-    fontSize: 12,
   };
 
   return (
@@ -277,24 +381,19 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     >
       <div style={containerStyle}>
         {/* Category Icon */}
-        <CardIconContainer color="default" size={isCompact ? 'sm' : 'md'}>
-          {getCategoryIcon(item.category, isCompact ? 14 : 18)}
-        </CardIconContainer>
+        <div style={{ flexShrink: 0, marginTop: 2, color: colors.fg.neutral.spotReadable }}>
+          {getCategoryIcon(item.category, 16)}
+        </div>
 
         {/* Content */}
         <div style={contentStyle}>
+          {/* Title row with trailing action */}
           <div style={headerStyle}>
             <p style={titleStyle}>{item.displayText}</p>
-            {isAIGenerated && (
-              <div style={aiIndicatorStyle}>
-                <Sparkles size={14} />
-                {!isCompact && (
-                  <span>AI</span>
-                )}
+            {trailing && (
+              <div style={{ marginLeft: 'auto', flexShrink: 0 }}>
+                {trailing}
               </div>
-            )}
-            {(item._meta.requiresReview || (isUnreviewed && item.source.type === 'maHandoff')) && (
-              <Badge variant="default" size="sm">Needs review</Badge>
             )}
           </div>
 
@@ -302,21 +401,17 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
             <p style={subtextStyle}>{item.displaySubtext}</p>
           )}
 
-          {/* Tags */}
-          {item.tags.length > 0 && (
+          {/* Attribution line */}
+          {attributionLine && (
+            <span style={attributionStyle}>{attributionLine}</span>
+          )}
+
+          {/* Tags (deduped) */}
+          {filteredTags.length > 0 && (
             <div style={tagsContainerStyle}>
-              {item.tags.slice(0, isCompact ? 3 : undefined).map((tag, index) => (
+              {filteredTags.map((tag, index) => (
                 <TagDisplay key={`${tag.type}-${tag.label}-${index}`} tag={tag} />
               ))}
-              {isCompact && item.tags.length > 3 && (
-                <span style={{
-                  fontSize: 12,
-                  color: colors.fg.neutral.spotReadable,
-                  alignSelf: 'center',
-                }}>
-                  +{item.tags.length - 3} more
-                </span>
-              )}
             </div>
           )}
 
@@ -330,21 +425,6 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
                 </div>
               ))}
             </div>
-          )}
-
-          {/* Next Action (Process view) */}
-          {nextAction && onAction && (
-            <button
-              type="button"
-              style={nextActionButtonStyle}
-              onClick={(e) => {
-                e.stopPropagation();
-                onAction(nextAction.actionType, nextAction.taskId);
-              }}
-              data-testid={`action-${nextAction.actionType}`}
-            >
-              {nextAction.label}
-            </button>
           )}
         </div>
 

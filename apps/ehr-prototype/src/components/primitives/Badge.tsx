@@ -71,7 +71,7 @@ const variantColors: Record<
 const sizeStyles: Record<'sm' | 'md', React.CSSProperties> = {
   sm: {
     padding: `1px 5px`,
-    fontSize: 11,
+    fontSize: 12,
     lineHeight: '16px',
   },
   md: {

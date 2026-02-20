@@ -262,6 +262,58 @@ Compact:                        Expanded:
 - Each section becomes a navigable entity
 - Canvas shows section-specific detail view
 - May create child tab or replace canvas content
+- Individual overview items (e.g., a specific allergy, medication) should also be tappable to open a detail/activity-log view. This requires mapping overview data objects (`Allergy`, `Medication`, etc.) to `ChartItem` entities or creating a lightweight detail pane for non-chart-item data.
+
+---
+
+## Quick Charting
+
+### Data Model Cleanup
+
+**Concept:** OmniAdd detail forms return category-specific fields (dosage, route, frequency, etc.) as flat top-level properties. These should be restructured into the `data` property matching the discriminated union type (`MedicationItem.data`, `LabItem.data`, etc.).
+
+**Why deferred:** Requires touching all 7 detail forms + OmniAdd merge logic + useCaptureView. Current workaround (defensive `?.` in selectors) prevents crashes.
+
+**Scope:**
+- Restructure form submission → `data` nesting for medication, lab, imaging, procedure, allergy, referral, diagnosis forms
+- Add `actions` array population based on category defaults
+- Update type guards and tests to validate nested structure
+
+**Revisit when:**
+- Adding structured editing to DetailsPane (needs reliable `data` shape)
+- Implementing real backend persistence (API expects nested format)
+
+---
+
+## Layout Architecture
+
+### Unified Morphing Right Rail
+
+**Concept:** A single right-rail component that adapts content per encounter mode:
+- **Capture mode**: Processing status (current ProcessingRail — draft generation, task progress, status updates)
+- **Process mode**: Completeness checklist + E&M level estimate + sign-off action
+- **Review mode**: Final review summary + sign & close action
+
+The rail provides persistent contextual information alongside the main content column, keeping status/actions visible while scrolling items.
+
+**Why deferred:**
+- Significant architectural refactor — requires new layout component, per-mode rail content, responsive behavior
+- Current inline approach (ProcessingRail in capture, sign-off sections in process/review) works, though sign-off scrolls away
+- Needs responsive design decisions first (rail width ranges, collapse behavior)
+
+**Open decisions:**
+- **Width**: Processing rail is 200px; sign-off needs ~280px minimum. Should the rail width vary per mode, or use a single width (e.g., 260px) that works for all?
+- **Responsive behavior**: Should the rail grow at wide resolutions (e.g., flex 200-280px)? At what breakpoint does it collapse? Does it become a bottom sheet, inline section, or drawer on small screens?
+- **Attention mechanism**: When collapsed on mobile, the rail receives async updates (draft results, processing status). How does the user know to expand it? Badge count? Notification dot? Toast?
+- **Unified API**: Should this be one `<RightRail mode={mode} />` component, or a generic `<RightRail>` slot that each view fills with mode-specific content?
+- **Coexistence**: In process/review modes, should the rail show processing status alongside sign-off (stacked), or replace processing entirely?
+
+**Lighter-weight alternative:** Sticky footer for sign-off actions in process/review views. Keeps single-column layout while making the sign action persistent. Lower effort but less cohesive than the rail pattern.
+
+**Revisit when:**
+- Current refinements stabilize and encounter workflow patterns are validated
+- Responsive layout phase is planned
+- User research indicates sign-off actions need to be more persistent/visible
 
 ---
 
@@ -334,3 +386,6 @@ When revisiting deferred items, consider:
 | Date | Item Added/Updated | Reason |
 |------|-------------------|--------|
 | 2025-01-31 | Initial future considerations | Captured from IA design discussions |
+| 2025-02-19 | Quick Charting data model cleanup | Deferred from Round 4.4 (defensive `?.` workaround in place) |
+| 2025-02-19 | Overview item → detail view | Extended Section Tapping entry with individual item tapping |
+| 2025-02-20 | Layout Architecture: Unified Morphing Right Rail | Documented from Round 4.5 responsive rail discussion |

@@ -47,6 +47,9 @@ export function selectSafetyAlerts(state: EncounterState): SafetyAlert[] {
     if (item.category === 'medication') {
       const med = item as MedicationItem;
 
+      // Skip safety checks if data is missing (e.g., manually created via OmniAdd)
+      if (!med.data?.drugName) continue;
+
       // 2. Allergy conflicts
       const allergyAlerts = checkAllergyConflicts(
         med.data.drugName,
@@ -62,6 +65,8 @@ export function selectSafetyAlerts(state: EncounterState): SafetyAlert[] {
         if (otherMed.id === med.id) continue;
         // Only check each pair once (compare IDs to avoid duplication)
         if (otherMed.id < med.id) continue;
+        // Skip if other med has no data
+        if (!otherMed.data?.drugName) continue;
 
         const interaction = findInteractions(
           normalizeDrugName(med.data.drugName),

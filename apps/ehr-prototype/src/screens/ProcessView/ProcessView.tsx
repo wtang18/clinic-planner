@@ -5,25 +5,24 @@
  * Shows items organized by batch (AI Drafts, Prescriptions, Labs, Imaging, Referrals)
  * with a sign-off section at the bottom.
  *
- * Renders inside AdaptiveLayout (same as CaptureView) to keep overview pane,
- * floating nav, and bottom bar visible.
+ * ProcessCanvas is the canvas-only content rendered inside CaptureView's
+ * single AdaptiveLayout. ProcessView is the legacy wrapper (kept for
+ * backwards compat) that renders its own AdaptiveLayout.
  */
 
 import React, { useCallback } from 'react';
 import { useEncounterState } from '../../hooks';
 import { useProcessView } from '../../hooks/useProcessView';
-import { useEncounterLayout } from '../../hooks/useEncounterLayout';
 import type { ItemCategory } from '../../types';
 import type { BatchType } from '../../types/drafts';
 
-import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
-import { CanvasPane } from '../../components/layout/CanvasPane';
 import { DetailsPane } from '../../components/details-pane/DetailsPane';
 import { BatchSection } from '../../components/process-view/BatchSection';
 import { DraftSection } from '../../components/process-view/DraftSection';
 import { SignOff } from '../../components/process-view/SignOff';
 import { EmptyState } from '../../components/primitives/EmptyState';
 
+import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
 import { List } from 'lucide-react';
 import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 
@@ -40,10 +39,10 @@ const BATCH_TO_CATEGORY: Record<BatchType, ItemCategory> = {
 };
 
 // ============================================================================
-// ProcessView Component
+// ProcessCanvas — canvas-only content (no AdaptiveLayout)
 // ============================================================================
 
-export const ProcessView: React.FC = () => {
+export const ProcessCanvas: React.FC = () => {
   const state = useEncounterState();
   const {
     batches,
@@ -66,8 +65,6 @@ export const ProcessView: React.FC = () => {
     handleScopedAdd,
     handleClearScopedAdd,
   } = useProcessView();
-
-  const layout = useEncounterLayout(handleModeChange);
 
   const patient = state.context.patient;
   const encounter = state.context.encounter;
@@ -144,67 +141,61 @@ export const ProcessView: React.FC = () => {
 
   return (
     <>
-      <AdaptiveLayout
-        testID="process-view"
-        menuPane={layout.menuPane}
-        menuPaneHeaderContent={layout.menuPaneHeaderContent}
-        overviewPane={layout.overviewPane}
-        overviewHeaderContent={layout.overviewHeaderContent}
-        canvasHeaderContent={layout.canvasHeaderContent}
-        patientIdentity={layout.patientIdentity}
-        aiControlSurface={layout.aiControlSurface}
-        canvasPane={
-          <CanvasPane headerContent={layout.canvasPaneHeader} compactHeaderContent={layout.compactCanvasPaneHeader}>
-            <div style={styles.mainContent}>
-              {/* AI Drafts section */}
-              <DraftSection
-                drafts={drafts}
-                onAcceptDraft={handleAcceptDraft}
-                onEditDraft={handleEditDraft}
-                onDismissDraft={handleDismissDraft}
-              />
+      <div style={styles.mainContent}>
+        <EncounterContextBar
+          encounter={encounter}
+          chiefComplaint={state.context.visit?.chiefComplaint}
+          providerName={state.session.currentUser?.name}
+          providerCredentials={state.session.currentUser?.credentials?.join(', ')}
+          style={{ paddingLeft: 0, paddingRight: 0 }}
+        />
 
-              {/* Operational batch sections */}
-              {batches.map((batch) => (
-                <BatchSection
-                  key={batch.type}
-                  batch={batch}
-                  onScopedAdd={handleBatchScopedAdd}
-                  onItemSelect={handleItemSelect}
-                  onItemAction={handleItemAction}
-                  onBatchAction={handleBatchAction}
-                />
-              ))}
+        {/* AI Drafts section */}
+        <DraftSection
+          drafts={drafts}
+          onAcceptDraft={handleAcceptDraft}
+          onEditDraft={handleEditDraft}
+          onDismissDraft={handleDismissDraft}
+        />
 
-              {/* Empty state when no items at all */}
-              {!hasContent && (
-                <EmptyState
-                  icon={<List size={48} />}
-                  title="No Items to Process"
-                  description="Chart items will appear here as you add them in Capture mode."
-                  size="md"
-                  style={styles.emptyState}
-                />
-              )}
+        {/* Operational batch sections */}
+        {batches.map((batch) => (
+          <BatchSection
+            key={batch.type}
+            batch={batch}
+            onScopedAdd={handleBatchScopedAdd}
+            onItemSelect={handleItemSelect}
+            onItemAction={handleItemAction}
+            onBatchAction={handleBatchAction}
+          />
+        ))}
 
-              {/* Sign-Off section */}
-              <SignOff
-                encounter={encounter}
-                checklist={checklist}
-                emLevel={emLevel}
-                outstandingCount={outstandingCount}
-                blockers={signOffBlockers}
-                isSigningOff={isSigningOff}
-                onSignOff={handleSignOff}
-                onChecklistSectionTap={handleChecklistSectionTap}
-              />
+        {/* Empty state when no items at all */}
+        {!hasContent && (
+          <EmptyState
+            icon={<List size={48} />}
+            title="No Items to Process"
+            description="Chart items will appear here as you add them in Capture mode."
+            size="md"
+            style={styles.emptyState}
+          />
+        )}
 
-              {/* Bottom spacing */}
-              <div style={{ height: spaceBetween.separated }} />
-            </div>
-          </CanvasPane>
-        }
-      />
+        {/* Sign-Off section */}
+        <SignOff
+          encounter={encounter}
+          checklist={checklist}
+          emLevel={emLevel}
+          outstandingCount={outstandingCount}
+          blockers={signOffBlockers}
+          isSigningOff={isSigningOff}
+          onSignOff={handleSignOff}
+          onChecklistSectionTap={handleChecklistSectionTap}
+        />
+
+        {/* Bottom spacing */}
+        <div style={{ height: spaceBetween.separated }} />
+      </div>
 
       {/* Details Pane overlay */}
       <DetailsPane
@@ -217,6 +208,16 @@ export const ProcessView: React.FC = () => {
   );
 };
 
+ProcessCanvas.displayName = 'ProcessCanvas';
+
+// ============================================================================
+// ProcessView — legacy wrapper (backwards compat, renders own layout)
+// ============================================================================
+
+export const ProcessView: React.FC = () => <ProcessCanvas />;
+
+ProcessView.displayName = 'ProcessView';
+
 // ============================================================================
 // Styles
 // ============================================================================
@@ -226,6 +227,7 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: 900,
     margin: '0 auto',
     position: 'relative',
+    paddingBottom: 80,
   },
   emptyState: {
     padding: spaceAround.spacious,
@@ -235,5 +237,3 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: colors.bg.neutral.min,
   },
 };
-
-ProcessView.displayName = 'ProcessView';

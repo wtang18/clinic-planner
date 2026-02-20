@@ -95,14 +95,12 @@ export const VitalsSection: React.FC<VitalsSectionProps> = ({
     (v) => v.readings.length > 0 && v.readings[v.readings.length - 1]?.isAbnormal
   );
 
-  // Generate collapsed summary
+  // Collapsed summary — only show when there's useful extra info (abnormals)
   const abnormalVitals = vitals.filter(
     (v) => v.readings.length > 0 && v.readings[v.readings.length - 1]?.isAbnormal
   );
   const collapsedSummary = hasAbnormalVitals
     ? `\u26A0\uFE0F ${abnormalVitals.map((v) => v.shortName).join(', ')}`
-    : vitals.length > 0
-    ? 'Recent vitals recorded'
     : undefined;
 
   const listStyle: React.CSSProperties = {
@@ -118,7 +116,7 @@ export const VitalsSection: React.FC<VitalsSectionProps> = ({
     justifyContent: 'space-between',
     gap: spaceBetween.related,
     padding: `${spaceAround.tight}px`,
-    backgroundColor: colors.bg.neutral.subtle,
+    backgroundColor: colors.bg.neutral.min,
     borderRadius: borderRadius.xs,
     cursor: onVitalClick ? 'pointer' : 'default',
   };
@@ -195,6 +193,8 @@ export const VitalsSection: React.FC<VitalsSectionProps> = ({
                   <span
                     style={{
                       fontSize: 13,
+                      lineHeight: '20px',
+                      letterSpacing: -0.5,
                       fontFamily: typography.fontFamily.sans,
                       fontWeight: typography.fontWeight.medium,
                       color: colors.fg.neutral.primary,

@@ -88,6 +88,7 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
     justifyContent: 'center',
     color: colors.fg.neutral.spotReadable,
     flexShrink: 0,
+    marginLeft: 'auto',
   };
 
   const iconContainerStyle: React.CSSProperties = {
@@ -108,24 +109,17 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
 
   const titleStyle: React.CSSProperties = {
     fontSize: 14,
+    lineHeight: '20px',
+    letterSpacing: -0.5,
     fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.medium,
+    fontWeight: typography.fontWeight.semibold,
     color: colors.fg.neutral.primary,
   };
 
-  const countBadgeStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 20,
-    height: 20,
-    padding: `0 ${spaceAround.nudge6}px`,
-    backgroundColor: colors.bg.neutral.subtle,
-    color: colors.fg.neutral.secondary,
-    borderRadius: borderRadius.full,
-    fontSize: 11,
+  const countStyle: React.CSSProperties = {
+    fontSize: 12,
     fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.medium,
+    color: colors.fg.neutral.spotReadable,
   };
 
   const summaryStyle: React.CSSProperties = {
@@ -161,22 +155,22 @@ export const OverviewSection: React.FC<OverviewSectionProps> = ({
           }
         }}
       >
-        <span style={chevronStyle}>
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-        </span>
-
         {icon && <span style={iconContainerStyle}>{icon}</span>}
 
         <div style={titleContainerStyle}>
           <span style={titleStyle}>{title}</span>
           {count !== undefined && count > 0 && (
-            <span style={countBadgeStyle}>{count}</span>
+            <span style={countStyle}>{count}</span>
           )}
         </div>
 
         {isCollapsed && collapsedSummary && (
           <span style={summaryStyle}>{collapsedSummary}</span>
         )}
+
+        <span style={chevronStyle}>
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+        </span>
       </div>
 
       <div style={contentStyle} aria-hidden={isCollapsed}>

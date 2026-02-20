@@ -163,11 +163,12 @@ export const DraftSection: React.FC<DraftSectionProps> = ({
 
 const styles: Record<string, React.CSSProperties> = {
   section: {
-    marginBottom: spaceAround.defaultPlus,
+    borderTop: `1px solid ${colors.border.neutral.low}`,
+    paddingTop: spaceAround.default,
   },
   sectionContent: {
-    padding: spaceAround.default,
-    paddingTop: spaceAround.compact,
+    paddingTop: spaceAround.tight,
+    paddingBottom: spaceAround.tight,
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.related,

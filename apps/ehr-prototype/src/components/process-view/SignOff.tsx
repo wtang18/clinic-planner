@@ -18,7 +18,7 @@ import { CompletenessChecklist } from './CompletenessChecklist';
 import { EMLevel } from './EMLevel';
 import { Button } from '../primitives/Button';
 import { Card } from '../primitives/Card';
-import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, heading, body } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -58,14 +58,14 @@ export const SignOff: React.FC<SignOffProps> = ({
   return (
     <Card
       variant="elevated"
-      padding="lg"
+      padding="md"
       data-testid="process-sign-off"
       style={{ ...styles.container, ...style }}
     >
       {/* Header */}
       <div style={styles.header}>
         <div style={styles.headerIcon}>
-          <PenTool size={24} />
+          <PenTool size={16} />
         </div>
         <div>
           <h3 style={styles.title}>Sign & Close Encounter</h3>
@@ -108,7 +108,8 @@ export const SignOff: React.FC<SignOffProps> = ({
             <div style={styles.blockerGroup}>
               <span style={styles.blockerGroupTitle}>
                 <AlertTriangle size={14} color={colors.fg.alert.secondary} />
-                Required ({errorBlockers.length})
+                Required
+                <span style={styles.blockerCount}>{errorBlockers.length}</span>
               </span>
               <ul style={styles.blockerList}>
                 {errorBlockers.map((b, i) => (
@@ -123,7 +124,8 @@ export const SignOff: React.FC<SignOffProps> = ({
             <div style={styles.blockerGroup}>
               <span style={styles.blockerGroupTitle}>
                 <AlertTriangle size={14} color={colors.fg.attention.secondary} />
-                Recommended ({warningBlockers.length})
+                Recommended
+                <span style={styles.blockerCount}>{warningBlockers.length}</span>
               </span>
               <ul style={styles.blockerList}>
                 {warningBlockers.map((b, i) => (
@@ -140,7 +142,7 @@ export const SignOff: React.FC<SignOffProps> = ({
       {/* Ready state */}
       {blockers.length === 0 && (
         <div style={styles.readyState}>
-          <CheckCircle size={20} color={colors.fg.positive.secondary} />
+          <CheckCircle size={16} color={colors.fg.positive.secondary} />
           <span style={styles.readyText}>All documentation complete. Ready to sign.</span>
         </div>
       )}
@@ -186,12 +188,12 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex',
     alignItems: 'flex-start',
-    gap: spaceBetween.related,
-    marginBottom: spaceAround.defaultPlus,
+    gap: spaceBetween.repeating,
+    marginBottom: spaceAround.default,
   },
   headerIcon: {
-    width: 48,
-    height: 48,
+    width: 32,
+    height: 32,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -201,14 +203,21 @@ const styles: Record<string, React.CSSProperties> = {
     flexShrink: 0,
   },
   title: {
-    fontSize: 20,
-    fontWeight: typography.fontWeight.semibold,
+    fontFamily: heading.md.medium.fontFamily,
+    fontSize: heading.md.medium.fontSize,
+    lineHeight: `${heading.md.medium.lineHeight}px`,
+    fontWeight: heading.md.medium.fontWeight,
+    letterSpacing: heading.md.medium.letterSpacing,
     color: colors.fg.neutral.primary,
     margin: 0,
     marginBottom: 2,
   },
   subtitle: {
-    fontSize: 14,
+    fontFamily: body.xs.regular.fontFamily,
+    fontSize: body.xs.regular.fontSize,
+    lineHeight: `${body.xs.regular.lineHeight}px`,
+    fontWeight: body.xs.regular.fontWeight,
+    letterSpacing: body.xs.regular.letterSpacing,
     color: colors.fg.neutral.spotReadable,
     margin: 0,
   },
@@ -267,6 +276,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: typography.fontWeight.semibold,
     color: colors.fg.neutral.secondary,
     marginBottom: spaceAround.tight,
+  },
+  blockerCount: {
+    fontSize: 12,
+    fontWeight: typography.fontWeight.regular,
+    color: colors.fg.neutral.spotReadable,
   },
   blockerList: {
     margin: 0,

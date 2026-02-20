@@ -41,13 +41,10 @@ export const captureViewStyles = {
   } as React.CSSProperties,
 
   chartItemsList: {
-    flex: 1,
-    overflowY: 'auto',
-    paddingBottom: '160px', // Space for OmniAdd + Minibar
   } as React.CSSProperties,
 
   contentWrapper: {
-    maxWidth: 800,
+    maxWidth: 900,
     width: '100%',
     margin: '0 auto',
   } as React.CSSProperties,

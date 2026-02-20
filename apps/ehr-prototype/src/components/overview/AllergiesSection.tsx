@@ -62,8 +62,11 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
 
   const itemStyle: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'flex-start',
-    gap: spaceBetween.relatedCompact,
+    flexDirection: 'column',
+    gap: spaceBetween.coupled,
+    padding: spaceAround.tight,
+    backgroundColor: colors.bg.neutral.min,
+    borderRadius: borderRadius.xs,
   };
 
   const getSeverityColor = (severity: Allergy['severity']) => {
@@ -122,51 +125,41 @@ export const AllergiesSection: React.FC<AllergiesSectionProps> = ({
         <div style={listStyle}>
           {allergies.map((allergy) => (
             <div key={allergy.id} style={itemStyle}>
-              <span
+              <div
                 style={{
-                  color: getSeverityColor(allergy.severity),
-                  flexShrink: 0,
-                  marginTop: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spaceBetween.relatedCompact,
+                  flexWrap: 'wrap',
                 }}
               >
-                <AlertTriangle size={14} />
-              </span>
-              <div style={{ flex: 1 }}>
-                <div
+                <span
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: spaceBetween.relatedCompact,
-                    flexWrap: 'wrap',
+                    fontSize: 14,
+                    lineHeight: '20px',
+                    letterSpacing: -0.5,
+                    fontFamily: typography.fontFamily.sans,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.fg.neutral.primary,
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: 14,
-                      fontFamily: typography.fontFamily.sans,
-                      fontWeight: typography.fontWeight.medium,
-                      color: colors.fg.neutral.primary,
-                    }}
-                  >
-                    {allergy.allergen}
-                  </span>
-                  <span style={getSeverityBadgeStyle(allergy.severity)}>
-                    {allergy.severity}
-                  </span>
-                </div>
-                {allergy.reaction && (
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontFamily: typography.fontFamily.sans,
-                      color: colors.fg.neutral.secondary,
-                      marginTop: spaceBetween.coupled,
-                    }}
-                  >
-                    Reaction: {allergy.reaction}
-                  </div>
-                )}
+                  {allergy.allergen}
+                </span>
+                <span style={getSeverityBadgeStyle(allergy.severity)}>
+                  {allergy.severity}
+                </span>
               </div>
+              {allergy.reaction && (
+                <div
+                  style={{
+                    fontSize: 12,
+                    fontFamily: typography.fontFamily.sans,
+                    color: colors.fg.neutral.secondary,
+                  }}
+                >
+                  Reaction: {allergy.reaction}
+                </div>
+              )}
             </div>
           ))}
         </div>

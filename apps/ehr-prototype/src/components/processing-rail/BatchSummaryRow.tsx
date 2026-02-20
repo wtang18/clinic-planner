@@ -6,10 +6,12 @@
  */
 
 import React from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { BatchSummary } from '../../types/drafts';
 import { ProcessingItemRow } from './ProcessingItemRow';
 import { DraftItemRow } from './DraftItemRow';
-import { colors, spaceAround, spaceBetween, body, label as labelStyle, borderRadius } from '../../styles/foundations';
+import { Badge } from '../primitives/Badge';
+import { colors, spaceAround, spaceBetween, body } from '../../styles/foundations';
 
 export interface BatchSummaryRowProps {
   batch: BatchSummary;
@@ -49,10 +51,12 @@ export function BatchSummaryRow({
         </span>
         <span style={styles.headerRight}>
           {batch.count > 0 && (
-            <span style={styles.countBadge}>{batch.count}</span>
+            <Badge count={batch.count} size="sm" />
           )}
           {!isEmpty && (
-            <span style={styles.chevron}>{expanded ? '▾' : '▸'}</span>
+            <span style={styles.chevronIcon}>
+              {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </span>
           )}
           {isEmpty && (
             <span style={styles.emptyDash}>—</span>
@@ -125,21 +129,9 @@ const styles: Record<string, React.CSSProperties> = {
     color: colors.fg.neutral.primary,
     wordBreak: 'break-word' as const,
   },
-  countBadge: {
-    ...labelStyle.sm,
-    fontWeight: 600,
-    color: colors.fg.neutral.secondary,
-    backgroundColor: colors.bg.neutral.subtle,
-    borderRadius: borderRadius.sm,
-    padding: `0 ${spaceBetween.coupled}px`,
-    minWidth: 18,
-    height: 18,
+  chevronIcon: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chevron: {
-    fontSize: 10,
     color: colors.fg.neutral.secondary,
   },
   emptyDash: {

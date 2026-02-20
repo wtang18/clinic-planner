@@ -385,7 +385,7 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
 
   return (
     <div style={containerStyle} data-testid="omni-add-bar">
-      <Card variant="elevated" padding="none" data-testid="omni-add-expanded">
+      <Card variant="outlined" padding="none" data-testid="omni-add-expanded">
         <div style={contentStyle}>
           {/* Toolbar: breadcrumb + mode toggles */}
           <div style={toolbarStyle}>

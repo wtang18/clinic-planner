@@ -59,9 +59,8 @@ export const MedicationsSection: React.FC<MedicationsSectionProps> = ({
     : activeMedications.slice(0, maxItems);
   const hasMore = activeMedications.length > maxItems;
 
-  // Generate collapsed summary
-  const collapsedSummary =
-    activeMedications.length > 0 ? `${activeMedications.length} active` : undefined;
+  // Collapsed summary — omitted when it would just restate the inline count
+  const collapsedSummary = undefined;
 
   const listStyle: React.CSSProperties = {
     display: 'flex',
@@ -75,7 +74,7 @@ export const MedicationsSection: React.FC<MedicationsSectionProps> = ({
     flexDirection: 'column',
     gap: spaceBetween.coupled,
     padding: `${spaceAround.tight}px`,
-    backgroundColor: colors.bg.neutral.subtle,
+    backgroundColor: colors.bg.neutral.min,
     borderRadius: borderRadius.xs,
     cursor: onMedicationClick ? 'pointer' : 'default',
   };
@@ -129,6 +128,8 @@ export const MedicationsSection: React.FC<MedicationsSectionProps> = ({
               <div
                 style={{
                   fontSize: 14,
+                  lineHeight: '20px',
+                  letterSpacing: -0.5,
                   fontFamily: typography.fontFamily.sans,
                   fontWeight: typography.fontWeight.medium,
                   color: colors.fg.neutral.primary,

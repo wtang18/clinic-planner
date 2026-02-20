@@ -111,42 +111,42 @@ export const BatchSection: React.FC<BatchSectionProps> = ({
 
   const batchActions = getBatchActions(batch);
 
+  const batchActionsTrailing = batchActions.length > 0 ? (
+    <div style={{ display: 'flex', gap: spaceBetween.repeating }} data-testid="batch-actions">
+      {batchActions.map((action) => {
+        const readyTaskIds = batch.subGroups
+          .flatMap(g => g.items)
+          .flatMap(i => i.tasks.filter(t => t.status === 'ready'))
+          .map(t => t.id);
+
+        return (
+          <Button
+            key={action.action}
+            variant="ghost"
+            size="xs"
+            leftIcon={action.icon}
+            onClick={() => onBatchAction?.(batch.type, action.action, readyTaskIds)}
+            data-testid={`batch-action-${action.action}`}
+          >
+            {action.label}
+          </Button>
+        );
+      })}
+    </div>
+  ) : undefined;
+
   return (
     <div style={{ ...styles.section, ...style }} data-testid={`batch-${batch.type}`}>
       <SectionHeader
         title={batch.label}
         count={`${batch.totalCount}`}
+        trailing={batchActionsTrailing}
         onAdd={onScopedAdd ? () => onScopedAdd(batch.type) : undefined}
         addLabel={`Add ${batch.label}`}
         testID={`batch-header-${batch.type}`}
       />
 
       <div style={styles.sectionContent}>
-        {/* Batch actions */}
-        {batchActions.length > 0 && (
-          <div style={styles.batchActions} data-testid="batch-actions">
-            {batchActions.map((action) => {
-              const readyTaskIds = batch.subGroups
-                .flatMap(g => g.items)
-                .flatMap(i => i.tasks.filter(t => t.status === 'ready'))
-                .map(t => t.id);
-
-              return (
-                <Button
-                  key={action.action}
-                  variant="secondary"
-                  size="sm"
-                  leftIcon={action.icon}
-                  onClick={() => onBatchAction?.(batch.type, action.action, readyTaskIds)}
-                  data-testid={`batch-action-${action.action}`}
-                >
-                  {action.label}
-                </Button>
-              );
-            })}
-          </div>
-        )}
-
         {/* Sub-groups */}
         {batch.subGroups.map((subGroup) => (
           <SubGroupSection
@@ -176,7 +176,7 @@ const SubGroupSection: React.FC<{
     {showSubHeader && (
       <div style={styles.subGroupHeader}>
         <span style={styles.subGroupLabel}>{subGroup.label}</span>
-        <span style={styles.subGroupCount}>({subGroup.items.length})</span>
+        <span style={styles.subGroupCount}>{subGroup.items.length}</span>
       </div>
     )}
     <div style={styles.itemList}>
@@ -184,7 +184,6 @@ const SubGroupSection: React.FC<{
         <ChartItemCard
           key={processItem.item.id}
           item={processItem.item}
-          variant="expanded"
           processingSteps={processItem.processingSteps}
           nextAction={processItem.nextAction}
           onSelect={() => onItemSelect?.(processItem.item.id)}
@@ -201,15 +200,13 @@ const SubGroupSection: React.FC<{
 
 const styles: Record<string, React.CSSProperties> = {
   section: {
-    marginBottom: spaceAround.defaultPlus,
+    borderTop: `1px solid ${colors.border.neutral.low}`,
+    paddingTop: spaceAround.default,
+    paddingBottom: spaceAround.default,
   },
   sectionContent: {
-    paddingTop: spaceAround.compact,
-  },
-  batchActions: {
-    display: 'flex',
-    gap: spaceBetween.repeating,
-    marginBottom: spaceAround.compact,
+    paddingTop: spaceAround.tight,
+    paddingBottom: spaceAround.tight,
   },
   subGroup: {
     marginBottom: spaceAround.compact,
@@ -230,7 +227,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   subGroupCount: {
     fontSize: 12,
-    color: colors.fg.neutral.disabled,
+    color: colors.fg.neutral.spotReadable,
   },
   itemList: {
     display: 'flex',

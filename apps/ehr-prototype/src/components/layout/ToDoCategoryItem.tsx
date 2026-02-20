@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { colors, spaceBetween, spaceAround, borderRadius, typography, transitions } from '../../styles/foundations';
+import { Badge } from '../primitives/Badge';
 
 // ============================================================================
 // Types
@@ -164,21 +165,6 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
     color: colors.fg.neutral.primary,
   };
 
-  const badgeStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 18,
-    height: 18,
-    padding: '0 5px',
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.bg.accent.subtle,
-    color: colors.fg.accent.primary,
-    fontSize: 11,
-    fontWeight: 500,
-    flexShrink: 0,
-  };
-
   const filtersContainerStyle: React.CSSProperties = {
     overflow: 'hidden',
     maxHeight: isExpanded ? filters.length * 32 + 8 : 0,
@@ -239,7 +225,7 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
         </span>
         <span style={labelStyle}>{label}</span>
         {badge !== undefined && badge > 0 && (
-          <span style={badgeStyle}>{badge}</span>
+          <Badge count={badge} size="sm" variant="info" />
         )}
         <div style={chevronStyle} onClick={handleChevronClick}>
           <ChevronRight size={14} />

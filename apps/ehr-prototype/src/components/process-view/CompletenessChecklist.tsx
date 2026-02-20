@@ -9,6 +9,7 @@ import React from 'react';
 import { CheckCircle, AlertCircle, Circle } from 'lucide-react';
 import type { ChecklistItem } from '../../state/selectors/process-view';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { Badge } from '../primitives/Badge';
 
 // ============================================================================
 // Types
@@ -104,7 +105,7 @@ const ChecklistRow: React.FC<{
         </span>
       </div>
       {item.itemCount > 0 && (
-        <span style={styles.rowCount}>{item.itemCount}</span>
+        <Badge count={item.itemCount} size="sm" />
       )}
     </div>
   );
@@ -161,13 +162,6 @@ const styles: Record<string, React.CSSProperties> = {
   rowLabel: {
     fontSize: 14,
     fontWeight: typography.fontWeight.regular,
-  },
-  rowCount: {
-    fontSize: 12,
-    color: colors.fg.neutral.spotReadable,
-    backgroundColor: colors.bg.neutral.subtle,
-    padding: `2px 6px`,
-    borderRadius: borderRadius.sm,
   },
 };
 

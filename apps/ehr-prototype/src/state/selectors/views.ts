@@ -129,7 +129,7 @@ export const selectPatientOverviewData = (
 ): PatientOverviewData => ({
   patient: state.context.patient,
   problemList: selectDiagnoses(state).filter(
-    dx => dx.data.type === 'chronic' || dx.data.clinicalStatus === 'active'
+    dx => dx.data?.type === 'chronic' || dx.data?.clinicalStatus === 'active'
   ),
   medications: selectMedications(state),
   allergies: selectAllergies(state),

@@ -6,13 +6,11 @@
  */
 
 import React from 'react';
-import { useNavigation, useCurrentScreen, useEncounterId, useCurrentMode, Screen } from './NavigationContext';
+import { useNavigation, useCurrentScreen, useEncounterId, Screen } from './NavigationContext';
 import { EncounterLoader } from './EncounterLoader';
 
 // Screens
 import { CaptureView } from '../screens/CaptureView';
-import { ProcessView } from '../screens/ProcessView';
-import { ReviewView } from '../screens/ReviewView';
 import { PatientOverview } from '../screens/PatientOverview';
 import { DemoLauncher } from './DemoLauncher';
 
@@ -48,20 +46,13 @@ const NotFoundScreen: React.FC = () => {
 // Encounter Screen Router
 // ============================================================================
 
-const EncounterScreen: React.FC = () => {
-  const mode = useCurrentMode();
-
-  switch (mode) {
-    case 'capture':
-      return <div data-testid="capture-view"><CaptureView /></div>;
-    case 'process':
-      return <div data-testid="process-view"><ProcessView /></div>;
-    case 'review':
-      return <div data-testid="review-view"><ReviewView /></div>;
-    default:
-      return <div data-testid="capture-view"><CaptureView /></div>;
-  }
-};
+/**
+ * EncounterScreen renders CaptureView as the single layout host.
+ * CaptureView owns the AdaptiveLayout (menu, overview, bottom bar) and
+ * switches its canvas area between capture, process, and review content
+ * based on the current mode. This ensures layout panes never unmount.
+ */
+const EncounterScreen: React.FC = () => <CaptureView />;
 
 // ============================================================================
 // Screen Router
