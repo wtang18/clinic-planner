@@ -90,7 +90,7 @@ const ControlButton: React.FC<ControlButtonProps> = ({
       return isHovered ? colors.bg.neutral.subtle : 'transparent';
     }
     // secondary
-    return isHovered ? colors.bg.neutral.elevated : colors.bg.neutral.subtle;
+    return isHovered ? colors.bg.neutral.low : colors.bg.neutral.subtle;
   };
 
   const getTextColor = () => {

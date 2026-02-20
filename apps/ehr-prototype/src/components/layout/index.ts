@@ -66,9 +66,6 @@ export type { FloatingHeaderProps } from './FloatingHeader';
 export { EncounterContextBar } from './EncounterContextBar';
 export type { EncounterContextBarProps } from './EncounterContextBar';
 
-export { AIDrawer } from './AIDrawer';
-export type { AIDrawerProps } from './AIDrawer';
-
 export { MobileSheet } from './MobileSheet';
 export type { MobileSheetProps } from './MobileSheet';
 

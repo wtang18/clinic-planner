@@ -130,10 +130,10 @@ function generateChiefComplaint(
   }
 
   // Try to infer from encounter reason
-  if (context.visit?.reasonForVisit) {
+  if (context.visit?.visitReason) {
     return {
       section: 'chief-complaint',
-      content: context.visit.reasonForVisit,
+      content: context.visit.visitReason,
       sourceItems: [],
     };
   }

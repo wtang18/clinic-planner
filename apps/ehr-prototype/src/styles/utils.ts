@@ -112,7 +112,7 @@ export interface PriorityStyles {
   label: string;
 }
 
-export function getPriorityStyles(priority: Priority): PriorityStyles {
+export function getPriorityStyles(priority: Priority | 'medium'): PriorityStyles {
   switch (priority) {
     case 'urgent':
       return {
@@ -134,6 +134,13 @@ export function getPriorityStyles(priority: Priority): PriorityStyles {
         bgColor: colors.bg.information.subtle,
         icon: '🟡',
         label: 'Medium',
+      };
+    case 'normal':
+      return {
+        color: colors.fg.neutral.secondary,
+        bgColor: colors.bg.neutral.subtle,
+        icon: '⚪',
+        label: 'Normal',
       };
     case 'low':
       return {

@@ -210,13 +210,14 @@ function buildItemTemplate(
     status: 'pending-review' as const,
     displayText: entity.text,
     tags: [{ label: 'AI Suggested', type: 'ai' as const }],
-    linkedDiagnoses: [],
-    linkedEncounters: [],
+    linkedDiagnoses: [] as string[],
+    linkedEncounters: [] as string[],
     _meta: {
-      syncStatus: 'pending' as const,
+      syncStatus: 'local' as const,
       aiGenerated: true,
       aiConfidence: entity.confidence,
       requiresReview: true,
+      reviewed: false,
     },
   };
 
@@ -225,6 +226,7 @@ function buildItemTemplate(
       const normalized = entity.normalizedValue as NormalizedMedication | null;
       return {
         ...baseTemplate,
+        category: 'medication' as const,
         displayText: normalized?.name || entity.text,
         data: {
           drugName: normalized?.name || entity.text,
@@ -237,13 +239,14 @@ function buildItemTemplate(
           prescriptionType: 'new' as const,
         },
         actions: ['e-prescribe', 'print', 'cancel', 'modify'],
-      };
+      } as Partial<ChartItem>;
     }
 
     case 'diagnosis': {
       const normalized = entity.normalizedValue as NormalizedDiagnosis | null;
       return {
         ...baseTemplate,
+        category: 'diagnosis' as const,
         displayText: normalized?.description || entity.text,
         displaySubtext: normalized?.icdCode,
         data: {
@@ -252,13 +255,14 @@ function buildItemTemplate(
           type: 'encounter' as const,
           clinicalStatus: 'active' as const,
         },
-      };
+      } as Partial<ChartItem>;
     }
 
     case 'lab': {
       const normalized = entity.normalizedValue as { name: string; loincCode?: string } | null;
       return {
         ...baseTemplate,
+        category: 'lab' as const,
         displayText: normalized?.name || entity.text,
         data: {
           testName: normalized?.name || entity.text,
@@ -267,33 +271,35 @@ function buildItemTemplate(
           collectionType: 'send-out' as const,
           orderStatus: 'draft' as const,
         },
-      };
+      } as Partial<ChartItem>;
     }
 
     case 'allergy': {
       const allergen = (entity.normalizedValue as string) || entity.text;
       return {
         ...baseTemplate,
+        category: 'allergy' as const,
         displayText: `Allergy: ${allergen}`,
         data: {
           allergen,
-          allergenType: 'drug' as const, // Could be improved with better detection
+          allergenType: 'drug' as const,
           severity: 'unknown' as const,
           reportedBy: 'patient' as const,
           verificationStatus: 'unverified' as const,
         },
-      };
+      } as Partial<ChartItem>;
     }
 
     case 'hpi': {
       return {
         ...baseTemplate,
+        category: 'hpi' as const,
         displayText: entity.text,
         data: {
           text: entity.text,
           format: 'plain' as const,
         },
-      };
+      } as Partial<ChartItem>;
     }
 
     default:

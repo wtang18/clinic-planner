@@ -48,9 +48,9 @@ const elevationStyles = {
 export const elevation: Record<keyof typeof elevationStyles, ViewStyle> = Object.fromEntries(
   Object.entries(elevationStyles).map(([key, value]) => [
     key,
-    Platform.select(value) as ViewStyle,
+    Platform.select(value as Record<string, ViewStyle>) as ViewStyle,
   ])
-) as any;
+) as Record<keyof typeof elevationStyles, ViewStyle>;
 
 export { elevationStyles };
 export type ElevationLevel = keyof typeof elevationStyles;

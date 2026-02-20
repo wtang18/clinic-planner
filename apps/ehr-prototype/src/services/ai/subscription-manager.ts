@@ -9,12 +9,12 @@ import type { EncounterState } from '../../state/types';
 import type { EncounterAction } from '../../state/actions/types';
 import type { Store } from '../../state/store/types';
 import type {
-  AIServiceRegistry,
   AIServiceResult,
   Notification,
   TriggerContext,
   AIService,
 } from './types';
+import type { AIServiceRegistry } from './registry';
 import type { ServiceExecutor } from './executor';
 
 // ============================================================================

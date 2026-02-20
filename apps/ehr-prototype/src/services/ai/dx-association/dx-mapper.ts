@@ -191,8 +191,8 @@ export function rankByPatientContext(
       let confidenceBoost = 0;
 
       // Check if patient has relevant conditions in problem list
-      const hasProblem = patientContext.problemList?.some(
-        (problem) =>
+      const hasProblem = patientContext.clinicalSummary?.problemList?.some(
+        (problem: { icdCode?: string; description: string }) =>
           problem.icdCode === suggestion.icdCode ||
           problem.description.toLowerCase().includes(suggestion.description.toLowerCase())
       );

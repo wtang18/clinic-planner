@@ -98,7 +98,7 @@ export const drugInteractionService: AIService = {
     );
 
     // Also include medications from patient's medication list if available
-    const patientMedications = state.context.patient?.medications || [];
+    const patientMedications = state.context.patient?.clinicalSummary?.medications || [];
     const allMedications = [
       ...currentMedications,
       ...patientMedicationsToItems(patientMedications),

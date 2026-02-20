@@ -201,7 +201,7 @@ describe('selectHasPaletteOpen', () => {
   it('false for TM palette when txEligible=false', () => {
     // Artificial state for testing the gate (wouldn't normally occur)
     const state: CoordinationState = {
-      aiTier: 'bar', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: false,
+      aiTier: 'bar', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: false, overviewExpanded: true,
     };
     expect(selectHasPaletteOpen(state)).toBe(false);
   });

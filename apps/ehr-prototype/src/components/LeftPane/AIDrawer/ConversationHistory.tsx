@@ -121,7 +121,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
 
   const actionButtonStyle: React.CSSProperties = {
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    border: `1px solid ${colors.border.neutral.default}`,
+    border: `1px solid ${colors.border.neutral.low}`,
     borderRadius: borderRadius.sm,
     backgroundColor: 'transparent',
     fontSize: 13,
@@ -151,7 +151,7 @@ const AIMessage: React.FC<AIMessageProps> = ({
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent';
-                (e.currentTarget as HTMLElement).style.borderColor = colors.border.neutral.default;
+                (e.currentTarget as HTMLElement).style.borderColor = colors.border.neutral.low;
               }}
             >
               {action.label}

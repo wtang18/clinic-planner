@@ -126,7 +126,7 @@ describe('Invariant Validation — Forbidden States', () => {
 describe('INV-8: txEligible Gate', () => {
   it('rejects txTier=palette when txEligible=false', () => {
     const state: CoordinationState = {
-      aiTier: 'bar', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: false,
+      aiTier: 'bar', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: false, overviewExpanded: true,
     };
     const result = validateInvariants(state);
     expect(result.valid).toBe(false);
@@ -135,7 +135,7 @@ describe('INV-8: txEligible Gate', () => {
 
   it('rejects txTier=anchor when txEligible=false', () => {
     const state: CoordinationState = {
-      aiTier: 'palette', txTier: 'anchor', paneView: 'menu', paneExpanded: true, txEligible: false,
+      aiTier: 'palette', txTier: 'anchor', paneView: 'menu', paneExpanded: true, txEligible: false, overviewExpanded: true,
     };
     const result = validateInvariants(state);
     expect(result.valid).toBe(false);
@@ -144,7 +144,7 @@ describe('INV-8: txEligible Gate', () => {
 
   it('rejects txTier=drawer when txEligible=false', () => {
     const state: CoordinationState = {
-      aiTier: 'bar', txTier: 'drawer', paneView: 'transcript', paneExpanded: true, txEligible: false,
+      aiTier: 'bar', txTier: 'drawer', paneView: 'transcript', paneExpanded: true, txEligible: false, overviewExpanded: true,
     };
     const result = validateInvariants(state);
     expect(result.valid).toBe(false);
@@ -154,7 +154,7 @@ describe('INV-8: txEligible Gate', () => {
 
   it('allows txTier=bar when txEligible=false (inert default)', () => {
     const state: CoordinationState = {
-      aiTier: 'bar', txTier: 'bar', paneView: 'menu', paneExpanded: true, txEligible: false,
+      aiTier: 'bar', txTier: 'bar', paneView: 'menu', paneExpanded: true, txEligible: false, overviewExpanded: true,
     };
     const result = validateInvariants(state);
     expect(result.valid).toBe(true);

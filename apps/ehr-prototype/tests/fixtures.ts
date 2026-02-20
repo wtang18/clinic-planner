@@ -7,8 +7,8 @@
 
 import type { ChartItem, DiagnosisItem, MedicationItem } from '../src/types/chart-items';
 import type { Suggestion } from '../src/types/suggestions';
-import type { PatientContext, EncounterContext, VisitContext } from '../src/types';
-import type { EncounterState } from '../src/state/store/types';
+import type { PatientContext, EncounterMeta, VisitMeta } from '../src/types';
+import type { EncounterState } from '../src/state/types';
 import type { ToDoItem, ToDoCategory } from '../src/scenarios/todoData';
 
 // ============================================================================
@@ -93,21 +93,19 @@ export function createTestPatient(overrides: Partial<PatientContext> = {}): Pati
   };
 }
 
-export function createTestEncounter(overrides: Partial<EncounterContext> = {}): EncounterContext {
+export function createTestEncounter(overrides: Partial<EncounterMeta> = {}): EncounterMeta {
   return {
     id: generateId('encounter'),
-    type: 'Urgent Care',
+    type: 'urgent-care',
     status: 'in-progress',
-    startTime: new Date(),
+    startedAt: new Date(),
     ...overrides,
   };
 }
 
-export function createTestVisit(overrides: Partial<VisitContext> = {}): VisitContext {
+export function createTestVisit(overrides: Partial<VisitMeta> = {}): VisitMeta {
   return {
     chiefComplaint: 'Test complaint',
-    appointmentType: 'urgent-care',
-    scheduledTime: new Date(),
     ...overrides,
   };
 }
@@ -239,7 +237,13 @@ export function createMinimalEncounterState(
       suggestions: {},
       tasks: {},
       careGaps: {},
-      alerts: {},
+      drafts: {},
+    },
+    relationships: {
+      itemOrder: [],
+      taskToItem: {},
+      suggestionToItem: {},
+      careGapToItems: {},
     },
     session: {
       mode: 'capture',
@@ -255,9 +259,13 @@ export function createMinimalEncounterState(
       },
     },
     sync: {
-      status: 'idle',
-      lastSyncAt: null,
-      pendingChanges: [],
+      status: 'local',
+      lastSyncedAt: null,
+      queue: [],
+    },
+    collaboration: {
+      currentOwner: null,
+      handoffHistory: [],
     },
     ...overrides,
   } as EncounterState;

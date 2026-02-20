@@ -285,7 +285,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<Mic size={16} />}
               label="Start"
-              showLabel={isFullWidth}
+              showLabel={!!isFullWidth}
               variant="primary"
               onClick={onStart}
               disabled={!isEnabled}
@@ -296,7 +296,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<Pause size={16} fill="currentColor" />}
               label="Pause"
-              showLabel={isFullWidth}
+              showLabel={!!isFullWidth}
               variant="secondary"
               onClick={onPause}
             />
@@ -306,7 +306,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<Play size={16} />}
               label="Resume"
-              showLabel={isFullWidth}
+              showLabel={!!isFullWidth}
               variant="primary"
               onClick={onResume}
             />
@@ -316,7 +316,7 @@ export const ControlsContainer: React.FC<ControlsContainerProps> = ({
               actionKey="primary"
               icon={<RotateCcw size={16} />}
               label="Retry"
-              showLabel={isFullWidth}
+              showLabel={!!isFullWidth}
               variant="primary"
               onClick={onRetry ?? onStart}
             />
