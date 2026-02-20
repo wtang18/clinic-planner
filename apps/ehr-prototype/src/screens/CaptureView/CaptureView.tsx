@@ -37,7 +37,7 @@ import { useAIAssistant } from '../../hooks/useAIAssistant';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { DetailsPane } from '../../components/details-pane';
-import { ProcessingRail, RAIL_WIDTH } from '../../components/processing-rail';
+import { ProcessingRail } from '../../components/processing-rail';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
 import {
@@ -48,6 +48,9 @@ import {
 } from '../../scenarios/todoData';
 
 import { ClipboardList } from 'lucide-react';
+import { useCurrentMode } from '../../navigation/NavigationContext';
+import { ProcessCanvas } from '../ProcessView';
+import { ReviewCanvas } from '../ReviewView';
 
 // ============================================================================
 // Types
@@ -82,6 +85,7 @@ export const CaptureView: React.FC = () => {
   } = useTranscription();
   const workspace = useWorkspace();
   const todoNav = useToDoNavigation();
+  const mode = useCurrentMode();
 
   // Map context segments to drawer segment format
   const drawerSegments = useMemo<DrawerTranscriptSegment[]>(() =>
@@ -740,11 +744,15 @@ export const CaptureView: React.FC = () => {
         onBack={handleNavBack}
         canvasPane={
           <CanvasPane
-            headerContent={viewMode === 'patient' ? canvasPaneHeader : undefined}
-            compactHeaderContent={viewMode === 'patient' ? compactCanvasHeader : undefined}
+            headerContent={undefined}
+            compactHeaderContent={undefined}
           >
-            {/* To-Do List View */}
-            {viewMode === 'todo-list' && todoViewState && currentCategory && (
+            {/* Process/Review canvas when in non-capture mode */}
+            {mode === 'process' && <ProcessCanvas />}
+            {mode === 'review' && <ReviewCanvas />}
+
+            {/* Capture mode content */}
+            {mode === 'capture' && viewMode === 'todo-list' && todoViewState && currentCategory && (
               <ToDoListView
                 categoryId={todoViewState.categoryId}
                 filterId={todoViewState.filterId}
@@ -759,7 +767,7 @@ export const CaptureView: React.FC = () => {
             )}
 
             {/* To-Do Detail View */}
-            {viewMode === 'todo-detail' && todoViewState?.selectedItem && (
+            {mode === 'capture' && viewMode === 'todo-detail' && todoViewState?.selectedItem && (
               <>
                 {/* Back button */}
                 <div
@@ -834,7 +842,7 @@ export const CaptureView: React.FC = () => {
             )}
 
             {/* Patient Workspace View - renders based on active tab */}
-            {viewMode === 'patient' && (() => {
+            {mode === 'capture' && viewMode === 'patient' && (() => {
               // Get the selected workspace ID from nav state (format: "patient-{id}")
               const selectedWorkspaceId = selectedNavItem.startsWith('patient-')
                 ? selectedNavItem.replace('patient-', '')
@@ -907,8 +915,26 @@ export const CaptureView: React.FC = () => {
                 return (
                   <>
                     {contextBar}
-                    <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-                      <div style={{ ...captureViewStyles.contentWrapper, flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0, 1fr) auto',
+                      gridTemplateRows: 'auto 1fr',
+                      flex: 1,
+                      minHeight: 0,
+                      columnGap: spaceAround.defaultPlus,
+                    }}>
+                      <EncounterContextBar
+                        encounter={encounter}
+                        chiefComplaint={visit?.chiefComplaint}
+                        providerName={currentUser?.name}
+                        providerCredentials={currentUser?.credentials?.join(', ')}
+                        style={{ paddingLeft: 0, paddingRight: 0, gridColumn: 1, gridRow: 1 }}
+                      />
+                      <div style={{
+                        ...captureViewStyles.contentWrapper,
+                        gridColumn: 1, gridRow: 2,
+                        minWidth: 0, overflowY: 'auto', paddingBottom: 80,
+                      }}>
                         {/* Chart items list */}
                         <div style={captureViewStyles.chartItemsList}>
                           {sortedItems.length === 0 ? (
@@ -947,6 +973,7 @@ export const CaptureView: React.FC = () => {
                         onAcceptDraft={handleAcceptDraft}
                         onEditDraft={handleEditDraft}
                         onDismissDraft={handleDismissDraft}
+                        style={{ gridColumn: 2, gridRow: 2, alignSelf: 'start' }}
                       />
                     </div>
                   </>
@@ -1008,8 +1035,26 @@ export const CaptureView: React.FC = () => {
               return (
                 <>
                   {contextBar}
-                  <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-                    <div style={{ ...captureViewStyles.contentWrapper, flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                    gridTemplateRows: 'auto 1fr',
+                    flex: 1,
+                    minHeight: 0,
+                    columnGap: spaceAround.defaultPlus,
+                  }}>
+                    <EncounterContextBar
+                      encounter={encounter}
+                      chiefComplaint={visit?.chiefComplaint}
+                      providerName={currentUser?.name}
+                      providerCredentials={currentUser?.credentials?.join(', ')}
+                      style={{ paddingLeft: 0, paddingRight: 0, gridColumn: 1, gridRow: 1 }}
+                    />
+                    <div style={{
+                      ...captureViewStyles.contentWrapper,
+                      gridColumn: 1, gridRow: 2,
+                      minWidth: 0, overflowY: 'auto', paddingBottom: 80,
+                    }}>
                       <div style={captureViewStyles.chartItemsList}>
                         {sortedItems.length === 0 ? (
                           <div style={captureViewStyles.chartItemsEmpty}>
@@ -1047,6 +1092,7 @@ export const CaptureView: React.FC = () => {
                       onAcceptDraft={handleAcceptDraft}
                       onEditDraft={handleEditDraft}
                       onDismissDraft={handleDismissDraft}
+                      style={{ gridColumn: 2, gridRow: 2, alignSelf: 'start' }}
                     />
                   </div>
                 </>

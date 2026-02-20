@@ -18,6 +18,7 @@ export interface ProcessingRailProps {
   onEditDraft?: (draftId: string) => void;
   onDismissDraft?: (draftId: string) => void;
   onOpenTaskDetails?: (taskId: string) => void;
+  style?: React.CSSProperties;
 }
 
 export function ProcessingRail({
@@ -25,6 +26,7 @@ export function ProcessingRail({
   onEditDraft,
   onDismissDraft,
   onOpenTaskDetails,
+  style,
 }: ProcessingRailProps) {
   const batches = useProcessingBatches();
   const hasAnyItems = batches.some(b => b.count > 0);
@@ -34,7 +36,7 @@ export function ProcessingRail({
   }
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, ...style }}>
       <div style={styles.header}>
         <span style={styles.headerTitle}>Processing</span>
       </div>
