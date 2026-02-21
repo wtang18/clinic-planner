@@ -14,6 +14,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { RxFieldDef } from '../../components/omni-add/fields/RxFields';
 import { LabFieldDef } from '../../components/omni-add/fields/LabFields';
 import { DxFieldDef } from '../../components/omni-add/fields/DxFields';
+import { ImagingFieldDef } from '../../components/omni-add/fields/ImagingFields';
+import { ProcedureFieldDef } from '../../components/omni-add/fields/ProcedureFields';
+import { AllergyFieldDef } from '../../components/omni-add/fields/AllergyFields';
+import { ReferralFieldDef } from '../../components/omni-add/fields/ReferralFields';
 import { getFieldDef } from '../../components/omni-add/fields';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 
@@ -87,6 +91,22 @@ describe('Field config registry', () => {
 
   it('returns undefined for vitals', () => {
     expect(getFieldDef('vitals')).toBeUndefined();
+  });
+
+  it('returns ImagingFieldDef for imaging', () => {
+    expect(getFieldDef('imaging')).toBe(ImagingFieldDef);
+  });
+
+  it('returns ProcedureFieldDef for procedure', () => {
+    expect(getFieldDef('procedure')).toBe(ProcedureFieldDef);
+  });
+
+  it('returns AllergyFieldDef for allergy', () => {
+    expect(getFieldDef('allergy')).toBe(AllergyFieldDef);
+  });
+
+  it('returns ReferralFieldDef for referral', () => {
+    expect(getFieldDef('referral')).toBe(ReferralFieldDef);
   });
 });
 
@@ -273,5 +293,186 @@ describe('DxFieldDef', () => {
     const data = DxFieldDef.buildData(DxFieldDef.getDefaults(dxItem), dxItem);
     expect(data.description).toBe('Acute Bronchitis');
     expect(data.icdCode).toBe('J20.9');
+  });
+});
+
+// ============================================================================
+// Imaging Fields
+// ============================================================================
+
+const imgItem: QuickPickItem = {
+  id: 'img-chest-xray',
+  label: 'Chest X-ray PA/Lateral',
+  chipLabel: 'Chest X-ray',
+  category: 'imaging',
+  data: {
+    studyType: 'X-ray',
+    bodyPart: 'Chest',
+    priority: 'routine',
+  },
+};
+
+describe('ImagingFieldDef', () => {
+  it('returns 1 field config (priority)', () => {
+    const fields = ImagingFieldDef.getFields(imgItem);
+    expect(fields).toHaveLength(1);
+    expect(fields[0].key).toBe('priority');
+  });
+
+  it('priority has 3 options', () => {
+    const fields = ImagingFieldDef.getFields(imgItem);
+    expect(fields[0].options).toHaveLength(3);
+    expect(fields[0].options.map(o => o.value)).toEqual(['routine', 'urgent', 'stat']);
+  });
+
+  it('getDefaults extracts priority', () => {
+    expect(ImagingFieldDef.getDefaults(imgItem)).toEqual({ priority: 'routine' });
+  });
+
+  it('buildData sets orderStatus to draft', () => {
+    const data = ImagingFieldDef.buildData({ priority: 'stat' }, imgItem);
+    expect(data.priority).toBe('stat');
+    expect(data.orderStatus).toBe('draft');
+    expect(data.studyType).toBe('X-ray');
+  });
+});
+
+// ============================================================================
+// Procedure Fields
+// ============================================================================
+
+const procItem: QuickPickItem = {
+  id: 'proc-rapid-strep',
+  label: 'Rapid Strep Test',
+  chipLabel: 'Rapid Strep',
+  category: 'procedure',
+  data: {
+    procedureName: 'Rapid Strep Test',
+    cptCode: '87880',
+    procedureStatus: 'planned',
+  },
+};
+
+describe('ProcedureFieldDef', () => {
+  it('returns 1 field config (status)', () => {
+    const fields = ProcedureFieldDef.getFields(procItem);
+    expect(fields).toHaveLength(1);
+    expect(fields[0].key).toBe('procedureStatus');
+  });
+
+  it('status has 4 options', () => {
+    const fields = ProcedureFieldDef.getFields(procItem);
+    expect(fields[0].options).toHaveLength(4);
+    expect(fields[0].options.map(o => o.value)).toEqual(['planned', 'in-progress', 'completed', 'cancelled']);
+  });
+
+  it('getDefaults extracts procedureStatus', () => {
+    expect(ProcedureFieldDef.getDefaults(procItem)).toEqual({ procedureStatus: 'planned' });
+  });
+
+  it('buildData preserves baseline data', () => {
+    const data = ProcedureFieldDef.buildData({ procedureStatus: 'completed' }, procItem);
+    expect(data.procedureStatus).toBe('completed');
+    expect(data.cptCode).toBe('87880');
+  });
+});
+
+// ============================================================================
+// Allergy Fields
+// ============================================================================
+
+const allergyItem: QuickPickItem = {
+  id: 'allergy-penicillin',
+  label: 'Penicillin',
+  chipLabel: 'Penicillin',
+  category: 'allergy',
+  data: {
+    allergen: 'Penicillin',
+    allergenType: 'drug',
+    severity: 'moderate',
+    verificationStatus: 'confirmed',
+  },
+};
+
+describe('AllergyFieldDef', () => {
+  it('returns 3 field configs', () => {
+    const fields = AllergyFieldDef.getFields(allergyItem);
+    expect(fields).toHaveLength(3);
+    expect(fields.map(f => f.key)).toEqual(['allergenType', 'severity', 'verificationStatus']);
+  });
+
+  it('allergenType has 4 options', () => {
+    const fields = AllergyFieldDef.getFields(allergyItem);
+    expect(fields[0].options).toHaveLength(4);
+  });
+
+  it('severity has 4 options', () => {
+    const fields = AllergyFieldDef.getFields(allergyItem);
+    expect(fields[1].options).toHaveLength(4);
+  });
+
+  it('verification has 3 options', () => {
+    const fields = AllergyFieldDef.getFields(allergyItem);
+    expect(fields[2].options).toHaveLength(3);
+  });
+
+  it('getDefaults extracts all three fields', () => {
+    const defaults = AllergyFieldDef.getDefaults(allergyItem);
+    expect(defaults).toEqual({
+      allergenType: 'drug',
+      severity: 'moderate',
+      verificationStatus: 'confirmed',
+    });
+  });
+
+  it('buildData preserves baseline data', () => {
+    const data = AllergyFieldDef.buildData(
+      { allergenType: 'food', severity: 'severe', verificationStatus: 'unverified' },
+      allergyItem,
+    );
+    expect(data.allergenType).toBe('food');
+    expect(data.severity).toBe('severe');
+    expect(data.verificationStatus).toBe('unverified');
+    expect(data.allergen).toBe('Penicillin');
+  });
+});
+
+// ============================================================================
+// Referral Fields
+// ============================================================================
+
+const refItem: QuickPickItem = {
+  id: 'ref-cardiology',
+  label: 'Cardiology',
+  chipLabel: 'Cardiology',
+  category: 'referral',
+  data: {
+    specialty: 'Cardiology',
+    urgency: 'routine',
+  },
+};
+
+describe('ReferralFieldDef', () => {
+  it('returns 1 field config (urgency)', () => {
+    const fields = ReferralFieldDef.getFields(refItem);
+    expect(fields).toHaveLength(1);
+    expect(fields[0].key).toBe('urgency');
+  });
+
+  it('urgency has 3 options', () => {
+    const fields = ReferralFieldDef.getFields(refItem);
+    expect(fields[0].options).toHaveLength(3);
+    expect(fields[0].options.map(o => o.value)).toEqual(['routine', 'urgent', 'emergent']);
+  });
+
+  it('getDefaults extracts urgency', () => {
+    expect(ReferralFieldDef.getDefaults(refItem)).toEqual({ urgency: 'routine' });
+  });
+
+  it('buildData sets referralStatus to draft', () => {
+    const data = ReferralFieldDef.buildData({ urgency: 'emergent' }, refItem);
+    expect(data.urgency).toBe('emergent');
+    expect(data.referralStatus).toBe('draft');
+    expect(data.specialty).toBe('Cardiology');
   });
 });
