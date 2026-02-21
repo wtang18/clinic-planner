@@ -21,12 +21,13 @@ import { getQuickPicks } from '../../data/mock-quick-picks';
 import { getCategoryVariant } from './omni-add-machine';
 import { CategoryPills } from './CategoryPills';
 import { ItemPills } from './ItemPills';
-import { SuggestionCard } from './SuggestionCard';
+import { SuggestionCard, buildSummary } from './SuggestionCard';
 import { FieldRow } from './FieldRow';
 import { getFieldDef } from './fields';
+import { generateSig, calculateQuantity } from './form/rx-helpers';
 import { searchInCategory } from '../../services/input-recognizer';
 import { Button } from '../primitives/Button';
-import { spaceBetween, spaceAround } from '../../styles/foundations';
+import { spaceBetween, spaceAround, typography, colors } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -53,6 +54,41 @@ export interface DetailAreaProps {
   /** For vitals */
   onVitalsSubmit?: (data: any) => void;
   onCancel?: () => void;
+}
+
+// ============================================================================
+// Instructions line builder
+// ============================================================================
+
+function buildInstructionsLine(
+  category: ItemCategory,
+  selectedItem: QuickPickItem,
+  fieldSelections: Record<string, string>,
+): string {
+  if (category === 'medication') {
+    const dosage = fieldSelections.dosage || '';
+    const route = fieldSelections.route || '';
+    const frequency = fieldSelections.frequency || '';
+    const duration = fieldSelections.duration || '';
+    const sig = generateSig(dosage, route, frequency);
+    const qty = calculateQuantity(frequency, duration);
+    const refills = Number(selectedItem.data.refills) || 0;
+    const parts: string[] = [];
+    if (sig) parts.push(`Sig: ${sig}`);
+    const meta: string[] = [];
+    if (qty !== null) meta.push(`Qty: ${qty}`);
+    meta.push(`Refills: ${refills}`);
+    if (duration) meta.push(`Duration: ${duration}`);
+    if (meta.length > 0) parts.push(meta.join(' \u00B7 '));
+    return parts.join('\n');
+  }
+
+  // Non-Rx: overlay fieldSelections onto item.data and use buildSummary
+  const merged: QuickPickItem = {
+    ...selectedItem,
+    data: { ...selectedItem.data, ...fieldSelections },
+  };
+  return buildSummary(merged);
 }
 
 // ============================================================================
@@ -119,6 +155,12 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
   const handleFieldChange = useCallback((key: string, value: string) => {
     setFieldSelections(prev => ({ ...prev, [key]: value }));
   }, []);
+
+  // Live instructions line for edit mode
+  const instructionsLine = useMemo(() => {
+    if (!editMode || !selectedItem || !category) return '';
+    return buildInstructionsLine(category, selectedItem, fieldSelections);
+  }, [editMode, selectedItem, category, fieldSelections]);
 
   // Handle [Add] from edit mode → build data from selections
   const handleEditAdd = useCallback(() => {
@@ -214,7 +256,14 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
           />
         )}
 
-        {/* Edit mode: [Clear][Add] action bar */}
+        {/* Edit mode: instructions line + [Clear][Add] action bar */}
+        {editMode && instructionsLine && (
+          <div style={styles.instructionsLine} data-testid="instructions-line">
+            {instructionsLine.split('\n').map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
+          </div>
+        )}
         {editMode && (
           <div style={styles.editActions} data-testid="detail-area-edit-actions">
             <Button
@@ -270,6 +319,13 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.relatedCompact,
+    padding: `${spaceAround.compact}px 0`,
+  },
+  instructionsLine: {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.mono,
+    color: colors.fg.neutral.spotReadable,
+    lineHeight: '16px',
     padding: `${spaceAround.compact}px 0`,
   },
   editActions: {

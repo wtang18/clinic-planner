@@ -27,7 +27,7 @@ import {
   makeItemPill,
 } from './omni-input-machine';
 import { recognize, type RecognizedAmbiguous } from '../../services/input-recognizer';
-import { getCategoryMeta } from './omni-add-machine';
+import { getCategoryMeta, CATEGORIES } from './omni-add-machine';
 import { OmniInput } from './OmniInput';
 import { DetailArea } from './DetailArea';
 import { NarrativeInput } from './NarrativeInput';
@@ -137,6 +137,24 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     dispatch({ type: 'CLEAR_ALL' });
     setSelectedPickItem(null);
   }, []);
+
+  const handleSpace = useCallback(() => {
+    // Try recognition result first
+    if (recognition?.kind === 'auto-category') {
+      dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(recognition.category) });
+      return;
+    }
+    // Try matching typed text against category labels/prefixes
+    const typed = state.text.trim().toLowerCase();
+    const match = CATEGORIES.find(
+      c => c.label.toLowerCase() === typed
+        || c.category === typed
+        || c.prefix?.replace(':', '') === typed,
+    );
+    if (match) {
+      dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(match.category) });
+    }
+  }, [recognition, state.text]);
 
   const handleCategorySelect = useCallback((cat: ItemCategory) => {
     dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(cat) });
@@ -294,6 +312,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
             onBackspace={handleBackspace}
             onPillClick={handlePillClick}
             onClear={handleClear}
+            onSpace={handleSpace}
             disabled={disabled}
             autoFocus
           />

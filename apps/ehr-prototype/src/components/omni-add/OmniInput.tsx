@@ -6,19 +6,20 @@
  * the last pill for typing.
  *
  * Layout:
- *   ┌─ Container ──────────────────────────────────────────────────┐
- *   │ [+ icon] [Rx](pill) [Benzonatate](pill) |text input     ✕  │
- *   └─────────────────────────────────────────────────────────────┘
+ *   ┌─ Container ────────────────────────────────────────────────┐
+ *   │ [+ icon] [Rx](pill) [Benzonatate](pill) |text input      │
+ *   └──────────────────────────────────────────────────────────┘
  *
  * Interactions:
  * - Backspace on empty input → delete rightmost pill
  * - Click pill → truncate everything after it
- * - ✕ → clear all
+ * - Escape → clear all
+ * - Space (depth 0) → commit category if recognized
  * - Focus: `/` or `Cmd+K` (handled by parent)
  */
 
 import React, { useRef, useEffect, useCallback } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { Pill } from './omni-input-machine';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 
@@ -34,6 +35,8 @@ export interface OmniInputProps {
   onPillClick: (index: number) => void;
   onClear: () => void;
   onSubmit?: () => void;
+  /** Called when Space is pressed at depth 0 with non-empty text */
+  onSpace?: () => void;
   placeholder?: string;
   disabled?: boolean;
   autoFocus?: boolean;
@@ -51,6 +54,7 @@ export const OmniInput: React.FC<OmniInputProps> = ({
   onPillClick,
   onClear,
   onSubmit,
+  onSpace,
   placeholder = 'Add to chart...',
   disabled = false,
   autoFocus = false,
@@ -80,6 +84,11 @@ export const OmniInput: React.FC<OmniInputProps> = ({
         e.preventDefault();
         onSubmit();
       }
+      if (e.key === ' ' && text.trim() && pills.length === 0 && onSpace) {
+        e.preventDefault();
+        onSpace();
+        return;
+      }
       if (e.key === 'Escape') {
         e.preventDefault();
         if (pills.length > 0 || text) {
@@ -89,7 +98,7 @@ export const OmniInput: React.FC<OmniInputProps> = ({
         }
       }
     },
-    [text, pills.length, onBackspace, onSubmit, onClear],
+    [text, pills.length, onBackspace, onSubmit, onClear, onSpace],
   );
 
   // Dynamic placeholder based on depth
@@ -147,21 +156,6 @@ export const OmniInput: React.FC<OmniInputProps> = ({
         spellCheck={false}
       />
 
-      {/* Clear button (visible when there's content) */}
-      {(pills.length > 0 || text) && (
-        <button
-          type="button"
-          style={styles.clearBtn}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClear();
-          }}
-          data-testid="omni-input-clear"
-          aria-label="Clear input"
-        >
-          <X size={12} />
-        </button>
-      )}
     </div>
   );
 };
@@ -225,20 +219,5 @@ const styles: Record<string, React.CSSProperties> = {
     color: colors.fg.neutral.primary,
     padding: 0,
     lineHeight: '20px',
-  },
-  clearBtn: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 20,
-    height: 20,
-    padding: 0,
-    border: 'none',
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.bg.neutral.subtle,
-    color: colors.fg.neutral.spotReadable,
-    cursor: 'pointer',
-    flexShrink: 0,
-    transition: `background-color ${transitions.fast}`,
   },
 };

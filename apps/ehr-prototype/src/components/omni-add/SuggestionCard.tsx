@@ -36,7 +36,7 @@ export interface SuggestionCardProps {
 // ============================================================================
 
 /** Generate a display summary from quick-pick data by category */
-function buildSummary(item: QuickPickItem): string {
+export function buildSummary(item: QuickPickItem): string {
   const d = item.data;
   switch (item.category) {
     case 'medication':
