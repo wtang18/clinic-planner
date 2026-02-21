@@ -29,6 +29,8 @@ export interface SuggestionCardProps {
   /** Called when user taps [Edit] — opens depth 3 with pre-selected values */
   onEdit: (item: QuickPickItem) => void;
   disabled?: boolean;
+  /** Show ⌘↩ shortcut hint on the Add button (depth 2 only) */
+  showShortcutHint?: boolean;
 }
 
 // ============================================================================
@@ -117,11 +119,12 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   onAdd,
   onEdit,
   disabled = false,
+  showShortcutHint = false,
 }) => {
   const displaySummary = summary || buildSummary(item);
 
   return (
-    <div style={styles.card} data-testid={`suggestion-card-${item.id}`}>
+    <div style={styles.card} data-testid={`suggestion-card-${item.id}`} data-omni-section>
       {/* Left: badge + content */}
       <div style={styles.content}>
         <span style={styles.badge}>{getCategoryBadge(item.category)}</span>
@@ -151,7 +154,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
           disabled={disabled}
           data-testid={`suggestion-add-${item.id}`}
         >
-          Add
+          Add{showShortcutHint && <span style={{ opacity: 0.7, marginLeft: 4, fontSize: 11 }}>⌘↩</span>}
         </Button>
       </div>
     </div>

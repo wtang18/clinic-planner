@@ -104,11 +104,11 @@ export const ChipSelect: React.FC<ChipSelectProps> = ({
     const allValues = options.map(o => o.value);
     const currentIndex = allValues.indexOf(value);
 
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    if (e.key === 'ArrowRight') {
       e.preventDefault();
       const next = currentIndex < allValues.length - 1 ? currentIndex + 1 : 0;
       onSelect(allValues[next]);
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       const prev = currentIndex > 0 ? currentIndex - 1 : allValues.length - 1;
       onSelect(allValues[prev]);
@@ -132,8 +132,8 @@ export const ChipSelect: React.FC<ChipSelectProps> = ({
     fontFamily: typography.fontFamily.sans,
     fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
     color: isActive ? colors.fg.accent.primary : colors.fg.neutral.secondary,
-    backgroundColor: isActive ? colors.bg.accent.subtle : colors.bg.neutral.subtle,
-    border: `1px solid ${isActive ? colors.border.accent.low : colors.border.neutral.subtle}`,
+    backgroundColor: isActive ? colors.bg.accent.medium : colors.bg.neutral.subtle,
+    border: `1px solid ${isActive ? colors.border.accent.medium : colors.border.neutral.low}`,
     borderRadius: borderRadius.full,
     cursor: disabled ? 'default' : 'pointer',
     transition: `all ${transitions.fast}`,

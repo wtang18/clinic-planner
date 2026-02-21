@@ -12,7 +12,7 @@
  * Coexists alongside old OmniAddBar during Phase 1 (opt-in via CaptureView).
  */
 
-import React, { useReducer, useCallback, useEffect, useMemo } from 'react';
+import React, { useReducer, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ChartItem, ItemCategory } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import {
@@ -32,6 +32,7 @@ import { NarrativeInput } from './NarrativeInput';
 import { VitalsInput } from './VitalsInput';
 import type { VitalsData } from './VitalsInput';
 import { Card } from '../primitives/Card';
+import { useOmniSectionNav } from './useOmniSectionNav';
 import { spaceAround, spaceBetween } from '../../styles/foundations';
 
 // ============================================================================
@@ -59,6 +60,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   disabled = false,
   initialCategory,
 }) => {
+  const { containerRef, handleKeyDown: handleSectionNav } = useOmniSectionNav();
   const [state, dispatch] = useReducer(omniInputReducer, OMNI_INPUT_INITIAL);
   const depth = getDepth(state);
   const category = getActiveCategory(state);
@@ -66,6 +68,9 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
 
   // Track the selected QuickPickItem for depth 2 suggestion card
   const [selectedPickItem, setSelectedPickItem] = React.useState<QuickPickItem | null>(null);
+
+  // Ref for edit-mode add handler (set by DetailArea when in edit mode)
+  const keyboardAddRef = useRef<(() => void) | null>(null);
 
   // Pre-select category on mount
   useEffect(() => {
@@ -114,6 +119,26 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [state.undoStack, onUndo]);
+
+  // ── Keyboard shortcut: / to focus omni-input from anywhere ──
+
+  useEffect(() => {
+    const handleSlashFocus = (e: KeyboardEvent) => {
+      if (e.key !== '/') return;
+      const el = document.activeElement;
+      const isInInput = el instanceof HTMLInputElement
+        || el instanceof HTMLTextAreaElement
+        || (el as HTMLElement)?.isContentEditable;
+      if (isInInput) return;
+
+      e.preventDefault();
+      containerRef.current
+        ?.querySelector<HTMLInputElement>('[data-testid="omni-input-field"]')
+        ?.focus();
+    };
+    window.addEventListener('keydown', handleSlashFocus);
+    return () => window.removeEventListener('keydown', handleSlashFocus);
+  }, []);
 
   // ── Handlers ──
 
@@ -241,6 +266,21 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     dispatch({ type: 'ITEM_ADDED', itemId });
   }, [onItemAdd]);
 
+  // ── Container keydown: section nav + ⌘↩ to add ──
+
+  const handleContainerKeyDown = useCallback((e: React.KeyboardEvent) => {
+    handleSectionNav(e);
+
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && depth >= 2 && selectedPickItem) {
+      e.preventDefault();
+      if (keyboardAddRef.current) {
+        keyboardAddRef.current();
+      } else {
+        handleItemAdd(selectedPickItem);
+      }
+    }
+  }, [handleSectionNav, depth, selectedPickItem, handleItemAdd]);
+
   const handleToggleBatch = useCallback(() => {
     dispatch({ type: 'TOGGLE_BATCH' });
   }, []);
@@ -256,7 +296,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   const showVitals = depth === 1 && variant === 'data-entry';
 
   return (
-    <div data-testid="omni-add-bar-v2">
+    <div ref={containerRef} onKeyDown={handleContainerKeyDown} data-testid="omni-add-bar-v2">
       <Card variant="outlined" padding="none">
         <div style={styles.content}>
           {/* Omni Input */}
@@ -285,6 +325,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
               onItemAdd={handleItemAdd}
               onItemEdit={handleItemEdit}
               onItemAddWithFields={handleItemAddWithFields}
+              keyboardAddRef={keyboardAddRef}
             />
           )}
 

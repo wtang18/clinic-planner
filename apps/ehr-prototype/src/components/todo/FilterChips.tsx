@@ -127,7 +127,7 @@ export const FilterChips: React.FC<FilterChipsProps> = ({
 
   const toggleChipStyle = (isActive: boolean): React.CSSProperties => ({
     ...chipStyle(isActive),
-    backgroundColor: isActive ? colors.bg.accent.low : colors.bg.neutral.subtle,
+    backgroundColor: isActive ? colors.bg.accent.medium : colors.bg.neutral.subtle,
   });
 
   const separatorStyle: React.CSSProperties = {

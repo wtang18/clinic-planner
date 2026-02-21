@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { useRovingTabindex } from './useRovingTabindex';
 
 // ============================================================================
 // Types
@@ -78,31 +79,29 @@ export const FieldOptionPills: React.FC<FieldOptionPillsProps> = ({
     }
   };
 
-  // Keyboard navigation across pills
-  const handleContainerKeyDown = (e: React.KeyboardEvent) => {
-    if (disabled || customMode || selected === null) return;
+  // Roving tabindex: ArrowLeft/Right moves focus AND fires onSelect
+  const roving = useRovingTabindex({
+    count: options.length,
+    onArrow: (i) => {
+      if (!disabled && !customMode) onSelect(options[i].value);
+    },
+  });
 
-    const allValues = options.map(o => o.value);
-    const currentIndex = allValues.indexOf(selected);
-
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      e.preventDefault();
-      const next = currentIndex < allValues.length - 1 ? currentIndex + 1 : 0;
-      onSelect(allValues[next]);
-    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      const prev = currentIndex > 0 ? currentIndex - 1 : allValues.length - 1;
-      onSelect(allValues[prev]);
+  // Sync focusedIndex to externally-set `selected` (e.g. [Edit] sets defaults)
+  React.useEffect(() => {
+    if (selected !== null) {
+      const idx = options.findIndex(o => o.value === selected);
+      if (idx >= 0) roving.setFocusedIndex(idx);
     }
-  };
+  }, [selected, options]);
 
   return (
     <div
       style={styles.container}
-      onKeyDown={handleContainerKeyDown}
+      role="radiogroup"
       data-testid="field-option-pills"
     >
-      {options.map(option => {
+      {options.map((option, index) => {
         const isActive = selected === option.value;
         return (
           <button
@@ -119,6 +118,7 @@ export const FieldOptionPills: React.FC<FieldOptionPillsProps> = ({
             onClick={() => handlePillClick(option.value)}
             disabled={disabled}
             data-testid={`field-pill-${option.value}`}
+            {...roving.getRovingProps(index)}
           >
             {option.label}
           </button>
@@ -190,23 +190,22 @@ const styles: Record<string, React.CSSProperties> = {
   pillUnselected: {
     fontWeight: typography.fontWeight.regular,
     color: colors.fg.neutral.secondary,
-    backgroundColor: colors.bg.neutral.subtle,
-    border: `1px solid ${colors.border.neutral.subtle}`,
+    backgroundColor: colors.bg.neutral.low,
+    border: `1px solid ${colors.border.neutral.low}`,
   },
   // Active: highlighted in the pre-selected state
   pillActive: {
     fontWeight: typography.fontWeight.medium,
     color: colors.fg.accent.primary,
-    backgroundColor: colors.bg.accent.subtle,
-    border: `1px solid ${colors.border.accent.low}`,
+    backgroundColor: colors.bg.accent.medium,
+    border: `1px solid ${colors.border.accent.medium}`,
   },
-  // Inactive: dimmed in the pre-selected state (non-selected siblings)
+  // Inactive: non-selected siblings in the pre-selected state
   pillInactive: {
     fontWeight: typography.fontWeight.regular,
-    color: colors.fg.neutral.spotReadable,
+    color: colors.fg.neutral.secondary,
     backgroundColor: colors.bg.neutral.subtle,
-    border: `1px solid ${colors.border.neutral.subtle}`,
-    opacity: 0.7,
+    border: `1px solid ${colors.border.neutral.low}`,
   },
   customInput: {
     padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,

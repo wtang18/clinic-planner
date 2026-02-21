@@ -10,6 +10,7 @@ import { ChevronDown } from 'lucide-react';
 import type { ItemCategory } from '../../types/chart-items';
 import { PRIMARY_CATEGORIES, SECONDARY_CATEGORIES, type CategoryMeta } from './omni-add-machine';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { useRovingTabindex, type RovingProps } from './useRovingTabindex';
 
 // ============================================================================
 // Types
@@ -30,7 +31,33 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
 }) => {
   const [showMore, setShowMore] = React.useState(false);
 
-  const renderPill = (meta: CategoryMeta) => (
+  // Primary row: categories + "More" chevron
+  const primaryRoving = useRovingTabindex({
+    count: PRIMARY_CATEGORIES.length + 1, // +1 for "More" chevron
+    onEnter: (i) => {
+      if (disabled) return;
+      if (i < PRIMARY_CATEGORIES.length) {
+        onSelect(PRIMARY_CATEGORIES[i].category);
+      } else {
+        setShowMore(prev => !prev);
+      }
+    },
+  });
+
+  // Secondary row: only active when showMore is true
+  const secondaryRoving = useRovingTabindex({
+    count: showMore ? SECONDARY_CATEGORIES.length : 0,
+    onEnter: (i) => {
+      if (disabled) return;
+      onSelect(SECONDARY_CATEGORIES[i].category);
+    },
+  });
+
+  const renderPill = (
+    meta: CategoryMeta,
+    index: number,
+    rovingProps: RovingProps,
+  ) => (
     <button
       key={meta.category}
       type="button"
@@ -38,6 +65,7 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
       onClick={() => onSelect(meta.category)}
       disabled={disabled}
       data-testid={`cat-pill-${meta.category}`}
+      {...rovingProps}
     >
       {meta.label}
       {meta.prefix && (
@@ -48,14 +76,17 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
 
   return (
     <div style={styles.container} data-testid="category-pills">
-      <div style={styles.row}>
-        {PRIMARY_CATEGORIES.map(renderPill)}
+      <div style={styles.row} role="toolbar" data-omni-section>
+        {PRIMARY_CATEGORIES.map((meta, i) =>
+          renderPill(meta, i, primaryRoving.getRovingProps(i)),
+        )}
         <button
           type="button"
           style={styles.morePill}
           onClick={() => setShowMore(!showMore)}
           data-testid="cat-pills-more"
           aria-label={showMore ? 'Show less' : 'Show more'}
+          {...primaryRoving.getRovingProps(PRIMARY_CATEGORIES.length)}
         >
           <ChevronDown
             size={14}
@@ -67,8 +98,10 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
         </button>
       </div>
       {showMore && (
-        <div style={styles.row}>
-          {SECONDARY_CATEGORIES.map(renderPill)}
+        <div style={styles.row} role="toolbar" data-omni-section>
+          {SECONDARY_CATEGORIES.map((meta, i) =>
+            renderPill(meta, i, secondaryRoving.getRovingProps(i)),
+          )}
         </div>
       )}
     </div>

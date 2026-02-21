@@ -8,6 +8,7 @@
 import React from 'react';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { useRovingTabindex } from './useRovingTabindex';
 
 // ============================================================================
 // Types
@@ -28,6 +29,13 @@ export const ItemPills: React.FC<ItemPillsProps> = ({
   onSelect,
   disabled = false,
 }) => {
+  const roving = useRovingTabindex({
+    count: items.length,
+    onEnter: (i) => {
+      if (!disabled) onSelect(items[i]);
+    },
+  });
+
   if (items.length === 0) {
     return (
       <div style={styles.empty} data-testid="item-pills-empty">
@@ -37,8 +45,8 @@ export const ItemPills: React.FC<ItemPillsProps> = ({
   }
 
   return (
-    <div style={styles.container} data-testid="item-pills">
-      {items.map((item) => (
+    <div style={styles.container} role="toolbar" data-testid="item-pills" data-omni-section>
+      {items.map((item, index) => (
         <button
           key={item.id}
           type="button"
@@ -46,6 +54,7 @@ export const ItemPills: React.FC<ItemPillsProps> = ({
           onClick={() => onSelect(item)}
           disabled={disabled}
           data-testid={`item-pill-${item.id}`}
+          {...roving.getRovingProps(index)}
         >
           {item.chipLabel}
         </button>

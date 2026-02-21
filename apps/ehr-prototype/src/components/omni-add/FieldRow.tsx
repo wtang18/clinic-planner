@@ -49,6 +49,7 @@ export const FieldRow: React.FC<FieldRowProps> = ({
     <div
       style={styles.container}
       data-testid={`v2-field-row-${label.toLowerCase().replace(/\s+/g, '-')}`}
+      data-omni-section
     >
       <span style={styles.label}>{label}</span>
       <FieldOptionPills

@@ -14,7 +14,7 @@
  * instead of item pills (handled by parent OmniAddBarV2).
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import type { ItemCategory } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import { getQuickPicks } from '../../data/mock-quick-picks';
@@ -54,6 +54,8 @@ export interface DetailAreaProps {
   /** For vitals */
   onVitalsSubmit?: (data: any) => void;
   onCancel?: () => void;
+  /** Ref for keyboard add handler (⌘↩) — set by DetailArea when in edit mode */
+  keyboardAddRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 // ============================================================================
@@ -106,6 +108,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
   onItemAdd,
   onItemEdit,
   onItemAddWithFields,
+  keyboardAddRef,
 }) => {
   // ── Depth 2 browse/edit state ──
   const [editMode, setEditMode] = useState(false);
@@ -176,6 +179,14 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
     const data = fieldDef.buildData(fieldSelections, selectedItem);
     onItemAddWithFields?.(selectedItem, data);
   }, [selectedItem, fieldDef, fieldSelections, onItemAddWithFields]);
+
+  // Register edit-mode add handler for ⌘↩ shortcut
+  useEffect(() => {
+    if (keyboardAddRef) {
+      keyboardAddRef.current = editMode ? handleEditAdd : null;
+    }
+    return () => { if (keyboardAddRef) keyboardAddRef.current = null; };
+  }, [editMode, handleEditAdd, keyboardAddRef]);
 
   // ── Depth 0: Root — show category pills ──
 
@@ -261,6 +272,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
             item={selectedItem}
             onAdd={onItemAdd}
             onEdit={handleEditClick}
+            showShortcutHint
           />
         )}
 
@@ -273,7 +285,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
           </div>
         )}
         {editMode && (
-          <div style={styles.editActions} data-testid="detail-area-edit-actions">
+          <div style={styles.editActions} data-testid="detail-area-edit-actions" data-omni-section>
             <Button
               variant="ghost"
               size="sm"
@@ -288,7 +300,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
               onClick={handleEditAdd}
               data-testid="field-add-btn"
             >
-              Add
+              Add <span style={{ opacity: 0.7, marginLeft: 4, fontSize: 11 }}>⌘↩</span>
             </Button>
           </div>
         )}

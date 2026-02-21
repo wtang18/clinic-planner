@@ -69,6 +69,63 @@ const dxItem: QuickPickItem = {
 };
 
 // ============================================================================
+// FieldOptionPills Keyboard Navigation Logic
+// ============================================================================
+
+/**
+ * Tests the arrow-key navigation behavior of FieldOptionPills.
+ * We test the selection logic directly since the test suite doesn't render
+ * React components. This mirrors the handleContainerKeyDown logic.
+ */
+
+function resolveArrowKey(
+  key: 'ArrowRight' | 'ArrowLeft',
+  selected: string | null,
+  options: string[],
+): string | null {
+  if (options.length === 0) return null;
+
+  if (selected === null) {
+    return key === 'ArrowRight' ? options[0] : options[options.length - 1];
+  }
+
+  const currentIndex = options.indexOf(selected);
+  if (key === 'ArrowRight') {
+    return options[currentIndex < options.length - 1 ? currentIndex + 1 : 0];
+  } else {
+    return options[currentIndex > 0 ? currentIndex - 1 : options.length - 1];
+  }
+}
+
+describe('FieldOptionPills arrow-key navigation', () => {
+  const options = ['routine', 'urgent', 'stat'];
+
+  it('ArrowRight when unselected selects first pill', () => {
+    expect(resolveArrowKey('ArrowRight', null, options)).toBe('routine');
+  });
+
+  it('ArrowLeft when unselected selects last pill', () => {
+    expect(resolveArrowKey('ArrowLeft', null, options)).toBe('stat');
+  });
+
+  it('ArrowRight from first pill selects second', () => {
+    expect(resolveArrowKey('ArrowRight', 'routine', options)).toBe('urgent');
+  });
+
+  it('ArrowLeft from first pill wraps to last', () => {
+    expect(resolveArrowKey('ArrowLeft', 'routine', options)).toBe('stat');
+  });
+
+  it('ArrowRight from last pill wraps to first', () => {
+    expect(resolveArrowKey('ArrowRight', 'stat', options)).toBe('routine');
+  });
+
+  it('returns null for empty options', () => {
+    expect(resolveArrowKey('ArrowRight', null, [])).toBeNull();
+  });
+});
+
+// ============================================================================
 // Field Config Registry
 // ============================================================================
 

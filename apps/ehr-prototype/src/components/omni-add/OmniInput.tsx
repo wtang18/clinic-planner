@@ -117,6 +117,7 @@ export const OmniInput: React.FC<OmniInputProps> = ({
       style={styles.container}
       onClick={handleContainerClick}
       data-testid="omni-input"
+      data-omni-section
     >
       {/* Leading icon: + or ✕ on hover when there's content */}
       <span
