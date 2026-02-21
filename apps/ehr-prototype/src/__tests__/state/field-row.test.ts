@@ -115,10 +115,10 @@ describe('Field config registry', () => {
 // ============================================================================
 
 describe('RxFieldDef', () => {
-  it('returns 4 field configs', () => {
+  it('returns 5 field configs', () => {
     const fields = RxFieldDef.getFields(rxItem);
-    expect(fields).toHaveLength(4);
-    expect(fields.map(f => f.key)).toEqual(['dosage', 'route', 'frequency', 'duration']);
+    expect(fields).toHaveLength(5);
+    expect(fields.map(f => f.key)).toEqual(['dosage', 'route', 'frequency', 'duration', 'refills']);
   });
 
   it('dosage options include item default', () => {
@@ -157,6 +157,7 @@ describe('RxFieldDef', () => {
       route: 'PO',
       frequency: 'TID PRN',
       duration: '7 days',
+      refills: '0',
     });
   });
 
@@ -313,10 +314,10 @@ const imgItem: QuickPickItem = {
 };
 
 describe('ImagingFieldDef', () => {
-  it('returns 1 field config (priority)', () => {
+  it('returns 2 field configs (priority, laterality)', () => {
     const fields = ImagingFieldDef.getFields(imgItem);
-    expect(fields).toHaveLength(1);
-    expect(fields[0].key).toBe('priority');
+    expect(fields).toHaveLength(2);
+    expect(fields.map(f => f.key)).toEqual(['priority', 'laterality']);
   });
 
   it('priority has 3 options', () => {
@@ -325,8 +326,8 @@ describe('ImagingFieldDef', () => {
     expect(fields[0].options.map(o => o.value)).toEqual(['routine', 'urgent', 'stat']);
   });
 
-  it('getDefaults extracts priority', () => {
-    expect(ImagingFieldDef.getDefaults(imgItem)).toEqual({ priority: 'routine' });
+  it('getDefaults extracts priority and laterality', () => {
+    expect(ImagingFieldDef.getDefaults(imgItem)).toEqual({ priority: 'routine', laterality: 'N/A' });
   });
 
   it('buildData sets orderStatus to draft', () => {
@@ -354,10 +355,10 @@ const procItem: QuickPickItem = {
 };
 
 describe('ProcedureFieldDef', () => {
-  it('returns 1 field config (status)', () => {
+  it('returns 2 field configs (status, laterality)', () => {
     const fields = ProcedureFieldDef.getFields(procItem);
-    expect(fields).toHaveLength(1);
-    expect(fields[0].key).toBe('procedureStatus');
+    expect(fields).toHaveLength(2);
+    expect(fields.map(f => f.key)).toEqual(['procedureStatus', 'laterality']);
   });
 
   it('status has 4 options', () => {
@@ -366,8 +367,8 @@ describe('ProcedureFieldDef', () => {
     expect(fields[0].options.map(o => o.value)).toEqual(['planned', 'in-progress', 'completed', 'cancelled']);
   });
 
-  it('getDefaults extracts procedureStatus', () => {
-    expect(ProcedureFieldDef.getDefaults(procItem)).toEqual({ procedureStatus: 'planned' });
+  it('getDefaults extracts procedureStatus and laterality', () => {
+    expect(ProcedureFieldDef.getDefaults(procItem)).toEqual({ procedureStatus: 'planned', laterality: 'N/A' });
   });
 
   it('buildData preserves baseline data', () => {

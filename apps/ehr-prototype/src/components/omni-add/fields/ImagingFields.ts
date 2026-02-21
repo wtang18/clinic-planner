@@ -20,6 +20,13 @@ const PRIORITY_OPTIONS: FieldOption[] = [
   { value: 'stat', label: 'STAT' },
 ];
 
+const LATERALITY_OPTIONS: FieldOption[] = [
+  { value: 'N/A', label: 'N/A' },
+  { value: 'Left', label: 'Left' },
+  { value: 'Right', label: 'Right' },
+  { value: 'Bilateral', label: 'Bilateral' },
+];
+
 // ============================================================================
 // Field Config
 // ============================================================================
@@ -31,12 +38,18 @@ function getFields(_item: QuickPickItem): FieldConfig[] {
       label: 'Priority',
       options: PRIORITY_OPTIONS,
     },
+    {
+      key: 'laterality',
+      label: 'Laterality',
+      options: LATERALITY_OPTIONS,
+    },
   ];
 }
 
 function getDefaults(item: QuickPickItem): Record<string, string> {
   return {
     priority: String(item.data.priority || 'routine'),
+    laterality: String(item.data.laterality || 'N/A'),
   };
 }
 
@@ -47,6 +60,7 @@ function buildData(
   return {
     ...item.data,
     priority: selections.priority || String(item.data.priority || 'routine'),
+    laterality: selections.laterality || String(item.data.laterality || 'N/A'),
     orderStatus: 'draft',
   };
 }

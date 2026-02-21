@@ -46,6 +46,13 @@ const DURATION_OPTIONS: FieldOption[] = [
   { value: '90 days', label: '90d' },
 ];
 
+const REFILL_OPTIONS: FieldOption[] = [
+  { value: '0', label: '0' },
+  { value: '1', label: '1' },
+  { value: '2', label: '2' },
+  { value: '3', label: '3' },
+];
+
 // ============================================================================
 // Field Config
 // ============================================================================
@@ -82,6 +89,11 @@ function getFields(item: QuickPickItem): FieldConfig[] {
       options: DURATION_OPTIONS,
       allowOther: true,
     },
+    {
+      key: 'refills',
+      label: 'Refills',
+      options: REFILL_OPTIONS,
+    },
   ];
 }
 
@@ -91,6 +103,7 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
     route: String(item.data.route || 'PO'),
     frequency: String(item.data.frequency || 'daily'),
     duration: String(item.data.duration || '7 days'),
+    refills: String(item.data.refills ?? '0'),
   };
 }
 
@@ -105,7 +118,7 @@ function buildData(
 
   const sig = generateSig(dosage, route, frequency);
   const quantity = calculateQuantity(frequency, duration) ?? Number(item.data.quantity) ?? 0;
-  const refills = Number(item.data.refills) || 0;
+  const refills = Number(selections.refills ?? item.data.refills) || 0;
 
   return {
     ...item.data,

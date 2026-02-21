@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import { ChevronDown } from 'lucide-react';
 import type { ItemCategory } from '../../types/chart-items';
 import { PRIMARY_CATEGORIES, SECONDARY_CATEGORIES, type CategoryMeta } from './omni-add-machine';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
@@ -54,8 +55,15 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
           style={styles.morePill}
           onClick={() => setShowMore(!showMore)}
           data-testid="cat-pills-more"
+          aria-label={showMore ? 'Show less' : 'Show more'}
         >
-          {showMore ? 'Less' : 'More'}
+          <ChevronDown
+            size={14}
+            style={{
+              transition: `transform ${transitions.fast}`,
+              transform: showMore ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
+          />
         </button>
       </div>
       {showMore && (
@@ -109,11 +117,11 @@ const styles: Record<string, React.CSSProperties> = {
   morePill: {
     display: 'inline-flex',
     alignItems: 'center',
-    padding: `4px ${spaceAround.compact}px`,
-    fontSize: 12,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.fg.accent.primary,
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
+    padding: 0,
+    color: colors.fg.neutral.spotReadable,
     backgroundColor: 'transparent',
     border: `1px dashed ${colors.border.neutral.low}`,
     borderRadius: borderRadius.full,

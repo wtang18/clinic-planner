@@ -18,8 +18,8 @@
  * - Focus: `/` or `Cmd+K` (handled by parent)
  */
 
-import React, { useRef, useEffect, useCallback } from 'react';
-import { Plus } from 'lucide-react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
+import { Plus, X } from 'lucide-react';
 import type { Pill } from './omni-input-machine';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 
@@ -60,6 +60,10 @@ export const OmniInput: React.FC<OmniInputProps> = ({
   autoFocus = false,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [iconHovered, setIconHovered] = useState(false);
+
+  const hasContent = pills.length > 0 || text.length > 0;
+  const showClear = hasContent && iconHovered;
 
   // Auto-focus on mount if requested
   useEffect(() => {
@@ -114,12 +118,17 @@ export const OmniInput: React.FC<OmniInputProps> = ({
       onClick={handleContainerClick}
       data-testid="omni-input"
     >
-      {/* Plus icon */}
-      <Plus
-        size={14}
-        style={styles.plusIcon}
-        aria-hidden
-      />
+      {/* Leading icon: + or ✕ on hover when there's content */}
+      <span
+        style={styles.leadingIcon}
+        onMouseEnter={() => setIconHovered(true)}
+        onMouseLeave={() => setIconHovered(false)}
+        onClick={showClear ? (e) => { e.stopPropagation(); onClear(); } : undefined}
+        role={showClear ? 'button' : undefined}
+        aria-label={showClear ? 'Clear input' : undefined}
+      >
+        {showClear ? <X size={14} /> : <Plus size={14} />}
+      </span>
 
       {/* Pills */}
       {pills.map((pill, i) => (
@@ -180,9 +189,17 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'text',
     transition: `border-color ${transitions.fast}`,
   },
-  plusIcon: {
-    color: colors.fg.neutral.spotReadable,
+  leadingIcon: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20,
+    height: 20,
     flexShrink: 0,
+    color: colors.fg.neutral.spotReadable,
+    cursor: 'pointer',
+    borderRadius: borderRadius.sm,
+    transition: `color ${transitions.fast}`,
   },
   pill: {
     display: 'inline-flex',
@@ -196,7 +213,7 @@ const styles: Record<string, React.CSSProperties> = {
     userSelect: 'none' as const,
     flexShrink: 0,
     transition: `opacity ${transitions.fast}`,
-    lineHeight: '18px',
+    lineHeight: '14px',
   },
   categoryPill: {
     color: colors.fg.accent.primary,

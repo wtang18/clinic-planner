@@ -21,6 +21,13 @@ const STATUS_OPTIONS: FieldOption[] = [
   { value: 'cancelled', label: 'Cancelled' },
 ];
 
+const LATERALITY_OPTIONS: FieldOption[] = [
+  { value: 'N/A', label: 'N/A' },
+  { value: 'Left', label: 'Left' },
+  { value: 'Right', label: 'Right' },
+  { value: 'Bilateral', label: 'Bilateral' },
+];
+
 // ============================================================================
 // Field Config
 // ============================================================================
@@ -32,12 +39,18 @@ function getFields(_item: QuickPickItem): FieldConfig[] {
       label: 'Status',
       options: STATUS_OPTIONS,
     },
+    {
+      key: 'laterality',
+      label: 'Laterality',
+      options: LATERALITY_OPTIONS,
+    },
   ];
 }
 
 function getDefaults(item: QuickPickItem): Record<string, string> {
   return {
     procedureStatus: String(item.data.procedureStatus || 'planned'),
+    laterality: String(item.data.laterality || 'N/A'),
   };
 }
 
@@ -48,6 +61,7 @@ function buildData(
   return {
     ...item.data,
     procedureStatus: selections.procedureStatus || String(item.data.procedureStatus || 'planned'),
+    laterality: selections.laterality || String(item.data.laterality || 'N/A'),
   };
 }
 

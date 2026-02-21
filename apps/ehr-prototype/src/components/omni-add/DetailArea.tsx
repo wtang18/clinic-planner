@@ -72,7 +72,7 @@ function buildInstructionsLine(
     const duration = fieldSelections.duration || '';
     const sig = generateSig(dosage, route, frequency);
     const qty = calculateQuantity(frequency, duration);
-    const refills = Number(selectedItem.data.refills) || 0;
+    const refills = Number(fieldSelections.refills ?? selectedItem.data.refills) || 0;
     const parts: string[] = [];
     if (sig) parts.push(`Sig: ${sig}`);
     const meta: string[] = [];
@@ -151,9 +151,17 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
     setFieldSelections({});
   }, []);
 
-  // Handle field selection change
+  // Handle field selection change — auto-enter edit mode on first tap
   const handleFieldChange = useCallback((key: string, value: string) => {
-    setFieldSelections(prev => ({ ...prev, [key]: value }));
+    setEditMode(prev => {
+      if (!prev) {
+        // First tap: only set the tapped field — leave others empty until user taps them
+        setFieldSelections({ [key]: value });
+      } else {
+        setFieldSelections(s => ({ ...s, [key]: value }));
+      }
+      return true;
+    });
   }, []);
 
   // Live instructions line for edit mode
@@ -322,10 +330,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: `${spaceAround.compact}px 0`,
   },
   instructionsLine: {
-    fontSize: 11,
-    fontFamily: typography.fontFamily.mono,
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.spotReadable,
-    lineHeight: '16px',
+    lineHeight: '20px',
     padding: `${spaceAround.compact}px 0`,
   },
   editActions: {

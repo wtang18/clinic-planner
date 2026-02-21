@@ -13,10 +13,8 @@
  */
 
 import React, { useReducer, useCallback, useEffect, useMemo } from 'react';
-import { Repeat, Undo2 } from 'lucide-react';
 import type { ChartItem, ItemCategory } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
-import { getQuickPicks } from '../../data/mock-quick-picks';
 import {
   omniInputReducer,
   OMNI_INPUT_INITIAL,
@@ -27,14 +25,14 @@ import {
   makeItemPill,
 } from './omni-input-machine';
 import { recognize, type RecognizedAmbiguous } from '../../services/input-recognizer';
-import { getCategoryMeta, CATEGORIES } from './omni-add-machine';
+import { CATEGORIES } from './omni-add-machine';
 import { OmniInput } from './OmniInput';
 import { DetailArea } from './DetailArea';
 import { NarrativeInput } from './NarrativeInput';
 import { VitalsInput } from './VitalsInput';
 import type { VitalsData } from './VitalsInput';
 import { Card } from '../primitives/Card';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+import { spaceAround, spaceBetween } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -261,49 +259,6 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     <div data-testid="omni-add-bar-v2">
       <Card variant="outlined" padding="none">
         <div style={styles.content}>
-          {/* Toolbar: batch mode + undo */}
-          <div style={styles.toolbar}>
-            <div style={styles.toolbarLeft}>
-              {state.batchMode && (
-                <span style={styles.batchBadge}>
-                  <Repeat size={10} />
-                  Batch
-                </span>
-              )}
-            </div>
-            <div style={styles.toolbarRight}>
-              {state.undoStack.length > 0 && (
-                <button
-                  type="button"
-                  style={styles.iconButton}
-                  onClick={() => {
-                    const lastId = state.undoStack[state.undoStack.length - 1];
-                    dispatch({ type: 'UNDO' });
-                    onUndo?.(lastId);
-                  }}
-                  title="Undo last add (Cmd+Z)"
-                  data-testid="omni-v2-undo"
-                >
-                  <Undo2 size={14} />
-                </button>
-              )}
-              {category && (
-                <button
-                  type="button"
-                  style={{
-                    ...styles.iconButton,
-                    ...(state.batchMode ? styles.iconButtonActive : {}),
-                  }}
-                  onClick={handleToggleBatch}
-                  title={state.batchMode ? 'Exit batch mode' : 'Enable batch mode'}
-                  data-testid="omni-v2-batch-toggle"
-                >
-                  <Repeat size={14} />
-                </button>
-              )}
-            </div>
-          </div>
-
           {/* Omni Input */}
           <OmniInput
             pills={state.pills}
@@ -367,52 +322,5 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: spaceBetween.related,
     padding: spaceAround.default,
-  },
-  toolbar: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minHeight: 20,
-  },
-  toolbarLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.repeating,
-  },
-  toolbarRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.coupled,
-  },
-  batchBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: spaceBetween.coupled,
-    padding: `2px ${spaceAround.nudge6}px`,
-    fontSize: 11,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.fg.accent.primary,
-    backgroundColor: 'rgba(37, 99, 235, 0.08)',
-    borderRadius: borderRadius.full,
-  },
-  iconButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 28,
-    height: 28,
-    padding: 0,
-    backgroundColor: 'transparent',
-    border: `1px solid transparent`,
-    borderRadius: borderRadius.sm,
-    cursor: 'pointer',
-    transition: `all ${transitions.fast}`,
-    color: colors.fg.neutral.spotReadable,
-  },
-  iconButtonActive: {
-    backgroundColor: colors.bg.neutral.subtle,
-    borderColor: colors.border.neutral.medium,
-    color: colors.fg.neutral.primary,
   },
 };
