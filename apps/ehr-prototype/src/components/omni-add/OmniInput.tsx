@@ -1,0 +1,244 @@
+/**
+ * OmniInput — Unified Token Input
+ *
+ * A single input field with inline pills (token input). Pills represent
+ * committed navigation state (category, item). The real <input> sits after
+ * the last pill for typing.
+ *
+ * Layout:
+ *   ┌─ Container ──────────────────────────────────────────────────┐
+ *   │ [+ icon] [Rx](pill) [Benzonatate](pill) |text input     ✕  │
+ *   └─────────────────────────────────────────────────────────────┘
+ *
+ * Interactions:
+ * - Backspace on empty input → delete rightmost pill
+ * - Click pill → truncate everything after it
+ * - ✕ → clear all
+ * - Focus: `/` or `Cmd+K` (handled by parent)
+ */
+
+import React, { useRef, useEffect, useCallback } from 'react';
+import { Plus, X } from 'lucide-react';
+import type { Pill } from './omni-input-machine';
+import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface OmniInputProps {
+  pills: Pill[];
+  text: string;
+  onTextChange: (text: string) => void;
+  onBackspace: () => void;
+  onPillClick: (index: number) => void;
+  onClear: () => void;
+  onSubmit?: () => void;
+  placeholder?: string;
+  disabled?: boolean;
+  autoFocus?: boolean;
+}
+
+// ============================================================================
+// Component
+// ============================================================================
+
+export const OmniInput: React.FC<OmniInputProps> = ({
+  pills,
+  text,
+  onTextChange,
+  onBackspace,
+  onPillClick,
+  onClear,
+  onSubmit,
+  placeholder = 'Add to chart...',
+  disabled = false,
+  autoFocus = false,
+}) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus on mount if requested
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
+  // Focus input when clicking the container
+  const handleContainerClick = useCallback(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Handle keydown on the hidden input
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Backspace' && text === '') {
+        e.preventDefault();
+        onBackspace();
+      }
+      if (e.key === 'Enter' && onSubmit) {
+        e.preventDefault();
+        onSubmit();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (pills.length > 0 || text) {
+          onClear();
+        } else {
+          inputRef.current?.blur();
+        }
+      }
+    },
+    [text, pills.length, onBackspace, onSubmit, onClear],
+  );
+
+  // Dynamic placeholder based on depth
+  const effectivePlaceholder = pills.length === 0
+    ? placeholder
+    : pills.length === 1
+      ? `Search ${pills[0].label}...`
+      : 'Type or select...';
+
+  return (
+    <div
+      style={styles.container}
+      onClick={handleContainerClick}
+      data-testid="omni-input"
+    >
+      {/* Plus icon */}
+      <Plus
+        size={14}
+        style={styles.plusIcon}
+        aria-hidden
+      />
+
+      {/* Pills */}
+      {pills.map((pill, i) => (
+        <span
+          key={`${pill.type}-${pill.value}`}
+          style={{
+            ...styles.pill,
+            ...(pill.type === 'category' ? styles.categoryPill : styles.itemPill),
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onPillClick(i);
+          }}
+          data-testid={`pill-${pill.type}-${i}`}
+          role="button"
+          tabIndex={0}
+        >
+          {pill.label}
+        </span>
+      ))}
+
+      {/* Text input */}
+      <input
+        ref={inputRef}
+        type="text"
+        value={text}
+        onChange={(e) => onTextChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder={effectivePlaceholder}
+        style={styles.input}
+        disabled={disabled}
+        data-testid="omni-input-field"
+        autoComplete="off"
+        spellCheck={false}
+      />
+
+      {/* Clear button (visible when there's content) */}
+      {(pills.length > 0 || text) && (
+        <button
+          type="button"
+          style={styles.clearBtn}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClear();
+          }}
+          data-testid="omni-input-clear"
+          aria-label="Clear input"
+        >
+          <X size={12} />
+        </button>
+      )}
+    </div>
+  );
+};
+
+OmniInput.displayName = 'OmniInput';
+
+// ============================================================================
+// Styles
+// ============================================================================
+
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spaceBetween.coupled,
+    minHeight: 36,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    border: `1px solid ${colors.border.neutral.medium}`,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.bg.neutral.base,
+    cursor: 'text',
+    transition: `border-color ${transitions.fast}`,
+  },
+  plusIcon: {
+    color: colors.fg.neutral.spotReadable,
+    flexShrink: 0,
+  },
+  pill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: `2px ${spaceAround.nudge6}px`,
+    fontSize: 12,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.medium,
+    borderRadius: borderRadius.sm,
+    cursor: 'pointer',
+    userSelect: 'none' as const,
+    flexShrink: 0,
+    transition: `opacity ${transitions.fast}`,
+    lineHeight: '18px',
+  },
+  categoryPill: {
+    color: colors.fg.accent.primary,
+    backgroundColor: colors.bg.accent.subtle,
+    border: `1px solid ${colors.border.neutral.low}`,
+  },
+  itemPill: {
+    color: colors.fg.neutral.primary,
+    backgroundColor: colors.bg.neutral.subtle,
+    border: `1px solid ${colors.border.neutral.low}`,
+  },
+  input: {
+    flex: 1,
+    minWidth: 80,
+    border: 'none',
+    outline: 'none',
+    backgroundColor: 'transparent',
+    fontSize: 14,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.primary,
+    padding: 0,
+    lineHeight: '20px',
+  },
+  clearBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20,
+    height: 20,
+    padding: 0,
+    border: 'none',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.bg.neutral.subtle,
+    color: colors.fg.neutral.spotReadable,
+    cursor: 'pointer',
+    flexShrink: 0,
+    transition: `background-color ${transitions.fast}`,
+  },
+};
