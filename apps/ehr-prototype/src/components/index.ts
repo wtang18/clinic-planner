@@ -85,10 +85,7 @@ export { TaskPane } from './tasks/TaskPane';
 // Omni Add
 // ============================================================================
 
-export { CategorySelector } from './omni-add/CategorySelector';
-export { ItemDetailForm } from './omni-add/ItemDetailForm';
-export { OmniAddBar } from './omni-add/OmniAddBar';
-export { QuickAddInput } from './omni-add/QuickAddInput';
+export { OmniAddBarV2 as OmniAddBar } from './omni-add/OmniAddBarV2';
 
 // ============================================================================
 // AI UI

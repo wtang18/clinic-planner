@@ -24,7 +24,7 @@ import type { ChartItem, ItemCategory } from '../../types';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { CareGapList } from '../../components/care-gaps/CareGapList';
 import { DetailsPane } from '../../components/details-pane';
-import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
+import { OmniAddBarV2 as OmniAddBar } from '../../components/omni-add/OmniAddBarV2';
 import { SafetyAlertBanner } from '../../components/safety/SafetyAlertBanner';
 import { FileText, Check, AlertTriangle, Circle } from 'lucide-react';
 

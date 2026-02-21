@@ -1,26 +1,41 @@
 /**
  * OmniAdd Components
  *
- * Tree-based OmniAdd charting module with dual input modes (touch + keyboard).
+ * Unified omni-input charting module with inline pills, suggestion cards,
+ * and adaptive detail area. Touch and keyboard are first-class on the same surface.
  */
 
-// Main orchestrator
-export { OmniAddBar, type OmniAddBarProps } from './OmniAddBar';
+// Main orchestrator (V2 — unified omni-input)
+export { OmniAddBarV2, type OmniAddBarV2Props } from './OmniAddBarV2';
 
-// Sub-components
-export { CategorySelector, type CategorySelectorProps } from './CategorySelector';
-export { QuickPickChips, type QuickPickChipsProps } from './QuickPickChips';
-export { QuickAddInput, type QuickAddInputProps } from './QuickAddInput';
-export { ItemDetailForm, type ItemDetailFormProps } from './ItemDetailForm';
+// V2 sub-components
+export { OmniInput, type OmniInputProps } from './OmniInput';
+export { DetailArea, type DetailAreaProps } from './DetailArea';
+export { CategoryPills } from './CategoryPills';
+export { ItemPills } from './ItemPills';
+export { SuggestionCard, type SuggestionCardProps } from './SuggestionCard';
+export { FieldRow, type FieldRowProps } from './FieldRow';
+export { FieldOptionPills, type FieldOptionPillsProps, type FieldOption } from './FieldOptionPills';
+
+// Shared sub-components (used by V2)
 export { NarrativeInput, type NarrativeInputProps } from './NarrativeInput';
 export { VitalsInput, type VitalsInputProps, type VitalsData } from './VitalsInput';
-export { OmniAddBreadcrumb, type OmniAddBreadcrumbProps } from './OmniAddBreadcrumb';
-export { CommandPalette, type CommandPaletteProps } from './CommandPalette';
 
-// State machine
+// State machines
 export {
-  omniAddReducer,
-  INITIAL_STATE,
+  omniInputReducer,
+  OMNI_INPUT_INITIAL,
+  getDepth,
+  getActiveCategory,
+  getActiveVariant,
+  makeCategoryPill,
+  makeItemPill,
+  type OmniInputState,
+  type OmniInputAction,
+  type Pill,
+} from './omni-input-machine';
+
+export {
   CATEGORIES,
   PRIMARY_CATEGORIES,
   SECONDARY_CATEGORIES,
@@ -28,15 +43,10 @@ export {
   getCategoryVariant,
   findCategoryByShortcut,
   findCategoryByPrefix,
-  canSubmit,
-  getBreadcrumbPath,
-  isAtRoot,
-  canNavigateBack,
-  type OmniAddState,
-  type OmniAddAction,
-  type OmniAddStep,
   type CategoryVariant,
   type CategoryMeta,
-  type BreadcrumbSegment,
-  type SelectedItem,
 } from './omni-add-machine';
+
+// Field definitions
+export { getFieldDef } from './fields';
+export type { FieldConfig, CategoryFieldDef } from './fields';

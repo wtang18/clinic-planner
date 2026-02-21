@@ -32,7 +32,7 @@ import { EncounterContextBar } from '../../components/layout/EncounterContextBar
 import { ModeSelector } from '../../components/layout/ModeSelector';
 import { PatientIdentityHeader } from '../../components/layout/PatientIdentityHeader';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
-import { OmniAddBar } from '../../components/omni-add/OmniAddBar';
+import { OmniAddBarV2 as OmniAddBar } from '../../components/omni-add/OmniAddBarV2';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
