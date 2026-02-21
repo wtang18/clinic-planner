@@ -174,12 +174,23 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   }, [onItemAdd, buildItemFromPick]);
 
   const handleItemEdit = useCallback((item: QuickPickItem) => {
-    // Phase 1: Edit = same as selecting (opens depth 2 card).
-    // Phase 2 will pre-populate field rows.
+    // Fallback for categories without field defs: same as selecting (opens depth 2)
     if (depth < 2) {
       handleItemSelect(item);
     }
   }, [depth, handleItemSelect]);
+
+  /** Add with custom field data from field row editing */
+  const handleItemAddWithFields = useCallback((item: QuickPickItem, data: Record<string, unknown>) => {
+    onItemAdd({
+      category: item.category,
+      displayText: item.label,
+      data,
+    } as Partial<ChartItem>);
+    const itemId = `item-${Date.now()}`;
+    dispatch({ type: 'ITEM_ADDED', itemId });
+    setSelectedPickItem(null);
+  }, [onItemAdd]);
 
   const handleNarrativeSubmit = useCallback((text: string) => {
     onItemAdd({
@@ -299,6 +310,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
               onItemSelect={handleItemSelect}
               onItemAdd={handleItemAdd}
               onItemEdit={handleItemEdit}
+              onItemAddWithFields={handleItemAddWithFields}
             />
           )}
 

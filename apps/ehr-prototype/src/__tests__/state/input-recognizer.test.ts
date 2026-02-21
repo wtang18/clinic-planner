@@ -12,6 +12,7 @@ import {
   groupAmbiguous,
   searchInCategory,
   recognize,
+  parseRxNL,
 } from '../../services/input-recognizer';
 
 // ============================================================================
@@ -235,5 +236,92 @@ describe('recognize', () => {
   it('returns none for unrecognized terms', () => {
     const result = recognize('xyznotadrugname');
     expect(result.kind).toBe('none');
+  });
+});
+
+// ============================================================================
+// NL Parameter Parsing (Rx)
+// ============================================================================
+
+describe('parseRxNL', () => {
+  it('parses full Rx string: drug + dosage + route + frequency', () => {
+    const result = parseRxNL('benzonatate 100mg po tid prn');
+    expect(result).not.toBeNull();
+    expect(result!.drugName).toBe('benzonatate');
+    expect(result!.dosage).toBe('100mg');
+    expect(result!.route).toBe('PO');
+    expect(result!.frequency).toBe('TID PRN');
+  });
+
+  it('parses drug + dosage only', () => {
+    const result = parseRxNL('amoxicillin 500mg');
+    expect(result).not.toBeNull();
+    expect(result!.drugName).toBe('amoxicillin');
+    expect(result!.dosage).toBe('500mg');
+    expect(result!.route).toBeUndefined();
+    expect(result!.frequency).toBeUndefined();
+  });
+
+  it('parses drug + dosage + route', () => {
+    const result = parseRxNL('ibuprofen 400mg po');
+    expect(result!.drugName).toBe('ibuprofen');
+    expect(result!.dosage).toBe('400mg');
+    expect(result!.route).toBe('PO');
+  });
+
+  it('parses drug + dosage + frequency (no route)', () => {
+    const result = parseRxNL('metoprolol 25mg bid');
+    expect(result!.drugName).toBe('metoprolol');
+    expect(result!.dosage).toBe('25mg');
+    expect(result!.frequency).toBe('BID');
+  });
+
+  it('parses drug name only', () => {
+    const result = parseRxNL('benzonatate');
+    expect(result).not.toBeNull();
+    expect(result!.drugName).toBe('benzonatate');
+    expect(result!.dosage).toBeUndefined();
+    expect(result!.route).toBeUndefined();
+    expect(result!.frequency).toBeUndefined();
+  });
+
+  it('handles IM route', () => {
+    const result = parseRxNL('ceftriaxone 250mg im');
+    expect(result!.route).toBe('IM');
+  });
+
+  it('handles daily frequency', () => {
+    const result = parseRxNL('metformin 500mg po daily');
+    expect(result!.frequency).toBe('daily');
+  });
+
+  it('handles QHS frequency', () => {
+    const result = parseRxNL('melatonin 3mg po qhs');
+    expect(result!.frequency).toBe('QHS');
+  });
+
+  it('handles multi-word drug names', () => {
+    const result = parseRxNL('albuterol sulfate 90mcg inh');
+    expect(result!.drugName).toBe('albuterol sulfate');
+    expect(result!.dosage).toBe('90mcg');
+  });
+
+  it('returns null for empty input', () => {
+    expect(parseRxNL('')).toBeNull();
+  });
+
+  it('returns null for whitespace only', () => {
+    expect(parseRxNL('   ')).toBeNull();
+  });
+
+  it('is case-insensitive for route and frequency', () => {
+    const result = parseRxNL('amoxicillin 500mg PO BID');
+    expect(result!.route).toBe('PO');
+    expect(result!.frequency).toBe('BID');
+  });
+
+  it('handles Q4-6H PRN frequency', () => {
+    const result = parseRxNL('codeine 10mg po q4-6h prn');
+    expect(result!.frequency).toBe('Q4-6H PRN');
   });
 });

@@ -167,6 +167,173 @@ export function searchInCategory(
 }
 
 // ============================================================================
+// NL Parameter Parsing (Rx only)
+// ============================================================================
+
+/**
+ * Parsed medication parameters from natural-language input.
+ * E.g., "benzonatate 100mg po tid prn" → { drugName, dosage, route, frequency }
+ *
+ * Phase 2: Rx-only via regex. Other categories and AI-assisted parsing
+ * are deferred (see FUTURE_CONSIDERATIONS.md).
+ */
+export interface ParsedRxParams {
+  drugName: string;
+  dosage?: string;
+  route?: string;
+  frequency?: string;
+}
+
+// Route abbreviations (case-insensitive)
+const ROUTE_ABBREVS: Record<string, string> = {
+  po: 'PO',
+  im: 'IM',
+  iv: 'IV',
+  sc: 'SC',
+  sl: 'SL',
+  pr: 'rectal',
+  top: 'topical',
+  topical: 'topical',
+  inh: 'Inhalation',
+  inhaled: 'Inhalation',
+  nasal: 'intranasal',
+};
+
+// Frequency abbreviations (case-insensitive)
+const FREQUENCY_ABBREVS: Record<string, string> = {
+  daily: 'daily',
+  qd: 'daily',
+  bid: 'BID',
+  tid: 'TID',
+  qid: 'QID',
+  qhs: 'QHS',
+  prn: 'PRN',
+  'tid prn': 'TID PRN',
+  'bid prn': 'BID PRN',
+  'qid prn': 'QID PRN',
+  'q4h': 'Q4H',
+  'q6h': 'Q6H',
+  'q8h': 'Q8H',
+  'q4h prn': 'Q4H PRN',
+  'q6h prn': 'Q6H PRN',
+  'q8h prn': 'Q8H PRN',
+  'q4-6h prn': 'Q4-6H PRN',
+  'q6-8h prn': 'Q6-8H PRN',
+};
+
+/**
+ * Parse a free-text Rx string into structured parameters.
+ * Handles formats like:
+ *   "benzonatate 100mg po tid prn"
+ *   "ibuprofen 400 mg bid"
+ *   "amoxicillin 500mg"
+ *
+ * Returns null if no drug name can be extracted.
+ */
+export function parseRxNL(input: string): ParsedRxParams | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const tokens = trimmed.split(/\s+/);
+  if (tokens.length === 0) return null;
+
+  // First token(s) = drug name (everything before a dosage, route, or frequency)
+  let drugNameParts: string[] = [];
+  let remaining: string[] = [];
+  let foundParam = false;
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const lower = token.toLowerCase();
+
+    // Check if this token looks like a dosage (e.g., "100mg", "500 mg", "10-100mg/5ml")
+    if (!foundParam && /^\d+[-\/]?\d*\s*(mg|mcg|ml|g|units?|iu|meq)s?(\/\d*\s*(ml|actuation|puff))?$/i.test(token)) {
+      foundParam = true;
+    }
+
+    // Check if next token is a unit (e.g., "100" followed by "mg")
+    if (!foundParam && /^\d+$/.test(token) && i + 1 < tokens.length && /^(mg|mcg|ml|g|units?|iu|meq)$/i.test(tokens[i + 1])) {
+      foundParam = true;
+    }
+
+    // Check if this is a known route or frequency
+    if (!foundParam && (ROUTE_ABBREVS[lower] || FREQUENCY_ABBREVS[lower])) {
+      foundParam = true;
+    }
+
+    if (foundParam) {
+      remaining = tokens.slice(i);
+      break;
+    } else {
+      drugNameParts.push(token);
+    }
+  }
+
+  // If no parameters found, everything is the drug name
+  if (!foundParam) {
+    return { drugName: tokens.join(' ') };
+  }
+
+  const drugName = drugNameParts.join(' ');
+  if (!drugName) return null;
+
+  // Parse remaining tokens for dosage, route, frequency
+  const remainingStr = remaining.join(' ');
+  let dosage: string | undefined;
+  let route: string | undefined;
+  let frequency: string | undefined;
+
+  // Extract dosage: number + unit pattern
+  const dosageMatch = remainingStr.match(/(\d+[-\/]?\d*\s*(?:mg|mcg|ml|g|units?|iu|meq)s?(?:\/\d*\s*(?:ml|actuation|puff))?)/i);
+  if (dosageMatch) {
+    dosage = dosageMatch[1].replace(/\s+/g, '');
+  }
+
+  // Extract route (after removing dosage match, check remaining tokens)
+  const afterDosage = dosageMatch
+    ? remainingStr.replace(dosageMatch[0], '').trim()
+    : remainingStr;
+
+  const afterTokens = afterDosage.split(/\s+/).filter(Boolean);
+
+  // Try multi-word frequency first (e.g., "tid prn")
+  for (let len = Math.min(3, afterTokens.length); len >= 1; len--) {
+    for (let start = 0; start <= afterTokens.length - len; start++) {
+      const phrase = afterTokens.slice(start, start + len).join(' ').toLowerCase();
+      if (FREQUENCY_ABBREVS[phrase]) {
+        frequency = FREQUENCY_ABBREVS[phrase];
+        // Remove matched tokens and check remaining for route
+        const before = afterTokens.slice(0, start);
+        const after = afterTokens.slice(start + len);
+        const routeTokens = [...before, ...after];
+        for (const rt of routeTokens) {
+          if (ROUTE_ABBREVS[rt.toLowerCase()]) {
+            route = ROUTE_ABBREVS[rt.toLowerCase()];
+            break;
+          }
+        }
+        break;
+      }
+    }
+    if (frequency) break;
+  }
+
+  // If no frequency found, check for route only
+  if (!frequency) {
+    for (const token of afterTokens) {
+      const lower = token.toLowerCase();
+      if (ROUTE_ABBREVS[lower] && !route) {
+        route = ROUTE_ABBREVS[lower];
+      } else if (FREQUENCY_ABBREVS[lower] && !frequency) {
+        frequency = FREQUENCY_ABBREVS[lower];
+      }
+    }
+  }
+
+  return { drugName, dosage, route, frequency };
+}
+
+// ============================================================================
 // Main Recognizer
 // ============================================================================
 
