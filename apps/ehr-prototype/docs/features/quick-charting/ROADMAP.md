@@ -26,7 +26,7 @@ The quick charting system doesn't exist in isolation. It's one of several input 
 | Surface | Location | Purpose |
 |---------|----------|---------|
 | **OmniAdd** | Canvas pane, bottom | Provider-initiated structured charting — the primary input tool |
-| **OmniAdd Suggestion Layer** | Within OmniAdd | Contextual shortcuts, order set suggestions, AI-predicted items |
+| **OmniAdd Suggestion Layer** | Within OmniAdd detail area | Contextual suggestion pills + cards, order set suggestions, AI-predicted items |
 | **AI Palette** | Bottom bar, expanded | Quick awareness of AI suggestions; accept/dismiss between charting actions |
 | **AI Drawer** | Left pane | Full AI assistant: suggestions, conversation, activity log |
 | **Processing Rail** | Capture mode, right column | AI draft accept (narrative content); order processing status |

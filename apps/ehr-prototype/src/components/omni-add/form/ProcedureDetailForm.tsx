@@ -48,7 +48,7 @@ export const ProcedureDetailForm: React.FC<ProcedureDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state from quick-pick smart defaults ──
   const [indication, setIndication] = React.useState<string>(String(data.indication || ''));
@@ -57,7 +57,7 @@ export const ProcedureDetailForm: React.FC<ProcedureDetailFormProps> = ({
   const [findings, setFindings] = React.useState<string>(String(data.findings || ''));
   const [complications, setComplications] = React.useState<string>(String(data.complications || ''));
 
-  const procedureName = String(data.procedureName || data.displayText || '');
+  const procedureName = String(data.procedureName || initialData?.displayText || '');
   const cptCode = data.cptCode ? String(data.cptCode) : undefined;
 
   const showCompletedFields = procedureStatus === 'completed';
@@ -67,11 +67,16 @@ export const ProcedureDetailForm: React.FC<ProcedureDetailFormProps> = ({
     e.preventDefault();
     onSubmit({
       ...initialData,
-      indication: indication || undefined,
-      procedureStatus,
-      technique: showCompletedFields && technique ? technique : undefined,
-      findings: showCompletedFields && findings ? findings : undefined,
-      complications: showCompletedFields && complications ? complications : undefined,
+      data: {
+        ...(initialData as any)?.data,
+        procedureName,
+        cptCode,
+        indication: indication || undefined,
+        procedureStatus,
+        technique: showCompletedFields && technique ? technique : undefined,
+        findings: showCompletedFields && findings ? findings : undefined,
+        complications: showCompletedFields && complications ? complications : undefined,
+      },
     } as unknown as Partial<ChartItem>);
   };
 

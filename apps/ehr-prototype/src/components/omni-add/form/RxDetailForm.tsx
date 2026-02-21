@@ -74,7 +74,7 @@ export const RxDetailForm: React.FC<RxDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state initialized from quick-pick smart defaults ──
   const [dosage, setDosage] = React.useState<string>(String(data.dosage || ''));
@@ -88,7 +88,7 @@ export const RxDetailForm: React.FC<RxDetailFormProps> = ({
   const [refills, setRefills] = React.useState<number>(Number(data.refills) || 0);
   const [daw, setDaw] = React.useState<boolean>(false);
 
-  const drugName = String(data.drugName || data.displayText || '');
+  const drugName = String(data.drugName || initialData?.displayText || '');
 
   // ── Auto-calculate sig when inputs change (unless manually overridden) ──
   React.useEffect(() => {
@@ -108,18 +108,20 @@ export const RxDetailForm: React.FC<RxDetailFormProps> = ({
   // ── Submit ──
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Fields are spread at top level to match OmniAddBar's buildChartItem pattern;
-    // useCaptureView.handleItemAdd picks them up and maps into category-specific data.
     onSubmit({
       ...initialData,
-      dosage,
-      route,
-      frequency,
-      duration,
-      sig,
-      quantity,
-      refills,
-      daw,
+      data: {
+        ...(initialData as any)?.data,
+        drugName,
+        dosage,
+        route,
+        frequency,
+        duration,
+        sig,
+        quantity,
+        refills,
+        daw,
+      },
     } as unknown as Partial<ChartItem>);
   };
 

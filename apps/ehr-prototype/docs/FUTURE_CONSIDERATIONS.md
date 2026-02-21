@@ -268,20 +268,22 @@ Compact:                        Expanded:
 
 ## Quick Charting
 
-### Data Model Cleanup
+### NL Parameter Parsing — Non-Rx Categories
 
-**Concept:** OmniAdd detail forms return category-specific fields (dosage, route, frequency, etc.) as flat top-level properties. These should be restructured into the `data` property matching the discriminated union type (`MedicationItem.data`, `LabItem.data`, etc.).
+**Concept:** The unified omni-input includes regex-based NL parameter parsing for Rx items (e.g., "benzonatate 100mg po tid" → pre-filled dosage/route/frequency). Extending this to other categories (labs, imaging, referrals) would allow similar shorthand entry.
 
-**Why deferred:** Requires touching all 7 detail forms + OmniAdd merge logic + useCaptureView. Current workaround (defensive `?.` in selectors) prevents crashes.
+**Why deferred:** Rx parsing covers the highest-value use case. Other categories have less standardized shorthand. AI-assisted parsing is a better fit for free-text → structured mapping in non-Rx categories.
 
 **Scope:**
-- Restructure form submission → `data` nesting for medication, lab, imaging, procedure, allergy, referral, diagnosis forms
-- Add `actions` array population based on category defaults
-- Update type guards and tests to validate nested structure
+- Lab: "cbc stat" → priority=stat, "lipid fasting" → fastingRequired=true
+- Imaging: "cxr pa lateral" → study type + views
+- Dx: "j20.9 acute bronchitis" → ICD code + description
+- Generic: AI-assisted entity extraction from free text
 
 **Revisit when:**
-- Adding structured editing to DetailsPane (needs reliable `data` shape)
-- Implementing real backend persistence (API expects nested format)
+- Rx NL parsing is validated with users
+- AI integration enables more sophisticated text understanding
+- Provider feedback identifies high-value shorthand patterns for other categories
 
 ---
 
@@ -389,3 +391,5 @@ When revisiting deferred items, consider:
 | 2025-02-19 | Quick Charting data model cleanup | Deferred from Round 4.4 (defensive `?.` workaround in place) |
 | 2025-02-19 | Overview item → detail view | Extended Section Tapping entry with individual item tapping |
 | 2025-02-20 | Layout Architecture: Unified Morphing Right Rail | Documented from Round 4.5 responsive rail discussion |
+| 2025-02-21 | Removed: Quick Charting Data Model Cleanup | Addressed in OmniAdd UX Rewrite Phase 0 |
+| 2025-02-21 | Added: NL Parameter Parsing — Non-Rx Categories | Deferred from OmniAdd UX Rewrite; Rx-only regex included |

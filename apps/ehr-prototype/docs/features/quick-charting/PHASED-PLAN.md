@@ -8,47 +8,57 @@
 
 ---
 
-## Phase 1: OmniAdd State Machine Refactor + Dual Input Paradigm
+## Phase 1: OmniAdd Omni-Input + Detail Area Architecture
 
-**Goal:** Replace the current 3-step linear OmniAdd flow with the tree-based state machine. Establish both touch and keyboard input patterns.
+**Goal:** Build the OmniAdd module with the unified omni-input (navigator) + detail area (workspace) architecture. Foundational interaction model for all charting input.
 
 **Scope:**
-- Refactor OmniAdd state machine: root → category → (quick-pick | search | text input | data entry) → details → add → reset
-- Tree navigation with breadcrumb support (tapping breadcrumb level returns to that level's selection state)
-- Category selector: primary row (Rx, Lab, Dx, Imaging, Proc) + secondary behind "More"
-- Keyboard command palette mode: type-to-search at root, category prefixes, single-key shortcuts
-- Touch mode: tap-through tree with chips
+- Omni-input component: single-line text field with inline pills, placeholder "Add to chart...", focus via `/` or `Cmd+K`
+- Pill behavior: pills as characters (single backspace deletes), tap preceding pill truncates, Cmd+A + Delete clears all
+- Detail area component: contextual workspace adapting to input state (tree depth)
+- Depth 1 (root): category suggestion pills + encounter-contextual suggestion cards with [Add][Edit]
+- Depth 1b (typed text): ranked result cards across categories, arrow key navigation, Enter accepts
+- Depth 2 (category committed): item suggestion pills + item suggestion cards within category
+- Depth 3 (item committed): field-row structure (unselected) + single suggestion card — handled by Phase 2 forms
+- Input recognition service: category prefix detection, item name matching, auto-categorization for unambiguous terms
+- Narrative categories: focus moves to text area in detail area on category commit
+- Vitals: data entry grid in detail area
 - Batch mode: stay-in-category after add
 - Undo: Cmd+Z / undo toast
-- Quick-pick chips component with mock data per category
+- Mock item catalog with suggestion configurations for cough visit
 
-**Does NOT include:** Detail forms, processing rail, AI drafts, details pane.
+**Does NOT include:** Detailed field forms (Phase 2), processing rail, AI drafts, details pane.
 
 **Exit criteria:**
-- Navigate full tree via touch and keyboard for any of the 15 categories
-- Structured search categories show placeholder quick-picks + search
-- Narrative categories show text input
-- Vitals shows field grid
-- Batch mode, breadcrumbs, undo all functional
+- Omni-input with pill insertion/deletion works via touch and keyboard
+- Detail area adapts correctly at each tree depth
+- [Add] on suggestion card adds item directly to chart (fastest path)
+- Search/filter via typed text shows ranked results across categories
+- Auto-categorization works for unambiguous terms, grouped results for ambiguous
+- Narrative and vitals category variants functional
+- Batch mode, undo, Escape behavior all functional
 
 ---
 
 ## Phase 2: Detail Forms for Exemplar Categories (Rx, Lab, Dx)
 
-**Goal:** Build category-specific detail forms for the three highest-priority structured search categories, establishing the pattern for all others.
+**Goal:** Build category-specific field-row configuration and suggestion card generation for the three highest-priority structured categories. Establishes the depth 3 detail area pattern.
 
 **Scope:**
-- Shared form components: ChipSelect, FieldRow
+- Shared form components: ChipSelect (pill options), FieldRow (label + pills/input), SuggestionCard (summary + Add/Edit)
 - Medication form: dosage, route, frequency, sig (auto), quantity (auto), refills, duration, pharmacy, DAW
 - Lab form: collection method, reference lab, priority, fasting, instructions
 - Diagnosis form: ICD-10 display, specificity, designation, onset, clinical status
-- Smart defaults pre-populating all fields
+- Suggestion card generation per item from default prescribing/ordering patterns
+- Edit flow: pre-selects card values across field rows, Clear restores suggestion card
 - Expanded mock data (10+ items per category)
 - Card display updates for richer summaries
 
 **Exit criteria:**
-- Full Rx/Lab/Dx flows from quick-pick → details → add → formatted card
-- Smart defaults mean most items need 1-2 modifications
+- Depth 3 shows field rows (unselected) + suggestion card for Rx/Lab/Dx items
+- [Add] on suggestion card adds item with defaults (no field interaction needed)
+- [Edit] pre-selects values, [Clear] restores, [Add] commits configuration
+- Smart defaults mean most items need 0-2 field adjustments
 - Both touch and keyboard work through all forms
 
 ---

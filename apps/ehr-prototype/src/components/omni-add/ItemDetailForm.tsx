@@ -194,8 +194,11 @@ export const ItemDetailForm: React.FC<ItemDetailFormProps> = ({
     e.preventDefault();
     onSubmit({
       ...initialData,
-      ...formData,
-    });
+      data: {
+        ...(initialData as any)?.data,
+        ...formData,
+      },
+    } as Partial<ChartItem>);
   };
 
   const containerStyle: React.CSSProperties = {

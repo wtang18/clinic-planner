@@ -22,8 +22,23 @@ This maps directly to the company's mandate to increase primary care capacity: r
 |---|----------|--------|-----------|
 | 1 | Primary interaction target | Both tablet/touch and keyboard/desktop equally | Providers use tablets in exam rooms and desktops at workstations; neither can be second-class |
 | 2 | Scope | Full pattern + architecture with all 15 categories mapped at spec level | Need complete picture to ensure the pattern scales |
-| 3 | Input paradigm | Dual: touch (progressive disclosure tree) + keyboard (command palette) | Different contexts demand different input modes |
+| 3 | Input paradigm | Unified omni-input: single text field with inline pills, supporting typed input, tapped selections, and natural language — keyboard-only and touch-only are both first-class paths | ~~Original: dual touch/keyboard toggle.~~ Revised: merged into single surface that serves both input styles without modal switching |
 | 4 | Capture mode focus | Chronological, unstructured — capture intent fast | Structure lives in Review mode; Capture optimizes for speed and low cognitive load |
+
+### OmniAdd Interaction Model (Revised)
+
+| # | Decision | Choice | Rationale |
+|---|----------|--------|-----------|
+| 41 | OmniAdd architecture | Two-part: omni-input (navigator) + detail area (workspace) | Input answers "what am I adding?"; detail area shows suggestions, configuration, and holds the commit action. Clear separation of concerns. |
+| 42 | Detail area content model | Everything is suggestions — pills at top for quick-select, cards below for complete previews with Add/Edit actions | Consistent pattern at every tree depth; only the specificity of suggestions changes |
+| 43 | Ambiguity resolution | Approach 4: weighted inline results with soft auto-categorization. Top result highlighted, Enter accepts, alternatives visible. | Transparent, consistent, handles ambiguity gracefully. Power users get speed parity via Enter-to-accept; less experienced users can scan and pick. |
+| 44 | Auto-categorization | Auto-insert category pill for unambiguous terms (drug names, unique lab names). Show grouped cross-category results for ambiguous terms. | Fast when confident; defers to provider when not. Prefixed input always auto-categorizes (provider declared intent). |
+| 45 | Natural language input | Support typed parameters (e.g., "benzonatate 100mg po bid 7d") parsed into suggestion card with pre-filled values | Power-user keyboard fast path. Parsing is best-effort; suggestion card makes parsed values visible for verification. Start rule-based, architecture supports AI parsing later. |
+| 46 | Suggestion card at item depth | Show field-row structure (unselected) above a single suggestion card with Add/Edit | Fields show object anatomy + give control. Suggestion card is the fast-accept path. Provider self-selects: methodical (field-by-field) or fast (tap Add on card). |
+| 47 | Edit on suggestion card | Pre-selects card's values across field rows, hides suggestion card. Clear affordance restores suggestion. | Reframes editing as "start from this suggestion" not "fix this." Provider is building on a foundation, not correcting. |
+| 48 | Pills as characters | Single backspace deletes rightmost pill — no highlight-then-delete. Cmd+A + delete clears all. Tapping preceding pill truncates everything after it. | Low-cost revert: suggestion engine immediately offers what was just removed. Simple, predictable, no modes. |
+| 49 | Narrative boundary | Narrative categories always require explicit declaration (prefix or tap). Free text is indistinguishable from structured search. After category commit, focus moves to text area in detail area. | System can't distinguish "searching for cough" from "writing about cough." Narratives are primarily AI-drafted anyway — manual path is secondary. |
+| 50 | Escape behavior | Context-dependent retreat: close field editing → blur omni-input. Never clears contents — Cmd+A + delete for that. | Matches Escape conventions everywhere (dismiss/retreat, not destroy). |
 
 ### Views & Navigation
 

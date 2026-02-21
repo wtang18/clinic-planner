@@ -77,7 +77,7 @@ export const AllergyDetailForm: React.FC<AllergyDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state from quick-pick smart defaults ──
   const [allergenType, setAllergenType] = React.useState<string>(String(data.allergenType || 'drug'));
@@ -86,7 +86,7 @@ export const AllergyDetailForm: React.FC<AllergyDetailFormProps> = ({
   const [reportedBy, setReportedBy] = React.useState<string>(String(data.reportedBy || 'patient'));
   const [verificationStatus, setVerificationStatus] = React.useState<string>(String(data.verificationStatus || 'unverified'));
 
-  const allergen = String(data.allergen || data.displayText || '');
+  const allergen = String(data.allergen || initialData?.displayText || '');
   const severityColor = SEVERITY_COLORS[severity] || SEVERITY_COLORS.unknown;
 
   // ── Submit ──
@@ -94,11 +94,15 @@ export const AllergyDetailForm: React.FC<AllergyDetailFormProps> = ({
     e.preventDefault();
     onSubmit({
       ...initialData,
-      allergenType,
-      reaction: reaction || undefined,
-      severity,
-      reportedBy,
-      verificationStatus,
+      data: {
+        ...(initialData as any)?.data,
+        allergen,
+        allergenType,
+        reaction: reaction || undefined,
+        severity,
+        reportedBy,
+        verificationStatus,
+      },
     } as unknown as Partial<ChartItem>);
   };
 

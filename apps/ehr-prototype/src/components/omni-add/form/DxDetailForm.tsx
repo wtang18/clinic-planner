@@ -61,7 +61,7 @@ export const DxDetailForm: React.FC<DxDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state from smart defaults ──
   const [ranking, setRanking] = React.useState<string>(String(data.ranking || 'primary'));
@@ -69,7 +69,7 @@ export const DxDetailForm: React.FC<DxDetailFormProps> = ({
   const [clinicalStatus, setClinicalStatus] = React.useState<string>(String(data.clinicalStatus || 'active'));
   const [type, setType] = React.useState<string>(String(data.type || 'encounter'));
 
-  const description = String(data.description || data.displayText || '');
+  const description = String(data.description || initialData?.displayText || '');
   const icdCode = String(data.icdCode || '');
 
   // ── Submit ──
@@ -77,10 +77,15 @@ export const DxDetailForm: React.FC<DxDetailFormProps> = ({
     e.preventDefault();
     onSubmit({
       ...initialData,
-      ranking,
-      clinicalStatus,
-      type,
-      onsetDate: onset === 'new' ? new Date() : undefined,
+      data: {
+        ...(initialData as any)?.data,
+        description,
+        icdCode,
+        ranking,
+        clinicalStatus,
+        type,
+        onsetDate: onset === 'new' ? new Date() : undefined,
+      },
     } as unknown as Partial<ChartItem>);
   };
 

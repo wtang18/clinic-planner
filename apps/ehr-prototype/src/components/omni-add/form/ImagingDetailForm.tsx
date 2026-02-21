@@ -47,7 +47,7 @@ export const ImagingDetailForm: React.FC<ImagingDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state from quick-pick smart defaults ──
   const [priority, setPriority] = React.useState<string>(String(data.priority || 'routine'));
@@ -57,18 +57,23 @@ export const ImagingDetailForm: React.FC<ImagingDetailFormProps> = ({
   const [instructions, setInstructions] = React.useState<string>('');
 
   const studyType = String(data.studyType || '');
-  const bodyPart = String(data.bodyPart || data.displayText || '');
+  const bodyPart = String(data.bodyPart || initialData?.displayText || '');
 
   // ── Submit ──
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       ...initialData,
-      priority,
-      indication: indication || undefined,
-      facility: facility ? { id: `fac-${Date.now()}`, name: facility } : undefined,
-      requiresAuth,
-      specialInstructions: instructions || undefined,
+      data: {
+        ...(initialData as any)?.data,
+        studyType,
+        bodyPart,
+        priority,
+        indication: indication || undefined,
+        facility: facility ? { id: `fac-${Date.now()}`, name: facility } : undefined,
+        requiresAuth,
+        orderStatus: 'draft',
+      },
     } as unknown as Partial<ChartItem>);
   };
 

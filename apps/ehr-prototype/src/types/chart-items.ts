@@ -94,7 +94,11 @@ export interface ChartItemBase {
   // Linkages
   linkedDiagnoses: string[];   // IDs of associated Dx items
   linkedEncounters: string[];  // For longitudinal tracking
-  
+
+  // Protocol / order-set provenance (populated when item originates from a protocol or order set)
+  protocolRef?: string;
+  orderSetRef?: string;
+
   // Activity log (append-only audit trail)
   activityLog: ActivityLogEntry[];
 

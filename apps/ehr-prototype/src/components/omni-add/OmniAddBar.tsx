@@ -76,8 +76,10 @@ function buildChartItem(
   return {
     category: state.category!,
     displayText: state.selectedItem?.label || '',
-    ...state.selectedItem?.data,
-    ...extra,
+    data: {
+      ...state.selectedItem?.data,
+      ...extra,
+    },
   } as Partial<ChartItem>;
 }
 
@@ -136,8 +138,14 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
 
   const handleDetailSubmit = (item: Partial<ChartItem>) => {
     dispatch({ type: 'SUBMIT_DETAIL' });
-    // Merge machine state data with form data; cast needed because ChartItem is a discriminated union
-    const merged = { ...buildChartItem(state), ...item } as Partial<ChartItem>;
+    // Merge machine state with form data; form's nested `data` overrides quick-pick defaults
+    const base = buildChartItem(state);
+    const formData = (item as any)?.data || {};
+    const merged = {
+      ...base,
+      ...item,
+      data: { ...(base as any).data, ...formData },
+    } as Partial<ChartItem>;
     onItemAdd(merged);
     const itemId = `item-${Date.now()}`;
     dispatch({ type: 'ITEM_ADDED', itemId });
@@ -148,24 +156,32 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
     onItemAdd({
       category: state.category!,
       displayText: text,
-    });
+      data: {
+        text,
+        format: 'plain',
+      },
+    } as Partial<ChartItem>);
     const itemId = `item-${Date.now()}`;
     dispatch({ type: 'ITEM_ADDED', itemId });
   };
 
-  const handleVitalsSubmit = (data: VitalsData) => {
+  const handleVitalsSubmit = (vitalsData: VitalsData) => {
     dispatch({ type: 'SUBMIT_DATA_ENTRY' });
     // Format vitals for display
     const parts: string[] = [];
-    if (data.systolicBP && data.diastolicBP) parts.push(`BP ${data.systolicBP}/${data.diastolicBP}`);
-    if (data.heartRate) parts.push(`HR ${data.heartRate}`);
-    if (data.temperature) parts.push(`Temp ${data.temperature}\u00B0F`);
-    if (data.spO2) parts.push(`SpO2 ${data.spO2}%`);
-    if (data.respiratoryRate) parts.push(`RR ${data.respiratoryRate}`);
+    if (vitalsData.systolicBP && vitalsData.diastolicBP) parts.push(`BP ${vitalsData.systolicBP}/${vitalsData.diastolicBP}`);
+    if (vitalsData.heartRate) parts.push(`HR ${vitalsData.heartRate}`);
+    if (vitalsData.temperature) parts.push(`Temp ${vitalsData.temperature}\u00B0F`);
+    if (vitalsData.spO2) parts.push(`SpO2 ${vitalsData.spO2}%`);
+    if (vitalsData.respiratoryRate) parts.push(`RR ${vitalsData.respiratoryRate}`);
     onItemAdd({
       category: 'vitals',
       displayText: parts.join(' \u00B7 ') || 'Vitals',
-      ...data,
+      data: {
+        measurements: [],
+        capturedAt: new Date(),
+        ...vitalsData,
+      },
     } as Partial<ChartItem>);
     const itemId = `item-${Date.now()}`;
     dispatch({ type: 'ITEM_ADDED', itemId });
@@ -267,7 +283,7 @@ export const OmniAddBar: React.FC<OmniAddBarProps> = ({
         const detailData = {
           displayText: state.selectedItem?.label,
           category: state.category!,
-          ...state.selectedItem?.data,
+          data: state.selectedItem?.data,
         } as Partial<ChartItem>;
 
         // Route to category-specific form for Rx, Lab, Dx; generic fallback for others

@@ -31,7 +31,7 @@ Every chart item must include these fields from the start (some unused in early 
 These support future multi-surface coordination (care protocols, order sets, unified suggestion engine). For Phases 1-7, most items will use 'manual' or 'maHandoff'. AI-related sources used starting Phase 4.
 
 ARCHITECTURE:
-- src/components/omni-add/ — OmniAdd module (state machine, category selector, search, forms)
+- src/components/omni-add/ — OmniAdd module (omni-input, detail area, forms, suggestion cards)
 - src/components/chart-items/ — Chart item cards
 - src/components/processing-rail/ — Rail components
 - src/components/details-pane/ — Details pane
@@ -45,7 +45,7 @@ ARCHITECTURE:
 - src/data/ — Mock data files
 
 DESIGN SPECS (in /docs/features/quick-charting/):
-- CONTEXT.md — Design decisions (40 confirmed decisions, including multi-surface coordination)
+- CONTEXT.md — Design decisions (50 confirmed decisions, including multi-surface coordination and OmniAdd interaction model)
 - DESIGN-SPEC.md — Full specification
 - CATEGORY-MAP.md — All 15 categories at spec level
 - PHASED-PLAN.md — 7-phase implementation plan
@@ -64,25 +64,84 @@ INTERACTION PRINCIPLES:
 
 ---
 
-## Phase 1: OmniAdd State Machine Refactor + Dual Input Paradigm
+## Phase 1: OmniAdd Omni-Input + Detail Area Architecture
 
 ```
-PHASE 1: OMNIADD STATE MACHINE REFACTOR
+PHASE 1: OMNIADD OMNI-INPUT + DETAIL AREA ARCHITECTURE
 
 [Include shared context block]
 
-GOAL: Replace the current linear 3-step OmniAdd with a tree-based state machine supporting both touch and keyboard. Architectural foundation for all subsequent phases.
+GOAL: Build the OmniAdd module with the unified omni-input (navigator) + detail area (workspace) architecture. This is the foundational interaction model for all charting input.
 
 WHAT TO BUILD:
 
-1. STATE MACHINE (src/components/omni-add/OmniAddStateMachine.ts)
-States: ROOT, CATEGORY_SELECTED, QUICK_PICK, SEARCH, DETAIL, TEXT_INPUT, DATA_ENTRY, ADDING
-Transitions by category variant:
-- Structured (medication, lab, imaging, procedure, diagnosis, allergy, referral): ROOT → CATEGORY → QUICK_PICK/SEARCH → DETAIL → ADD → ROOT
-- Narrative (chief-complaint, hpi, ros, physical-exam, plan, instruction, note): ROOT → CATEGORY → TEXT_INPUT → ADD → ROOT
-- Data entry (vitals): ROOT → CATEGORY → DATA_ENTRY → ADD → ROOT
-Back navigation at every level. Track breadcrumb path.
-Batch mode: after ADD, return to CATEGORY (not ROOT). "Done with [Category]" exits batch.
+1. OMNI-INPUT COMPONENT (src/components/omni-add/OmniInput.tsx)
+Single-line text field with inline pills. Placeholder: "Add to chart..." Focus via tap, `/`, or `Cmd+K`. Close/clear via ✕ button.
+
+Pill behavior:
+- Pills materialize in the input as selections are made (category, item)
+- Pills behave as characters: single backspace deletes rightmost pill (no highlight-then-delete)
+- Tapping a preceding pill truncates everything to its right (returns to that depth)
+- Cmd+A + Delete clears all pills and text
+- Typing with pills present filters the detail area content
+
+Pill state examples:
+- Empty: `| ` (cursor, placeholder visible)
+- Category committed: `[Rx] |`
+- Item committed: `[Rx] [Benzonatate] |`
+- Typed text: `[Rx] amox|`
+
+2. DETAIL AREA COMPONENT (src/components/omni-add/DetailArea.tsx)
+Contextual workspace below the omni-input. Content adapts based on current input state (tree depth). Three content types render here depending on context:
+
+a) Suggestion pills: horizontal row of tappable pills for quick selection
+b) Suggestion cards: complete item previews with [Add] and [Edit] actions
+c) Workspace content: field-row configuration (structured), text area (narrative), data entry grid (vitals)
+
+3. DETAIL AREA BY DEPTH
+
+DEPTH 1 — ROOT (no pills, no text):
+- Suggestion pills row: category pills [Rx] [Lab] [Dx] [Imaging] [Proc] [More...]
+- Suggestion cards below: hardcoded encounter-contextual suggestions for the cough visit demo:
+  - "Rx · Benzonatate 100mg PO TID PRN · #15 · 0RF · CVS" [Add][Edit]
+  - "Dx · Acute Bronchitis (J20.9) · Primary" [Add][Edit]
+  - "Lab · Rapid COVID-19 Antigen · In-House · Routine" [Add][Edit]
+
+Tapping a category pill: inserts pill into omni-input, advances detail area to depth 2.
+Tapping Add on a card: adds that item directly to chart items list (fastest path). Set source to 'manual' (from suggestion).
+Tapping Edit on a card: inserts category + item pills into omni-input, shows depth 3 field view.
+
+DEPTH 1b — ROOT WITH TEXT (searching across categories):
+- Category pills replaced by ranked result cards grouped by category
+- Hardcoded search matching for demo items (match by prefix/substring)
+- Each result card shows category badge + item summary + [Add][Edit]
+- Arrow keys highlight cards, Enter accepts highlighted card
+- If typed text auto-resolves to a single category (e.g., "benzonatate" → only Rx), auto-insert category pill
+
+DEPTH 2 — CATEGORY COMMITTED (e.g., [Rx]):
+- Suggestion pills: item pills within category [Benzonatate] [Dextromethorphan] [Guaifenesin]
+- Suggestion cards: complete items within category with [Add][Edit]
+- Typing filters both pills and cards
+- Tapping an item pill: inserts into omni-input, advances to depth 3
+
+DEPTH 3 — ITEM COMMITTED (e.g., [Rx] [Benzonatate]):
+For structured categories: field-row view + suggestion card
+- Field rows visible with pill options but UNSELECTED by default
+- Shows object anatomy: what fields exist, what options are available
+- Single suggestion card at bottom with recommended configuration
+- [Add] on card: accepts suggestion as-is, adds to chart
+- [Edit] on card: pre-selects card's values across field rows, hides card. [Clear] restores. [Add] commits current configuration.
+- For this phase, only Rx/Lab/Dx need detailed field rows (built in Phase 2). Other structured categories show placeholder fields.
+
+For narrative categories: text area
+- If prefix included text (e.g., "cc cough x 5 days"), pre-fill text area with content after category token
+- Text area with category-specific placeholder
+- [Add] button below text area
+- Focus automatically moves to text area when narrative category committed
+
+For vitals: data entry grid
+- Grid: BP (sys/dia), HR, Temp, RR, SpO2, Weight, Height, BMI (auto-calc), Pain (0-10)
+- Number inputs with units. Out-of-range highlighting. [Add] when any field has value.
 
 CHART ITEM TYPE (src/types/chart-items.ts):
 When defining/extending the ChartItem type, include these fields (see shared context "FORWARD-COMPATIBLE DATA MODEL"):
@@ -93,60 +152,61 @@ When defining/extending the ChartItem type, include these fields (see shared con
 - activityLog: ActivityLogEntry[] (empty array for now — populated starting Phase 3)
 This ensures the data model is stable from Phase 1 onward.
 
-2. BREADCRUMB NAVIGATION
-Display: `+ Rx > Benzonatate`
-CRITICAL: Tapping a breadcrumb level returns to that level's SELECTION state — to choose a different option. Tapping "Benzonatate" returns to Rx quick-picks (not Benzonatate's details). Tapping "Rx" returns to root. Tapping "+" returns to root.
-Back button / Escape moves back one level.
+4. INPUT RECOGNITION (src/services/input-recognizer.ts)
+Simple rule-based recognition for the prototype:
+- Category prefix detection: 'rx', 'lab', 'dx', 'img', 'proc', 'cc', 'hpi', 'ros', 'pe', 'vitals', 'allergy', 'plan', 'instruction', 'note', 'referral'
+- Item name matching: substring match against mock item catalogs
+- Auto-categorization: if item name matches exactly one category, auto-insert category pill
+- Ambiguous terms: show grouped results (no auto-category)
+- Natural language parameter parsing deferred to enhancement — for now, just match item names
 
-3. CATEGORY SELECTOR (modify CategorySelector.tsx)
-Primary row: Rx (M), Lab (L), Dx (D), Imaging (I), Proc (P)
-Secondary behind "More": CC, HPI, ROS, PE, Vitals, Allergy, Plan, Instruction, Note, Referral
-Each category knows its interaction variant.
+5. KEYBOARD-ONLY FLOW
+Full flow without mouse/touch:
+- `/` or `Cmd+K` → focus omni-input
+- Type item name or prefix → results appear in detail area
+- `↑`/`↓` → highlight suggestion cards
+- `Enter` → accept highlighted card (Add)
+- `Tab` → move into field rows (when at depth 3)
+- `Escape` → context-dependent: close field editing → blur omni-input
 
-4. DUAL INPUT MODE
-ROOT state:
-- Touch: category pills visible
-- Keyboard: text input "Add item... (/ for categories)". Typing searches all categories. Prefixes: rx:, lab:, dx:, etc. Single-key shortcuts M/L/D/I/P when empty.
-CATEGORY state:
-- Touch: quick-pick chips + "Other" (search)
-- Keyboard: scoped search + quick-picks visible
+6. BATCH MODE
+After adding: omni-input resets to `[Category] |` (stays at category depth).
+Detail area shows category-scoped suggestions for next item.
+"Done with [Category]" affordance to return to root.
+Backspace on category pill exits to root.
+Escape exits to root.
 
-5. QUICK-PICK CHIPS (src/components/omni-add/QuickPickChips.tsx)
-Horizontal scrollable chips. Last chip = "Other" (opens search).
-Hardcoded mock data per category for cough visit:
-- Rx: Benzonatate, Dextromethorphan, Guaifenesin, Codeine
-- Lab: Rapid COVID-19, Rapid Flu A/B, Strep, CBC
-- Dx: Acute bronchitis, URI, Cough unspecified, Pneumonia
-- Imaging: Chest X-ray, Chest CT
-- Procedure: Rapid Strep Test, Nebulizer Treatment
-
-6. NARRATIVE INPUT (src/components/omni-add/NarrativeInput.tsx)
-Text area with category-specific placeholder. Expandable. "Add" button.
-Note: narrative categories are primarily AI-drafted (Phase 4), but OmniAdd is the manual/secondary path. Keep this simple for now.
-
-7. VITALS INPUT (src/components/omni-add/VitalsInput.tsx)
-Grid: BP (sys/dia), HR, Temp, RR, SpO2, Weight, Height, BMI (auto-calc), Pain (0-10).
-Number inputs with units. Out-of-range highlighting. "Add" when any field has value.
-
-8. BATCH MODE
-After adding: return to CATEGORY level (not ROOT).
-"Done with [Category]" chip/button to exit.
-Keyboard: Enter = add + stay; Escape = back to ROOT.
-
-9. UNDO
+7. UNDO
 Cmd/Ctrl+Z removes last-added item. Touch: toast with "Undo" for 5 seconds.
 
+MOCK DATA (src/data/mock-catalog.ts):
+Single catalog file with items across categories for the cough visit:
+- Rx: Benzonatate, Dextromethorphan, Guaifenesin, Amoxicillin, Codeine
+- Lab: Rapid COVID-19, Rapid Flu A/B, Rapid Strep, CBC
+- Dx: Acute bronchitis (J20.9), URI (J06.9), Cough unspecified (R05.9), Pneumonia (J18.9)
+- Imaging: Chest X-ray, Chest CT
+- Procedure: Rapid Strep Test, Nebulizer Treatment
+Each item includes a default suggestion configuration (dosage, route, etc. for Rx; collection method, priority for Labs; ICD-10, designation for Dx).
+
 ACCEPTANCE CRITERIA:
-- [ ] Full tree navigation via touch: tap Rx → quick-picks → Benzonatate → detail form → add → stays at Rx
-- [ ] Full tree navigation via keyboard: type "rx:" → arrow to item → Enter → tab fields → Enter to add
-- [ ] Single-key shortcuts (M/L/D/I/P) work when input focused and empty
-- [ ] "More" reveals secondary categories
-- [ ] Narrative category (e.g., HPI) shows text input
-- [ ] Vitals shows numeric grid with BMI auto-calc
-- [ ] Breadcrumbs show position; tapping breadcrumb level returns to selection state for that level
-- [ ] Escape navigates back one level
-- [ ] Batch mode works (stays at category after add)
-- [ ] Undo works (keyboard + touch toast)
+- [ ] Omni-input shows "Add to chart..." placeholder, focuses on `/` or `Cmd+K`
+- [ ] Empty state: detail area shows category pills + suggestion cards
+- [ ] Tap category pill → pill appears in omni-input, detail area shows items within category
+- [ ] Tap item pill → pill appears in omni-input, detail area shows field rows + suggestion card
+- [ ] Tap [Add] on any suggestion card → item added to chart list, omni-input resets
+- [ ] Type "benz" → detail area shows filtered results with Benzonatate as top match
+- [ ] Type "strep" → detail area shows grouped results (Lab, Dx, Procedure matches)
+- [ ] Type "rx" or "rx:" → [Rx] pill auto-inserts, detail area scoped to medications
+- [ ] Backspace deletes rightmost pill; last pill deleted returns to root
+- [ ] Tap preceding pill truncates everything after it
+- [ ] Cmd+A + Delete clears entire input
+- [ ] ✕ button clears entire input
+- [ ] Arrow keys navigate suggestion cards, Enter accepts highlighted
+- [ ] Narrative category (e.g., CC): focus moves to text area in detail area
+- [ ] Vitals: detail area shows numeric grid with BMI auto-calc
+- [ ] Batch mode: after add, stays at category depth
+- [ ] Undo works (Cmd+Z + touch toast)
+- [ ] Escape blurs omni-input (preserves contents)
 ```
 
 ---
@@ -158,7 +218,7 @@ PHASE 2: DETAIL FORMS FOR RX, LAB, DX
 
 [Include shared context block]
 
-GOAL: Build category-specific detail forms for Medication, Lab, Diagnosis. These establish the pattern for all structured search categories.
+GOAL: Build category-specific detail forms for Medication, Lab, Diagnosis. These establish the field-row configuration pattern used at depth 3 of the OmniAdd detail area, and the suggestion card generation for each category.
 
 PREREQUISITES: Phase 1 complete.
 
@@ -167,24 +227,37 @@ WHAT TO BUILD:
 1. SHARED FORM COMPONENTS (src/components/omni-add/forms/shared/)
 
 ChipSelect.tsx:
-- Horizontal chips, single-select (multi option). "Other" chip reveals text input.
+- Horizontal pill options, single-select (multi option). "Other" pill reveals text input.
 - Keyboard: arrows to navigate, Enter to select. Touch: tap to select.
+- Selected state: pill highlighted (pre-selected by Edit action or provider choice).
+- Unselected state: all pills visible but none highlighted (default when entering depth 3 directly).
 
 FieldRow.tsx:
-- Label left, input/chips right. Supports ChipSelect, text, number, toggle, search/select.
-- Required field indicator (subtle). Expandable: tap to show chips, collapsed shows current value.
+- Label left, pill options or input right. Supports ChipSelect, text, number, toggle, search/select.
+- Required field indicator (subtle).
+- Fields are always visible (not collapsed) — shows object anatomy at a glance.
+- When unselected: pill options visible, no highlight. When Edit pre-selects: relevant pill highlighted, numeric fields filled.
+
+SuggestionCard.tsx:
+- Compact card showing complete item summary as single-line text.
+- Actions: [Edit] and [Add].
+- Add: accepts configuration, adds item to chart.
+- Edit: pre-selects card's values across field rows above, hides this card. Shows [Clear] + [Add] below field rows.
+- Clear: resets all field selections, restores suggestion card.
 
 2. MEDICATION FORM (src/components/omni-add/forms/MedicationForm.tsx)
-Fields in order: Dosage (ChipSelect), Route (ChipSelect), Frequency (ChipSelect), Instructions/Sig (auto-generated text), Quantity (number, auto-calc from frequency×duration), Refills (number), Duration (ChipSelect), Pharmacy (search/select), DAW (toggle).
-Smart defaults: ALL fields pre-populated on drug selection. Sig auto-generates. Quantity auto-calculates.
+Field rows: Dosage (ChipSelect), Route (ChipSelect), Frequency (ChipSelect), Instructions/Sig (auto-generated text), Quantity (number, auto-calc from frequency×duration), Refills (number), Duration (ChipSelect), Pharmacy (search/select), DAW (toggle).
+Suggestion card: generated from default prescribing pattern for selected drug. Sig auto-generates. Quantity auto-calculates.
 Mock data (src/data/mock-medications.ts): Benzonatate, Dextromethorphan, Amoxicillin, Metformin, Lisinopril + 10 more common primary care meds with default prescribing patterns.
 
 3. LAB FORM (src/components/omni-add/forms/LabForm.tsx)
-Fields: Collection method (In-House/Send Out), Reference lab (if Send Out), Priority, Fasting (toggle), Special instructions.
+Field rows: Collection method (In-House/Send Out), Reference lab (if Send Out), Priority, Fasting (toggle), Special instructions.
+Suggestion card: generated from default ordering pattern for selected lab.
 Mock data (src/data/mock-labs.ts): Rapid COVID, Flu A/B, Strep, CBC, CMP, Lipid Panel, A1C, TSH, UA + 10 more.
 
 4. DIAGNOSIS FORM (src/components/omni-add/forms/DiagnosisForm.tsx)
-Fields: ICD-10 code (read-only), Specificity (if children exist), Designation (Primary/Secondary, first defaults Primary), Onset, Clinical status, Associated orders (read-only auto-linked).
+Field rows: ICD-10 code (read-only), Specificity (if children exist), Designation (Primary/Secondary, first defaults Primary), Onset, Clinical status, Associated orders (read-only auto-linked).
+Suggestion card: generated from diagnosis defaults (first Dx → Primary, specificity → most common child code).
 Mock data (src/data/mock-diagnoses.ts): Acute bronchitis (J20.9) with children, URI (J06.9), Cough (R05.9) with children, Essential HTN (I10), Type 2 DM (E11.9) with children + 15 more.
 
 5. CARD DISPLAY UPDATES
@@ -192,13 +265,17 @@ Richer card summaries: Rx shows drug+dosage+route+frequency. Lab shows name+coll
 Card shows "Last edited by [name] · [time]" (placeholder data for now — activity log comes in Phase 3).
 
 ACCEPTANCE CRITERIA:
-- [ ] Benzonatate → full form with all fields pre-populated → modify dosage via chips → add → formatted card
-- [ ] Sig auto-generates, quantity auto-calculates
+- [ ] Select Benzonatate → depth 3 shows field rows (unselected) + suggestion card at bottom
+- [ ] Tap [Add] on suggestion card → item added with default configuration (no field interaction needed)
+- [ ] Tap [Edit] on suggestion card → field pills pre-selected, card hidden, [Clear] + [Add] visible
+- [ ] Tap [Clear] → field selections reset, suggestion card restored
+- [ ] Adjust dosage pill from 100mg to 200mg → quantity auto-recalculates
+- [ ] Sig auto-generates from field selections
 - [ ] Lab form hides reference lab when "In-House" selected
 - [ ] Dx form shows specificity prompt, first Dx defaults to Primary
 - [ ] ChipSelect and FieldRow reusable across all three forms
-- [ ] Keyboard: Tab between fields, arrow keys for chips
-- [ ] Touch: tap to expand field, tap chip to select
+- [ ] Keyboard: Tab between fields, arrow keys for pills, Cmd+Enter to Add
+- [ ] Touch: tap pill to select, tap [Add] to commit
 ```
 
 ---

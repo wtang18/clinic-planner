@@ -47,7 +47,7 @@ export const ReferralDetailForm: React.FC<ReferralDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state from quick-pick smart defaults ──
   const [reason, setReason] = React.useState<string>(String(data.reason || ''));
@@ -56,18 +56,23 @@ export const ReferralDetailForm: React.FC<ReferralDetailFormProps> = ({
   const [referToFacility, setReferToFacility] = React.useState<string>('');
   const [requiresAuth, setRequiresAuth] = React.useState<boolean>(Boolean(data.requiresAuth));
 
-  const specialty = String(data.specialty || data.displayText || '');
+  const specialty = String(data.specialty || initialData?.displayText || '');
 
   // ── Submit ──
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       ...initialData,
-      reason: reason || undefined,
-      urgency,
-      referToProvider: referToProvider ? { id: `prov-${Date.now()}`, name: referToProvider } : undefined,
-      referToFacility: referToFacility ? { id: `fac-${Date.now()}`, name: referToFacility } : undefined,
-      requiresAuth,
+      data: {
+        ...(initialData as any)?.data,
+        specialty,
+        reason: reason || undefined,
+        urgency,
+        referToProvider: referToProvider ? { id: `prov-${Date.now()}`, name: referToProvider } : undefined,
+        referToFacility: referToFacility ? { id: `fac-${Date.now()}`, name: referToFacility } : undefined,
+        requiresAuth,
+        referralStatus: 'draft',
+      },
     } as unknown as Partial<ChartItem>);
   };
 

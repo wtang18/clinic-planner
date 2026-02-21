@@ -37,10 +37,16 @@ Every chart item exists once. The views arrange and surface it differently. The 
 │  │  │ Card: Lab (provider-added)      │  │  │  Labs (Quest)           │  │
 │  │  └─────────────────────────────────┘  │  │  —                      │  │
 │  │                                       │  │                         │  │
-│  │  ┌─────────────────────────────────┐  │  └─────────────────────────┘  │
-│  │  │  OmniAdd Module                 │  │                               │
-│  │  │  (always visible at bottom)     │  │                               │
-│  │  └─────────────────────────────────┘  │                               │
+│  │  ┌─ OmniAdd Module ───────────────┐  │  └─────────────────────────┘  │
+│  │  │ ┌─ Omni-Input ──────────────┐  │  │                               │
+│  │  │ │ + Add to chart...      ✕  │  │  │                               │
+│  │  │ └──────────────────────────┘  │  │                               │
+│  │  │ ┌─ Detail Area ─────────────┐  │  │                               │
+│  │  │ │ [Rx] [Lab] [Dx] [Img]    │  │  │                               │
+│  │  │ │                           │  │  │                               │
+│  │  │ │ Suggestion cards...       │  │  │                               │
+│  │  │ └──────────────────────────┘  │  │                               │
+│  │  └────────────────────────────────┘  │                               │
 │  └───────────────────────────────────────┘                               │
 │                                                                          │
 │  ┌──────────────────────────────────────────────────────────────────────┐│
@@ -63,100 +69,246 @@ Three levels of interaction, escalating in depth:
 
 ## 2. OmniAdd Module
 
-### 2.1 State Machine
+### 2.1 Architecture: Omni-Input + Detail Area
 
-Tree-based state machine with three interaction variants:
+OmniAdd has two components with distinct roles:
+
+**Omni-Input (navigator):** Single-line text field with inline pills. Answers "what am I adding?" Accepts typed input and tapped selections. Pills materialize inside the field as the provider navigates the tree — either by typing terms/prefixes or by selecting items from the detail area. The omni-input determines which content appears in the detail area.
+
+**Detail Area (workspace):** Contextual content below the omni-input that adapts based on the current input state. Shows suggestion pills and suggestion cards at selection depths; shows field-row configuration and text areas at editing depths. Holds the Add/commit action. All selection and configuration happens here.
 
 ```
-                    ┌─────────┐
-                    │  ROOT   │ ← Returns here after add (unless batch mode)
-                    └────┬────┘
-                         │
-            ┌────────────┼────────────────┐
-            │            │                │
-     ┌──────▼──────┐ ┌──▼────────┐ ┌─────▼──────────┐
-     │  STRUCTURED  │ │ NARRATIVE │ │  DATA ENTRY    │
-     │  SEARCH     │ │ (manual)  │ │  (vitals)      │
-     └──────┬──────┘ └──┬────────┘ └─────┬──────────┘
-            │            │                │
-     ┌──────▼──────┐ ┌──▼────────┐ ┌─────▼──────────┐
-     │ QUICK-PICK  │ │ TEXT      │ │  FIELDS        │
-     │ or SEARCH   │ │ INPUT     │ │  (numeric)     │
-     └──────┬──────┘ └──┬────────┘ └─────┬──────────┘
-            │            │                │
-     ┌──────▼──────┐    │                │
-     │  DETAIL     │    │                │
-     │  FIELDS     │    │                │
-     └──────┬──────┘    │                │
-            └────────────┼────────────────┘
-                         │
-                    ┌────▼────┐
-                    │  ADD    │ → chart items list + processing rail (if applicable)
-                    └────┬────┘
-                         │
-                    ┌────▼────┐
-                    │  ROOT   │ (or CATEGORY if batch mode)
-                    └─────────┘
+┌─ OmniAdd Module ──────────────────────────────────────────────────────┐
+│                                                                        │
+│  ┌─ Omni-Input ────────────────────────────────────────────────────┐  │
+│  │  + [Rx] [Benzonatate] |                                    ✕   │  │
+│  └─────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│  ┌─ Detail Area ───────────────────────────────────────────────────┐  │
+│  │                                                                  │  │
+│  │  (content adapts to omni-input state — see §2.4)                │  │
+│  │                                                                  │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-Note: Narrative categories (CC, HPI, ROS, PE, Plan, Instruction) are primarily AI-drafted via ambient recording. The OmniAdd narrative flow is the secondary/manual path — used when the provider wants to add or write content directly rather than waiting for or accepting an AI draft.
+### 2.2 Omni-Input Behavior
 
-### 2.2 Root State
+**Text input:** Always-present single-line field. Placeholder: "Add to chart..." Focus via tap, `/`, or `Cmd+K`.
 
-**Touch:** Category pills in priority order. Primary row: Rx (M), Lab (L), Dx (D), Imaging (I), Proc (P). Secondary behind "More": CC, HPI, ROS, PE, Vitals, Allergy, Plan, Instruction, Note, Referral.
+**Pill formation:** As the provider navigates the tree (by typing recognized terms, selecting suggestions, or typing category prefixes), pills materialize in the input field representing committed selections. Pills act as breadcrumbs showing current tree position.
 
-**Keyboard:** Focused text input with placeholder "Add item... (/ for categories)". Typing searches across all categories. Category prefixes (`rx:`, `lab:`, `dx:`) narrow scope. Single-key shortcuts (M, L, D, I, P) when input is empty.
+**Pill examples by depth:**
+- Root (nothing committed): `|` (cursor only)
+- Category committed: `[Rx] |`
+- Item committed: `[Rx] [Benzonatate] |`
 
-**Both:** AI suggestion row below input showing complete, actionable items based on encounter context.
+**Pills behave as characters.** They occupy space in the input like text. Backspace deletes the rightmost pill (or text character). No highlight-then-delete — single backspace removes a pill. Select-all (`Cmd+A`) + delete clears everything.
 
-### 2.3 Breadcrumb Navigation
+**Tapping a preceding pill** truncates everything to its right and shows options at that level. Tapping `[Rx]` in `[Rx] [Benzonatate]` removes the item pill, returns to category-scoped suggestions.
 
-Breadcrumbs show current tree path: `+ Rx > Benzonatate`
+**Typing with pills present** filters content in the detail area. `[Rx] amox|` filters Rx suggestions to matches for "amox".
 
-Tapping a breadcrumb level returns to that level's **selection state** — not forward into its details. Examples:
-- Tapping "Rx" in `+ Rx > Benzonatate` returns to the Rx category root (quick-picks/search) to choose a different drug
-- Tapping "+" returns to OmniAdd root
+**The ✕ button** clears all pills and text, returns to root state.
 
-Back button and Escape key move back one level.
+### 2.3 Input Recognition and Categorization
 
-### 2.4 Structured Search Flow
+The omni-input supports multiple input styles that all resolve through the same ranking system:
 
-**Categories:** medication, lab, imaging, procedure, diagnosis, allergy, referral
+**Natural language input:** `benzonatate 100mg po bid 7d` → system recognizes "benzonatate" as an Rx, parses parameters. Auto-inserts `[Rx]` pill, shows suggestion card with parsed values.
 
-1. **Category selected** → Quick-pick chips (AI-generated based on CC/patient context) + "Other" (search)
-2. **Item selected** → Detail fields specific to category, pre-populated with smart defaults
-3. **Add** → Card appears in chart items list; processing entry created if applicable
+**Category prefix:** `rx amoxicillin` or `rx:amoxicillin` → `[Rx]` pill inserts, results scoped to Rx matching "amoxicillin".
 
-### 2.5 Narrative Flow (Manual/Secondary Path)
+**Item name only:** `amoxicillin` → system recognizes as unambiguously Rx → `[Rx]` pill auto-inserts, detail area shows Amoxicillin suggestion cards.
 
-**Categories:** chief-complaint, hpi, ros, physical-exam, plan, instruction, note
+**Ambiguous terms:** `strep` → could be Lab/Dx/Procedure → no category pill auto-inserts. Detail area shows ranked results grouped by category. Provider selects one, both pills insert together.
 
-1. **Category selected** → Text input area with category-specific placeholder
-2. **Type content** — template/snippet support for ROS (system toggles) and PE (system sections)
-3. **Add** → Card appears in chart items list
+**Auto-categorization rules:**
+
+| Input Pattern | Behavior | Rationale |
+|--------------|----------|-----------|
+| Recognized drug name | Auto-insert `[Rx]` | Drug names are unambiguous |
+| Recognized lab with no Dx/Proc overlap | Auto-insert `[Lab]` | e.g., "CBC" is only a lab |
+| Term matching multiple categories | No auto-insert; show grouped results | Provider disambiguates |
+| Category prefix (`rx:`, `lab:`, `dx:`, etc.) | Auto-insert category pill | Provider declared intent |
+| Narrative category prefix (`cc`, `hpi`, `ros`, `pe`) | Auto-insert category pill, focus moves to text area | See §2.6 |
+
+**Structured categories never accept free text as a final value.** Every item must resolve to a known entity (medication from formulary, lab from catalog, diagnosis from ICD-10). If typed text has no match, the detail area shows "No matches" with suggestions for similar terms.
+
+### 2.4 Detail Area: Suggestion-Driven at Every Depth
+
+The detail area is always a response to the current omni-input state. Everything in it is a suggestion — at different levels of specificity depending on tree depth. The detail area has three types of content that appear contextually: suggestion pills (quick-select options), suggestion cards (complete item previews with actions), and workspace content (field rows, text areas, data entry grids).
+
+**Depth 1 — Root (no pills, no text):**
+
+The zero-input state. Detail area shows encounter-contextual suggestions: category pills for scoping, and complete suggestion cards for likely next items.
+
+```
+  [Rx]  [Lab]  [Dx]  [Imaging]  [Referral]  [More...]
+
+  ┌─ Rx · Benzonatate 100mg PO TID PRN ──────────┐
+  │  #15 · 0 refills · CVS              [Add][Edit]│
+  └────────────────────────────────────────────────┘
+  ┌─ Dx · Acute Bronchitis (J20.9) ──────────────┐
+  │  Primary · Acute onset             [Add][Edit] │
+  └────────────────────────────────────────────────┘
+  ┌─ Lab · Rapid COVID-19 Antigen ────────────────┐
+  │  In-House · Routine                [Add][Edit] │
+  └────────────────────────────────────────────────┘
+```
+
+Category pills at top: tapping one inserts the corresponding pill into the omni-input and advances the detail area to depth 2.
+
+Suggestion cards below: fully fleshed-out items the provider probably wants to add next, based on encounter context (CC, patient history, ambient recording, care protocols, provider patterns). Each card has Add (accept as-is) and Edit (open field configuration).
+
+**Depth 1b — Root with typed text (searching):**
+
+Provider has typed text but no category is committed. Detail area shows ranked results across all categories, replacing category pills with search results.
+
+```
+  ┌─ Lab · Rapid Strep Test ──────────────────────┐
+  │  In-House · Routine                [Add][Edit] │
+  └────────────────────────────────────────────────┘
+  ┌─ Dx · Streptococcal pharyngitis (J02.0) ─────┐
+  │  Primary · Acute onset             [Add][Edit] │
+  └────────────────────────────────────────────────┘
+  ┌─ Procedure · Rapid Strep Collection ──────────┐
+  │  In-Office                         [Add][Edit] │
+  └────────────────────────────────────────────────┘
+```
+
+Results ranked by relevance and encounter context. Each result shows its category badge. Selecting one inserts both `[Category]` and `[Item]` pills into the omni-input.
+
+Keyboard: arrow keys highlight results, Enter accepts the top/highlighted result.
+
+**Depth 2 — Category committed (e.g., `[Rx] |`):**
+
+Detail area shows suggestions within that category: item pills for quick selection, and suggestion cards for common items.
+
+```
+  [Benzonatate]  [Dextromethorphan]  [Guaifenesin]  [Amoxicillin]
+
+  ┌─ Benzonatate 100mg PO TID PRN ───────────────┐
+  │  #15 · 0 refills · CVS              [Add][Edit]│
+  └────────────────────────────────────────────────┘
+  ┌─ Dextromethorphan 30mg PO Q6H PRN ───────────┐
+  │  #20 · 0 refills · CVS              [Add][Edit]│
+  └────────────────────────────────────────────────┘
+```
+
+Tapping an item pill inserts it into the omni-input and advances to depth 3. Typing filters both pills and cards. The pills are the quick-select layer; the cards are the fully configured previews.
+
+**Depth 3 — Item committed (e.g., `[Rx] [Benzonatate]`):**
+
+Detail area shows the item's configurable fields (unselected) with a suggestion card at the bottom representing the recommended configuration.
+
+```
+  → Dosage          [100 mg]  [200 mg]  [Other]
+  → Route           [PO]  [IM]  [Other]
+  → Frequency       [TID PRN]  [BID]  [Other]
+  → Quantity        ___
+  → Refills         ___
+
+  ┌─ Suggested ───────────────────────────────────┐
+  │  100 mg PO TID PRN cough #15, 0RF             │
+  │                                  [Edit] [Add]  │
+  └────────────────────────────────────────────────┘
+```
+
+Field rows are visible with pill options but **unselected by default**. This shows the anatomy of the item — what fields exist and what options are available — giving providers a sense of control and visibility without implying the system has already decided.
+
+The suggestion card at the bottom represents the system's recommended configuration. Two actions:
+
+**Add:** Accepts the suggestion as-is. Item added to chart with the suggested values. Fastest path.
+
+**Edit:** Pre-selects the suggestion's values across the field rows and hides the suggestion card (since the provider is indicating the suggestion isn't exactly right). The provider adjusts fields as needed using the now-highlighted pills. An Add button remains at the bottom. A Clear affordance resets field selections and restores the suggestion card.
+
+```
+  After tapping Edit on suggestion:
+
+  → Dosage          [•100 mg]  [200 mg]  [Other]
+  → Route           [•PO]  [IM]  [Other]
+  → Frequency       [•TID PRN]  [BID]  [Other]
+  → Quantity        15
+  → Refills         0
+
+                                    [Clear]  [Add]
+```
+
+Fields with `•` indicate pre-selected values from the suggestion. Provider taps different pills to change, adjusts numeric fields as needed. Add commits the current configuration.
+
+**Natural language fast path:** If the provider typed parameters (e.g., `benzonatate 100mg po bid 7d`), the system parses these and the suggestion card reflects the parsed values. Add accepts the parsed result. Edit pre-fills with the parsed values if adjustments are needed. The parsing doesn't need to be perfect — the suggestion card makes parsed values visible so misparses are obvious, and Edit gives a one-tap path to correction.
+
+### 2.5 Detail Area: Keyboard-Only Flow
+
+The entire OmniAdd flow is completable without mouse or touch:
+
+1. `/` or `Cmd+K` → focus omni-input
+2. Type: `benzonatate 100mg po bid 7d`
+3. `↑`/`↓` arrow keys → highlight different suggestion cards (top result highlighted by default)
+4. `Enter` → accepts highlighted suggestion card (Add). Pills insert, item added to chart.
+5. Cursor returns to omni-input (batch mode: scoped to same category)
+
+If the provider wants to customize before adding:
+
+1. Type: `benzonatate`
+2. `Enter` → accepts top suggestion, inserts pills, shows depth 3 with suggestion card
+3. `Tab` → moves focus into field rows
+4. `Tab`/`Shift+Tab` → navigate between fields
+5. Arrow keys within a field → navigate pill options
+6. `Enter` on a pill → select it
+7. `Tab` past last field or `Cmd+Enter` → Add (commit item)
+
+`Escape` behavior by context:
+- Focus in field rows → blur fields, return focus to omni-input
+- Focus in omni-input with pills → blur omni-input entirely (preserve contents)
+- Empty omni-input → blur omni-input
+
+### 2.6 Category Variants
+
+The three category variants (structured search, narrative, data entry) all enter through the omni-input but produce different detail area content at depth 2+.
+
+**Structured Search (medication, lab, imaging, procedure, diagnosis, allergy, referral):**
+Detail area shows item suggestions (pills + cards) at depth 2, field configuration at depth 3. Described fully in §2.4.
+
+**Narrative (chief-complaint, hpi, ros, physical-exam, plan, instruction, note):**
+Narrative categories require explicit declaration — a typed prefix (`cc`, `hpi`, etc.) or a category pill tap. Free text is indistinguishable from structured search terms, so the system cannot auto-detect narrative intent.
+
+Once a narrative category pill is committed (e.g., `[CC]`), **focus automatically moves to the detail area**, which shows:
+
+```
+  ┌─ AI Draft (if available) ─────────────────────┐
+  │  Patient reports cough x 5 days, productive    │
+  │  with yellow sputum, worse at night. Tried     │
+  │  OTC Robitussin without relief...              │
+  │                                  [Edit] [Add]  │
+  └────────────────────────────────────────────────┘
+
+  — or write manually —
+  ┌────────────────────────────────────────────────┐
+  │  |                                             │
+  │                                                │
+  └────────────────────────────────────────────────┘
+                                            [Add]
+```
+
+If an AI draft exists for this category (from ambient recording), it appears as a suggestion card. Add accepts as-is; Edit opens the content in the text area for modification.
+
+Below the AI draft (or as the only content if no draft exists): a text area for manual entry with a category-specific placeholder. Template/snippet support for ROS (system toggles) and PE (system sections).
+
+If the provider types content after the prefix (`cc cough x 5 days`), the text after the category token pre-fills the text area.
 
 Note is the only purely manual narrative category. All others are primarily AI-drafted from ambient recording (see Section 3).
 
-### 2.6 Structured Data Entry Flow
-
-**Category:** vitals
-
-1. **Category selected** → Grid of vital sign fields (BP, HR, Temp, RR, SpO2, Weight, Height, BMI, Pain)
-2. **Enter values** — out-of-range highlighting, BMI auto-calc, trend indicators vs. last recorded
-3. **Add** → Vitals card appears in chart items list
+**Data Entry (vitals):**
+`[Vitals]` pill committed → detail area shows the numeric field grid (BP, HR, Temp, RR, SpO2, Weight, Height, BMI, Pain). Out-of-range highlighting, BMI auto-calc, trend indicators vs. last recorded. Add button at bottom.
 
 Vitals are typically MA-entered during rooming. Provider updates via OmniAdd if needed.
 
-### 2.7 AI Suggestion Layer
+### 2.7 Suggestion Engine
 
-Suggestions appear at multiple points in OmniAdd:
-
-| Context | Suggestion Type | Example |
-|---------|----------------|---------|
-| Root (no category) | Complete items across categories | "Rx: Benzonatate 100mg PO TID PRN #15, 0RF" |
-| Category selected | Pre-filled items within category | Within Rx: common cough medications with full details |
-| After adding item | Next likely item | After Rx, suggest associated Dx |
-| Order sets | Multi-item bundles | "Bronchitis" → Rx + Dx + Labs |
+All content in the detail area is generated by the suggestion engine. Different tree depths produce different suggestion types, but the engine is unified.
 
 **Suggestion sources (priority order):**
 1. Ambient recording transcript
@@ -167,26 +319,59 @@ Suggestions appear at multiple points in OmniAdd:
 6. Care gaps (overdue screenings, monitoring)
 7. Provider's prescribing patterns
 
-**Accepting a suggestion:** One tap (touch) or Enter (keyboard) adds the complete item, bypassing the tree. This is the fastest path.
+**Suggestion types by depth:**
 
-**Order sets:** Single suggestion that adds multiple items. Two interaction paths:
-- **Quick add (primary):** One-tap accepts all default-selected items with smart defaults. Fastest path for trusted order sets.
-- **Review & customize (secondary):** Expand the order set suggestion to see contents. Shows a review flow with checkboxes per item (standard items pre-checked, conditional items unchecked, contraindicated items flagged). Each item has an [Edit] affordance for field customization. [Add Selected] batch-adds checked items.
+| Depth | Pill Suggestions | Card Suggestions |
+|-------|-----------------|------------------|
+| Root (zero-input) | Category pills (Rx, Lab, Dx...) | Complete items across categories |
+| Root (typed text) | None (results replace pills) | Ranked results across categories |
+| Category committed | Item pills within category | Complete items within category |
+| Item committed | Field-level option pills | Top recommended configuration |
+| After adding item | Next-likely category pills | Next-likely complete items |
 
-Order sets are the shared data structure behind OmniAdd bundled suggestions, AI suggestion bundles, and care protocol card sections. See MULTI-SURFACE-COORDINATION.md §4 for the full order set architecture.
+**Accepting a suggestion card:** Tap Add (touch) or Enter on highlighted card (keyboard). Adds the complete item to the chart, bypassing further configuration. This is the fastest path.
+
+**Result ranking (Approach 4 — weighted inline results):** All typed input produces ranked results in the detail area. The top result is always highlighted and one Enter away. Alternative results are visible below. The provider can verify the system's best guess before committing. Ranking considers: exact match strength, encounter context relevance, category frequency patterns, and provider history.
+
+**Ambiguity resolution:** When a typed term matches multiple categories, results are shown grouped by category with the most likely match promoted to the top. No auto-categorization occurs for ambiguous terms. The provider selects from the ranked results, and both category + item pills insert together.
+
+**Natural language parameter parsing:** When input includes recognizable parameters (dosage, route, frequency, duration patterns), the suggestion card reflects parsed values. The parsing pipeline: identify item → identify category → extract parameters → match to field values → generate suggestion card with pre-filled configuration. Parsing is best-effort — misparses are visible in the suggestion card for the provider to catch. Rule-based pattern matching for common clinical abbreviations is sufficient for the prototype; the architecture supports swapping in AI-assisted parsing later.
+
+**Order sets:** Single suggestion card that represents multiple items. See MULTI-SURFACE-COORDINATION.md §4 for the full order set architecture. In the detail area, an order set card shows a summary (e.g., "Bronchitis Workup · 3 items: Rx, Dx, Lab") with Add (accept all with defaults) and Edit (open order set review flow with per-item checkboxes and customization).
 
 ### 2.8 Batch Mode
 
 After adding an item, OmniAdd returns to category level (not root) for batch adds:
+- Omni-input shows `[Rx] |` with cursor ready for next item
+- Detail area shows category-scoped suggestions (next likely items)
 - "Done with [Category]" affordance returns to root
-- Keyboard: Enter adds and stays; Escape returns to root
-- Touch: category chip stays active with "adding more" state
+- Keyboard: Escape exits batch mode to root
+- Backspace on category pill also exits to root
 
 ### 2.9 Undo
 
 - Keyboard: Cmd/Ctrl+Z removes last-added chart item
 - Touch: toast with "Undo" for 5 seconds after add
 - Undo removes item from chart list and processing state
+
+### 2.10 Correction and Editing
+
+**Backspace behavior** — pills are characters:
+
+| State | Backspace |
+|-------|-----------|
+| Text present after pills | Delete text character |
+| Cursor against rightmost pill, no text | Delete that pill |
+| Multiple pills, rightmost deleted | Cursor at end of previous pill |
+| Last pill deleted | Return to root |
+
+Deleting an item pill returns to category-scoped suggestions (detail area updates to depth 2). Deleting a category pill returns to root suggestions (detail area updates to depth 1). Since the suggestion engine immediately responds with contextual options, the item just removed is likely the top suggestion — making re-selection a single tap/Enter if the deletion was accidental.
+
+**Tapping a preceding pill** truncates everything to its right. Tapping `[Rx]` in `[Rx] [Benzonatate]` removes `[Benzonatate]` and returns to category-scoped suggestions. This matches standard breadcrumb navigation.
+
+**Clearing the entire input:** `Cmd+A` + delete, or tap the ✕ button.
+
+**Within the configuration field view** (depth 3 after Edit): tapping different pills changes selections. Clear resets all selections and restores the suggestion card. These changes are local to the field view — the omni-input pills are unaffected.
 
 ---
 
@@ -238,11 +423,11 @@ Dismiss:
 
 ### 3.5 Draft vs. Suggestion Distinction
 
-| | AI Suggestion (OmniAdd) | AI Draft (Rail) |
-|-|------------------------|-----------------|
+| | AI Suggestion (OmniAdd Detail Area) | AI Draft (Rail) |
+|-|-------------------------------------|-----------------|
 | Content type | Structured items (Rx, Lab, Dx, etc.) | Narrative content (HPI, PE, Plan, etc.) |
-| Where it appears | Suggestion row in OmniAdd | Processing rail under "AI Drafts" |
-| Provider action | Accept = adds via OmniAdd flow | Accept = promotes to chart list |
+| Where it appears | Suggestion cards in OmniAdd detail area | Processing rail under "AI Drafts" |
+| Provider action | Accept = Add on suggestion card | Accept = promotes to chart list |
 | Generation | Based on context/rules | Based on ambient recording |
 
 ---
@@ -659,17 +844,17 @@ Provider switches to Process view to:
 
 | Shortcut | Action |
 |----------|--------|
-| `/` or `Cmd+K` | Focus OmniAdd |
-| `M` | Medication category (when OmniAdd focused + empty) |
-| `L` | Lab category |
-| `D` | Diagnosis category |
-| `I` | Imaging category |
-| `P` | Procedure category |
-| `Escape` | Back one level / close pane |
-| `Enter` | Select / Add item / Accept suggestion |
-| `Tab` / `Shift+Tab` | Navigate detail fields |
+| `/` or `Cmd+K` | Focus omni-input |
+| `Escape` | Context-dependent: close field editing → blur omni-input → close details pane |
+| `Enter` | Accept highlighted suggestion card (Add) / Select pill option / Submit item from field view |
+| `Cmd+Enter` | Add item (when focus is in field rows) |
+| `↑` / `↓` | Navigate suggestion cards / search results |
+| `Tab` / `Shift+Tab` | Navigate between detail area fields |
+| `Backspace` | Delete text character or rightmost pill |
+| `Cmd+A` + `Delete` | Clear all pills and text in omni-input |
 | `Cmd+Z` | Undo last add |
-| `↑` / `↓` | Navigate suggestions / search results |
+
+Category prefixes (type in omni-input): `rx`, `lab`, `dx`, `img`, `proc`, `cc`, `hpi`, `ros`, `pe`, `vitals`, `allergy`, `plan`, `instruction`, `note`, `referral`
 
 ### 10.3 Safety Checks
 

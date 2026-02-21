@@ -59,7 +59,7 @@ export const LabDetailForm: React.FC<LabDetailFormProps> = ({
   onCancel,
   mode = 'create',
 }) => {
-  const data = (initialData as Record<string, unknown>) || {};
+  const data = ((initialData as any)?.data as Record<string, unknown>) || {};
 
   // ── Form state from quick-pick smart defaults ──
   const [priority, setPriority] = React.useState<string>(String(data.priority || 'routine'));
@@ -68,7 +68,7 @@ export const LabDetailForm: React.FC<LabDetailFormProps> = ({
   const [fastingRequired, setFastingRequired] = React.useState<boolean>(Boolean(data.fastingRequired));
   const [specialInstructions, setSpecialInstructions] = React.useState<string>(String(data.specialInstructions || ''));
 
-  const testName = String(data.testName || data.displayText || '');
+  const testName = String(data.testName || initialData?.displayText || '');
   const testCode = data.testCode ? String(data.testCode) : undefined;
   const panelName = data.panelName ? String(data.panelName) : undefined;
 
@@ -77,11 +77,18 @@ export const LabDetailForm: React.FC<LabDetailFormProps> = ({
     e.preventDefault();
     onSubmit({
       ...initialData,
-      priority,
-      collectionType,
-      labVendor: collectionType === 'send-out' ? labVendor : undefined,
-      fastingRequired,
-      specialInstructions: specialInstructions || undefined,
+      data: {
+        ...(initialData as any)?.data,
+        testName,
+        testCode,
+        panelName,
+        priority,
+        collectionType,
+        labVendor: collectionType === 'send-out' ? labVendor : undefined,
+        fastingRequired,
+        specialInstructions: specialInstructions || undefined,
+        orderStatus: 'draft',
+      },
     } as unknown as Partial<ChartItem>);
   };
 

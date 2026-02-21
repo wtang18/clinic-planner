@@ -31,7 +31,7 @@ This document defines:
 | Surface | Location | Primary Intent | Cognitive Mode | Input Type |
 |---------|----------|---------------|----------------|------------|
 | **OmniAdd** | Canvas pane, bottom | Provider-initiated structured charting | "I know what I want to add" | Active — provider drives |
-| **OmniAdd Suggestion Layer** | Within OmniAdd, at each state | Contextual shortcuts within active charting | "Here's what you probably want next" | Semi-active — provider sees and accepts |
+| **OmniAdd Suggestion Layer** | Within OmniAdd detail area, at each depth | Contextual shortcuts within active charting | "Here's what you probably want next" | Semi-active — provider sees and accepts |
 | **AI Palette** | Bottom bar, expanded | Cross-cutting awareness + quick actions | "What should I be thinking about?" | Ambient — AI surfaces, provider acts |
 | **AI Drawer** | Left pane | Full AI assistant: suggestions, conversation, activity | "Let me explore / ask / review AI's perspective" | Deliberate — provider engages deeply |
 | **Processing Rail** | Capture mode, right column | Peripheral awareness of AI drafts + order status | "What's happening alongside my charting?" | Passive — provider glances, acts when ready |
@@ -65,7 +65,7 @@ All surfaces READ from and WRITE to the same chart items state. No surface "owns
 | Surface | Best For | Not For |
 |---------|----------|---------|
 | **OmniAdd** | Adding specific items the provider has decided on; speed-optimized structured input | Browsing recommendations; reviewing AI output |
-| **OmniAdd Suggestions** | Accelerating OmniAdd with contextual predictions; order set shortcuts | Comprehensive care planning; cross-cutting awareness |
+| **OmniAdd Suggestions** | Accelerating OmniAdd with contextual suggestion cards and pills; order set shortcuts | Comprehensive care planning; cross-cutting awareness |
 | **AI Palette** | Quick awareness checks; accepting/dismissing suggestions between charting actions | Deep editing; extended conversation; protocol review |
 | **AI Drawer** | Extended AI interaction; reviewing full suggestion list; asking clinical questions | Rapid item addition (too many taps to add from drawer) |
 | **Processing Rail** | Ambient awareness of AI drafts and order status during charting | Detailed editing; batch operations (that's Process view) |
@@ -96,7 +96,7 @@ Suggestion Engine
   ├── Generates → Care gap alerts
   │
   └── Consumed by:
-      ├── OmniAdd suggestion row (filtered to current category context)
+      ├── OmniAdd detail area suggestion cards (filtered to current input context)
       ├── AI Palette suggestion section (top 3, cross-category)
       ├── AI Drawer suggestion section (full list, grouped by source)
       ├── Processing Rail AI Drafts section (narrative drafts only)
