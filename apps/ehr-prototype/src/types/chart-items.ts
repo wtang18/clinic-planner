@@ -438,3 +438,26 @@ export type ChartItem =
   | InstructionItem
   | ReferralItem
   | ProcedureItem;
+
+// ============================================================================
+// Data Map — extracts the `data` shape for each category
+// ============================================================================
+
+/** Maps each ItemCategory to its ChartItem data shape */
+export type ChartItemDataMap = {
+  'chief-complaint': NarrativeItem['data'];
+  'hpi': NarrativeItem['data'];
+  'ros': NarrativeItem['data'];
+  'physical-exam': PhysicalExamItem['data'];
+  'vitals': VitalsItem['data'];
+  'medication': MedicationItem['data'];
+  'allergy': AllergyItem['data'];
+  'lab': LabItem['data'];
+  'imaging': ImagingItem['data'];
+  'procedure': ProcedureItem['data'];
+  'diagnosis': DiagnosisItem['data'];
+  'plan': NarrativeItem['data'];
+  'instruction': InstructionItem['data'];
+  'note': NarrativeItem['data'];
+  'referral': ReferralItem['data'];
+};

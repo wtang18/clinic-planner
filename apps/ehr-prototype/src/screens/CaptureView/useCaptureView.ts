@@ -9,6 +9,7 @@ import type { ChartItem, ItemSource } from '../../types';
 import type { Mode } from '../../state/types';
 import { useDispatch } from '../../hooks';
 import { useItemActions, useSuggestionActions, useDraftActions } from '../../hooks';
+import { materializeChartItem } from '../../utils/chart-item-factory';
 import { useTranscription } from '../../context/TranscriptionContext';
 import { useStore } from '../../hooks/useEncounterState';
 import { useNavigation } from '../../navigation/NavigationContext';
@@ -80,38 +81,13 @@ export function useCaptureView(): UseCaptureViewResult {
   // Handle adding a new item
   const handleItemAdd = useCallback(
     (partialItem: Partial<ChartItem>, source: ItemSource = { type: 'manual' }) => {
-      // Create a complete ChartItem with defaults for missing fields
-      const now = new Date();
-      const item: ChartItem = {
-        id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        category: partialItem.category || 'note',
-        displayText: partialItem.displayText || '',
-        displaySubtext: partialItem.displaySubtext,
-        createdAt: now,
-        createdBy: { id: 'current-user', name: 'Current User' },
-        modifiedAt: now,
-        modifiedBy: { id: 'current-user', name: 'Current User' },
+      addItem(
+        materializeChartItem(partialItem, {
+          source,
+          activityDetail: `Added via OmniAdd (${partialItem.category || 'note'})`,
+        }),
         source,
-        status: 'active',
-        tags: partialItem.tags || [],
-        linkedDiagnoses: partialItem.linkedDiagnoses || [],
-        linkedEncounters: partialItem.linkedEncounters || [],
-        activityLog: [{
-          timestamp: now,
-          action: 'created',
-          actor: 'Current User',
-          details: `Added via OmniAdd (${partialItem.category || 'note'})`,
-        }],
-        _meta: {
-          syncStatus: 'pending',
-          aiGenerated: false,
-          requiresReview: false,
-          reviewed: true,
-        },
-        ...partialItem,
-      } as ChartItem;
-
-      addItem(item, source);
+      );
     },
     [addItem]
   );
@@ -217,13 +193,7 @@ export function useCaptureView(): UseCaptureViewResult {
             category: draft.category,
             displayText: draft.content,
             displaySubtext: draft.label,
-            _meta: {
-              syncStatus: 'pending' as const,
-              aiGenerated: true,
-              requiresReview: false,
-              reviewed: true,
-            },
-          } as unknown as Partial<ChartItem>,
+          },
           { type: 'aiDraft', draftId }
         );
       }
@@ -238,44 +208,21 @@ export function useCaptureView(): UseCaptureViewResult {
       const draft = selectDraft(state, draftId);
       if (!draft) return;
 
-      // Accept and create the item (same as accept flow)
       acceptDraftAction(draftId);
 
-      const itemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const now = new Date();
-
-      const item: ChartItem = {
-        id: itemId,
-        category: draft.category,
-        displayText: draft.content,
-        displaySubtext: draft.label,
-        createdAt: now,
-        createdBy: { id: 'current-user', name: 'Current User' },
-        modifiedAt: now,
-        modifiedBy: { id: 'current-user', name: 'Current User' },
-        source: { type: 'aiDraft', draftId },
-        status: 'active',
-        tags: [],
-        linkedDiagnoses: [],
-        linkedEncounters: [],
-        activityLog: [{
-          timestamp: now,
-          action: 'created',
-          actor: 'Current User',
-          details: `AI-generated from ambient, editing (${draft.category})`,
-        }],
-        _meta: {
-          syncStatus: 'pending' as const,
+      const item = materializeChartItem(
+        { category: draft.category, displayText: draft.content, displaySubtext: draft.label },
+        {
+          source: { type: 'aiDraft', draftId },
           aiGenerated: true,
           requiresReview: true,
           reviewed: false,
+          activityDetail: `AI-generated from ambient, editing (${draft.category})`,
         },
-      } as unknown as ChartItem;
+      );
 
       addItem(item, { type: 'aiDraft', draftId });
-
-      // Open details pane for editing
-      setSelectedItemId(itemId);
+      setSelectedItemId(item.id);
     },
     [store, acceptDraftAction, addItem]
   );

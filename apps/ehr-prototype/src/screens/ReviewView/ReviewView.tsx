@@ -20,6 +20,7 @@ import {
   useItemActions,
 } from '../../hooks';
 import type { ChartItem, ItemCategory } from '../../types';
+import { materializeChartItem } from '../../utils/chart-item-factory';
 
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { CareGapList } from '../../components/care-gaps/CareGapList';
@@ -167,37 +168,13 @@ export const ReviewCanvas: React.FC = () => {
   // Handle scoped item add from OmniAddBar
   const handleScopedItemAdd = useCallback(
     (item: Partial<ChartItem>) => {
-      const now = new Date();
-      const fullItem: ChartItem = {
-        id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        category: item.category || 'note',
-        displayText: item.displayText || '',
-        displaySubtext: item.displaySubtext,
-        createdAt: now,
-        createdBy: { id: 'current-user', name: 'Current User' },
-        modifiedAt: now,
-        modifiedBy: { id: 'current-user', name: 'Current User' },
-        source: { type: 'manual' },
-        status: 'confirmed' as const,
-        tags: item.tags || [],
-        linkedDiagnoses: item.linkedDiagnoses || [],
-        linkedEncounters: item.linkedEncounters || [],
-        activityLog: [{
-          timestamp: now,
-          action: 'created',
-          actor: 'Current User',
-          details: `Added in Review mode (${item.category || 'note'})`,
-        }],
-        _meta: {
-          syncStatus: 'pending' as const,
-          aiGenerated: false,
-          requiresReview: false,
-          reviewed: true,
-        },
-        ...item,
-      } as ChartItem;
-
-      addItem(fullItem, { type: 'manual' });
+      addItem(
+        materializeChartItem(item, {
+          status: 'confirmed',
+          activityDetail: `Added in Review mode (${item.category || 'note'})`,
+        }),
+        { type: 'manual' },
+      );
       handleCancelScopedAdd();
     },
     [addItem, handleCancelScopedAdd]

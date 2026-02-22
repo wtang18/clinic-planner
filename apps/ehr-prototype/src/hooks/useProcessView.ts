@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useState, useMemo } from 'react';
-import type { ChartItem, ItemSource, ItemCategory, AIDraft } from '../types';
+import type { ChartItem, ItemCategory, AIDraft } from '../types';
 import type { Mode } from '../state/types';
 import type { BatchType } from '../types/drafts';
 import type { SignOffBlocker } from '../screens/ReviewView/SignOffSection';
@@ -36,6 +36,7 @@ import {
 } from '../hooks';
 import { useStore } from './useEncounterState';
 import { selectDraft } from '../state/selectors/drafts';
+import { materializeChartItem } from '../utils/chart-item-factory';
 
 // ============================================================================
 // Types
@@ -179,36 +180,18 @@ export function useProcessView(): UseProcessViewResult {
           source: { type: 'aiDraft', draftId },
         });
       } else {
-        const now = new Date();
-        const item: ChartItem = {
-          id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          category: draft.category,
-          displayText: draft.content,
-          displaySubtext: draft.label,
-          createdAt: now,
-          createdBy: { id: 'current-user', name: 'Current User' },
-          modifiedAt: now,
-          modifiedBy: { id: 'current-user', name: 'Current User' },
-          source: { type: 'aiDraft', draftId },
-          status: 'confirmed' as const,
-          tags: [],
-          linkedDiagnoses: [],
-          linkedEncounters: [],
-          activityLog: [{
-            timestamp: now,
-            action: 'created',
-            actor: 'Current User',
-            details: `Accepted AI draft (${draft.category})`,
-          }],
-          _meta: {
-            syncStatus: 'pending' as const,
-            aiGenerated: true,
-            requiresReview: false,
-            reviewed: true,
-          },
-        } as unknown as ChartItem;
-
-        addItem(item, { type: 'aiDraft', draftId });
+        addItem(
+          materializeChartItem(
+            { category: draft.category, displayText: draft.content, displaySubtext: draft.label },
+            {
+              source: { type: 'aiDraft', draftId },
+              status: 'confirmed',
+              aiGenerated: true,
+              activityDetail: `Accepted AI draft (${draft.category})`,
+            },
+          ),
+          { type: 'aiDraft', draftId },
+        );
       }
     },
     [store, acceptDraftAction, updateItem, addItem]
@@ -223,39 +206,20 @@ export function useProcessView(): UseProcessViewResult {
 
       acceptDraftAction(draftId);
 
-      const itemId = `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      const now = new Date();
-
-      const item: ChartItem = {
-        id: itemId,
-        category: draft.category,
-        displayText: draft.content,
-        displaySubtext: draft.label,
-        createdAt: now,
-        createdBy: { id: 'current-user', name: 'Current User' },
-        modifiedAt: now,
-        modifiedBy: { id: 'current-user', name: 'Current User' },
-        source: { type: 'aiDraft', draftId },
-        status: 'confirmed' as const,
-        tags: [],
-        linkedDiagnoses: [],
-        linkedEncounters: [],
-        activityLog: [{
-          timestamp: now,
-          action: 'created',
-          actor: 'Current User',
-          details: `AI-generated from ambient, editing (${draft.category})`,
-        }],
-        _meta: {
-          syncStatus: 'pending' as const,
+      const item = materializeChartItem(
+        { category: draft.category, displayText: draft.content, displaySubtext: draft.label },
+        {
+          source: { type: 'aiDraft', draftId },
+          status: 'confirmed',
           aiGenerated: true,
           requiresReview: true,
           reviewed: false,
+          activityDetail: `AI-generated from ambient, editing (${draft.category})`,
         },
-      } as unknown as ChartItem;
+      );
 
       addItem(item, { type: 'aiDraft', draftId });
-      setSelectedItemId(itemId);
+      setSelectedItemId(item.id);
     },
     [store, acceptDraftAction, addItem]
   );
