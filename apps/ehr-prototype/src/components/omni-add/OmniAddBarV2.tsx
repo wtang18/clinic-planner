@@ -165,6 +165,18 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     // Try recognition result first
     if (recognition?.kind === 'auto-category') {
       dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(recognition.category) });
+      if (recognition.bestMatch) {
+        // Strong match: commit category + item in one action (jump to depth 2)
+        // Uses setTimeout to dispatch after category pill is committed (same as handleItemSelect)
+        const match = recognition.bestMatch;
+        setTimeout(() => {
+          dispatch({ type: 'INSERT_PILL', pill: makeItemPill(match.chipLabel, match.category) });
+          setSelectedPickItem(match);
+        }, 0);
+      } else {
+        // No strong match: carry the typed text forward so user sees filtered results at depth 1
+        dispatch({ type: 'SET_TEXT', text: state.text.trim() });
+      }
       return;
     }
     // Try matching typed text against category labels/prefixes
