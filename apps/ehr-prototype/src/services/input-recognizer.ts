@@ -167,15 +167,12 @@ export function searchInCategory(
 }
 
 // ============================================================================
-// NL Parameter Parsing (Rx only)
+// NL Parameter Parsing
 // ============================================================================
 
 /**
  * Parsed medication parameters from natural-language input.
  * E.g., "benzonatate 100mg po tid prn" → { drugName, dosage, route, frequency }
- *
- * Phase 2: Rx-only via regex. Other categories and AI-assisted parsing
- * are deferred (see FUTURE_CONSIDERATIONS.md).
  */
 export interface ParsedRxParams {
   drugName: string;
@@ -331,6 +328,114 @@ export function parseRxNL(input: string): ParsedRxParams | null {
   }
 
   return { drugName, dosage, route, frequency };
+}
+
+// ============================================================================
+// Polymorphic NL Parameter Parsing
+// ============================================================================
+
+/**
+ * Per-category keyword → field mapping tables.
+ * Each entry maps a lowercase keyword to { field, value } where `value`
+ * matches a FieldOption.value in the corresponding CategoryFieldDef.
+ *
+ * Supported: Lab, Allergy, Imaging, Referral.
+ * Excluded: Dx, Procedure (no reliable keyword patterns).
+ */
+
+interface KeywordMapping {
+  field: string;
+  value: string;
+}
+
+type KeywordTable = Record<string, KeywordMapping>;
+
+const LAB_KEYWORDS: KeywordTable = {
+  stat: { field: 'priority', value: 'stat' },
+  urgent: { field: 'priority', value: 'urgent' },
+};
+
+const ALLERGY_KEYWORDS: KeywordTable = {
+  anaphylaxis: { field: 'severity', value: 'severe' },
+  severe: { field: 'severity', value: 'severe' },
+  rash: { field: 'severity', value: 'mild' },
+  hives: { field: 'severity', value: 'mild' },
+  mild: { field: 'severity', value: 'mild' },
+  moderate: { field: 'severity', value: 'moderate' },
+};
+
+const IMAGING_KEYWORDS: KeywordTable = {
+  stat: { field: 'priority', value: 'stat' },
+  urgent: { field: 'priority', value: 'urgent' },
+  left: { field: 'laterality', value: 'Left' },
+  right: { field: 'laterality', value: 'Right' },
+  bilateral: { field: 'laterality', value: 'Bilateral' },
+};
+
+const REFERRAL_KEYWORDS: KeywordTable = {
+  urgent: { field: 'urgency', value: 'urgent' },
+  emergent: { field: 'urgency', value: 'emergent' },
+};
+
+const CATEGORY_KEYWORD_TABLES: Partial<Record<ItemCategory, KeywordTable>> = {
+  lab: LAB_KEYWORDS,
+  allergy: ALLERGY_KEYWORDS,
+  imaging: IMAGING_KEYWORDS,
+  referral: REFERRAL_KEYWORDS,
+};
+
+/**
+ * Scan input tokens against a keyword table, collecting first match per field.
+ */
+function parseKeywordParams(
+  input: string,
+  table: KeywordTable,
+): Record<string, string> | null {
+  const tokens = input.toLowerCase().split(/\s+/);
+  const result: Record<string, string> = {};
+
+  for (const token of tokens) {
+    const mapping = table[token];
+    if (mapping && !result[mapping.field]) {
+      result[mapping.field] = mapping.value;
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+}
+
+/**
+ * Parse NL parameters from free-text input for any supported category.
+ *
+ * - **Rx**: delegates to parseRxNL, strips drugName, returns { dosage?, route?, frequency? }
+ * - **Lab/Allergy/Imaging/Referral**: keyword scan against per-category lookup tables
+ * - **Dx/Procedure**: returns null (no reliable keyword patterns)
+ *
+ * Returns null if no parameters could be extracted.
+ */
+export function parseNLParams(
+  category: ItemCategory,
+  input: string,
+): Record<string, string> | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  // Rx: delegate to the regex-based parser
+  if (category === 'medication') {
+    const rx = parseRxNL(trimmed);
+    if (!rx) return null;
+    const params: Record<string, string> = {};
+    if (rx.dosage) params.dosage = rx.dosage;
+    if (rx.route) params.route = rx.route;
+    if (rx.frequency) params.frequency = rx.frequency;
+    return Object.keys(params).length > 0 ? params : null;
+  }
+
+  // Keyword-based categories
+  const table = CATEGORY_KEYWORD_TABLES[category];
+  if (!table) return null;
+
+  return parseKeywordParams(trimmed, table);
 }
 
 // ============================================================================

@@ -24,7 +24,7 @@ import {
   makeCategoryPill,
   makeItemPill,
 } from './omni-input-machine';
-import { recognize, type RecognizedAmbiguous } from '../../services/input-recognizer';
+import { recognize, parseNLParams, type RecognizedAmbiguous } from '../../services/input-recognizer';
 import { CATEGORIES } from './omni-add-machine';
 import { OmniInput } from './OmniInput';
 import { DetailArea } from './DetailArea';
@@ -68,6 +68,9 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
 
   // Track the selected QuickPickItem for depth 2 suggestion card
   const [selectedPickItem, setSelectedPickItem] = React.useState<QuickPickItem | null>(null);
+
+  // NL-parsed field overrides (e.g., "500mg TID" → { dosage: '500mg', frequency: 'TID' })
+  const [nlOverrides, setNlOverrides] = React.useState<Record<string, string> | null>(null);
 
   // Ref for edit-mode add handler (set by DetailArea when in edit mode)
   const keyboardAddRef = useRef<(() => void) | null>(null);
@@ -149,21 +152,25 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   const handleBackspace = useCallback(() => {
     dispatch({ type: 'DELETE_PILL' });
     setSelectedPickItem(null);
+    setNlOverrides(null);
   }, []);
 
   const handlePillClick = useCallback((index: number) => {
     dispatch({ type: 'TRUNCATE_TO_PILL', index });
     setSelectedPickItem(null);
+    setNlOverrides(null);
   }, []);
 
   const handleClear = useCallback(() => {
     dispatch({ type: 'CLEAR_ALL' });
     setSelectedPickItem(null);
+    setNlOverrides(null);
   }, []);
 
   const handleSpace = useCallback(() => {
     // Try recognition result first
     if (recognition?.kind === 'auto-category') {
+      const parsedOverrides = parseNLParams(recognition.category, state.text);
       dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(recognition.category) });
       if (recognition.bestMatch) {
         // Strong match: commit category + item in one action (jump to depth 2)
@@ -172,6 +179,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
         setTimeout(() => {
           dispatch({ type: 'INSERT_PILL', pill: makeItemPill(match.chipLabel, match.category) });
           setSelectedPickItem(match);
+          setNlOverrides(parsedOverrides);
         }, 0);
       } else {
         // No strong match: carry the typed text forward so user sees filtered results at depth 1
@@ -224,6 +232,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     const itemId = `item-${Date.now()}`;
     dispatch({ type: 'ITEM_ADDED', itemId });
     setSelectedPickItem(null);
+    setNlOverrides(null);
   }, [onItemAdd, buildItemFromPick]);
 
   const handleItemEdit = useCallback((item: QuickPickItem) => {
@@ -243,6 +252,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
     const itemId = `item-${Date.now()}`;
     dispatch({ type: 'ITEM_ADDED', itemId });
     setSelectedPickItem(null);
+    setNlOverrides(null);
   }, [onItemAdd]);
 
   const handleNarrativeSubmit = useCallback((text: string) => {
@@ -332,6 +342,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
               text={state.text}
               selectedItem={selectedPickItem}
               ambiguousGroups={ambiguousGroups}
+              nlOverrides={nlOverrides}
               onCategorySelect={handleCategorySelect}
               onItemSelect={handleItemSelect}
               onItemAdd={handleItemAdd}

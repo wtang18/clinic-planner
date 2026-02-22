@@ -54,6 +54,8 @@ export interface DetailAreaProps {
   /** For vitals */
   onVitalsSubmit?: (data: any) => void;
   onCancel?: () => void;
+  /** NL-parsed field overrides to pre-fill on auto-categorization */
+  nlOverrides?: Record<string, string> | null;
   /** Ref for keyboard add handler (⌘↩) — set by DetailArea when in edit mode */
   keyboardAddRef?: React.MutableRefObject<(() => void) | null>;
 }
@@ -108,6 +110,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
   onItemAdd,
   onItemEdit,
   onItemAddWithFields,
+  nlOverrides,
   keyboardAddRef,
 }) => {
   // ── Depth 2 browse/edit state ──
@@ -125,6 +128,15 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
     () => (category ? getFieldDef(category) : undefined),
     [category],
   );
+
+  // Pre-fill fields from NL overrides (fires after reset effect in same render cycle)
+  React.useEffect(() => {
+    if (nlOverrides && selectedItem && fieldDef) {
+      const defaults = fieldDef.getDefaults(selectedItem);
+      setEditMode(true);
+      setFieldSelections({ ...defaults, ...nlOverrides });
+    }
+  }, [nlOverrides, selectedItem, fieldDef]);
 
   // Get field configs and defaults for selected item
   const fieldConfigs = useMemo(

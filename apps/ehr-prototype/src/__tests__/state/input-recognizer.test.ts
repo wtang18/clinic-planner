@@ -13,6 +13,7 @@ import {
   searchInCategory,
   recognize,
   parseRxNL,
+  parseNLParams,
 } from '../../services/input-recognizer';
 
 // ============================================================================
@@ -323,5 +324,129 @@ describe('parseRxNL', () => {
   it('handles Q4-6H PRN frequency', () => {
     const result = parseRxNL('codeine 10mg po q4-6h prn');
     expect(result!.frequency).toBe('Q4-6H PRN');
+  });
+});
+
+// ============================================================================
+// Polymorphic NL Parameter Parsing
+// ============================================================================
+
+describe('parseNLParams', () => {
+  // ── Rx delegation ──
+
+  it('Rx: parses "amoxicillin 500mg TID" → dosage + frequency', () => {
+    const result = parseNLParams('medication', 'amoxicillin 500mg TID');
+    expect(result).toEqual({ dosage: '500mg', frequency: 'TID' });
+  });
+
+  it('Rx: parses "ibuprofen 400mg po bid" → dosage + route + frequency', () => {
+    const result = parseNLParams('medication', 'ibuprofen 400mg po bid');
+    expect(result).toEqual({ dosage: '400mg', route: 'PO', frequency: 'BID' });
+  });
+
+  it('Rx: bare drug name returns null (no params)', () => {
+    expect(parseNLParams('medication', 'amoxicillin')).toBeNull();
+  });
+
+  // ── Lab ──
+
+  it('Lab: "CBC stat" → priority:stat', () => {
+    const result = parseNLParams('lab', 'CBC stat');
+    expect(result).toEqual({ priority: 'stat' });
+  });
+
+  it('Lab: "BMP urgent" → priority:urgent', () => {
+    const result = parseNLParams('lab', 'BMP urgent');
+    expect(result).toEqual({ priority: 'urgent' });
+  });
+
+  it('Lab: bare "CBC" → null', () => {
+    expect(parseNLParams('lab', 'CBC')).toBeNull();
+  });
+
+  // ── Allergy ──
+
+  it('Allergy: "penicillin rash" → severity:mild', () => {
+    const result = parseNLParams('allergy', 'penicillin rash');
+    expect(result).toEqual({ severity: 'mild' });
+  });
+
+  it('Allergy: "sulfa anaphylaxis" → severity:severe', () => {
+    const result = parseNLParams('allergy', 'sulfa anaphylaxis');
+    expect(result).toEqual({ severity: 'severe' });
+  });
+
+  it('Allergy: "latex hives" → severity:mild', () => {
+    const result = parseNLParams('allergy', 'latex hives');
+    expect(result).toEqual({ severity: 'mild' });
+  });
+
+  it('Allergy: "aspirin moderate" → severity:moderate', () => {
+    const result = parseNLParams('allergy', 'aspirin moderate');
+    expect(result).toEqual({ severity: 'moderate' });
+  });
+
+  it('Allergy: bare "penicillin" → null', () => {
+    expect(parseNLParams('allergy', 'penicillin')).toBeNull();
+  });
+
+  // ── Imaging ──
+
+  it('Imaging: "MRI knee left urgent" → priority + laterality', () => {
+    const result = parseNLParams('imaging', 'MRI knee left urgent');
+    expect(result).toEqual({ priority: 'urgent', laterality: 'Left' });
+  });
+
+  it('Imaging: "xray bilateral" → laterality:Bilateral', () => {
+    const result = parseNLParams('imaging', 'xray bilateral');
+    expect(result).toEqual({ laterality: 'Bilateral' });
+  });
+
+  it('Imaging: "CT stat" → priority:stat', () => {
+    const result = parseNLParams('imaging', 'CT stat');
+    expect(result).toEqual({ priority: 'stat' });
+  });
+
+  it('Imaging: "xray right" → laterality:Right', () => {
+    const result = parseNLParams('imaging', 'xray right');
+    expect(result).toEqual({ laterality: 'Right' });
+  });
+
+  // ── Referral ──
+
+  it('Referral: "pulmonology urgent" → urgency:urgent', () => {
+    const result = parseNLParams('referral', 'pulmonology urgent');
+    expect(result).toEqual({ urgency: 'urgent' });
+  });
+
+  it('Referral: "cardiology emergent" → urgency:emergent', () => {
+    const result = parseNLParams('referral', 'cardiology emergent');
+    expect(result).toEqual({ urgency: 'emergent' });
+  });
+
+  // ── Unsupported categories ──
+
+  it('Diagnosis: returns null (unsupported)', () => {
+    expect(parseNLParams('diagnosis', 'bronchitis acute')).toBeNull();
+  });
+
+  it('Procedure: returns null (unsupported)', () => {
+    expect(parseNLParams('procedure', 'biopsy stat')).toBeNull();
+  });
+
+  // ── Edge cases ──
+
+  it('empty string → null', () => {
+    expect(parseNLParams('lab', '')).toBeNull();
+  });
+
+  it('whitespace only → null', () => {
+    expect(parseNLParams('lab', '   ')).toBeNull();
+  });
+
+  it('first keyword wins per field (no double-match)', () => {
+    // "severe mild" — "severe" is scanned first, so severity = severe
+    const result = parseNLParams('allergy', 'penicillin severe mild');
+    expect(result).toEqual({ severity: 'severe' });
   });
 });

@@ -268,22 +268,25 @@ Compact:                        Expanded:
 
 ## Quick Charting
 
-### NL Parameter Parsing — Non-Rx Categories
+### NL Parameter Parsing — Dx/Procedure Categories
 
-**Concept:** The unified omni-input includes regex-based NL parameter parsing for Rx items (e.g., "benzonatate 100mg po tid" → pre-filled dosage/route/frequency). Extending this to other categories (labs, imaging, referrals) would allow similar shorthand entry.
+**Concept:** The unified omni-input includes NL parameter parsing for Rx (regex), Lab, Allergy, Imaging, and Referral (keyword scan). Extending to Dx and Procedure would complete coverage, but these categories lack reliable keyword patterns.
 
-**Why deferred:** Rx parsing covers the highest-value use case. Other categories have less standardized shorthand. AI-assisted parsing is a better fit for free-text → structured mapping in non-Rx categories.
+**What's done:**
+- Rx: regex-based parsing (dosage, route, frequency)
+- Lab: keyword scan (stat, urgent → priority)
+- Allergy: keyword scan (rash, hives, anaphylaxis, etc. → severity)
+- Imaging: keyword scan (stat, urgent → priority; left, right, bilateral → laterality)
+- Referral: keyword scan (urgent, emergent → urgency)
 
-**Scope:**
-- Lab: "cbc stat" → priority=stat, "lipid fasting" → fastingRequired=true
-- Imaging: "cxr pa lateral" → study type + views
-- Dx: "j20.9 acute bronchitis" → ICD code + description
+**What's deferred:**
+- Dx: "j20.9 acute bronchitis" → ICD code + description (requires structured lookup)
+- Procedure: No standardized shorthand identified
 - Generic: AI-assisted entity extraction from free text
 
 **Revisit when:**
-- Rx NL parsing is validated with users
 - AI integration enables more sophisticated text understanding
-- Provider feedback identifies high-value shorthand patterns for other categories
+- Provider feedback identifies high-value shorthand patterns for Dx/Procedure
 
 ---
 
@@ -393,3 +396,4 @@ When revisiting deferred items, consider:
 | 2025-02-20 | Layout Architecture: Unified Morphing Right Rail | Documented from Round 4.5 responsive rail discussion |
 | 2025-02-21 | Removed: Quick Charting Data Model Cleanup | Addressed in OmniAdd UX Rewrite Phase 0 |
 | 2025-02-21 | Added: NL Parameter Parsing — Non-Rx Categories | Deferred from OmniAdd UX Rewrite; Rx-only regex included |
+| 2025-02-21 | Updated: NL Parsing → Dx/Procedure only | Lab/Allergy/Imaging/Referral keyword parsing implemented |
