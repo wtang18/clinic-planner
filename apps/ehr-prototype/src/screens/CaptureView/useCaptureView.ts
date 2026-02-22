@@ -46,6 +46,8 @@ export interface UseCaptureViewResult {
   handleCloseDetailsPane: () => void;
   /** Handle accepting a suggestion */
   handleSuggestionAccept: (suggestionId: string) => void;
+  /** Handle accepting a suggestion with field changes */
+  handleSuggestionAcceptWithChanges: (suggestionId: string, fieldData: Record<string, unknown>) => void;
   /** Handle dismissing a suggestion */
   handleSuggestionDismiss: (suggestionId: string, reason?: string) => void;
   /** Handle transcription toggle */
@@ -69,7 +71,7 @@ export function useCaptureView(): UseCaptureViewResult {
   const store = useStore();
   const { setMode: setNavigationMode } = useNavigation();
   const { addItem, updateItem, deleteItem } = useItemActions();
-  const { acceptSuggestion, dismissSuggestion } = useSuggestionActions();
+  const { acceptSuggestion, acceptWithChanges, dismissSuggestion } = useSuggestionActions();
   const { acceptDraft: acceptDraftAction, dismissDraft: dismissDraftAction } = useDraftActions();
   const transcription = useTranscription();
 
@@ -131,12 +133,70 @@ export function useCaptureView(): UseCaptureViewResult {
     setSelectedItemId(null);
   }, []);
 
-  // Handle accepting a suggestion
+  // Handle accepting a suggestion — creates a ChartItem from the suggestion template
   const handleSuggestionAccept = useCallback(
     (suggestionId: string) => {
+      const state = store.getState();
+      const suggestion = Object.values(state.entities.suggestions).find(
+        (s: any) => s.id === suggestionId
+      ) as import('../../types/suggestions').Suggestion | undefined;
+
+      if (suggestion) {
+        const template = suggestion.content.type === 'new-item'
+          ? suggestion.content.itemTemplate
+          : suggestion.content.type === 'care-gap-action'
+            ? suggestion.content.actionTemplate
+            : null;
+
+        if (template) {
+          addItem(
+            materializeChartItem(template, {
+              source: { type: 'aiSuggestion', suggestionId },
+              activityDetail: `Accepted AI suggestion: ${suggestion.displayText}`,
+            }),
+            { type: 'aiSuggestion', suggestionId },
+          );
+        }
+      }
+
       acceptSuggestion(suggestionId);
     },
-    [acceptSuggestion]
+    [acceptSuggestion, addItem, store]
+  );
+
+  // Handle accepting a suggestion with field changes
+  const handleSuggestionAcceptWithChanges = useCallback(
+    (suggestionId: string, fieldData: Record<string, unknown>) => {
+      const state = store.getState();
+      const suggestion = Object.values(state.entities.suggestions).find(
+        (s: any) => s.id === suggestionId
+      ) as import('../../types/suggestions').Suggestion | undefined;
+
+      if (suggestion) {
+        const baseTemplate = suggestion.content.type === 'new-item'
+          ? suggestion.content.itemTemplate
+          : suggestion.content.type === 'care-gap-action'
+            ? suggestion.content.actionTemplate
+            : null;
+
+        if (baseTemplate) {
+          const template = {
+            ...baseTemplate,
+            data: { ...(baseTemplate.data ?? {}), ...fieldData },
+          } as Partial<ChartItem>;
+          addItem(
+            materializeChartItem(template, {
+              source: { type: 'aiSuggestion', suggestionId },
+              activityDetail: `Accepted AI suggestion with changes: ${suggestion.displayText}`,
+            }),
+            { type: 'aiSuggestion', suggestionId },
+          );
+        }
+      }
+
+      acceptWithChanges(suggestionId, fieldData as any);
+    },
+    [acceptWithChanges, addItem, store]
   );
 
   // Handle dismissing a suggestion
@@ -249,6 +309,7 @@ export function useCaptureView(): UseCaptureViewResult {
     handleItemRemove,
     handleCloseDetailsPane,
     handleSuggestionAccept,
+    handleSuggestionAcceptWithChanges,
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,

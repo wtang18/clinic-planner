@@ -14,18 +14,19 @@
  * instead of item pills (handled by parent OmniAddBarV2).
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import type { ItemCategory } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import { getQuickPicks } from '../../data/mock-quick-picks';
 import { getCategoryVariant } from './omni-add-machine';
 import { CategoryPills } from './CategoryPills';
 import { ItemPills } from './ItemPills';
-import { SuggestionCard, buildSummary } from './SuggestionCard';
+import { SuggestionCard } from './SuggestionCard';
 import { FieldRow } from './FieldRow';
-import { getFieldDef } from './fields';
 import { generateSig, calculateQuantity } from './form/rx-helpers';
 import { searchInCategory } from '../../services/input-recognizer';
+import { buildItemSummary } from '../../utils/suggestion-helpers';
+import { useFieldEditor } from '../../hooks/useFieldEditor';
 import { Button } from '../primitives/Button';
 import { spaceBetween, spaceAround, typography, colors } from '../../styles/foundations';
 
@@ -92,7 +93,7 @@ function buildInstructionsLine(
     ...selectedItem,
     data: { ...selectedItem.data, ...fieldSelections },
   };
-  return buildSummary(merged);
+  return buildItemSummary(merged);
 }
 
 // ============================================================================
@@ -113,84 +114,40 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
   nlOverrides,
   keyboardAddRef,
 }) => {
-  // ── Depth 2 browse/edit state ──
-  const [editMode, setEditMode] = useState(false);
-  const [fieldSelections, setFieldSelections] = useState<Record<string, string>>({});
-
-  // Reset edit mode when selected item changes
-  React.useEffect(() => {
-    setEditMode(false);
-    setFieldSelections({});
-  }, [selectedItem]);
-
-  // Get field definition for current category
-  const fieldDef = useMemo(
-    () => (category ? getFieldDef(category) : undefined),
-    [category],
-  );
-
-  // Pre-fill fields from NL overrides (fires after reset effect in same render cycle)
-  React.useEffect(() => {
-    if (nlOverrides && selectedItem && fieldDef) {
-      const defaults = fieldDef.getDefaults(selectedItem);
-      setEditMode(true);
-      setFieldSelections({ ...defaults, ...nlOverrides });
-    }
-  }, [nlOverrides, selectedItem, fieldDef]);
-
-  // Get field configs and defaults for selected item
-  const fieldConfigs = useMemo(
-    () => (fieldDef && selectedItem ? fieldDef.getFields(selectedItem) : []),
-    [fieldDef, selectedItem],
-  );
-
-  const fieldDefaults = useMemo(
-    () => (fieldDef && selectedItem ? fieldDef.getDefaults(selectedItem) : {}),
-    [fieldDef, selectedItem],
-  );
+  // ── Depth 2 browse/edit state (extracted hook) ──
+  const {
+    editMode,
+    fieldSelections,
+    fieldConfigs,
+    fieldDef,
+    enterEditMode,
+    clearEditMode,
+    handleFieldChange,
+    buildData,
+  } = useFieldEditor({ category, item: selectedItem, nlOverrides });
 
   // Handle [Edit] on suggestion card → enter edit mode with pre-selected defaults
   const handleEditClick = useCallback((item: QuickPickItem) => {
     if (fieldDef) {
-      setEditMode(true);
-      setFieldSelections(fieldDef.getDefaults(item));
+      enterEditMode(fieldDef.getDefaults(item));
     } else {
       // No field config for this category — delegate to parent
       onItemEdit(item);
     }
-  }, [fieldDef, onItemEdit]);
-
-  // Handle [Clear] → reset to browse mode
-  const handleClear = useCallback(() => {
-    setEditMode(false);
-    setFieldSelections({});
-  }, []);
-
-  // Handle field selection change — auto-enter edit mode on first tap
-  const handleFieldChange = useCallback((key: string, value: string) => {
-    setEditMode(prev => {
-      if (!prev) {
-        // First tap: only set the tapped field — leave others empty until user taps them
-        setFieldSelections({ [key]: value });
-      } else {
-        setFieldSelections(s => ({ ...s, [key]: value }));
-      }
-      return true;
-    });
-  }, []);
+  }, [fieldDef, enterEditMode, onItemEdit]);
 
   // Live instructions line for edit mode
-  const instructionsLine = useMemo(() => {
+  const instructionsLine = React.useMemo(() => {
     if (!editMode || !selectedItem || !category) return '';
     return buildInstructionsLine(category, selectedItem, fieldSelections);
   }, [editMode, selectedItem, category, fieldSelections]);
 
   // Handle [Add] from edit mode → build data from selections
   const handleEditAdd = useCallback(() => {
-    if (!selectedItem || !fieldDef) return;
-    const data = fieldDef.buildData(fieldSelections, selectedItem);
+    const data = buildData();
+    if (!selectedItem || !data) return;
     onItemAddWithFields?.(selectedItem, data);
-  }, [selectedItem, fieldDef, fieldSelections, onItemAddWithFields]);
+  }, [selectedItem, buildData, onItemAddWithFields]);
 
   // Register edit-mode add handler for ⌘↩ shortcut
   useEffect(() => {
@@ -301,7 +258,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleClear}
+              onClick={clearEditMode}
               data-testid="field-clear-btn"
             >
               Clear

@@ -31,6 +31,8 @@ export interface FieldRowProps {
   /** Show "Other" pill for custom entry */
   allowOther?: boolean;
   disabled?: boolean;
+  /** Color theme: 'light' (default) or 'dark' for palette overlay */
+  theme?: 'light' | 'dark';
 }
 
 // ============================================================================
@@ -44,20 +46,23 @@ export const FieldRow: React.FC<FieldRowProps> = ({
   onSelect,
   allowOther = false,
   disabled = false,
+  theme = 'light',
 }) => {
+  const isDark = theme === 'dark';
   return (
     <div
       style={styles.container}
       data-testid={`v2-field-row-${label.toLowerCase().replace(/\s+/g, '-')}`}
       data-omni-section
     >
-      <span style={styles.label}>{label}</span>
+      <span style={{ ...styles.label, ...(isDark ? { color: 'rgba(255,255,255,0.6)' } : {}) }}>{label}</span>
       <FieldOptionPills
         options={options}
         selected={selected}
         onSelect={onSelect}
         allowOther={allowOther}
         disabled={disabled}
+        theme={theme}
       />
     </div>
   );

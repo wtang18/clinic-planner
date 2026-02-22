@@ -3,6 +3,8 @@
  *
  * Collapsible suggestions section at the top of the AI drawer scroll area.
  * Shows top 3 by default with expand option.
+ * Supports edit-before-accept: clicking [Edit] replaces the list with a
+ * SuggestionEditPanel inline.
  *
  * @see AI_DRAWER.md §5 for full specification
  */
@@ -12,6 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Suggestion } from '../../../types/suggestions';
 import { SuggestionList } from '../../suggestions/SuggestionList';
+import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
 import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
 
@@ -26,6 +29,8 @@ export interface SuggestionsSectionProps {
   onAccept: (id: string) => void;
   /** Called when a suggestion is dismissed */
   onDismiss: (id: string, reason?: string) => void;
+  /** Called when a suggestion is accepted with field changes */
+  onAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Default number of visible suggestions */
   defaultVisible?: number;
   /** Custom styles */
@@ -42,11 +47,13 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
   suggestions,
   onAccept,
   onDismiss,
+  onAcceptWithChanges,
   defaultVisible = 3,
   style,
   testID,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null);
 
   // Filter to action-type suggestions (same set shown in palette)
   const actionSuggestions = suggestions.filter(s =>
@@ -60,6 +67,10 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
 
   const visibleSuggestions = isExpanded ? actionSuggestions : actionSuggestions.slice(0, defaultVisible);
   const hasMore = actionSuggestions.length > defaultVisible;
+
+  const editingSuggestion = editingSuggestionId
+    ? suggestions.find(s => s.id === editingSuggestionId) ?? null
+    : null;
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -142,7 +153,7 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
         </div>
 
         {/* Show all / Show less toggle */}
-        {hasMore && (
+        {hasMore && !editingSuggestion && (
           <button
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
@@ -169,25 +180,38 @@ export const SuggestionsSection: React.FC<SuggestionsSectionProps> = ({
         )}
       </div>
 
-      {/* Suggestions list */}
+      {/* Content: edit panel or suggestion list */}
       <div style={contentStyle}>
-        <AnimatePresence mode="popLayout">
-          <motion.div
-            key={isExpanded ? 'expanded' : 'collapsed'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-          >
-            <SuggestionList
-              suggestions={visibleSuggestions}
-              onAccept={onAccept}
-              onDismiss={onDismiss}
-              variant="compact"
-              showHeader={false}
-            />
-          </motion.div>
-        </AnimatePresence>
+        {editingSuggestion && onAcceptWithChanges ? (
+          <SuggestionEditPanel
+            suggestion={editingSuggestion}
+            theme="light"
+            onAccept={(id, data) => {
+              onAcceptWithChanges(id, data);
+              setEditingSuggestionId(null);
+            }}
+            onCancel={() => setEditingSuggestionId(null)}
+          />
+        ) : (
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={isExpanded ? 'expanded' : 'collapsed'}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+            >
+              <SuggestionList
+                suggestions={visibleSuggestions}
+                onAccept={onAccept}
+                onDismiss={onDismiss}
+                onEdit={(id) => setEditingSuggestionId(id)}
+                variant="compact"
+                showHeader={false}
+              />
+            </motion.div>
+          </AnimatePresence>
+        )}
       </div>
     </section>
   );

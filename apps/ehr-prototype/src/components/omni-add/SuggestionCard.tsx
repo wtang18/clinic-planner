@@ -11,8 +11,8 @@
  */
 
 import React from 'react';
-import type { ItemCategory } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
+import { buildItemSummary, getCategoryBadge } from '../../utils/suggestion-helpers';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { Button } from '../primitives/Button';
 
@@ -34,82 +34,6 @@ export interface SuggestionCardProps {
 }
 
 // ============================================================================
-// Helpers
-// ============================================================================
-
-/** Generate a display summary from quick-pick data by category */
-export function buildSummary(item: QuickPickItem): string {
-  const d = item.data;
-  switch (item.category) {
-    case 'medication':
-      return [
-        d.dosage,
-        d.route,
-        d.frequency,
-        d.quantity ? `#${d.quantity}` : null,
-        d.refills !== undefined ? `${d.refills}RF` : null,
-      ].filter(Boolean).join(' ');
-
-    case 'lab':
-      return [
-        d.priority !== 'routine' ? String(d.priority).toUpperCase() : null,
-        d.collectionType,
-        d.fastingRequired ? 'Fasting' : null,
-      ].filter(Boolean).join(' \u00B7 ');
-
-    case 'diagnosis':
-      return [
-        d.icdCode,
-        d.type,
-        d.clinicalStatus,
-      ].filter(Boolean).join(' \u00B7 ');
-
-    case 'imaging':
-      return [
-        d.studyType,
-        d.bodyPart,
-        d.priority !== 'routine' ? String(d.priority).toUpperCase() : null,
-      ].filter(Boolean).join(' \u00B7 ');
-
-    case 'procedure':
-      return [
-        d.cptCode ? `CPT ${d.cptCode}` : null,
-        d.procedureStatus,
-      ].filter(Boolean).join(' \u00B7 ');
-
-    case 'allergy':
-      return [
-        d.allergenType,
-        d.severity,
-        d.reaction || null,
-      ].filter(Boolean).join(' \u00B7 ');
-
-    case 'referral':
-      return [
-        d.specialty,
-        d.urgency !== 'routine' ? String(d.urgency) : null,
-      ].filter(Boolean).join(' \u00B7 ');
-
-    default:
-      return item.label;
-  }
-}
-
-/** Get category badge label */
-function getCategoryBadge(category: ItemCategory): string {
-  const badges: Partial<Record<ItemCategory, string>> = {
-    medication: 'Rx',
-    lab: 'Lab',
-    diagnosis: 'Dx',
-    imaging: 'Img',
-    procedure: 'Proc',
-    allergy: 'Allergy',
-    referral: 'Ref',
-  };
-  return badges[category] ?? category;
-}
-
-// ============================================================================
 // Component
 // ============================================================================
 
@@ -121,7 +45,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   disabled = false,
   showShortcutHint = false,
 }) => {
-  const displaySummary = summary || buildSummary(item);
+  const displaySummary = summary || buildItemSummary(item);
 
   return (
     <div style={styles.card} data-testid={`suggestion-card-${item.id}`} data-omni-section>

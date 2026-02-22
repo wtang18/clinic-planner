@@ -336,6 +336,7 @@ export const CaptureView: React.FC = () => {
     handleItemRemove,
     handleCloseDetailsPane,
     handleSuggestionAccept,
+    handleSuggestionAcceptWithChanges,
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
@@ -698,6 +699,7 @@ export const CaptureView: React.FC = () => {
               isLoading: aiState.isLoading,
               onSuggestionAccept: handleSuggestionAccept,
               onSuggestionDismiss: handleSuggestionDismiss,
+              onSuggestionAcceptWithChanges: handleSuggestionAcceptWithChanges,
               availableContextLevels: ['encounter', 'patient', 'section'],
               onContextLevelChange: (level: string) => console.log('Drawer context:', level),
             }}
@@ -1106,6 +1108,7 @@ export const CaptureView: React.FC = () => {
             suggestions={activeSuggestions}
             onSuggestionAccept={handleSuggestionAccept}
             onSuggestionDismiss={handleSuggestionDismiss}
+            onSuggestionAcceptWithChanges={handleSuggestionAcceptWithChanges}
             patientName={patientOverviewData.name}
             contextTarget={{ type: 'encounter', label: state.context.visit?.chiefComplaint || encounter?.type || 'Visit' }}
             availableContextLevels={['encounter', 'patient', 'section']}

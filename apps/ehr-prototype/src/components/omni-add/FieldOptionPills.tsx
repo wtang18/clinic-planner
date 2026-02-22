@@ -29,6 +29,8 @@ export interface FieldOptionPillsProps {
   /** Show an "Other" pill with custom text input */
   allowOther?: boolean;
   disabled?: boolean;
+  /** Color theme: 'light' (default) or 'dark' for palette overlay */
+  theme?: 'light' | 'dark';
 }
 
 // ============================================================================
@@ -41,7 +43,9 @@ export const FieldOptionPills: React.FC<FieldOptionPillsProps> = ({
   onSelect,
   allowOther = false,
   disabled = false,
+  theme = 'light',
 }) => {
+  const isDark = theme === 'dark';
   const [customMode, setCustomMode] = React.useState(false);
   const [customValue, setCustomValue] = React.useState('');
   const customInputRef = React.useRef<HTMLInputElement>(null);
@@ -103,17 +107,20 @@ export const FieldOptionPills: React.FC<FieldOptionPillsProps> = ({
     >
       {options.map((option, index) => {
         const isActive = selected === option.value;
+        const stateStyles = isDark
+          ? (selected === null
+            ? darkStyles.pillUnselected
+            : isActive ? darkStyles.pillActive : darkStyles.pillInactive)
+          : (selected === null
+            ? styles.pillUnselected
+            : isActive ? styles.pillActive : styles.pillInactive);
         return (
           <button
             key={option.value}
             type="button"
             style={{
               ...styles.pill,
-              ...(selected === null
-                ? styles.pillUnselected
-                : isActive
-                  ? styles.pillActive
-                  : styles.pillInactive),
+              ...stateStyles,
             }}
             onClick={() => handlePillClick(option.value)}
             disabled={disabled}
@@ -130,11 +137,13 @@ export const FieldOptionPills: React.FC<FieldOptionPillsProps> = ({
           type="button"
           style={{
             ...styles.pill,
-            ...(selected === null
-              ? styles.pillUnselected
-              : isCustomValue
-                ? styles.pillActive
-                : styles.pillInactive),
+            ...(isDark
+              ? (selected === null
+                ? darkStyles.pillUnselected
+                : isCustomValue ? darkStyles.pillActive : darkStyles.pillInactive)
+              : (selected === null
+                ? styles.pillUnselected
+                : isCustomValue ? styles.pillActive : styles.pillInactive)),
             borderStyle: 'dashed',
           }}
           onClick={handleOtherClick}
@@ -217,5 +226,27 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: borderRadius.full,
     outline: 'none',
     width: 120,
+  },
+};
+
+// Dark theme pill overrides — used when theme='dark' (AI palette)
+const darkStyles: Record<string, React.CSSProperties> = {
+  pillUnselected: {
+    fontWeight: typography.fontWeight.regular,
+    color: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.1)',
+  },
+  pillActive: {
+    fontWeight: typography.fontWeight.medium,
+    color: colors.fg.accent.primary,
+    backgroundColor: colors.bg.accent.medium,
+    border: `1px solid ${colors.border.accent.medium}`,
+  },
+  pillInactive: {
+    fontWeight: typography.fontWeight.regular,
+    color: 'rgba(255,255,255,0.4)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.06)',
   },
 };

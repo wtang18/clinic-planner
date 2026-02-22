@@ -5,13 +5,12 @@
  */
 
 import React from 'react';
-import { Ban, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
-import { getSuggestionCategoryLabel } from '../../utils/suggestions';
+import { colors, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
 import { SuggestionChip } from './SuggestionChip';
+import { SuggestionActionRow } from './SuggestionActionRow';
 import { Button } from '../primitives/Button';
-import { IconButton } from '../primitives/IconButton';
 import { EmptyState } from '../primitives/EmptyState';
 
 // ============================================================================
@@ -29,6 +28,8 @@ export interface SuggestionListProps {
   onDismiss: (id: string) => void;
   /** Called when a suggestion is clicked for modification */
   onModify?: (id: string) => void;
+  /** Called when a suggestion's [Edit] button is clicked */
+  onEdit?: (id: string) => void;
   /** Called when clear all is clicked */
   onClearAll?: () => void;
   /** Whether to display as chips or cards */
@@ -51,6 +52,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
   onAccept,
   onDismiss,
   onModify,
+  onEdit,
   onClearAll,
   variant = 'chips',
   showHeader = true,
@@ -144,20 +146,6 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
     gap: spaceBetween.coupled,
   };
 
-  const isDark = theme === 'dark';
-
-  const compactItemStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.bg.positive.subtle,
-    borderRadius: borderRadius.sm,
-    fontSize: 14,
-    fontFamily: typography.fontFamily.sans,
-    transition: `all ${transitions.fast}`,
-  };
-
   const exitingStyle: React.CSSProperties = {
     opacity: 0,
     transform: 'translateX(-10px)',
@@ -170,7 +158,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
     justifyContent: 'center',
     padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
     backgroundColor: colors.bg.neutral.subtle,
-    borderRadius: borderRadius.sm,
+    borderRadius: 4,
     fontSize: 12,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.secondary,
@@ -246,82 +234,20 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
         </div>
       )}
 
-      {/* Compact list variant */}
+      {/* Compact list variant — uses SuggestionActionRow */}
       {variant === 'compact' && (
         <div style={compactListStyle}>
-          {visibleSuggestions.map((suggestion) => {
-            const categoryLabel = getSuggestionCategoryLabel(suggestion);
-            const labelColor = isDark ? 'rgba(255, 255, 255, 0.5)' : colors.fg.neutral.spotReadable;
-            const textColor = isDark ? colors.fg.neutral.inversePrimary : colors.fg.neutral.secondary;
-            return (
-            <div
+          {visibleSuggestions.map((suggestion) => (
+            <SuggestionActionRow
               key={suggestion.id}
-              style={{
-                ...compactItemStyle,
-                ...(exitingIds.has(suggestion.id) ? exitingStyle : {}),
-              }}
-            >
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 6,
-                minWidth: 0,
-                flex: 1,
-              }}>
-                <span style={{
-                  fontSize: 13,
-                  fontWeight: typography.fontWeight.semibold,
-                  color: labelColor,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  lineHeight: '28px',
-                  minHeight: 28,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}>
-                  {categoryLabel}
-                </span>
-                <span style={{
-                  fontSize: 14,
-                  color: textColor,
-                  lineHeight: '28px',
-                  minHeight: 28,
-                  display: 'flex',
-                  alignItems: 'center',
-                }}>
-                  {suggestion.displayText}
-                </span>
-              </div>
-              <div style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: spaceBetween.coupled,
-                flexShrink: 0,
-                minHeight: 28,
-              }}>
-                <IconButton
-                  icon={<Ban size={14} />}
-                  label="Dismiss"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDismiss(suggestion.id)}
-                  style={{ color: isDark ? 'rgba(255,255,255,0.5)' : colors.fg.neutral.spotReadable }}
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleAccept(suggestion.id)}
-                  style={isDark
-                    ? { backgroundColor: colors.fg.positive.secondary, color: '#fff', borderRadius: 4, height: 28, padding: '0 10px' }
-                    : { color: colors.fg.positive.secondary, height: 28, padding: '0 10px' }
-                  }
-                >
-                  Add
-                </Button>
-              </div>
-            </div>
-            );
-          })}
+              suggestion={suggestion}
+              onAccept={handleAccept}
+              onDismiss={handleDismiss}
+              onEdit={onEdit}
+              theme={theme}
+              exiting={exitingIds.has(suggestion.id)}
+            />
+          ))}
 
           {/* More indicator */}
           {showHeader && !expanded && hiddenCount > 0 && (

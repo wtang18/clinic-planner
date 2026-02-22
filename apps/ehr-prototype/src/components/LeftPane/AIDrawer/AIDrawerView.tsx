@@ -57,6 +57,8 @@ export interface AIDrawerViewProps {
   onSuggestionAccept?: (id: string) => void;
   /** Called when suggestion is dismissed */
   onSuggestionDismiss?: (id: string, reason?: string) => void;
+  /** Called when suggestion is accepted with field changes */
+  onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Called when follow-up action is clicked */
   onFollowUpClick?: (actionId: string) => void;
   /** Custom styles */
@@ -154,6 +156,7 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
   onBroadenScope,
   onSuggestionAccept,
   onSuggestionDismiss,
+  onSuggestionAcceptWithChanges,
   onFollowUpClick,
   style,
   testID,
@@ -231,6 +234,7 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
                 suggestions={suggestions}
                 onAccept={onSuggestionAccept}
                 onDismiss={onSuggestionDismiss}
+                onAcceptWithChanges={onSuggestionAcceptWithChanges}
               />
             )}
 

@@ -31,6 +31,7 @@ import {
   List,
 } from 'lucide-react';
 
+import { Button } from '../../primitives/Button';
 import { DragHandle } from '../DragHandle';
 import { AIInputArea } from '../../ai-ui/AIInputArea';
 import type { AIMinibarContent } from '../../ai-ui/AIMinibar';
@@ -48,6 +49,7 @@ import type { Suggestion, Alert } from '../../../types/suggestions';
 import type { QuickAction } from '../../../hooks/useAIAssistant';
 import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
 import { SuggestionList } from '../../suggestions/SuggestionList';
+import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
 
 // ============================================================================
 // Constants
@@ -94,6 +96,7 @@ export interface AISurfaceModuleProps {
   alerts?: Alert[];
   onSuggestionAccept?: (id: string) => void;
   onSuggestionDismiss?: (id: string) => void;
+  onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   onAlertAcknowledge?: (id: string) => void;
   onClearContext?: () => void;
   quickActions?: QuickAction[];
@@ -421,6 +424,7 @@ interface PaletteContentProps {
   onOpenDrawer: () => void;
   onSuggestionAccept?: (id: string) => void;
   onSuggestionDismiss?: (id: string) => void;
+  onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   quickActions?: QuickAction[];
   onQuickActionClick?: (actionId: string) => void;
   onClearContext?: () => void;
@@ -437,6 +441,7 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
   onOpenDrawer,
   onSuggestionAccept,
   onSuggestionDismiss,
+  onSuggestionAcceptWithChanges,
   quickActions,
   onQuickActionClick,
   onClearContext,
@@ -450,6 +455,12 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
   // Context level popover state
   const [popoverOpen, setPopoverOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
+
+  // Edit-before-accept state
+  const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null);
+  const editingSuggestion = editingSuggestionId
+    ? suggestions.find(s => s.id === editingSuggestionId) ?? null
+    : null;
 
   const showContextLevelSelector = onContextLevelChange && availableContextLevels && availableContextLevels.length > 0;
 
@@ -551,8 +562,19 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
 
       {/* Content Area */}
       <div style={{ flex: 1, overflow: 'auto', padding: spaceAround.default }}>
-        {/* Suggestions */}
-        {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss ? (
+        {/* Edit mode: SuggestionEditPanel replaces suggestions */}
+        {editingSuggestion && onSuggestionAcceptWithChanges ? (
+          <SuggestionEditPanel
+            suggestion={editingSuggestion}
+            theme="dark"
+            onAccept={(id, data) => {
+              onSuggestionAcceptWithChanges(id, data);
+              setEditingSuggestionId(null);
+            }}
+            onCancel={() => setEditingSuggestionId(null)}
+          />
+        ) : actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss ? (
+          /* Suggestions */
           <div>
             <div style={{ fontSize: 11, fontWeight: typography.fontWeight.semibold, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
               Suggested Actions
@@ -561,6 +583,7 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
               suggestions={actionSuggestions.slice(0, 3)}
               onAccept={(id) => onSuggestionAccept(id)}
               onDismiss={(id) => onSuggestionDismiss(id)}
+              onEdit={(id) => setEditingSuggestionId(id)}
               variant="compact"
               theme="dark"
               showHeader={false}
@@ -583,26 +606,24 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
               >
                 <style>{`.ai-palette-actions::-webkit-scrollbar { display: none; }`}</style>
                 {quickActions.map((action) => (
-                  <button
+                  <Button
                     key={action.id}
+                    variant="secondary"
+                    size="sm"
+                    shape="rounded"
                     onClick={() => onQuickActionClick(action.id)}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      padding: '8px 12px',
                       backgroundColor: 'rgba(255,255,255,0.08)',
                       border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: borderRadius.md,
                       color: colors.fg.neutral.inversePrimary,
-                      fontSize: 13,
-                      cursor: 'pointer',
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
+                      backdropFilter: 'none',
+                      WebkitBackdropFilter: 'none',
                     }}
                   >
                     {action.label}
-                  </button>
+                  </Button>
                 ))}
               </div>
             ) : (
@@ -617,13 +638,15 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
         )}
       </div>
 
-      {/* Input Area */}
-      <AIInputArea
-        placeholder="Ask AI…"
-        onOpenDrawer={onOpenDrawer}
-        showDrawerButton={true}
-        maxHeight={120}
-      />
+      {/* Input Area — hidden during edit mode */}
+      {!editingSuggestion && (
+        <AIInputArea
+          placeholder="Ask AI…"
+          onOpenDrawer={onOpenDrawer}
+          showDrawerButton={true}
+          maxHeight={120}
+        />
+      )}
     </motion.div>
   );
 };
@@ -644,6 +667,7 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
   alerts = [],
   onSuggestionAccept,
   onSuggestionDismiss,
+  onSuggestionAcceptWithChanges,
   onAlertAcknowledge,
   onClearContext,
   quickActions,
@@ -855,6 +879,7 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
           onOpenDrawer={() => onTierChange('drawer')}
           onSuggestionAccept={onSuggestionAccept}
           onSuggestionDismiss={onSuggestionDismiss}
+          onSuggestionAcceptWithChanges={onSuggestionAcceptWithChanges}
           quickActions={quickActions}
           onQuickActionClick={onQuickActionClick}
           onClearContext={onClearContext}

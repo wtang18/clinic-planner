@@ -51,6 +51,8 @@ export interface BottomBarContainerProps {
   onSuggestionAccept?: (id: string) => void;
   /** Called when a suggestion is dismissed */
   onSuggestionDismiss?: (id: string) => void;
+  /** Called when a suggestion is accepted with field changes */
+  onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Called when an alert is acknowledged */
   onAlertAcknowledge?: (id: string) => void;
   /** Patient name for AI palette context header */
@@ -83,6 +85,7 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   alerts = [],
   onSuggestionAccept,
   onSuggestionDismiss,
+  onSuggestionAcceptWithChanges,
   onAlertAcknowledge,
   patientName,
   contextTarget,
@@ -264,6 +267,7 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
                   alerts={alerts}
                   onSuggestionAccept={onSuggestionAccept}
                   onSuggestionDismiss={onSuggestionDismiss}
+                  onSuggestionAcceptWithChanges={onSuggestionAcceptWithChanges}
                   onAlertAcknowledge={onAlertAcknowledge}
                   quickActions={quickActions}
                   onQuickActionClick={onQuickActionClick}
