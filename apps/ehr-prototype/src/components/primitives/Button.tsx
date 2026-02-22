@@ -5,8 +5,13 @@
  */
 
 import React, { forwardRef } from 'react';
-import { colors, spaceAround, spaceBetween, borderRadius, typography, shadows, transitions } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
 import { Spinner } from './Spinner';
+import { resolveButtonShape } from './button-shapes';
+import type { ButtonShape } from './button-shapes';
+
+export type { ButtonShape };
+export { resolveButtonShape };
 
 // ============================================================================
 // Types
@@ -17,6 +22,8 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Size */
   size?: 'xs' | 'sm' | 'md' | 'lg';
+  /** Border radius shape — pill (default), rounded (16px), rect (8px) */
+  shape?: ButtonShape;
   /** Disabled state */
   disabled?: boolean;
   /** Loading state */
@@ -42,7 +49,6 @@ const baseStyles: React.CSSProperties = {
   gap: spaceBetween.repeating,
   fontFamily: typography.fontFamily.sans,
   fontWeight: typography.fontWeight.medium,
-  borderRadius: borderRadius.full,
   border: 'none',
   cursor: 'pointer',
   transition: `all ${transitions.fast}`,
@@ -148,6 +154,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     {
       variant = 'primary',
       size = 'md',
+      shape = 'pill',
       disabled = false,
       loading = false,
       leftIcon,
@@ -167,6 +174,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const computedStyle: React.CSSProperties = {
       ...baseStyles,
+      borderRadius: resolveButtonShape(shape),
       ...sizeStyles[size],
       ...variantStyles[variant].base,
       ...(isHovered && !isDisabled ? variantStyles[variant].hover : {}),

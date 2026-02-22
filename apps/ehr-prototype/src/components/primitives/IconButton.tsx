@@ -5,7 +5,12 @@
  */
 
 import React, { forwardRef } from 'react';
-import { colors, borderRadius, transitions } from '../../styles/foundations';
+import { colors, transitions } from '../../styles/foundations';
+import { resolveIconButtonShape } from './button-shapes';
+import type { IconButtonShape } from './button-shapes';
+
+export type { IconButtonShape };
+export { resolveIconButtonShape };
 
 // ============================================================================
 // Types
@@ -20,6 +25,8 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
   variant?: 'default' | 'ghost' | 'danger';
   /** Size */
   size?: 'sm' | 'md' | 'lg';
+  /** Border radius shape — circle (default), rounded (16px), rect (8px) */
+  shape?: IconButtonShape;
   /** Disabled state */
   disabled?: boolean;
 }
@@ -94,6 +101,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       label,
       variant = 'default',
       size = 'md',
+      shape = 'circle',
       disabled = false,
       style,
       ...props
@@ -112,7 +120,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       height: sizeStyle.size,
       padding: 0,
       border: 'none',
-      borderRadius: borderRadius.full,
+      borderRadius: resolveIconButtonShape(shape),
       cursor: disabled ? 'not-allowed' : 'pointer',
       transition: `all ${transitions.fast}`,
       outline: 'none',

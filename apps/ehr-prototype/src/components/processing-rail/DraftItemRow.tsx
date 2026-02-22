@@ -6,8 +6,10 @@
  */
 
 import React from 'react';
+import { Check, Pencil, X } from 'lucide-react';
 import type { DraftStatus } from '../../types/drafts';
-import { colors, spaceAround, spaceBetween, borderRadius } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
+import { IconButton } from '../primitives/IconButton';
 
 export interface DraftItemRowProps {
   draftId: string;
@@ -43,30 +45,32 @@ export function DraftItemRow({
       )}
       {status === 'pending' && (
         <div style={styles.actions}>
-          <button
+          <IconButton
+            icon={<Check size={14} />}
+            label={`Accept ${label}`}
+            variant="ghost"
+            size="sm"
+            shape="rounded"
             onClick={() => onAccept?.(draftId)}
-            style={styles.acceptButton}
-            aria-label={`Accept ${label}`}
-            title="Accept"
-          >
-            ✓
-          </button>
-          <button
+            style={{ color: colors.fg.positive.primary }}
+          />
+          <IconButton
+            icon={<Pencil size={14} />}
+            label={`Edit ${label}`}
+            variant="ghost"
+            size="sm"
+            shape="rounded"
             onClick={() => onEdit?.(draftId)}
-            style={styles.editButton}
-            aria-label={`Edit ${label}`}
-            title="Edit"
-          >
-            ✎
-          </button>
-          <button
+            style={{ color: colors.fg.information.primary }}
+          />
+          <IconButton
+            icon={<X size={14} />}
+            label={`Dismiss ${label}`}
+            variant="ghost"
+            size="sm"
+            shape="rounded"
             onClick={() => onDismiss?.(draftId)}
-            style={styles.dismissButton}
-            aria-label={`Dismiss ${label}`}
-            title="Dismiss"
-          >
-            ✕
-          </button>
+          />
         </div>
       )}
     </div>
@@ -108,44 +112,5 @@ const styles: Record<string, React.CSSProperties> = {
   actions: {
     display: 'flex',
     gap: spaceBetween.coupled,
-  },
-  acceptButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 26,
-    height: 22,
-    borderRadius: borderRadius.sm,
-    border: `1px solid ${colors.fg.positive.primary}`,
-    background: 'transparent',
-    cursor: 'pointer',
-    color: colors.fg.positive.primary,
-    fontSize: 13,
-  },
-  editButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 26,
-    height: 22,
-    borderRadius: borderRadius.sm,
-    border: `1px solid ${colors.fg.information.primary}`,
-    background: 'transparent',
-    cursor: 'pointer',
-    color: colors.fg.information.primary,
-    fontSize: 13,
-  },
-  dismissButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 26,
-    height: 22,
-    borderRadius: borderRadius.sm,
-    border: `1px solid ${colors.fg.neutral.secondary}`,
-    background: 'transparent',
-    cursor: 'pointer',
-    color: colors.fg.neutral.secondary,
-    fontSize: 13,
   },
 };

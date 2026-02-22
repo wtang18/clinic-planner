@@ -30,6 +30,7 @@ import {
 import type { ChartItem, Tag } from '../../types/chart-items';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { getTagColor } from '../../styles/utils';
+import { Button } from '../primitives/Button';
 import { Card } from '../primitives/Card';
 import { IconButton } from '../primitives/IconButton';
 
@@ -214,20 +215,6 @@ const stepLabelStyle: React.CSSProperties = {
   color: colors.fg.neutral.secondary,
 };
 
-const trailingActionButtonStyle: React.CSSProperties = {
-  height: 20,
-  padding: `0 ${spaceAround.nudge6}px`,
-  fontSize: 11,
-  lineHeight: '20px',
-  fontWeight: typography.fontWeight.medium,
-  color: colors.fg.accent.primary,
-  backgroundColor: colors.bg.accent.subtle,
-  border: `1px solid ${colors.border.accent.low}`,
-  borderRadius: borderRadius.xs,
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-};
-
 const attributionStyle: React.CSSProperties = {
   fontSize: 12,
   lineHeight: '16px',
@@ -278,9 +265,10 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
 
     if (nextAction && onAction) {
       return (
-        <button
-          type="button"
-          style={trailingActionButtonStyle}
+        <Button
+          variant="primary"
+          size="xs"
+          shape="rect"
           onClick={(e) => {
             e.stopPropagation();
             onAction(nextAction.actionType, nextAction.taskId);
@@ -288,7 +276,7 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
           data-testid={`action-${nextAction.actionType}`}
         >
           {nextAction.label}
-        </button>
+        </Button>
       );
     }
 

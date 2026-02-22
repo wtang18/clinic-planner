@@ -19,6 +19,11 @@ const meta: Meta<typeof IconButton> = {
       options: ['sm', 'md', 'lg'],
       description: 'Button size',
     },
+    shape: {
+      control: 'select',
+      options: ['circle', 'rounded', 'rect'],
+      description: 'Border radius shape',
+    },
     disabled: {
       control: 'boolean',
       description: 'Disabled state',
@@ -84,6 +89,17 @@ export const ClinicalActions: Story = {
       <IconButton icon={<Icon name="x" size="small" />} label="Dismiss" variant="ghost" onClick={fn()} />
       <IconButton icon={<Icon name="trash" size="small" />} label="Delete" variant="danger" onClick={fn()} />
       <IconButton icon={<Icon name="more-vertical" size="small" />} label="More" variant="ghost" onClick={fn()} />
+    </div>
+  ),
+};
+
+export const AllShapes: Story = {
+  name: 'All Shapes',
+  render: () => (
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+      <IconButton icon={<Icon name="pencil" size="small" />} label="Circle" shape="circle" onClick={fn()} />
+      <IconButton icon={<Icon name="pencil" size="small" />} label="Rounded" shape="rounded" onClick={fn()} />
+      <IconButton icon={<Icon name="pencil" size="small" />} label="Rect" shape="rect" onClick={fn()} />
     </div>
   ),
 };

@@ -6,7 +6,9 @@
  */
 
 import React from 'react';
+import { MoreHorizontal } from 'lucide-react';
 import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
+import { IconButton } from '../primitives/IconButton';
 
 export interface ProcessingItemRowProps {
   taskId: string;
@@ -23,14 +25,13 @@ export function ProcessingItemRow({ taskId, label, status, onOpenDetails }: Proc
         <span style={styles.status}>{status}</span>
       </div>
       {onOpenDetails && (
-        <button
+        <IconButton
+          icon={<MoreHorizontal size={14} />}
+          label={`Open details for ${label}`}
+          variant="ghost"
+          size="sm"
           onClick={() => onOpenDetails(taskId)}
-          style={styles.detailsButton}
-          aria-label={`Open details for ${label}`}
-          title="Details"
-        >
-          ⋯
-        </button>
+        />
       )}
     </div>
   );
@@ -64,18 +65,5 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 400,
     color: colors.fg.neutral.secondary,
     wordBreak: 'break-word' as const,
-  },
-  detailsButton: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 24,
-    height: 24,
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    color: colors.fg.neutral.secondary,
-    fontSize: 14,
-    flexShrink: 0,
   },
 };
