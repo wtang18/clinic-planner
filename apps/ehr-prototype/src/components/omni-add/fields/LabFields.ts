@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { LabItem } from '../../../types/chart-items';
 
 // ============================================================================
 // Option Sets (mirrored from LabDetailForm)
@@ -54,14 +55,14 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): LabItem['data'] {
   const priority = selections.priority || String(item.data.priority || 'routine');
   const collectionType = selections.collectionType || String(item.data.collectionType || 'in-house');
 
   return {
-    ...item.data,
-    priority,
-    collectionType,
+    ...(item.data as LabItem['data']),
+    priority: priority as LabItem['data']['priority'],
+    collectionType: collectionType as LabItem['data']['collectionType'],
     orderStatus: 'draft',
   };
 }
@@ -70,4 +71,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const LabFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const LabFieldDef: CategoryFieldDef<LabItem['data']> = { getFields, getDefaults, buildData };

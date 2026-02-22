@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { ProcedureItem } from '../../../types/chart-items';
 
 // ============================================================================
 // Option Sets (mirrored from ProcedureDetailForm)
@@ -57,11 +58,11 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): ProcedureItem['data'] {
   return {
-    ...item.data,
-    procedureStatus: selections.procedureStatus || String(item.data.procedureStatus || 'planned'),
-    laterality: selections.laterality || String(item.data.laterality || 'N/A'),
+    ...(item.data as ProcedureItem['data']),
+    procedureStatus: (selections.procedureStatus || String(item.data.procedureStatus || 'planned')) as ProcedureItem['data']['procedureStatus'],
+    laterality: (selections.laterality || String(item.data.laterality || 'N/A')) as ProcedureItem['data']['laterality'],
   };
 }
 
@@ -69,4 +70,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const ProcedureFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const ProcedureFieldDef: CategoryFieldDef<ProcedureItem['data']> = { getFields, getDefaults, buildData };

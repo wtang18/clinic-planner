@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { MedicationItem } from '../../../types/chart-items';
 import { calculateQuantity, generateSig } from '../form/rx-helpers';
 
 // ============================================================================
@@ -110,7 +111,7 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): MedicationItem['data'] {
   const dosage = selections.dosage || String(item.data.dosage || '');
   const route = selections.route || String(item.data.route || 'PO');
   const frequency = selections.frequency || String(item.data.frequency || 'daily');
@@ -121,7 +122,7 @@ function buildData(
   const refills = Number(selections.refills ?? item.data.refills) || 0;
 
   return {
-    ...item.data,
+    ...(item.data as MedicationItem['data']),
     dosage,
     route,
     frequency,
@@ -137,4 +138,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const RxFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const RxFieldDef: CategoryFieldDef<MedicationItem['data']> = { getFields, getDefaults, buildData };

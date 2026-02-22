@@ -295,17 +295,18 @@ export interface ImagingItem extends ChartItemBase {
     bodyPart: string;        // "Chest", "Abdomen", "Left knee"
     indication: string;
     priority: 'routine' | 'urgent' | 'stat';
-    
+    laterality?: 'N/A' | 'Left' | 'Right' | 'Bilateral';
+
     // Order routing
     facility?: FacilityReference;
     requiresAuth: boolean;
     authStatus?: 'pending' | 'approved' | 'denied';
-    
+
     // Status
     orderStatus: 'draft' | 'ordered' | 'scheduled' | 'completed' | 'read';
     scheduledAt?: Date;
     completedAt?: Date;
-    
+
     // Results
     radiologistReport?: string;
     impression?: string;
@@ -416,7 +417,8 @@ export interface ProcedureItem extends ChartItemBase {
     technique?: string;
     findings?: string;
     complications?: string;
-    
+    laterality?: 'N/A' | 'Left' | 'Right' | 'Bilateral';
+
     // Status
     procedureStatus: 'planned' | 'in-progress' | 'completed' | 'cancelled';
   };

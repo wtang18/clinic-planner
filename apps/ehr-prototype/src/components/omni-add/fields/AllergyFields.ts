@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { AllergyItem } from '../../../types/chart-items';
 
 // ============================================================================
 // Option Sets (mirrored from AllergyDetailForm)
@@ -69,12 +70,12 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): AllergyItem['data'] {
   return {
-    ...item.data,
-    allergenType: selections.allergenType || String(item.data.allergenType || 'drug'),
-    severity: selections.severity || String(item.data.severity || 'unknown'),
-    verificationStatus: selections.verificationStatus || String(item.data.verificationStatus || 'unverified'),
+    ...(item.data as AllergyItem['data']),
+    allergenType: (selections.allergenType || String(item.data.allergenType || 'drug')) as AllergyItem['data']['allergenType'],
+    severity: (selections.severity || String(item.data.severity || 'unknown')) as AllergyItem['data']['severity'],
+    verificationStatus: (selections.verificationStatus || String(item.data.verificationStatus || 'unverified')) as AllergyItem['data']['verificationStatus'],
   };
 }
 
@@ -82,4 +83,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const AllergyFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const AllergyFieldDef: CategoryFieldDef<AllergyItem['data']> = { getFields, getDefaults, buildData };

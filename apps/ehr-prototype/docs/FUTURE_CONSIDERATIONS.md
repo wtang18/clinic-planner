@@ -397,3 +397,4 @@ When revisiting deferred items, consider:
 | 2025-02-21 | Removed: Quick Charting Data Model Cleanup | Addressed in OmniAdd UX Rewrite Phase 0 |
 | 2025-02-21 | Added: NL Parameter Parsing — Non-Rx Categories | Deferred from OmniAdd UX Rewrite; Rx-only regex included |
 | 2025-02-21 | Updated: NL Parsing → Dx/Procedure only | Lab/Allergy/Imaging/Referral keyword parsing implemented |
+| 2025-02-22 | No change needed | Typed buildData() returns completed; data model nesting entry already removed |

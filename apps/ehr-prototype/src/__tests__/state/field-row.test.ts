@@ -5,7 +5,7 @@
  * (unselected vs pre-selected), custom "Other" input, and keyboard navigation.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // We test the field config logic rather than React rendering,
 // since we don't have a DOM test environment. The component tests
@@ -20,6 +20,15 @@ import { AllergyFieldDef } from '../../components/omni-add/fields/AllergyFields'
 import { ReferralFieldDef } from '../../components/omni-add/fields/ReferralFields';
 import { getFieldDef } from '../../components/omni-add/fields';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
+import type {
+  MedicationItem,
+  LabItem,
+  DiagnosisItem,
+  ImagingItem,
+  ProcedureItem,
+  AllergyItem,
+  ReferralItem,
+} from '../../types/chart-items';
 
 // ============================================================================
 // Test Fixtures
@@ -532,5 +541,67 @@ describe('ReferralFieldDef', () => {
     expect(data.urgency).toBe('emergent');
     expect(data.referralStatus).toBe('draft');
     expect(data.specialty).toBe('Cardiology');
+  });
+});
+
+// ============================================================================
+// Typed buildData() Return Assertions
+// ============================================================================
+
+describe('buildData typed return values', () => {
+  it('RxFieldDef.buildData satisfies MedicationItem data', () => {
+    const data: MedicationItem['data'] = RxFieldDef.buildData(
+      RxFieldDef.getDefaults(rxItem), rxItem,
+    );
+    expect(data.drugName).toBe('Benzonatate');
+    expect(data.dosage).toBe('100mg');
+  });
+
+  it('LabFieldDef.buildData satisfies LabItem data', () => {
+    const data: LabItem['data'] = LabFieldDef.buildData(
+      LabFieldDef.getDefaults(labItem), labItem,
+    );
+    expect(data.testName).toBe('Complete Blood Count');
+    expect(data.priority).toBe('routine');
+  });
+
+  it('DxFieldDef.buildData satisfies DiagnosisItem data', () => {
+    const data: DiagnosisItem['data'] = DxFieldDef.buildData(
+      DxFieldDef.getDefaults(dxItem), dxItem,
+    );
+    expect(data.description).toBe('Acute Bronchitis');
+    expect(data.icdCode).toBe('J20.9');
+  });
+
+  it('ImagingFieldDef.buildData satisfies ImagingItem data', () => {
+    const data: ImagingItem['data'] = ImagingFieldDef.buildData(
+      ImagingFieldDef.getDefaults(imgItem), imgItem,
+    );
+    expect(data.studyType).toBe('X-ray');
+    expect(data.priority).toBe('routine');
+  });
+
+  it('ProcedureFieldDef.buildData satisfies ProcedureItem data', () => {
+    const data: ProcedureItem['data'] = ProcedureFieldDef.buildData(
+      ProcedureFieldDef.getDefaults(procItem), procItem,
+    );
+    expect(data.procedureName).toBe('Rapid Strep Test');
+    expect(data.procedureStatus).toBe('planned');
+  });
+
+  it('AllergyFieldDef.buildData satisfies AllergyItem data', () => {
+    const data: AllergyItem['data'] = AllergyFieldDef.buildData(
+      AllergyFieldDef.getDefaults(allergyItem), allergyItem,
+    );
+    expect(data.allergen).toBe('Penicillin');
+    expect(data.allergenType).toBe('drug');
+  });
+
+  it('ReferralFieldDef.buildData satisfies ReferralItem data', () => {
+    const data: ReferralItem['data'] = ReferralFieldDef.buildData(
+      ReferralFieldDef.getDefaults(refItem), refItem,
+    );
+    expect(data.specialty).toBe('Cardiology');
+    expect(data.urgency).toBe('routine');
   });
 });

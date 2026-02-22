@@ -28,11 +28,11 @@ export interface FieldConfig {
  * Category field definition bundle.
  * Each category exports one of these from its fields file.
  */
-export interface CategoryFieldDef {
+export interface CategoryFieldDef<TData extends Record<string, unknown> = Record<string, unknown>> {
   /** Get field configs, optionally customized per item (e.g., dosage options) */
   getFields: (item: QuickPickItem) => FieldConfig[];
   /** Extract default selections from quick-pick data */
   getDefaults: (item: QuickPickItem) => Record<string, string>;
   /** Build chart item data from field selections + item baseline */
-  buildData: (selections: Record<string, string>, item: QuickPickItem) => Record<string, unknown>;
+  buildData: (selections: Record<string, string>, item: QuickPickItem) => TData;
 }

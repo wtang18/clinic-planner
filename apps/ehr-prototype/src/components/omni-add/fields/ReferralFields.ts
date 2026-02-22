@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { ReferralItem } from '../../../types/chart-items';
 
 // ============================================================================
 // Option Sets (mirrored from ReferralDetailForm)
@@ -43,10 +44,10 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): ReferralItem['data'] {
   return {
-    ...item.data,
-    urgency: selections.urgency || String(item.data.urgency || 'routine'),
+    ...(item.data as ReferralItem['data']),
+    urgency: (selections.urgency || String(item.data.urgency || 'routine')) as ReferralItem['data']['urgency'],
     referralStatus: 'draft',
   };
 }
@@ -55,4 +56,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const ReferralFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const ReferralFieldDef: CategoryFieldDef<ReferralItem['data']> = { getFields, getDefaults, buildData };

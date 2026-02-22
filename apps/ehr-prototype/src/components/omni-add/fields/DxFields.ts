@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { DiagnosisItem } from '../../../types/chart-items';
 
 // ============================================================================
 // Option Sets (mirrored from DxDetailForm)
@@ -66,16 +67,16 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): DiagnosisItem['data'] {
   const ranking = selections.ranking || String(item.data.ranking || 'primary');
   const type = selections.type || String(item.data.type || 'encounter');
   const clinicalStatus = selections.clinicalStatus || String(item.data.clinicalStatus || 'active');
 
   return {
-    ...item.data,
-    ranking,
-    type,
-    clinicalStatus,
+    ...(item.data as DiagnosisItem['data']),
+    ranking: ranking as DiagnosisItem['data']['ranking'],
+    type: type as DiagnosisItem['data']['type'],
+    clinicalStatus: clinicalStatus as DiagnosisItem['data']['clinicalStatus'],
     onsetDate: new Date(),
   };
 }
@@ -84,4 +85,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const DxFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const DxFieldDef: CategoryFieldDef<DiagnosisItem['data']> = { getFields, getDefaults, buildData };

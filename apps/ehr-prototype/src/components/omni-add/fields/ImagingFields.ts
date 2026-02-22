@@ -9,6 +9,7 @@
 import type { FieldOption } from '../FieldOptionPills';
 import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
+import type { ImagingItem } from '../../../types/chart-items';
 
 // ============================================================================
 // Option Sets (mirrored from ImagingDetailForm)
@@ -56,11 +57,11 @@ function getDefaults(item: QuickPickItem): Record<string, string> {
 function buildData(
   selections: Record<string, string>,
   item: QuickPickItem,
-): Record<string, unknown> {
+): ImagingItem['data'] {
   return {
-    ...item.data,
-    priority: selections.priority || String(item.data.priority || 'routine'),
-    laterality: selections.laterality || String(item.data.laterality || 'N/A'),
+    ...(item.data as ImagingItem['data']),
+    priority: (selections.priority || String(item.data.priority || 'routine')) as ImagingItem['data']['priority'],
+    laterality: (selections.laterality || String(item.data.laterality || 'N/A')) as ImagingItem['data']['laterality'],
     orderStatus: 'draft',
   };
 }
@@ -69,4 +70,4 @@ function buildData(
 // Export
 // ============================================================================
 
-export const ImagingFieldDef: CategoryFieldDef = { getFields, getDefaults, buildData };
+export const ImagingFieldDef: CategoryFieldDef<ImagingItem['data']> = { getFields, getDefaults, buildData };
