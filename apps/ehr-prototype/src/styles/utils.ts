@@ -208,8 +208,8 @@ export function getTagColor(tag: Tag): { color: string; bgColor: string } {
       };
     case 'ai':
       return {
-        color: colors.fg.generative.spotReadable,
-        bgColor: colors.bg.positive.subtle,
+        color: colors.fg.neutral.secondary,
+        bgColor: colors.bg.neutral.low,
       };
     case 'workflow':
       return {

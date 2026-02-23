@@ -142,11 +142,22 @@ export function useCaptureView(): UseCaptureViewResult {
       ) as import('../../types/suggestions').Suggestion | undefined;
 
       if (suggestion) {
-        const template = suggestion.content.type === 'new-item'
-          ? suggestion.content.itemTemplate
-          : suggestion.content.type === 'care-gap-action'
-            ? suggestion.content.actionTemplate
-            : null;
+        let template: Partial<ChartItem> | null = null;
+
+        if (suggestion.content.type === 'new-item') {
+          template = {
+            ...suggestion.content.itemTemplate,
+            category: suggestion.content.itemTemplate.category || suggestion.content.category,
+            displayText: suggestion.content.itemTemplate.displayText
+              || suggestion.actionLabel || suggestion.displayText,
+          } as Partial<ChartItem>;
+        } else if (suggestion.content.type === 'care-gap-action') {
+          template = {
+            ...suggestion.content.actionTemplate,
+            displayText: suggestion.content.actionTemplate.displayText
+              || suggestion.actionLabel || suggestion.displayText,
+          } as Partial<ChartItem>;
+        }
 
         if (template) {
           addItem(
@@ -173,11 +184,22 @@ export function useCaptureView(): UseCaptureViewResult {
       ) as import('../../types/suggestions').Suggestion | undefined;
 
       if (suggestion) {
-        const baseTemplate = suggestion.content.type === 'new-item'
-          ? suggestion.content.itemTemplate
-          : suggestion.content.type === 'care-gap-action'
-            ? suggestion.content.actionTemplate
-            : null;
+        let baseTemplate: Partial<ChartItem> | null = null;
+
+        if (suggestion.content.type === 'new-item') {
+          baseTemplate = {
+            ...suggestion.content.itemTemplate,
+            category: suggestion.content.itemTemplate.category || suggestion.content.category,
+            displayText: suggestion.content.itemTemplate.displayText
+              || suggestion.actionLabel || suggestion.displayText,
+          } as Partial<ChartItem>;
+        } else if (suggestion.content.type === 'care-gap-action') {
+          baseTemplate = {
+            ...suggestion.content.actionTemplate,
+            displayText: suggestion.content.actionTemplate.displayText
+              || suggestion.actionLabel || suggestion.displayText,
+          } as Partial<ChartItem>;
+        }
 
         if (baseTemplate) {
           const template = {

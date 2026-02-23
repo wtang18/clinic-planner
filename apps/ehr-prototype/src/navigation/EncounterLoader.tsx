@@ -2,14 +2,20 @@
  * EncounterLoader Component
  *
  * Loads encounter data before rendering child components.
+ * Wraps children with per-encounter TranscriptionProvider and
+ * dispatches suggestions synced to transcript playback timing.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Loader, AlertCircle } from 'lucide-react';
 import { useDispatch } from '../hooks';
-import { ENCOUNTER_TEMPLATES } from '../mocks';
+import { ENCOUNTER_TEMPLATES, generateSuggestionsForScenario } from '../mocks';
 import { buildMAItemsForPatient, MA_SOURCE } from '../data/mock-encounter';
 import type { EncounterContext } from '../mocks/generators/encounters';
+import { TranscriptionProvider, useTranscription } from '../context/TranscriptionContext';
+import { useAIServices } from '../context/AIServicesContext';
+import { getScheduleForEncounter } from './suggestion-schedule';
+import type { ScheduledSuggestion } from './suggestion-schedule';
 import { colors, spaceAround, typography } from '../styles/foundations';
 
 // ============================================================================
@@ -86,6 +92,115 @@ function getMAItemsForScenario(encounterId: string, mockData: EncounterContext) 
 }
 
 // ============================================================================
+// Helper: Encounter → Transcript Scenario
+// ============================================================================
+
+function getTranscriptScenario(encounterId: string): 'uc-cough' | 'pc-diabetes' {
+  if (encounterId === 'pc-diabetes' || encounterId === 'demo-pc') {
+    return 'pc-diabetes';
+  }
+  // AWV and UC Cough both use uc-cough transcript (AWV has no transcript-triggered
+  // suggestions, so the transcript is harmless)
+  return 'uc-cough';
+}
+
+// ============================================================================
+// SuggestionScheduleRunner
+//
+// Inner component that dispatches suggestions synced to transcript timing.
+// Must be rendered inside TranscriptionProvider to access isRecording.
+// ============================================================================
+
+const SuggestionScheduleRunner: React.FC<{
+  encounterId: string;
+  children: React.ReactNode;
+}> = ({ encounterId, children }) => {
+  const dispatch = useDispatch();
+  const { isRecording } = useTranscription();
+  const { disableService, enableService } = useAIServices();
+  const dispatchedRef = useRef(new Set<string>());
+  const timeoutIdsRef = useRef<number[]>([]);
+  const scheduleRef = useRef(getScheduleForEncounter(encounterId));
+
+  // Disable entity-extraction to prevent regex-based duplicates of curated suggestions
+  useEffect(() => {
+    disableService('entity-extraction');
+    return () => enableService('entity-extraction');
+  }, [disableService, enableService]);
+
+  // Helper: dispatch a single scheduled suggestion
+  const dispatchEntry = (entry: ScheduledSuggestion) => {
+    if (dispatchedRef.current.has(entry.key)) return;
+    dispatchedRef.current.add(entry.key);
+
+    const suggestions = generateSuggestionsForScenario(entry.scenario);
+    const suggestion = suggestions[entry.itemIndex];
+    if (!suggestion) return;
+
+    dispatch({
+      type: 'SUGGESTION_RECEIVED',
+      payload: { suggestion, source: suggestion.source || 'ai-analysis' },
+    });
+  };
+
+  // Dispatch immediate suggestions on mount (staggered 500ms apart)
+  useEffect(() => {
+    const immediates = scheduleRef.current.filter(s => s.timing.type === 'immediate');
+    const ids: number[] = [];
+
+    immediates.forEach((entry, i) => {
+      const id = window.setTimeout(() => {
+        dispatchEntry(entry);
+      }, i * 500);
+      ids.push(id);
+    });
+    timeoutIdsRef.current.push(...ids);
+
+    return () => {
+      for (const id of ids) window.clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encounterId]);
+
+  // On Record start: schedule transcript-synced suggestions
+  useEffect(() => {
+    if (!isRecording) return;
+
+    const onRecordItems = scheduleRef.current.filter(s => s.timing.type === 'onRecord');
+    const ids: number[] = [];
+
+    for (const entry of onRecordItems) {
+      if (dispatchedRef.current.has(entry.key)) continue;
+
+      const delayMs = entry.timing.type === 'onRecord' ? entry.timing.delayMs : 0;
+      const id = window.setTimeout(() => {
+        dispatchEntry(entry);
+      }, delayMs);
+      ids.push(id);
+    }
+    timeoutIdsRef.current.push(...ids);
+
+    // Cleanup on pause/stop: clear pending onRecord timeouts
+    return () => {
+      for (const id of ids) window.clearTimeout(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording]);
+
+  // Cleanup all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      for (const id of timeoutIdsRef.current) window.clearTimeout(id);
+      timeoutIdsRef.current = [];
+    };
+  }, []);
+
+  return <>{children}</>;
+};
+
+SuggestionScheduleRunner.displayName = 'SuggestionScheduleRunner';
+
+// ============================================================================
 // Component
 // ============================================================================
 
@@ -138,7 +253,7 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
 
     loadEncounter();
 
-    // Cleanup: Close encounter on unmount
+    // Cleanup: close encounter on unmount
     return () => {
       dispatch({
         type: 'ENCOUNTER_CLOSED',
@@ -172,8 +287,14 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
     );
   }
 
-  // Loaded - render children
-  return <>{children}</>;
+  // Loaded: wrap children with per-encounter TranscriptionProvider + schedule runner
+  return (
+    <TranscriptionProvider mockScenario={getTranscriptScenario(encounterId)}>
+      <SuggestionScheduleRunner encounterId={encounterId}>
+        {children}
+      </SuggestionScheduleRunner>
+    </TranscriptionProvider>
+  );
 };
 
 // ============================================================================

@@ -8,7 +8,6 @@ import React from 'react';
 import { ThemeProvider } from '../styles/theme';
 import { EncounterStoreProvider } from '../hooks/useEncounterState';
 import { AIServicesProvider } from './AIServicesContext';
-import { TranscriptionProvider } from './TranscriptionContext';
 import { WorkspaceProvider } from './WorkspaceContext';
 import { DemoProvider } from '../demo/DemoContext';
 import { TourTargetProvider } from '../tour/TourTargetRegistry';
@@ -29,10 +28,6 @@ export interface AppProvidersProps {
   initialState?: Partial<EncounterState>;
   /** AI services configuration */
   aiConfig?: Partial<AIServicesConfig>;
-  /** Use mock transcription service */
-  useMockTranscription?: boolean;
-  /** Mock scenario for transcription */
-  mockScenario?: 'uc-cough' | 'pc-diabetes';
   /** Enable development mode */
   devMode?: boolean;
   /** Initial demo preset ID */
@@ -55,19 +50,18 @@ export interface AppProvidersProps {
  * 3. WorkspaceProvider - workspace and tab management
  * 4. EncounterStoreProvider - encounter state (provides store context for hooks)
  * 5. AIServicesProvider - AI service orchestration
- * 6. TranscriptionProvider - transcription service
- * 7. CoordinationProvider - tier + pane coordination (single source of truth)
- * 8. BottomBarProvider - bottom bar session state
- * 9. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
- * 10. TourTargetProvider - tour target registration
- * 11. NetworkStatusBanner - offline/online status
+ * 6. CoordinationProvider - tier + pane coordination (single source of truth)
+ * 7. BottomBarProvider - bottom bar session state
+ * 8. AIKeyboardShortcutsProvider - ⌘K and Escape shortcuts
+ * 9. TourTargetProvider - tour target registration
+ * 10. NetworkStatusBanner - offline/online status
+ *
+ * Note: TranscriptionProvider is per-encounter, provided by EncounterLoader.
  */
 export const AppProviders: React.FC<AppProvidersProps> = ({
   children,
   initialState,
   aiConfig,
-  useMockTranscription = true,
-  mockScenario = 'uc-cough',
   devMode = __DEV__,
   initialDemoPreset,
   showNetworkStatus = true,
@@ -78,24 +72,19 @@ export const AppProviders: React.FC<AppProvidersProps> = ({
         <WorkspaceProvider>
           <EncounterStoreProvider initialState={initialState} devMode={devMode}>
             <AIServicesProvider config={aiConfig}>
-              <TranscriptionProvider
-                useMock={useMockTranscription}
-                mockScenario={mockScenario}
-              >
-                <CoordinationProvider initialState={{ txEligible: true }}>
-                  <BottomBarProvider demoMode={true}>
-                    <AIKeyboardShortcutsProvider>
-                      <TourTargetProvider>
-                        {showNetworkStatus ? (
-                          <NetworkStatusBanner>{children}</NetworkStatusBanner>
-                        ) : (
-                          children
-                        )}
-                      </TourTargetProvider>
-                    </AIKeyboardShortcutsProvider>
-                  </BottomBarProvider>
-                </CoordinationProvider>
-              </TranscriptionProvider>
+              <CoordinationProvider initialState={{ txEligible: true }}>
+                <BottomBarProvider demoMode={true}>
+                  <AIKeyboardShortcutsProvider>
+                    <TourTargetProvider>
+                      {showNetworkStatus ? (
+                        <NetworkStatusBanner>{children}</NetworkStatusBanner>
+                      ) : (
+                        children
+                      )}
+                    </TourTargetProvider>
+                  </AIKeyboardShortcutsProvider>
+                </BottomBarProvider>
+              </CoordinationProvider>
             </AIServicesProvider>
           </EncounterStoreProvider>
         </WorkspaceProvider>

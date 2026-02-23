@@ -112,6 +112,18 @@ export const UC_COUGH_SEGMENTS: MockSegmentConfig[] = [
     confidence: 0.88,
     speaker: 'provider',
   },
+  {
+    text: "I'm going to prescribe benzonatate, 100 milligrams three times a day for about a week, to help control the cough.",
+    delayMs: 3000,
+    confidence: 0.94,
+    speaker: 'provider',
+  },
+  {
+    text: "Based on your symptoms and the exam, this looks like acute bronchitis. It's usually viral and should resolve in a week or two with supportive care.",
+    delayMs: 3000,
+    confidence: 0.92,
+    speaker: 'provider',
+  },
 ];
 
 /**

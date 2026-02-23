@@ -127,6 +127,7 @@ export interface ChartItemActions {
  */
 export function useItemActions(): ChartItemActions {
   const dispatch = useDispatch();
+  const currentUser = useSelector((state) => state.session.currentUser);
 
   return React.useMemo(
     () => ({
@@ -135,7 +136,7 @@ export function useItemActions(): ChartItemActions {
       },
 
       updateItem: (id: string, changes: Partial<ChartItem>) => {
-        dispatch(itemUpdated(id, changes, 'user-edit'));
+        dispatch(itemUpdated(id, changes, 'user-edit', currentUser?.name));
       },
 
       confirmItem: (id: string) => {
@@ -158,7 +159,7 @@ export function useItemActions(): ChartItemActions {
         dispatch(itemDxUnlinked(itemId, diagnosisId));
       },
     }),
-    [dispatch]
+    [dispatch, currentUser]
   );
 }
 

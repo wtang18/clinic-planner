@@ -37,11 +37,6 @@ export interface AppProps {
    * Use mock services (default: true for development)
    */
   useMockServices?: boolean;
-
-  /**
-   * Mock scenario ID for transcription playback
-   */
-  mockScenario?: 'uc-cough' | 'pc-diabetes';
 }
 
 // ============================================================================
@@ -50,7 +45,6 @@ export interface AppProps {
 
 export const App: React.FC<AppProps> = ({
   useMockServices = true,
-  mockScenario = 'uc-cough',
 }) => {
   // Load Inter font from Google Fonts and inject global styles for web platform
   useEffect(() => {
@@ -95,8 +89,6 @@ export const App: React.FC<AppProps> = ({
         <StatusBar style="auto" />
         <ErrorBoundary>
           <AppProviders
-            useMockTranscription={useMockServices}
-            mockScenario={mockScenario}
             devMode={__DEV__}
           >
             <NavigationProvider>
