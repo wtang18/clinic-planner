@@ -181,10 +181,10 @@ describe('Field config registry', () => {
 // ============================================================================
 
 describe('RxFieldDef', () => {
-  it('returns 5 field configs', () => {
+  it('returns 6 field configs', () => {
     const fields = RxFieldDef.getFields(rxItem);
-    expect(fields).toHaveLength(5);
-    expect(fields.map(f => f.key)).toEqual(['dosage', 'route', 'frequency', 'duration', 'refills']);
+    expect(fields).toHaveLength(6);
+    expect(fields.map(f => f.key)).toEqual(['medIntent', 'dosage', 'route', 'frequency', 'duration', 'refills']);
   });
 
   it('dosage options include item default', () => {
@@ -219,6 +219,7 @@ describe('RxFieldDef', () => {
   it('getDefaults extracts values from item data', () => {
     const defaults = RxFieldDef.getDefaults(rxItem);
     expect(defaults).toEqual({
+      medIntent: 'prescribe',
       dosage: '100mg',
       route: 'PO',
       frequency: 'TID PRN',
@@ -254,6 +255,53 @@ describe('RxFieldDef', () => {
       rxItem,
     );
     expect(data.quantity).toBe(30);
+  });
+
+  it('getDefaults detects reportedBy → medIntent reported', () => {
+    const reportedItem = {
+      ...rxItem,
+      data: { ...rxItem.data, reportedBy: 'patient' },
+    };
+    const defaults = RxFieldDef.getDefaults(reportedItem);
+    expect(defaults.medIntent).toBe('reported');
+  });
+
+  it('getDefaults maps prescriptionType refill → medIntent refill', () => {
+    const refillItem = {
+      ...rxItem,
+      data: { ...rxItem.data, prescriptionType: 'refill' },
+    };
+    const defaults = RxFieldDef.getDefaults(refillItem);
+    expect(defaults.medIntent).toBe('refill');
+  });
+
+  it('buildData with intent reported sets reportedBy and verificationStatus', () => {
+    const data = RxFieldDef.buildData(
+      { medIntent: 'reported', dosage: '600mg', route: 'PO', frequency: 'BID', duration: '7 days' },
+      rxItem,
+    );
+    expect(data.reportedBy).toBe('patient');
+    expect(data.verificationStatus).toBe('unverified');
+    expect(data.prescriptionType).toBe('new');
+  });
+
+  it('buildData with intent prescribe clears reportedBy', () => {
+    const data = RxFieldDef.buildData(
+      { medIntent: 'prescribe', dosage: '100mg', route: 'PO', frequency: 'TID', duration: '7 days' },
+      rxItem,
+    );
+    expect(data.reportedBy).toBeUndefined();
+    expect(data.verificationStatus).toBeUndefined();
+    expect(data.prescriptionType).toBe('new');
+  });
+
+  it('buildData with intent refill sets prescriptionType refill', () => {
+    const data = RxFieldDef.buildData(
+      { medIntent: 'refill', dosage: '100mg', route: 'PO', frequency: 'TID', duration: '30 days' },
+      rxItem,
+    );
+    expect(data.prescriptionType).toBe('refill');
+    expect(data.reportedBy).toBeUndefined();
   });
 });
 

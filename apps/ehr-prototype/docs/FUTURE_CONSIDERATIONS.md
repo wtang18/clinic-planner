@@ -290,6 +290,51 @@ Compact:                        Expanded:
 
 ---
 
+## AI Suggestions
+
+### AI-Side Verb Disambiguation for Medication Intent
+
+**Concept:** The entity extractor captures context verbs from transcription ("taking", "start", "refill", "discontinue") but discards them. These verbs could set better defaults for `prescriptionType` (new/refill/change/discontinue) rather than always defaulting to "new".
+
+**Current state:** `prescriptionType` is now an editable field in the suggestion edit panel, so clinicians can correct it manually. The AI extractor still defaults to "new".
+
+**Why deferred:**
+- Verb-to-intent mapping is ambiguous ("taking" could mean current med or new start)
+- Wrong defaults are worse than neutral defaults — clinicians expect to verify
+- Requires confidence thresholds and fallback logic
+
+**Revisit when:**
+- LLM integration enables better semantic understanding of transcript context
+- User feedback indicates the "new" default causes frequent corrections
+
+### Cross-Category Switching in Suggestion Edit Panel
+
+**Concept:** Allow switching a suggestion's category during edit-before-accept (e.g., medication → allergy when AI miscategorizes).
+
+**Why deferred:**
+- Different categories have incompatible data shapes (medication has dosage/route, allergy has severity/reaction)
+- Lossy data mapping between categories
+- Competes with OmniAdd's category selection flow — may confuse users about which path to use
+
+**Revisit when:**
+- User research shows frequent AI miscategorization that requires category correction
+- A clear UX pattern emerges for field-shape transitions
+
+### Ambiguous Entity Multi-Resolution
+
+**Concept:** When the AI extracts an ambiguous entity (e.g., "penicillin" could be a medication or an allergy), present it as multiple resolution options rather than committing to one category.
+
+**Why deferred:**
+- Requires significant UI design (multi-card or split-action presentation)
+- Entity extraction confidence scoring is not mature enough to identify ambiguity reliably
+- Single-category suggestions with edit-before-accept covers most cases
+
+**Revisit when:**
+- Entity extraction includes category-level confidence scores
+- User feedback shows specific ambiguity patterns that cause friction
+
+---
+
 ## Layout Architecture
 
 ### Unified Morphing Right Rail
@@ -398,3 +443,4 @@ When revisiting deferred items, consider:
 | 2025-02-21 | Added: NL Parameter Parsing — Non-Rx Categories | Deferred from OmniAdd UX Rewrite; Rx-only regex included |
 | 2025-02-21 | Updated: NL Parsing → Dx/Procedure only | Lab/Allergy/Imaging/Referral keyword parsing implemented |
 | 2025-02-22 | No change needed | Typed buildData() returns completed; data model nesting entry already removed |
+| 2025-02-22 | Added: AI Suggestions section | Verb disambiguation, cross-category switching, multi-resolution deferred from med intent + narrative work |

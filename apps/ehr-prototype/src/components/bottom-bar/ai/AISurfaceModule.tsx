@@ -560,10 +560,9 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
         )}
       </div>
 
-      {/* Content Area */}
-      <div style={{ flex: 1, overflow: 'auto', padding: spaceAround.default }}>
-        {/* Edit mode: SuggestionEditPanel replaces suggestions */}
-        {editingSuggestion && onSuggestionAcceptWithChanges ? (
+      {editingSuggestion && onSuggestionAcceptWithChanges ? (
+        /* Edit mode: just the edit panel, nothing else */
+        <div style={{ flex: 1, overflow: 'auto', padding: spaceAround.default }}>
           <SuggestionEditPanel
             suggestion={editingSuggestion}
             theme="dark"
@@ -573,79 +572,83 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
             }}
             onCancel={() => setEditingSuggestionId(null)}
           />
-        ) : actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss ? (
-          /* Suggestions */
-          <div>
-            <div style={{ fontSize: 11, fontWeight: typography.fontWeight.semibold, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-              Suggested Actions
-            </div>
-            <SuggestionList
-              suggestions={actionSuggestions.slice(0, 3)}
-              onAccept={(id) => onSuggestionAccept(id)}
-              onDismiss={(id) => onSuggestionDismiss(id)}
-              onEdit={(id) => setEditingSuggestionId(id)}
-              variant="compact"
-              theme="dark"
-              showHeader={false}
-            />
-          </div>
-        ) : (
-          /* Quick Actions or Empty State */
-          <>
-            {quickActions && quickActions.length > 0 && onQuickActionClick ? (
-              <div
-                className="ai-palette-actions"
-                style={{
-                  display: 'flex',
-                  gap: 8,
-                  overflowX: 'auto',
-                  margin: `0 -${spaceAround.default}px`,
-                  padding: `0 ${spaceAround.default}px`,
-                  scrollbarWidth: 'none',
-                }}
-              >
-                <style>{`.ai-palette-actions::-webkit-scrollbar { display: none; }`}</style>
-                {quickActions.map((action) => (
-                  <Button
-                    key={action.id}
-                    variant="secondary"
-                    size="sm"
-                    shape="rounded"
-                    onClick={() => onQuickActionClick(action.id)}
-                    style={{
-                      backgroundColor: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      color: colors.fg.neutral.inversePrimary,
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      backdropFilter: 'none',
-                      WebkitBackdropFilter: 'none',
-                    }}
-                  >
-                    {action.label}
-                  </Button>
-                ))}
+        </div>
+      ) : (
+        <>
+          {/* Content Area */}
+          <div style={{ flex: 1, overflow: 'auto', padding: spaceAround.default }}>
+            {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss ? (
+              /* Suggestions */
+              <div>
+                <div style={{ fontSize: 11, fontWeight: typography.fontWeight.semibold, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+                  Suggested Actions
+                </div>
+                <SuggestionList
+                  suggestions={actionSuggestions.slice(0, 3)}
+                  onAccept={(id) => onSuggestionAccept(id)}
+                  onDismiss={(id) => onSuggestionDismiss(id)}
+                  onEdit={(id) => setEditingSuggestionId(id)}
+                  variant="compact"
+                  theme="dark"
+                  showHeader={false}
+                />
               </div>
             ) : (
-              activeSuggestions.length === 0 && (
-                <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
-                  <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
-                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
-                </div>
-              )
+              /* Quick Actions or Empty State */
+              <>
+                {quickActions && quickActions.length > 0 && onQuickActionClick ? (
+                  <div
+                    className="ai-palette-actions"
+                    style={{
+                      display: 'flex',
+                      gap: 8,
+                      overflowX: 'auto',
+                      margin: `0 -${spaceAround.default}px`,
+                      padding: `0 ${spaceAround.default}px`,
+                      scrollbarWidth: 'none',
+                    }}
+                  >
+                    <style>{`.ai-palette-actions::-webkit-scrollbar { display: none; }`}</style>
+                    {quickActions.map((action) => (
+                      <Button
+                        key={action.id}
+                        variant="secondary"
+                        size="sm"
+                        shape="rounded"
+                        onClick={() => onQuickActionClick(action.id)}
+                        style={{
+                          backgroundColor: 'rgba(255,255,255,0.08)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          color: colors.fg.neutral.inversePrimary,
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                          backdropFilter: 'none',
+                          WebkitBackdropFilter: 'none',
+                        }}
+                      >
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  activeSuggestions.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
+                      <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
+                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
+                    </div>
+                  )
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
-
-      {/* Input Area — hidden during edit mode */}
-      {!editingSuggestion && (
-        <AIInputArea
-          placeholder="Ask AI…"
-          onOpenDrawer={onOpenDrawer}
-          showDrawerButton={true}
-          maxHeight={120}
-        />
+          </div>
+          {/* Input Area */}
+          <AIInputArea
+            placeholder="Ask AI…"
+            onOpenDrawer={onOpenDrawer}
+            showDrawerButton={true}
+            maxHeight={120}
+          />
+        </>
       )}
     </motion.div>
   );

@@ -11,7 +11,7 @@ export const SUGGESTION_ACTION_TYPES = ['chart-item', 'care-gap-action'] as cons
 export function getSuggestionCategoryLabel(suggestion: Suggestion): string {
   if (suggestion.content.type === 'new-item') {
     const map: Record<string, string> = {
-      medication: 'Add Rx',
+      medication: 'Add Med',
       diagnosis: 'Add Dx',
       lab: 'Add Lab',
       imaging: 'Add Imaging',

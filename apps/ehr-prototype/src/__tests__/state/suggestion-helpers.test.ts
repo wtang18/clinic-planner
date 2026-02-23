@@ -69,8 +69,8 @@ describe('buildItemSummary', () => {
 // ============================================================================
 
 describe('getCategoryBadge', () => {
-  it('maps medication to Rx', () => {
-    expect(getCategoryBadge('medication')).toBe('Rx');
+  it('maps medication to Med', () => {
+    expect(getCategoryBadge('medication')).toBe('Med');
   });
 
   it('maps lab to Lab', () => {
@@ -79,6 +79,18 @@ describe('getCategoryBadge', () => {
 
   it('maps diagnosis to Dx', () => {
     expect(getCategoryBadge('diagnosis')).toBe('Dx');
+  });
+
+  it('maps hpi to HPI', () => {
+    expect(getCategoryBadge('hpi')).toBe('HPI');
+  });
+
+  it('maps plan to Plan', () => {
+    expect(getCategoryBadge('plan')).toBe('Plan');
+  });
+
+  it('maps instruction to Instr', () => {
+    expect(getCategoryBadge('instruction')).toBe('Instr');
   });
 
   it('returns category name for unmapped categories', () => {

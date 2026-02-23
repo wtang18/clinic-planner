@@ -5,15 +5,16 @@
  * before accepting it. Used by both the AI palette and the AI drawer.
  *
  * Layout:
- *   Header: [Category badge] Item label         [Cancel]
+ *   Header: [Category badge] Item label
  *   FieldRows (with theme support)
  *   Instructions preview
  *   Footer: [Cancel] [Add with changes]
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { Suggestion } from '../../types/suggestions';
 import { suggestionToEditableItem, getCategoryBadge } from '../../utils/suggestion-helpers';
+import { isNarrativeCategory } from '../../services/ai/entity-extraction/suggestion-validators';
 import { useFieldEditor } from '../../hooks/useFieldEditor';
 import { FieldRow } from '../omni-add/FieldRow';
 import { generateSig, calculateQuantity } from '../omni-add/form/rx-helpers';
@@ -49,6 +50,7 @@ function buildEditInstructionsLine(
   fieldSelections: Record<string, string>,
 ): string {
   if (category === 'medication') {
+    const intent = fieldSelections.medIntent || 'prescribe';
     const dosage = fieldSelections.dosage || '';
     const route = fieldSelections.route || '';
     const frequency = fieldSelections.frequency || '';
@@ -57,6 +59,9 @@ function buildEditInstructionsLine(
     const qty = calculateQuantity(frequency, duration);
     const refills = Number(fieldSelections.refills ?? data.refills) || 0;
     const parts: string[] = [];
+    if (intent === 'reported') {
+      parts.push('Reported by patient');
+    }
     if (sig) parts.push(`Sig: ${sig}`);
     const meta: string[] = [];
     if (qty !== null) meta.push(`Qty: ${qty}`);
@@ -91,24 +96,16 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
   const editableItem = useMemo(() => suggestionToEditableItem(suggestion), [suggestion]);
 
   const {
-    editMode,
     fieldSelections,
     fieldConfigs,
-    enterEditMode,
     clearEditMode,
     handleFieldChange,
     buildData,
   } = useFieldEditor({
     category: editableItem?.category ?? null,
     item: editableItem,
+    autoEnterEditMode: true,
   });
-
-  // Auto-enter edit mode with defaults on mount
-  React.useEffect(() => {
-    if (editableItem && !editMode) {
-      enterEditMode();
-    }
-  }, [editableItem]);
 
   const category = editableItem?.category;
   const badge = category ? getCategoryBadge(category) : null;
@@ -127,6 +124,23 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
     }
   };
 
+  // Narrative categories (hpi, plan, instruction) use textarea editing
+  if (editableItem && category && isNarrativeCategory(category)) {
+    return (
+      <NarrativeEditPanel
+        suggestion={suggestion}
+        editableItem={editableItem}
+        category={category}
+        badge={badge}
+        label={label}
+        isDark={isDark}
+        theme={theme}
+        onAccept={onAccept}
+        onCancel={onCancel}
+      />
+    );
+  }
+
   if (!editableItem || fieldConfigs.length === 0) {
     // No editable fields — shouldn't normally happen but handle gracefully
     return null;
@@ -140,14 +154,6 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
           {badge && <span style={badgeStyle(isDark)}>{badge}</span>}
           <span style={labelStyle(isDark)}>{label}</span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          style={{ color: isDark ? 'rgba(255,255,255,0.6)' : colors.fg.neutral.spotReadable }}
-        >
-          Cancel
-        </Button>
       </div>
 
       {/* Field rows */}
@@ -202,6 +208,83 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
 };
 
 SuggestionEditPanel.displayName = 'SuggestionEditPanel';
+
+// ============================================================================
+// Narrative Edit Sub-Panel
+// ============================================================================
+
+interface NarrativeEditPanelProps {
+  suggestion: Suggestion;
+  editableItem: import('../../data/mock-quick-picks').QuickPickItem;
+  category: string;
+  badge: string | null;
+  label: string;
+  isDark: boolean;
+  theme: 'light' | 'dark';
+  onAccept: (suggestionId: string, data: Record<string, unknown>) => void;
+  onCancel: () => void;
+}
+
+const NarrativeEditPanel: React.FC<NarrativeEditPanelProps> = ({
+  suggestion,
+  editableItem,
+  badge,
+  label,
+  isDark,
+  onAccept,
+  onCancel,
+}) => {
+  const initialText = String(editableItem.data.text ?? '');
+  const [text, setText] = useState(initialText);
+
+  const handleAdd = () => {
+    onAccept(suggestion.id, { text, format: 'plain' });
+  };
+
+  return (
+    <div style={containerStyle(isDark)} data-testid="suggestion-edit-panel">
+      {/* Header */}
+      <div style={headerStyle(isDark)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spaceBetween.coupled, flex: 1, minWidth: 0 }}>
+          {badge && <span style={badgeStyle(isDark)}>{badge}</span>}
+          <span style={labelStyle(isDark)}>{label}</span>
+        </div>
+      </div>
+
+      {/* Textarea */}
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        style={textareaStyle(isDark)}
+        rows={6}
+        data-testid="narrative-edit-textarea"
+      />
+
+      {/* Footer actions */}
+      <div style={footerStyle}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          style={{ color: isDark ? 'rgba(255,255,255,0.6)' : colors.fg.neutral.spotReadable }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          shape="rect"
+          onClick={handleAdd}
+          data-testid="suggestion-edit-add-btn"
+        >
+          Add with changes
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+NarrativeEditPanel.displayName = 'NarrativeEditPanel';
 
 // ============================================================================
 // Styles
@@ -261,6 +344,22 @@ const instructionsStyle = (isDark: boolean): React.CSSProperties => ({
   color: isDark ? 'rgba(255,255,255,0.5)' : colors.fg.neutral.spotReadable,
   lineHeight: '18px',
   padding: `${spaceAround.tight}px 0`,
+});
+
+const textareaStyle = (isDark: boolean): React.CSSProperties => ({
+  width: '100%',
+  minHeight: 100,
+  padding: spaceAround.compact,
+  fontSize: 13,
+  fontFamily: typography.fontFamily.sans,
+  lineHeight: '20px',
+  color: isDark ? colors.fg.neutral.inversePrimary : colors.fg.neutral.primary,
+  backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : colors.bg.neutral.low,
+  border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : colors.border.neutral.low}`,
+  borderRadius: borderRadius.sm,
+  resize: 'vertical' as const,
+  outline: 'none',
+  boxSizing: 'border-box' as const,
 });
 
 const footerStyle: React.CSSProperties = {

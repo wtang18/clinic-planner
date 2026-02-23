@@ -148,6 +148,26 @@ export const SUGGESTION_TEMPLATES = {
       }
     ),
     generateNewItemSuggestion(
+      'medication',
+      {
+        drugName: 'Mucinex',
+        genericName: 'Guaifenesin',
+        dosage: '600 mg',
+        route: 'PO',
+        frequency: 'BID',
+        reportedBy: 'patient',
+        verificationStatus: 'unverified',
+        prescriptionType: 'new',
+        isControlled: false,
+      },
+      'Mucinex 600mg (reported)',
+      {
+        source: 'transcription',
+        confidence: 0.88,
+        reasoning: 'Extracted from: "I\'ve been taking some Mucinex for the cough"',
+      }
+    ),
+    generateNewItemSuggestion(
       'diagnosis',
       {
         description: 'Acute bronchitis',
@@ -235,6 +255,49 @@ export const SUGGESTION_TEMPLATES = {
         source: 'ai-analysis',
         confidence: 0.82,
         reasoning: 'Recommended for diabetic patients on statin therapy',
+      }
+    ),
+  ],
+
+  // UC Cough - narrative draft suggestions
+  ucCoughNarrativeDrafts: [
+    generateNewItemSuggestion(
+      'hpi',
+      {
+        text: 'Patient is a 45-year-old male presenting with productive cough x5 days. Cough is worse at night with mild congestion. No fever, chest pain, or shortness of breath. No sick contacts. Non-smoker.',
+        format: 'plain',
+      },
+      'Draft HPI',
+      {
+        source: 'ai-analysis',
+        confidence: 0.85,
+        reasoning: 'Generated from transcript',
+      }
+    ),
+    generateNewItemSuggestion(
+      'plan',
+      {
+        text: '1. Benzonatate 100mg TID x7 days for cough\n2. Increase fluids and rest\n3. Return if symptoms worsen or fever develops',
+        format: 'plain',
+      },
+      'Draft A&P',
+      {
+        source: 'ai-analysis',
+        confidence: 0.80,
+        reasoning: 'Generated from encounter context',
+      }
+    ),
+    generateNewItemSuggestion(
+      'instruction',
+      {
+        text: 'Take benzonatate as directed — swallow whole, do not crush or chew. Increase fluids. Return if fever develops or cough worsens after 5 days.',
+        format: 'plain',
+      },
+      'Draft Instructions',
+      {
+        source: 'ai-analysis',
+        confidence: 0.82,
+        reasoning: 'Generated from treatment plan',
       }
     ),
   ],

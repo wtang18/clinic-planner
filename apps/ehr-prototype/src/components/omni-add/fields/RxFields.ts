@@ -16,6 +16,21 @@ import { calculateQuantity, generateSig } from '../form/rx-helpers';
 // Option Sets (mirrored from RxDetailForm)
 // ============================================================================
 
+/**
+ * Med intent options — disambiguates prescribing actions vs. patient-reported meds.
+ *
+ * "Reported" maps to MedicationItem's `reportedBy: 'patient'` +
+ * `verificationStatus: 'unverified'`. The prescribing intents
+ * (Prescribe/Refill/Change/D-C) map to `prescriptionType`.
+ */
+const MED_INTENT_OPTIONS: FieldOption[] = [
+  { value: 'prescribe', label: 'Prescribe' },
+  { value: 'reported', label: 'Reported' },
+  { value: 'refill', label: 'Refill' },
+  { value: 'change', label: 'Change' },
+  { value: 'discontinue', label: 'D/C' },
+];
+
 const ROUTE_OPTIONS: FieldOption[] = [
   { value: 'PO', label: 'PO' },
   { value: 'IM', label: 'IM' },
@@ -68,6 +83,11 @@ function getFields(item: QuickPickItem): FieldConfig[] {
 
   return [
     {
+      key: 'medIntent',
+      label: 'Intent',
+      options: MED_INTENT_OPTIONS,
+    },
+    {
       key: 'dosage',
       label: 'Dosage',
       options: dosageOptions,
@@ -99,7 +119,20 @@ function getFields(item: QuickPickItem): FieldConfig[] {
 }
 
 function getDefaults(item: QuickPickItem): Record<string, string> {
+  // Detect intent from data: reportedBy trumps prescriptionType
+  let medIntent = 'prescribe';
+  if (item.data.reportedBy) {
+    medIntent = 'reported';
+  } else {
+    const pt = String(item.data.prescriptionType || 'new');
+    const ptToIntent: Record<string, string> = {
+      new: 'prescribe', refill: 'refill', change: 'change', discontinue: 'discontinue',
+    };
+    medIntent = ptToIntent[pt] ?? 'prescribe';
+  }
+
   return {
+    medIntent,
     dosage: String(item.data.dosage || ''),
     route: String(item.data.route || 'PO'),
     frequency: String(item.data.frequency || 'daily'),
@@ -121,8 +154,17 @@ function buildData(
   const quantity = calculateQuantity(frequency, duration) ?? Number(item.data.quantity) ?? 0;
   const refills = Number(selections.refills ?? item.data.refills) || 0;
 
+  // Map medIntent → prescriptionType + reportedBy/verificationStatus
+  const intent = selections.medIntent || 'prescribe';
+  const intentToPrescriptionType: Record<string, MedicationItem['data']['prescriptionType']> = {
+    prescribe: 'new', reported: 'new', refill: 'refill', change: 'change', discontinue: 'discontinue',
+  };
+  const prescriptionType = intentToPrescriptionType[intent] ?? 'new';
+  const isReported = intent === 'reported';
+
   return {
     ...(item.data as MedicationItem['data']),
+    prescriptionType,
     dosage,
     route,
     frequency,
@@ -131,6 +173,9 @@ function buildData(
     quantity,
     refills,
     daw: false,
+    ...(isReported
+      ? { reportedBy: 'patient' as const, verificationStatus: 'unverified' as const }
+      : { reportedBy: undefined, verificationStatus: undefined }),
   };
 }
 

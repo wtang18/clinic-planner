@@ -151,6 +151,12 @@ export function generateUcCoughMidEncounterState(): EncounterState {
     state.entities.suggestions[sug.id] = sug;
   });
 
+  // Add narrative draft suggestions
+  const narrativeDrafts = SUGGESTION_TEMPLATES.ucCoughNarrativeDrafts;
+  narrativeDrafts.forEach(sug => {
+    state.entities.suggestions[sug.id] = sug;
+  });
+
   return state;
 }
 

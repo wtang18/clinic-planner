@@ -1,8 +1,11 @@
 /**
  * SuggestionActionRow — Themed compact row for AI suggestions.
  *
- * Renders: [Category badge] Label · Summary   [Dismiss] [Edit] [Add]
+ * Layout:
+ *   [Badge]  Label                    [Dismiss] [Edit] [Add]
+ *            Summary (truncated)
  *
+ * Badge sits top-left, label + summary stack vertically, actions pin right.
  * Replaces the inline compact variant rendering in SuggestionList with proper
  * component structure and theme support (light for drawer, dark for palette).
  */
@@ -10,8 +13,8 @@
 import React from 'react';
 import { Ban } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
-import { getCategoryBadge, buildSuggestionSummary, suggestionToEditableItem } from '../../utils/suggestion-helpers';
-import { getSuggestionCategoryLabel } from '../../utils/suggestions';
+import { getCategoryBadge, buildSuggestionSummary } from '../../utils/suggestion-helpers';
+import { EDITABLE_SUGGESTION_CATEGORIES } from '../../services/ai/entity-extraction/suggestion-validators';
 import { Button } from '../primitives/Button';
 import { IconButton } from '../primitives/IconButton';
 import {
@@ -40,9 +43,16 @@ export interface SuggestionActionRowProps {
 // Helpers
 // ============================================================================
 
-/** Suggestion types that have an editable template */
+/** Suggestion types that have an editable template with a structured CategoryFieldDef */
 function hasEditableTemplate(suggestion: Suggestion): boolean {
-  return suggestion.content.type === 'new-item' || suggestion.content.type === 'care-gap-action';
+  if (suggestion.content.type === 'new-item') {
+    return EDITABLE_SUGGESTION_CATEGORIES.has(suggestion.content.category);
+  }
+  if (suggestion.content.type === 'care-gap-action') {
+    const cat = suggestion.content.actionTemplate.category;
+    return cat != null && EDITABLE_SUGGESTION_CATEGORIES.has(cat);
+  }
+  return false;
 }
 
 /** Get the category for badge rendering */
@@ -77,11 +87,10 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     gap: spaceBetween.repeating,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.bg.positive.subtle,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.bg.transparent.min,
     borderRadius: borderRadius.sm,
     transition: `all ${transitions.fast}`,
     ...(exiting ? { opacity: 0, transform: 'translateX(-10px)' } : {}),
@@ -95,13 +104,14 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
     fontSize: 10,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.semibold,
-    color: isDark ? 'rgba(255,255,255,0.7)' : colors.fg.accent.primary,
-    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : colors.bg.accent.subtle,
+    color: isDark ? 'rgba(255,255,255,0.7)' : colors.fg.transparent.medium,
+    backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : colors.bg.transparent.subtle,
     borderRadius: borderRadius.xs,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
     flexShrink: 0,
     lineHeight: '16px',
+    marginTop: 2,
   };
 
   const labelStyle: React.CSSProperties = {
@@ -128,15 +138,15 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
       style={containerStyle}
       data-testid={`suggestion-action-row-${suggestion.id}`}
     >
-      {/* Left: badge + label + summary */}
+      {/* Left: badge + stacked text */}
+      {badge && <span style={badgeStyle}>{badge}</span>}
       <div style={{
         display: 'flex',
-        alignItems: 'center',
-        gap: spaceBetween.coupled,
+        flexDirection: 'column',
+        gap: 2,
         minWidth: 0,
         flex: 1,
       }}>
-        {badge && <span style={badgeStyle}>{badge}</span>}
         <span style={labelStyle}>{label}</span>
         {summary && <span style={summaryStyle}>{summary}</span>}
       </div>
@@ -147,6 +157,7 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
         alignItems: 'center',
         gap: spaceBetween.coupled,
         flexShrink: 0,
+        alignSelf: 'center',
       }}>
         <IconButton
           icon={<Ban size={14} />}

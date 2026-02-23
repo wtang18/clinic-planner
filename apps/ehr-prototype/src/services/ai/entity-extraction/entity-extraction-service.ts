@@ -15,6 +15,7 @@ import type { ExtractedEntity, TranscriptSegment, EntityType } from '../../../ty
 import { extractEntities } from './extractors';
 import type { ExtractionContext, NormalizedMedication, NormalizedDiagnosis } from './types';
 import { DEFAULT_ENTITY_EXTRACTION_CONFIG } from './types';
+import { validateSuggestionData, getPrimaryIdentifier } from './suggestion-validators';
 
 // ============================================================================
 // Service Definition
@@ -143,9 +144,15 @@ function entityToSuggestion(
   }
 
   const { suggestionType, itemCategory } = mapping;
-  const itemTemplate = buildItemTemplate(entity, itemCategory, state);
+  const itemTemplate = buildItemTemplate(entity, itemCategory, state, segment);
 
   if (!itemTemplate) {
+    return null;
+  }
+
+  // Validate data quality — reject noise words and empty identifiers
+  const templateData = (itemTemplate.data ?? {}) as Record<string, unknown>;
+  if (!validateSuggestionData(itemCategory, templateData)) {
     return null;
   }
 
@@ -154,6 +161,9 @@ function entityToSuggestion(
     itemTemplate,
     category: itemCategory,
   };
+
+  // Set actionLabel from primary identifier for clean display in action rows
+  const actionLabel = getPrimaryIdentifier(itemCategory, templateData) ?? undefined;
 
   return {
     id: `sug-${nanoid(8)}`,
@@ -170,6 +180,7 @@ function entityToSuggestion(
     displaySubtext: segment.text.length > 50
       ? segment.text.substring(0, 50) + '...'
       : segment.text,
+    actionLabel,
   };
 }
 
@@ -179,31 +190,45 @@ function entityToSuggestion(
 function getEntityMapping(
   entityType: EntityType
 ): { suggestionType: SuggestionType; itemCategory: ItemCategory } | null {
-  const mappings: Record<
+  // Only map to structured categories that have CategoryFieldDef definitions.
+  // Unstructured categories (hpi, vitals, physical-exam) are excluded because
+  // they produce noise suggestions and have no editable field rows.
+  const mappings: Partial<Record<
     EntityType,
     { suggestionType: SuggestionType; itemCategory: ItemCategory }
-  > = {
+  >> = {
     medication: { suggestionType: 'chart-item', itemCategory: 'medication' },
     diagnosis: { suggestionType: 'chart-item', itemCategory: 'diagnosis' },
-    symptom: { suggestionType: 'chart-item', itemCategory: 'hpi' },
-    'vital-sign': { suggestionType: 'chart-item', itemCategory: 'vitals' },
     'lab-test': { suggestionType: 'chart-item', itemCategory: 'lab' },
     procedure: { suggestionType: 'chart-item', itemCategory: 'procedure' },
     allergy: { suggestionType: 'chart-item', itemCategory: 'allergy' },
-    duration: { suggestionType: 'chart-item', itemCategory: 'hpi' },
-    'body-part': { suggestionType: 'chart-item', itemCategory: 'physical-exam' },
   };
 
-  return mappings[entityType] || null;
+  return mappings[entityType] ?? null;
 }
 
 /**
  * Build a partial chart item template from an entity
  */
+/**
+ * Reporting-verb pattern — matches context suggesting the patient reports
+ * taking a medication rather than the provider prescribing it.
+ * Checks the ~40 chars before the entity span in the segment text.
+ */
+const REPORTING_VERB_PATTERN = /\b(?:taking|been\s+on|currently\s+on|been\s+taking|takes|using|on|tried|started)\b/i;
+
+function hasReportingContext(entity: ExtractedEntity, segment: TranscriptSegment): boolean {
+  const [start] = entity.span;
+  // Check text before the entity in the segment (up to 40 chars of leading context)
+  const leadingContext = segment.text.substring(Math.max(0, start - 40), start);
+  return REPORTING_VERB_PATTERN.test(leadingContext);
+}
+
 function buildItemTemplate(
   entity: ExtractedEntity,
   category: ItemCategory,
-  state: EncounterState
+  state: EncounterState,
+  segment?: TranscriptSegment,
 ): Partial<ChartItem> | null {
   const baseTemplate = {
     category,
@@ -224,6 +249,7 @@ function buildItemTemplate(
   switch (category) {
     case 'medication': {
       const normalized = entity.normalizedValue as NormalizedMedication | null;
+      const isReported = segment ? hasReportingContext(entity, segment) : false;
       return {
         ...baseTemplate,
         category: 'medication' as const,
@@ -237,6 +263,9 @@ function buildItemTemplate(
           frequency: normalized?.frequency || 'daily',
           isControlled: false,
           prescriptionType: 'new' as const,
+          ...(isReported
+            ? { reportedBy: 'patient' as const, verificationStatus: 'unverified' as const }
+            : {}),
         },
         actions: ['e-prescribe', 'print', 'cancel', 'modify'],
       } as Partial<ChartItem>;
@@ -286,18 +315,6 @@ function buildItemTemplate(
           severity: 'unknown' as const,
           reportedBy: 'patient' as const,
           verificationStatus: 'unverified' as const,
-        },
-      } as Partial<ChartItem>;
-    }
-
-    case 'hpi': {
-      return {
-        ...baseTemplate,
-        category: 'hpi' as const,
-        displayText: entity.text,
-        data: {
-          text: entity.text,
-          format: 'plain' as const,
         },
       } as Partial<ChartItem>;
     }

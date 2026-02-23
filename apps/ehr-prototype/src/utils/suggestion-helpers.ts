@@ -71,16 +71,19 @@ export function buildItemSummary(item: QuickPickItem): string {
   }
 }
 
-/** Get short category badge label (e.g., 'Rx', 'Lab', 'Dx') */
+/** Get short category badge label (e.g., 'Med', 'Lab', 'Dx') */
 export function getCategoryBadge(category: ItemCategory): string {
   const badges: Partial<Record<ItemCategory, string>> = {
-    medication: 'Rx',
+    medication: 'Med',
     lab: 'Lab',
     diagnosis: 'Dx',
     imaging: 'Img',
     procedure: 'Proc',
     allergy: 'Allergy',
     referral: 'Ref',
+    hpi: 'HPI',
+    plan: 'Plan',
+    instruction: 'Instr',
   };
   return badges[category] ?? category;
 }

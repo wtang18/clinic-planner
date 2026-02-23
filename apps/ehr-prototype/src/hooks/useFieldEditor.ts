@@ -25,6 +25,12 @@ export interface UseFieldEditorOptions {
   item: QuickPickItem | null;
   /** NL overrides from text parsing */
   nlOverrides?: Record<string, string> | null;
+  /**
+   * When true, automatically enters edit mode with defaults when item changes,
+   * instead of resetting to browse mode. Use this for panels that are always
+   * in edit mode (e.g., SuggestionEditPanel).
+   */
+  autoEnterEditMode?: boolean;
 }
 
 export interface UseFieldEditorResult {
@@ -51,6 +57,7 @@ export function useFieldEditor({
   category,
   item,
   nlOverrides,
+  autoEnterEditMode = false,
 }: UseFieldEditorOptions): UseFieldEditorResult {
   const [editMode, setEditMode] = useState(false);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string>>({});
@@ -61,11 +68,16 @@ export function useFieldEditor({
     [category],
   );
 
-  // Reset edit mode when item changes
+  // Item-change effect: either auto-enter edit mode or reset
   useEffect(() => {
-    setEditMode(false);
-    setFieldSelections({});
-  }, [item]);
+    if (autoEnterEditMode && item && fieldDef) {
+      setEditMode(true);
+      setFieldSelections(fieldDef.getDefaults(item));
+    } else {
+      setEditMode(false);
+      setFieldSelections({});
+    }
+  }, [item, autoEnterEditMode, fieldDef]);
 
   // Pre-fill fields from NL overrides (fires after reset in same render cycle)
   useEffect(() => {
