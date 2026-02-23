@@ -9,8 +9,7 @@
  * the same element as the menu toggle button (just in expanded form).
  */
 
-import React, { useEffect, useCallback } from 'react';
-import { Platform } from 'react-native';
+import React, { useCallback } from 'react';
 import { colors, zIndex as zIndexTokens, transitions, glass, GLASS_BUTTON_RADIUS, GLASS_BUTTON_HEIGHT, LAYOUT } from '../../styles/foundations';
 import { useCoordination } from '../../hooks/useCoordination';
 import { CollapsiblePane } from './CollapsiblePane';
@@ -116,33 +115,8 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
     dispatch({ type: overviewCollapsed ? 'OVERVIEW_EXPANDED' : 'OVERVIEW_COLLAPSED' });
   }, [overviewCollapsed, dispatch]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore shortcuts when typing in input fields
-      const target = e.target as HTMLElement;
-      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
-        return;
-      }
-
-      // Cmd+Shift+\ to toggle overview (check first since it's a superset of Cmd+\)
-      if (e.metaKey && e.shiftKey && e.key === '\\') {
-        e.preventDefault();
-        toggleOverview();
-        return;
-      }
-      // Cmd+\ to toggle menu
-      if (e.metaKey && e.key === '\\') {
-        e.preventDefault();
-        toggleMenu();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleMenu, toggleOverview]);
+  // Note: ⌘\ and ⌘⇧\ shortcuts are now handled by usePaneShortcuts hook
+  // (registered via ShortcutManager, called from CaptureView)
 
   // ============================================================================
   // Styles
@@ -151,7 +125,8 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    height: '100vh',
+    height: 'calc(100vh - var(--legend-panel-height, 0px))',
+    transition: 'height 200ms ease',
     width: '100%',
     backgroundColor: colors.bg.neutral.min,
     overflow: 'hidden',
@@ -220,7 +195,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
     position: 'fixed',
     top: MENU_INSET,
     left: MENU_INSET,
-    bottom: MENU_INSET,
+    bottom: `calc(${MENU_INSET}px + var(--legend-panel-height, 0px))`,
     width: menuWidth,
     zIndex: zIndexTokens.sticky + 1, // Above nav row since it's part of floating layer
     // Glassmorphic styling
@@ -230,7 +205,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
     // Animation - slide completely off-screen including inset
     transform: menuCollapsed ? `translateX(calc(-100% - ${MENU_INSET}px))` : 'translateX(0)',
     opacity: menuCollapsed ? 0 : 1,
-    transition: `transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1)`,
+    transition: `transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1), bottom 200ms ease`,
     pointerEvents: menuCollapsed ? 'none' : 'auto',
     display: 'flex',
     flexDirection: 'column',

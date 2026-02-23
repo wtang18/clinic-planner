@@ -10,15 +10,18 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, Platform, View } from 'react-native';
 
-import { NavigationProvider, useNavigation } from './navigation/NavigationContext';
+import { NavigationProvider, useNavigation, useCurrentScreen } from './navigation/NavigationContext';
 import { AppRouter } from './navigation/AppRouter';
 import { AppProviders } from './context/AppProviders';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { TourOverlay } from './tour/TourOverlay';
 import { DemoModeBanner } from './demo/DemoModeBanner';
 import { DemoOverlay } from './demo/DemoOverlay';
-import { ShortcutHelpModal } from './shortcuts/ShortcutHelpModal';
 import { registerDefaultShortcuts } from './shortcuts/defaultShortcuts';
+import { ChordBadge } from './shortcuts/ChordBadge';
+import { ShortcutLegendPanel } from './shortcuts/ShortcutLegendPanel';
+import { HelpHubButton } from './components/help/HelpHubButton';
+import { clearTriedShortcuts } from './shortcuts/shortcutProgress';
 import { useDemoMode } from './demo/DemoContext';
 import { useDemoController } from './demo/hooks/useDemoController';
 import { tourSystem } from './tour/TourSystem';
@@ -108,7 +111,24 @@ export const App: React.FC<AppProps> = ({
 const AppContent: React.FC = () => {
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const { activePreset, exitDemo, resetDemo } = useDemoMode();
-  const { setMode } = useNavigation();
+  const { setMode, navigate } = useNavigation();
+  const screen = useCurrentScreen();
+
+  const showHelpUI = screen !== 'home' && screen !== 'demo';
+
+  // Clear tried-shortcut progress on page load (web only) so each session starts fresh
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      clearTriedShortcuts();
+    }
+  }, []);
+
+  // Close legend panel when navigating away from encounter screens
+  useEffect(() => {
+    if (!showHelpUI && showShortcutHelp) {
+      setShowShortcutHelp(false);
+    }
+  }, [showHelpUI, showShortcutHelp]);
 
   // Register keyboard shortcuts (web only)
   useEffect(() => {
@@ -116,7 +136,6 @@ const AppContent: React.FC = () => {
 
     return registerDefaultShortcuts({
       openOmniAdd: () => {
-        // Dispatch custom event for OmniAdd to listen to
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('ehr:open-omni-add'));
         }
@@ -137,9 +156,15 @@ const AppContent: React.FC = () => {
           window.dispatchEvent(new CustomEvent('ehr:save'));
         }
       },
-      help: () => setShowShortcutHelp(true),
+      help: () => setShowShortcutHelp((prev) => !prev),
+      navigate: (screen) => navigate(screen as any),
+      navigateWorkspace: (slot) => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('ehr:navigate-workspace', { detail: { slot } }));
+        }
+      },
     });
-  }, [setMode]);
+  }, [setMode, navigate]);
 
   return (
     <View style={styles.content}>
@@ -161,12 +186,19 @@ const AppContent: React.FC = () => {
       {/* Demo overlay (only when demo controller is active) */}
       {activePreset && <DemoOverlayContainer />}
 
-      {/* Shortcut help modal (web only) */}
-      {Platform.OS === 'web' && (
-        <ShortcutHelpModal
-          isOpen={showShortcutHelp}
-          onClose={() => setShowShortcutHelp(false)}
-        />
+      {/* Help hub + legend panel + chord badge (web only, encounter screens) */}
+      {Platform.OS === 'web' && showHelpUI && (
+        <>
+          <ShortcutLegendPanel
+            isOpen={showShortcutHelp}
+            onClose={() => setShowShortcutHelp(false)}
+          />
+          <HelpHubButton
+            isLegendOpen={showShortcutHelp}
+            onToggleLegend={() => setShowShortcutHelp((prev) => !prev)}
+          />
+          <ChordBadge />
+        </>
       )}
     </View>
   );

@@ -191,12 +191,13 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   // Container styles - fixed at bottom
   const containerStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: 0,
+    bottom: 'var(--legend-panel-height, 0px)',
     left: 0,
     right: 0,
     zIndex: zIndex.modal,
     padding: spaceAround.tight,
     pointerEvents: 'none',
+    transition: 'bottom 200ms ease',
     ...style,
   };
 

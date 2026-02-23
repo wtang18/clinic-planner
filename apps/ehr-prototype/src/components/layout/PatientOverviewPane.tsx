@@ -6,7 +6,7 @@
  * Supports Overview and Activity tabs via segmented control.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { colors, spaceAround, spaceBetween, LAYOUT } from '../../styles/foundations';
 import { SegmentedControl } from '../primitives/SegmentedControl';
 import { PatientIdentityHeader } from './PatientIdentityHeader';
@@ -118,6 +118,21 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
     }
     onTabChange?.(newTab);
   };
+
+  // Listen for keyboard-driven tab cycling (from usePaneShortcuts → ehr:cycle-overview-tab)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => {
+      // Toggle between overview and activity
+      const next: OverviewTab = currentTab === 'overview' ? 'activity' : 'overview';
+      if (!controlledActiveTab) {
+        setInternalTab(next);
+      }
+      onTabChange?.(next);
+    };
+    window.addEventListener('ehr:cycle-overview-tab', handler);
+    return () => window.removeEventListener('ehr:cycle-overview-tab', handler);
+  }, [currentTab, controlledActiveTab, onTabChange]);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',

@@ -16,6 +16,7 @@ import {
   useToDoNavigation,
   useDrawerCoordination,
 } from '../../hooks';
+import { useCoordination } from '../../hooks/useCoordination';
 import { useTranscription } from '../../context/TranscriptionContext';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { getPatientByMrn } from '../../scenarios/patientData';
@@ -65,6 +66,7 @@ interface ToDoViewState {
 }
 
 import { useCaptureView } from './useCaptureView';
+import { usePaneShortcuts } from '../../shortcuts/usePaneShortcuts';
 import { captureViewStyles, captureViewAnimations } from './CaptureView.styles';
 import { colors, spaceAround } from '../../styles/foundations';
 
@@ -109,6 +111,10 @@ export const CaptureView: React.FC = () => {
 
   // Drawer coordination (cross-surface actions)
   const { paneState, barState, barActions, actions, activeSession } = useDrawerCoordination();
+
+  // Pane keyboard shortcuts (⌘\, ⌘], etc.)
+  const { state: coordState, dispatch: coordDispatch } = useCoordination();
+  usePaneShortcuts(coordState, coordDispatch);
 
   // AI Assistant state (content, context, loading — mode is now from coordination)
   const [aiState, aiActions] = useAIAssistant('encounter');

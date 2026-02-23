@@ -4,7 +4,7 @@
  * Custom hook for capture view logic and state management.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import type { ChartItem, ItemSource } from '../../types';
 import type { Mode } from '../../state/types';
 import { useDispatch } from '../../hooks';
@@ -239,6 +239,14 @@ export function useCaptureView(): UseCaptureViewResult {
       transcription.start();
     }
   }, [transcription]);
+
+  // Listen for transcription toggle shortcut event (fired by ShortcutManager)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => handleTranscriptionToggle();
+    window.addEventListener('ehr:toggle-transcription', handler);
+    return () => window.removeEventListener('ehr:toggle-transcription', handler);
+  }, [handleTranscriptionToggle]);
 
   // Handle mode change
   const handleModeChange = useCallback(
