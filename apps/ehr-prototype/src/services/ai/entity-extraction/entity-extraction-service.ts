@@ -234,7 +234,7 @@ function buildItemTemplate(
     category,
     status: 'pending-review' as const,
     displayText: entity.text,
-    tags: [{ label: 'AI Suggested', type: 'ai' as const }],
+    tags: [],
     linkedDiagnoses: [] as string[],
     linkedEncounters: [] as string[],
     _meta: {
@@ -253,6 +253,7 @@ function buildItemTemplate(
       return {
         ...baseTemplate,
         category: 'medication' as const,
+        intent: isReported ? 'report' as const : 'prescribe' as const,
         displayText: normalized?.name || entity.text,
         data: {
           drugName: normalized?.name || entity.text,

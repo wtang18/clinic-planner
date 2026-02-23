@@ -13,6 +13,7 @@
 
 import React, { useMemo, useState } from 'react';
 import type { Suggestion } from '../../types/suggestions';
+import type { ItemIntent } from '../../types/chart-items';
 import { suggestionToEditableItem, getCategoryBadge } from '../../utils/suggestion-helpers';
 import { isNarrativeCategory } from '../../services/ai/entity-extraction/suggestion-validators';
 import { useFieldEditor } from '../../hooks/useFieldEditor';
@@ -50,7 +51,6 @@ function buildEditInstructionsLine(
   fieldSelections: Record<string, string>,
 ): string {
   if (category === 'medication') {
-    const intent = fieldSelections.medIntent || 'prescribe';
     const dosage = fieldSelections.dosage || '';
     const route = fieldSelections.route || '';
     const frequency = fieldSelections.frequency || '';
@@ -59,7 +59,7 @@ function buildEditInstructionsLine(
     const qty = calculateQuantity(frequency, duration);
     const refills = Number(fieldSelections.refills ?? data.refills) || 0;
     const parts: string[] = [];
-    if (intent === 'reported') {
+    if (data.reportedBy) {
       parts.push('Reported by patient');
     }
     if (sig) parts.push(`Sig: ${sig}`);
@@ -95,6 +95,11 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
   const isDark = theme === 'dark';
   const editableItem = useMemo(() => suggestionToEditableItem(suggestion), [suggestion]);
 
+  // Extract intent from suggestion template
+  const intent: ItemIntent | undefined = suggestion.content.type === 'new-item'
+    ? suggestion.content.itemTemplate?.intent as ItemIntent | undefined
+    : undefined;
+
   const {
     fieldSelections,
     fieldConfigs,
@@ -105,10 +110,11 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
     category: editableItem?.category ?? null,
     item: editableItem,
     autoEnterEditMode: true,
+    intent,
   });
 
   const category = editableItem?.category;
-  const badge = category ? getCategoryBadge(category) : null;
+  const badge = category ? getCategoryBadge(category, intent) : null;
   const label = suggestion.actionLabel || suggestion.displayText;
 
   // Live instructions preview

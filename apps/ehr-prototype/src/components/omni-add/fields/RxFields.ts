@@ -2,8 +2,13 @@
  * RxFields — Medication field configuration for V2 omni-input
  *
  * Extracts field definitions from the existing RxDetailForm option sets.
- * Provides: dosage, route, frequency, duration pill fields.
+ * Provides: prescriptionType, dosage, route, frequency, duration pill fields.
  * Quantity and refills are derived (auto-calc from frequency + duration).
+ *
+ * Note: For reported meds (patient says they take something), the extractor
+ * sets `reportedBy: 'patient'` on the suggestion data. The edit panel still
+ * shows the same Rx fields — intent-adaptive field shapes (hiding duration/
+ * refills for reported meds) are deferred to FUTURE_CONSIDERATIONS.md.
  */
 
 import type { FieldOption } from '../FieldOptionPills';
@@ -11,46 +16,17 @@ import type { QuickPickItem } from '../../../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from './types';
 import type { MedicationItem } from '../../../types/chart-items';
 import { calculateQuantity, generateSig } from '../form/rx-helpers';
+import { ROUTE_OPTIONS, FREQUENCY_OPTIONS } from './shared-options';
 
 // ============================================================================
 // Option Sets (mirrored from RxDetailForm)
 // ============================================================================
 
-/**
- * Med intent options — disambiguates prescribing actions vs. patient-reported meds.
- *
- * "Reported" maps to MedicationItem's `reportedBy: 'patient'` +
- * `verificationStatus: 'unverified'`. The prescribing intents
- * (Prescribe/Refill/Change/D-C) map to `prescriptionType`.
- */
-const MED_INTENT_OPTIONS: FieldOption[] = [
-  { value: 'prescribe', label: 'Prescribe' },
-  { value: 'reported', label: 'Reported' },
+const PRESCRIPTION_TYPE_OPTIONS: FieldOption[] = [
+  { value: 'new', label: 'New' },
   { value: 'refill', label: 'Refill' },
   { value: 'change', label: 'Change' },
   { value: 'discontinue', label: 'D/C' },
-];
-
-const ROUTE_OPTIONS: FieldOption[] = [
-  { value: 'PO', label: 'PO' },
-  { value: 'IM', label: 'IM' },
-  { value: 'IV', label: 'IV' },
-  { value: 'SC', label: 'SC' },
-  { value: 'topical', label: 'Topical' },
-  { value: 'Inhalation', label: 'Inhaled' },
-  { value: 'intranasal', label: 'Nasal' },
-  { value: 'rectal', label: 'Rectal' },
-];
-
-const FREQUENCY_OPTIONS: FieldOption[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: 'BID', label: 'BID' },
-  { value: 'TID', label: 'TID' },
-  { value: 'QID', label: 'QID' },
-  { value: 'Q4-6H PRN', label: 'Q4-6H PRN' },
-  { value: 'TID PRN', label: 'TID PRN' },
-  { value: 'QHS', label: 'QHS' },
-  { value: 'PRN', label: 'PRN' },
 ];
 
 const DURATION_OPTIONS: FieldOption[] = [
@@ -83,9 +59,9 @@ function getFields(item: QuickPickItem): FieldConfig[] {
 
   return [
     {
-      key: 'medIntent',
-      label: 'Intent',
-      options: MED_INTENT_OPTIONS,
+      key: 'prescriptionType',
+      label: 'Type',
+      options: PRESCRIPTION_TYPE_OPTIONS,
     },
     {
       key: 'dosage',
@@ -119,20 +95,8 @@ function getFields(item: QuickPickItem): FieldConfig[] {
 }
 
 function getDefaults(item: QuickPickItem): Record<string, string> {
-  // Detect intent from data: reportedBy trumps prescriptionType
-  let medIntent = 'prescribe';
-  if (item.data.reportedBy) {
-    medIntent = 'reported';
-  } else {
-    const pt = String(item.data.prescriptionType || 'new');
-    const ptToIntent: Record<string, string> = {
-      new: 'prescribe', refill: 'refill', change: 'change', discontinue: 'discontinue',
-    };
-    medIntent = ptToIntent[pt] ?? 'prescribe';
-  }
-
   return {
-    medIntent,
+    prescriptionType: String(item.data.prescriptionType || 'new'),
     dosage: String(item.data.dosage || ''),
     route: String(item.data.route || 'PO'),
     frequency: String(item.data.frequency || 'daily'),
@@ -154,13 +118,7 @@ function buildData(
   const quantity = calculateQuantity(frequency, duration) ?? Number(item.data.quantity) ?? 0;
   const refills = Number(selections.refills ?? item.data.refills) || 0;
 
-  // Map medIntent → prescriptionType + reportedBy/verificationStatus
-  const intent = selections.medIntent || 'prescribe';
-  const intentToPrescriptionType: Record<string, MedicationItem['data']['prescriptionType']> = {
-    prescribe: 'new', reported: 'new', refill: 'refill', change: 'change', discontinue: 'discontinue',
-  };
-  const prescriptionType = intentToPrescriptionType[intent] ?? 'new';
-  const isReported = intent === 'reported';
+  const prescriptionType = (selections.prescriptionType || String(item.data.prescriptionType || 'new')) as MedicationItem['data']['prescriptionType'];
 
   return {
     ...(item.data as MedicationItem['data']),
@@ -173,9 +131,6 @@ function buildData(
     quantity,
     refills,
     daw: false,
-    ...(isReported
-      ? { reportedBy: 'patient' as const, verificationStatus: 'unverified' as const }
-      : { reportedBy: undefined, verificationStatus: undefined }),
   };
 }
 

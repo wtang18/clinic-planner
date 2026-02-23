@@ -57,6 +57,22 @@ export type ItemStatus =
   | 'completed'       // Results received, procedure done
   | 'cancelled';
 
+/**
+ * Clinical intent — the verb/action for a chart item.
+ *
+ * Most categories have a single implicit intent (lab→order, allergy→report),
+ * but medications and diagnoses support multiple intents for new items.
+ * Mutations on existing items (discontinue, change, cancel) are deferred.
+ */
+export type ItemIntent =
+  | 'prescribe'   // New/refill medication order (badge: Rx)
+  | 'report'      // Patient-reported item (badge: Med / Allergy)
+  | 'order'       // Order a lab, imaging, procedure
+  | 'assess'      // Confirm a diagnosis (badge: Dx)
+  | 'rule-out'    // Differential diagnosis (badge: R/O)
+  | 'refer'       // Make a referral
+  | 'draft';      // Draft a narrative section
+
 /** Tag for visual indicators on items */
 export interface Tag {
   label: string;
@@ -79,6 +95,7 @@ export type TagType =
 export interface ChartItemBase {
   id: string;
   category: ItemCategory;
+  intent?: ItemIntent;
   createdAt: Date;
   createdBy: UserReference;
   modifiedAt: Date;
@@ -463,3 +480,31 @@ export type ChartItemDataMap = {
   'note': NarrativeItem['data'];
   'referral': ReferralItem['data'];
 };
+
+// ============================================================================
+// Intent Resolution
+// ============================================================================
+
+/** Default intent for each category — used when `intent` is not explicitly set. */
+export const DEFAULT_INTENT: Record<ItemCategory, ItemIntent> = {
+  medication: 'prescribe',
+  lab: 'order',
+  imaging: 'order',
+  procedure: 'order',
+  diagnosis: 'assess',
+  allergy: 'report',
+  referral: 'refer',
+  'chief-complaint': 'draft',
+  hpi: 'draft',
+  ros: 'draft',
+  'physical-exam': 'draft',
+  plan: 'draft',
+  instruction: 'draft',
+  note: 'draft',
+  vitals: 'report',
+};
+
+/** Resolve the effective intent: explicit value or category default. */
+export function resolveIntent(item: { category: ItemCategory; intent?: ItemIntent }): ItemIntent {
+  return item.intent ?? DEFAULT_INTENT[item.category];
+}

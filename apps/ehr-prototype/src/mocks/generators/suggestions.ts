@@ -10,6 +10,7 @@ import {
   SuggestionSource,
   SuggestionContent,
 } from '../../types';
+import type { ChartItem, ItemCategory, ItemIntent } from '../../types/chart-items';
 import { generateId } from './ids';
 
 // ============================================================================
@@ -61,27 +62,41 @@ export function generateDxSuggestion(
 
 export function generateNewItemSuggestion(
   category: string,
-  itemTemplate: Record<string, unknown>,
+  itemData: Record<string, unknown>,
   displayText: string,
   options: {
     source?: SuggestionSource;
     confidence?: number;
     sourceSegmentId?: string;
     reasoning?: string;
+    intent?: ItemIntent;
   } = {}
 ): Suggestion {
   return generateSuggestion({
     type: 'chart-item',
     content: {
       type: 'new-item',
-      itemTemplate,
-      category: category as any,
+      itemTemplate: {
+        category: category as ItemCategory,
+        displayText,
+        data: itemData,
+        ...(options.intent ? { intent: options.intent } : {}),
+        _meta: {
+          syncStatus: 'local' as const,
+          aiGenerated: true,
+          aiConfidence: options.confidence || 0.8,
+          requiresReview: true,
+          reviewed: false,
+        },
+      } as Partial<ChartItem>,
+      category: category as ItemCategory,
     },
     source: options.source || 'transcription',
     confidence: options.confidence || 0.8,
     sourceSegmentId: options.sourceSegmentId,
     reasoning: options.reasoning,
     displayText,
+    actionLabel: displayText,
   });
 }
 
@@ -108,7 +123,8 @@ export function generateCorrectionSuggestion(
 
 export function generateCareGapActionSuggestion(
   careGapId: string,
-  actionTemplate: Record<string, unknown>,
+  category: string,
+  actionData: Record<string, unknown>,
   displayText: string
 ): Suggestion {
   return generateSuggestion({
@@ -116,10 +132,15 @@ export function generateCareGapActionSuggestion(
     content: {
       type: 'care-gap-action',
       careGapId,
-      actionTemplate,
+      actionTemplate: {
+        category: category as ItemCategory,
+        displayText,
+        data: actionData,
+      } as Partial<ChartItem>,
     },
     source: 'care-gap',
     displayText,
+    actionLabel: displayText,
   });
 }
 
@@ -145,6 +166,7 @@ export const SUGGESTION_TEMPLATES = {
         source: 'transcription',
         confidence: 0.92,
         reasoning: 'Extracted from: "Let\'s start with benzonatate 100mg three times a day"',
+        intent: 'prescribe',
       }
     ),
     generateNewItemSuggestion(
@@ -165,6 +187,7 @@ export const SUGGESTION_TEMPLATES = {
         source: 'transcription',
         confidence: 0.88,
         reasoning: 'Extracted from: "I\'ve been taking some Mucinex for the cough"',
+        intent: 'report',
       }
     ),
     generateNewItemSuggestion(
@@ -206,6 +229,7 @@ export const SUGGESTION_TEMPLATES = {
   pcDiabetesCareGaps: [
     generateCareGapActionSuggestion(
       'gap-a1c-001',
+      'lab',
       {
         testName: 'Hemoglobin A1C',
         testCode: '4548-4',
@@ -215,6 +239,7 @@ export const SUGGESTION_TEMPLATES = {
     ),
     generateCareGapActionSuggestion(
       'gap-eye-001',
+      'referral',
       {
         specialty: 'Ophthalmology',
         reason: 'Annual diabetic eye exam',
@@ -241,6 +266,7 @@ export const SUGGESTION_TEMPLATES = {
         source: 'transcription',
         confidence: 0.95,
         reasoning: 'Patient requested refill of current diabetes medication',
+        intent: 'prescribe',
       }
     ),
     generateNewItemSuggestion(
@@ -267,7 +293,7 @@ export const SUGGESTION_TEMPLATES = {
         text: 'Patient is a 45-year-old male presenting with productive cough x5 days. Cough is worse at night with mild congestion. No fever, chest pain, or shortness of breath. No sick contacts. Non-smoker.',
         format: 'plain',
       },
-      'Draft HPI',
+      'HPI Draft',
       {
         source: 'ai-analysis',
         confidence: 0.85,
@@ -280,7 +306,7 @@ export const SUGGESTION_TEMPLATES = {
         text: '1. Benzonatate 100mg TID x7 days for cough\n2. Increase fluids and rest\n3. Return if symptoms worsen or fever develops',
         format: 'plain',
       },
-      'Draft A&P',
+      'Assessment & Plan Draft',
       {
         source: 'ai-analysis',
         confidence: 0.80,
@@ -293,13 +319,69 @@ export const SUGGESTION_TEMPLATES = {
         text: 'Take benzonatate as directed — swallow whole, do not crush or chew. Increase fluids. Return if fever develops or cough worsens after 5 days.',
         format: 'plain',
       },
-      'Draft Instructions',
+      'Patient Instructions Draft',
       {
         source: 'ai-analysis',
         confidence: 0.82,
         reasoning: 'Generated from treatment plan',
       }
     ),
+  ],
+
+  // Annual Wellness Visit - screening suggestions
+  awvWellnessScreening: [
+    generateNewItemSuggestion('lab', {
+      testName: 'Lipid Panel',
+      testCode: '57698-3',
+      priority: 'routine',
+      collectionType: 'send-out',
+      orderStatus: 'draft',
+    }, 'Lipid Panel', {
+      source: 'care-gap',
+      confidence: 0.90,
+      reasoning: 'Recommended for males 20+ per USPSTF',
+    }),
+    generateNewItemSuggestion('lab', {
+      testName: 'Comprehensive Metabolic Panel',
+      testCode: '24323-8',
+      priority: 'routine',
+      collectionType: 'send-out',
+      orderStatus: 'draft',
+    }, 'CMP', {
+      source: 'care-gap',
+      confidence: 0.85,
+      reasoning: 'Baseline metabolic screening for annual wellness',
+    }),
+    generateNewItemSuggestion('diagnosis', {
+      description: 'Encounter for general adult medical examination',
+      icdCode: 'Z00.00',
+      type: 'encounter',
+      clinicalStatus: 'active',
+    }, 'Annual Wellness Visit (Z00.00)', {
+      source: 'ai-analysis',
+      confidence: 0.95,
+      reasoning: 'Standard AWV diagnosis code',
+    }),
+  ],
+
+  // Annual Wellness Visit - narrative drafts
+  awvNarrativeDrafts: [
+    generateNewItemSuggestion('hpi', {
+      text: '31-year-old male presenting for annual wellness exam. No acute complaints. History of low back pain, managed conservatively. Anxiety disorder, stable on sertraline. No new symptoms.',
+      format: 'plain',
+    }, 'HPI Draft', {
+      source: 'ai-analysis',
+      confidence: 0.85,
+      reasoning: 'Generated from patient history',
+    }),
+    generateNewItemSuggestion('plan', {
+      text: '1. Continue sertraline 50mg daily for anxiety\n2. Routine labs: Lipid panel, CMP\n3. Discuss exercise program for back pain\n4. Age-appropriate screenings up to date\n5. Follow up in 1 year or PRN',
+      format: 'plain',
+    }, 'Assessment & Plan Draft', {
+      source: 'ai-analysis',
+      confidence: 0.80,
+      reasoning: 'Generated from encounter context',
+    }),
   ],
 
   // Drug interaction alert

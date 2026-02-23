@@ -9,7 +9,7 @@
  * flexible model where the pill array IS the navigation state.
  */
 
-import type { ItemCategory } from '../../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../../types/chart-items';
 import {
   CATEGORIES,
   getCategoryVariant,
@@ -28,6 +28,7 @@ export interface Pill {
   value: string;
   category: ItemCategory;
   label: string;
+  intent?: ItemIntent;
 }
 
 export interface OmniInputState {
@@ -89,14 +90,19 @@ export function getActiveVariant(state: OmniInputState): CategoryVariant | null 
 // Helpers
 // ============================================================================
 
-/** Create a category pill from an ItemCategory */
-export function makeCategoryPill(category: ItemCategory): Pill {
-  const meta = CATEGORIES.find(c => c.category === category);
+/** Create a category pill from an ItemCategory, with optional intent override */
+export function makeCategoryPill(category: ItemCategory, intent?: ItemIntent): Pill {
+  // When intent is provided, find the matching CategoryMeta entry with that intent (for correct label)
+  const meta = intent
+    ? CATEGORIES.find(c => c.category === category && c.intent === intent)
+      ?? CATEGORIES.find(c => c.category === category)
+    : CATEGORIES.find(c => c.category === category && !c.intent);
   return {
     type: 'category',
     value: category,
     category,
     label: meta?.label ?? category,
+    ...(intent ? { intent } : {}),
   };
 }
 

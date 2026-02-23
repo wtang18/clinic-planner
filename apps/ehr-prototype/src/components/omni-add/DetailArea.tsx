@@ -15,7 +15,7 @@
  */
 
 import React, { useCallback, useEffect } from 'react';
-import type { ItemCategory } from '../../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import { getQuickPicks } from '../../data/mock-quick-picks';
 import { getCategoryVariant } from './omni-add-machine';
@@ -37,6 +37,7 @@ import { spaceBetween, spaceAround, typography, colors } from '../../styles/foun
 export interface DetailAreaProps {
   depth: number;
   category: ItemCategory | null;
+  intent?: ItemIntent;
   text: string;
   /** The selected QuickPickItem at depth 2 */
   selectedItem: QuickPickItem | null;
@@ -103,6 +104,7 @@ function buildInstructionsLine(
 export const DetailArea: React.FC<DetailAreaProps> = ({
   depth,
   category,
+  intent,
   text,
   selectedItem,
   ambiguousGroups,
@@ -124,7 +126,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
     clearEditMode,
     handleFieldChange,
     buildData,
-  } = useFieldEditor({ category, item: selectedItem, nlOverrides });
+  } = useFieldEditor({ category, item: selectedItem, nlOverrides, intent });
 
   // Handle [Edit] on suggestion card → enter edit mode with pre-selected defaults
   const handleEditClick = useCallback((item: QuickPickItem) => {

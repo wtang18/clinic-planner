@@ -55,8 +55,8 @@ describe('Category metadata', () => {
     expect(names).toEqual(['medication', 'lab', 'diagnosis', 'imaging', 'procedure']);
   });
 
-  it('has 10 secondary categories', () => {
-    expect(SECONDARY_CATEGORIES).toHaveLength(10);
+  it('has 12 secondary categories', () => {
+    expect(SECONDARY_CATEGORIES).toHaveLength(12);
   });
 
   it('finds categories by keyboard shortcut', () => {
@@ -83,5 +83,20 @@ describe('Category metadata', () => {
     expect(meta.shortcut).toBe('M');
     expect(meta.prefix).toBe('rx:');
     expect(meta.primary).toBe(true);
+  });
+
+  it('finds "med:" prefix with report intent', () => {
+    const result = findCategoryByPrefix('med:mucinex');
+    expect(result).toEqual({ category: 'medication', query: 'mucinex', intent: 'report' });
+  });
+
+  it('finds "ro:" prefix with rule-out intent', () => {
+    const result = findCategoryByPrefix('ro:cough');
+    expect(result).toEqual({ category: 'diagnosis', query: 'cough', intent: 'rule-out' });
+  });
+
+  it('"rx:" prefix has no intent override', () => {
+    const result = findCategoryByPrefix('rx:amox');
+    expect(result).toEqual({ category: 'medication', query: 'amox' });
   });
 });

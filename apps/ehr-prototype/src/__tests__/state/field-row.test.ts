@@ -18,6 +18,7 @@ import { ImagingFieldDef } from '../../components/omni-add/fields/ImagingFields'
 import { ProcedureFieldDef } from '../../components/omni-add/fields/ProcedureFields';
 import { AllergyFieldDef } from '../../components/omni-add/fields/AllergyFields';
 import { ReferralFieldDef } from '../../components/omni-add/fields/ReferralFields';
+import { ReportMedFieldDef } from '../../components/omni-add/fields/ReportMedFields';
 import { getFieldDef } from '../../components/omni-add/fields';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import type {
@@ -184,7 +185,7 @@ describe('RxFieldDef', () => {
   it('returns 6 field configs', () => {
     const fields = RxFieldDef.getFields(rxItem);
     expect(fields).toHaveLength(6);
-    expect(fields.map(f => f.key)).toEqual(['medIntent', 'dosage', 'route', 'frequency', 'duration', 'refills']);
+    expect(fields.map(f => f.key)).toEqual(['prescriptionType', 'dosage', 'route', 'frequency', 'duration', 'refills']);
   });
 
   it('dosage options include item default', () => {
@@ -219,7 +220,7 @@ describe('RxFieldDef', () => {
   it('getDefaults extracts values from item data', () => {
     const defaults = RxFieldDef.getDefaults(rxItem);
     expect(defaults).toEqual({
-      medIntent: 'prescribe',
+      prescriptionType: 'new',
       dosage: '100mg',
       route: 'PO',
       frequency: 'TID PRN',
@@ -257,51 +258,31 @@ describe('RxFieldDef', () => {
     expect(data.quantity).toBe(30);
   });
 
-  it('getDefaults detects reportedBy → medIntent reported', () => {
-    const reportedItem = {
-      ...rxItem,
-      data: { ...rxItem.data, reportedBy: 'patient' },
-    };
-    const defaults = RxFieldDef.getDefaults(reportedItem);
-    expect(defaults.medIntent).toBe('reported');
-  });
-
-  it('getDefaults maps prescriptionType refill → medIntent refill', () => {
+  it('getDefaults maps prescriptionType refill', () => {
     const refillItem = {
       ...rxItem,
       data: { ...rxItem.data, prescriptionType: 'refill' },
     };
     const defaults = RxFieldDef.getDefaults(refillItem);
-    expect(defaults.medIntent).toBe('refill');
+    expect(defaults.prescriptionType).toBe('refill');
   });
 
-  it('buildData with intent reported sets reportedBy and verificationStatus', () => {
+  it('buildData carries through prescriptionType selection', () => {
     const data = RxFieldDef.buildData(
-      { medIntent: 'reported', dosage: '600mg', route: 'PO', frequency: 'BID', duration: '7 days' },
-      rxItem,
-    );
-    expect(data.reportedBy).toBe('patient');
-    expect(data.verificationStatus).toBe('unverified');
-    expect(data.prescriptionType).toBe('new');
-  });
-
-  it('buildData with intent prescribe clears reportedBy', () => {
-    const data = RxFieldDef.buildData(
-      { medIntent: 'prescribe', dosage: '100mg', route: 'PO', frequency: 'TID', duration: '7 days' },
-      rxItem,
-    );
-    expect(data.reportedBy).toBeUndefined();
-    expect(data.verificationStatus).toBeUndefined();
-    expect(data.prescriptionType).toBe('new');
-  });
-
-  it('buildData with intent refill sets prescriptionType refill', () => {
-    const data = RxFieldDef.buildData(
-      { medIntent: 'refill', dosage: '100mg', route: 'PO', frequency: 'TID', duration: '30 days' },
+      { prescriptionType: 'refill', dosage: '100mg', route: 'PO', frequency: 'TID', duration: '30 days' },
       rxItem,
     );
     expect(data.prescriptionType).toBe('refill');
-    expect(data.reportedBy).toBeUndefined();
+  });
+
+  it('buildData preserves reportedBy from item baseline', () => {
+    const reportedItem = {
+      ...rxItem,
+      data: { ...rxItem.data, reportedBy: 'patient', verificationStatus: 'unverified' },
+    };
+    const data = RxFieldDef.buildData(RxFieldDef.getDefaults(reportedItem), reportedItem);
+    expect(data.reportedBy).toBe('patient');
+    expect(data.verificationStatus).toBe('unverified');
   });
 });
 
@@ -651,5 +632,118 @@ describe('buildData typed return values', () => {
     );
     expect(data.specialty).toBe('Cardiology');
     expect(data.urgency).toBe('routine');
+  });
+});
+
+// ============================================================================
+// Intent-Aware getFieldDef
+// ============================================================================
+
+describe('Intent-aware getFieldDef', () => {
+  it('returns ReportMedFieldDef for medication + report intent', () => {
+    expect(getFieldDef('medication', 'report')).toBe(ReportMedFieldDef);
+  });
+
+  it('returns RxFieldDef for medication + prescribe intent (no override)', () => {
+    expect(getFieldDef('medication', 'prescribe')).toBe(RxFieldDef);
+  });
+
+  it('returns RxFieldDef for medication with no intent (backward compat)', () => {
+    expect(getFieldDef('medication')).toBe(RxFieldDef);
+  });
+
+  it('returns DxFieldDef for diagnosis + rule-out (no override)', () => {
+    expect(getFieldDef('diagnosis', 'rule-out')).toBe(DxFieldDef);
+  });
+
+  it('returns undefined for narrative + draft intent', () => {
+    expect(getFieldDef('hpi', 'draft')).toBeUndefined();
+  });
+});
+
+// ============================================================================
+// ReportMedFields
+// ============================================================================
+
+const reportMedItem: QuickPickItem = {
+  id: 'med-mucinex',
+  label: 'Mucinex 600mg',
+  chipLabel: 'Mucinex',
+  category: 'medication',
+  data: {
+    drugName: 'Mucinex',
+    genericName: 'Guaifenesin',
+    dosage: '600mg',
+    route: 'PO',
+    frequency: 'BID',
+    reportedBy: 'patient',
+    verificationStatus: 'unverified',
+    prescriptionType: 'new',
+    isControlled: false,
+  },
+};
+
+describe('ReportMedFieldDef', () => {
+  it('returns 5 field configs (no prescriptionType/duration/refills)', () => {
+    const fields = ReportMedFieldDef.getFields(reportMedItem);
+    expect(fields).toHaveLength(5);
+    expect(fields.map(f => f.key)).toEqual([
+      'dosage', 'route', 'frequency', 'reportedBy', 'verificationStatus',
+    ]);
+  });
+
+  it('does not include prescriptionType, duration, or refills fields', () => {
+    const fields = ReportMedFieldDef.getFields(reportMedItem);
+    const keys = fields.map(f => f.key);
+    expect(keys).not.toContain('prescriptionType');
+    expect(keys).not.toContain('duration');
+    expect(keys).not.toContain('refills');
+  });
+
+  it('dosage has item default as option + allowOther', () => {
+    const fields = ReportMedFieldDef.getFields(reportMedItem);
+    const dosageField = fields.find(f => f.key === 'dosage')!;
+    expect(dosageField.options.some(o => o.value === '600mg')).toBe(true);
+    expect(dosageField.allowOther).toBe(true);
+  });
+
+  it('reportedBy has 3 options', () => {
+    const fields = ReportMedFieldDef.getFields(reportMedItem);
+    const reportedByField = fields.find(f => f.key === 'reportedBy')!;
+    expect(reportedByField.options).toHaveLength(3);
+    expect(reportedByField.options.map(o => o.value)).toEqual(['patient', 'caregiver', 'external-record']);
+  });
+
+  it('verificationStatus has 3 options', () => {
+    const fields = ReportMedFieldDef.getFields(reportMedItem);
+    const verField = fields.find(f => f.key === 'verificationStatus')!;
+    expect(verField.options).toHaveLength(3);
+    expect(verField.options.map(o => o.value)).toEqual(['unverified', 'verified', 'discrepancy']);
+  });
+
+  it('getDefaults extracts all 5 fields', () => {
+    const defaults = ReportMedFieldDef.getDefaults(reportMedItem);
+    expect(defaults).toEqual({
+      dosage: '600mg',
+      route: 'PO',
+      frequency: 'BID',
+      reportedBy: 'patient',
+      verificationStatus: 'unverified',
+    });
+  });
+
+  it('buildData produces valid MedicationItem data with report fields', () => {
+    const data: MedicationItem['data'] = ReportMedFieldDef.buildData(
+      ReportMedFieldDef.getDefaults(reportMedItem),
+      reportMedItem,
+    );
+    expect(data.drugName).toBe('Mucinex');
+    expect(data.dosage).toBe('600mg');
+    expect(data.route).toBe('PO');
+    expect(data.frequency).toBe('BID');
+    expect(data.reportedBy).toBe('patient');
+    expect(data.verificationStatus).toBe('unverified');
+    expect(data.prescriptionType).toBe('new');
+    expect(data.isControlled).toBe(false);
   });
 });

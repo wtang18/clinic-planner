@@ -10,7 +10,7 @@
  *    cross-category results so the provider can pick the intended category
  */
 
-import type { ItemCategory } from '../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../types/chart-items';
 import {
   CATEGORIES,
   findCategoryByPrefix,
@@ -29,6 +29,7 @@ export interface RecognizedPrefix {
   kind: 'prefix';
   category: ItemCategory;
   query: string;
+  intent?: ItemIntent;
 }
 
 export interface RecognizedCategory {
@@ -75,6 +76,7 @@ export function detectPrefix(input: string): RecognizedPrefix | null {
     kind: 'prefix',
     category: result.category,
     query: result.query,
+    ...(result.intent ? { intent: result.intent } : {}),
   };
 }
 

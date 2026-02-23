@@ -10,7 +10,7 @@
  */
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import type { ItemCategory } from '../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../types/chart-items';
 import type { QuickPickItem } from '../data/mock-quick-picks';
 import type { FieldConfig, CategoryFieldDef } from '../components/omni-add/fields';
 import { getFieldDef } from '../components/omni-add/fields';
@@ -31,6 +31,8 @@ export interface UseFieldEditorOptions {
    * in edit mode (e.g., SuggestionEditPanel).
    */
   autoEnterEditMode?: boolean;
+  /** Intent override for selecting intent-specific field defs (e.g., 'report' for reported meds) */
+  intent?: ItemIntent;
 }
 
 export interface UseFieldEditorResult {
@@ -58,14 +60,15 @@ export function useFieldEditor({
   item,
   nlOverrides,
   autoEnterEditMode = false,
+  intent,
 }: UseFieldEditorOptions): UseFieldEditorResult {
   const [editMode, setEditMode] = useState(false);
   const [fieldSelections, setFieldSelections] = useState<Record<string, string>>({});
 
-  // Get field definition for current category
+  // Get field definition for current category (intent-aware)
   const fieldDef = useMemo(
-    () => (category ? getFieldDef(category) : undefined),
-    [category],
+    () => (category ? getFieldDef(category, intent) : undefined),
+    [category, intent],
   );
 
   // Item-change effect: either auto-enter edit mode or reset

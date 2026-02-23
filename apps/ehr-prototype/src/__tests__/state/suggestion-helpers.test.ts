@@ -69,8 +69,8 @@ describe('buildItemSummary', () => {
 // ============================================================================
 
 describe('getCategoryBadge', () => {
-  it('maps medication to Med', () => {
-    expect(getCategoryBadge('medication')).toBe('Med');
+  it('maps medication to Rx', () => {
+    expect(getCategoryBadge('medication')).toBe('Rx');
   });
 
   it('maps lab to Lab', () => {
@@ -95,6 +95,27 @@ describe('getCategoryBadge', () => {
 
   it('returns category name for unmapped categories', () => {
     expect(getCategoryBadge('vitals')).toBe('vitals');
+  });
+
+  // Intent-aware overrides
+  it('maps medication + report intent to Med', () => {
+    expect(getCategoryBadge('medication', 'report')).toBe('Med');
+  });
+
+  it('maps medication + prescribe intent to Rx', () => {
+    expect(getCategoryBadge('medication', 'prescribe')).toBe('Rx');
+  });
+
+  it('maps medication with no intent to Rx (backward compat)', () => {
+    expect(getCategoryBadge('medication')).toBe('Rx');
+  });
+
+  it('maps diagnosis + rule-out intent to R/O', () => {
+    expect(getCategoryBadge('diagnosis', 'rule-out')).toBe('R/O');
+  });
+
+  it('maps diagnosis + assess intent to Dx', () => {
+    expect(getCategoryBadge('diagnosis', 'assess')).toBe('Dx');
   });
 });
 

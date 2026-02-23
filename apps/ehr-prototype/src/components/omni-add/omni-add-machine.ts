@@ -12,7 +12,7 @@
  * SELECTION state (to choose a different option), not into its details.
  */
 
-import type { ItemCategory } from '../../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../../types/chart-items';
 
 // ============================================================================
 // Category Variants
@@ -52,6 +52,7 @@ export interface CategoryMeta {
   shortcut?: string;  // Single-key shortcut when OmniAdd input is empty
   prefix?: string;    // Keyboard prefix (e.g., "rx:")
   primary: boolean;
+  intent?: ItemIntent; // Override intent (e.g., 'report' for med: prefix)
 }
 
 export const CATEGORIES: CategoryMeta[] = [
@@ -70,6 +71,8 @@ export const CATEGORIES: CategoryMeta[] = [
   { category: 'instruction',     label: 'Instruction', prefix: 'instr:',              primary: false },
   { category: 'note',            label: 'Note',      prefix: 'note:',                 primary: false },
   { category: 'referral',        label: 'Referral',  prefix: 'ref:',                  primary: false },
+  { category: 'medication',      label: 'Med',       prefix: 'med:',                  primary: false, intent: 'report' },
+  { category: 'diagnosis',       label: 'R/O',       prefix: 'ro:',                   primary: false, intent: 'rule-out' },
 ];
 
 export const PRIMARY_CATEGORIES = CATEGORIES.filter(c => c.primary);
@@ -85,11 +88,15 @@ export function findCategoryByShortcut(key: string): ItemCategory | null {
   return match?.category ?? null;
 }
 
-export function findCategoryByPrefix(input: string): { category: ItemCategory; query: string } | null {
+export function findCategoryByPrefix(input: string): { category: ItemCategory; query: string; intent?: ItemIntent } | null {
   const lower = input.toLowerCase();
   for (const cat of CATEGORIES) {
     if (cat.prefix && lower.startsWith(cat.prefix)) {
-      return { category: cat.category, query: lower.slice(cat.prefix.length).trim() };
+      return {
+        category: cat.category,
+        query: lower.slice(cat.prefix.length).trim(),
+        ...(cat.intent ? { intent: cat.intent } : {}),
+      };
     }
   }
   return null;

@@ -13,6 +13,7 @@
 import React from 'react';
 import { Ban } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
+import type { ItemIntent } from '../../types/chart-items';
 import { getCategoryBadge, buildSuggestionSummary } from '../../utils/suggestion-helpers';
 import { EDITABLE_SUGGESTION_CATEGORIES } from '../../services/ai/entity-extraction/suggestion-validators';
 import { Button } from '../primitives/Button';
@@ -66,6 +67,14 @@ function getSuggestionCategory(suggestion: Suggestion): string | null {
   return null;
 }
 
+/** Extract intent from suggestion template */
+function getSuggestionIntent(suggestion: Suggestion): ItemIntent | undefined {
+  if (suggestion.content.type === 'new-item') {
+    return suggestion.content.itemTemplate?.intent as ItemIntent | undefined;
+  }
+  return undefined;
+}
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -80,7 +89,8 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
 }) => {
   const isDark = theme === 'dark';
   const category = getSuggestionCategory(suggestion);
-  const badge = category ? getCategoryBadge(category as any) : null;
+  const intent = getSuggestionIntent(suggestion);
+  const badge = category ? getCategoryBadge(category as any, intent) : null;
   const summary = buildSuggestionSummary(suggestion);
   const label = suggestion.actionLabel || suggestion.displayText;
   const canEdit = hasEditableTemplate(suggestion) && onEdit;

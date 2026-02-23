@@ -13,7 +13,7 @@
  */
 
 import React, { useReducer, useCallback, useEffect, useMemo, useRef } from 'react';
-import type { ChartItem, ItemCategory } from '../../types/chart-items';
+import type { ChartItem, ItemCategory, ItemIntent } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import {
   omniInputReducer,
@@ -65,6 +65,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   const depth = getDepth(state);
   const category = getActiveCategory(state);
   const variant = getActiveVariant(state);
+  const activeIntent: ItemIntent | undefined = state.pills.find(p => p.type === 'category')?.intent;
 
   // Track the selected QuickPickItem for depth 2 suggestion card
   const [selectedPickItem, setSelectedPickItem] = React.useState<QuickPickItem | null>(null);
@@ -93,7 +94,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   // Auto-commit prefix-detected categories
   useEffect(() => {
     if (recognition?.kind === 'prefix') {
-      dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(recognition.category) });
+      dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(recognition.category, recognition.intent) });
       if (recognition.query) {
         dispatch({ type: 'SET_TEXT', text: recognition.query });
       }
@@ -224,8 +225,9 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
       category: item.category,
       displayText: item.label,
       data: item.data,
+      ...(activeIntent ? { intent: activeIntent } : {}),
     } as Partial<ChartItem>;
-  }, []);
+  }, [activeIntent]);
 
   const handleItemAdd = useCallback((item: QuickPickItem) => {
     onItemAdd(buildItemFromPick(item));
@@ -248,12 +250,13 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
       category: item.category,
       displayText: item.label,
       data,
+      ...(activeIntent ? { intent: activeIntent } : {}),
     } as Partial<ChartItem>);
     const itemId = `item-${Date.now()}`;
     dispatch({ type: 'ITEM_ADDED', itemId });
     setSelectedPickItem(null);
     setNlOverrides(null);
-  }, [onItemAdd]);
+  }, [onItemAdd, activeIntent]);
 
   const handleNarrativeSubmit = useCallback((text: string) => {
     onItemAdd({
@@ -339,6 +342,7 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
             <DetailArea
               depth={depth}
               category={category}
+              intent={activeIntent}
               text={state.text}
               selectedItem={selectedPickItem}
               ambiguousGroups={ambiguousGroups}

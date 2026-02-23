@@ -5,7 +5,7 @@
  * (SuggestionActionRow, SuggestionEditPanel) can reuse the same logic.
  */
 
-import type { ItemCategory } from '../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../types/chart-items';
 import type { QuickPickItem } from '../data/mock-quick-picks';
 import type { Suggestion } from '../types/suggestions';
 
@@ -71,12 +71,12 @@ export function buildItemSummary(item: QuickPickItem): string {
   }
 }
 
-/** Get short category badge label (e.g., 'Med', 'Lab', 'Dx') */
-export function getCategoryBadge(category: ItemCategory): string {
+/** Get short category badge label, with optional intent override (e.g., report→'Med', rule-out→'R/O') */
+export function getCategoryBadge(category: ItemCategory, intent?: ItemIntent): string {
+  if (category === 'medication') return intent === 'report' ? 'Med' : 'Rx';
+  if (category === 'diagnosis') return intent === 'rule-out' ? 'R/O' : 'Dx';
   const badges: Partial<Record<ItemCategory, string>> = {
-    medication: 'Med',
     lab: 'Lab',
-    diagnosis: 'Dx',
     imaging: 'Img',
     procedure: 'Proc',
     allergy: 'Allergy',
@@ -139,6 +139,11 @@ export function suggestionToEditableItem(
 export function buildSuggestionSummary(suggestion: Suggestion): string {
   const editableItem = suggestionToEditableItem(suggestion);
   if (editableItem) {
+    // Narrative categories: show truncated text preview
+    const text = editableItem.data?.text;
+    if (typeof text === 'string' && text.length > 0) {
+      return text.length > 60 ? text.substring(0, 60) + '...' : text;
+    }
     const summary = buildItemSummary(editableItem);
     if (summary && summary !== editableItem.label) return summary;
   }

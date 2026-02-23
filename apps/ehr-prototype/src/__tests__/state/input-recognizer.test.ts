@@ -71,6 +71,27 @@ describe('detectPrefix', () => {
     expect(result!.category).toBe('medication');
     expect(result!.query).toBe('');
   });
+
+  it('detects "med:" prefix with report intent', () => {
+    const result = detectPrefix('med:mucinex');
+    expect(result).not.toBeNull();
+    expect(result!.category).toBe('medication');
+    expect(result!.query).toBe('mucinex');
+    expect(result!.intent).toBe('report');
+  });
+
+  it('detects "ro:" prefix with rule-out intent', () => {
+    const result = detectPrefix('ro:pneumonia');
+    expect(result).not.toBeNull();
+    expect(result!.category).toBe('diagnosis');
+    expect(result!.query).toBe('pneumonia');
+    expect(result!.intent).toBe('rule-out');
+  });
+
+  it('"rx:" prefix has no intent', () => {
+    const result = detectPrefix('rx:benzonatate');
+    expect(result!.intent).toBeUndefined();
+  });
 });
 
 // ============================================================================
