@@ -17,8 +17,7 @@ import type { UseWorkflowStateResult } from './useWorkflowState';
 import type { EncounterMeta } from '../../types';
 import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
 import {
-  BillingProviderSection,
-  SupervisorSection,
+  ProvidersSection,
   PatientInfoSection,
   PatientCardsSection,
   SpecialtySection,
@@ -27,7 +26,6 @@ import {
   ConsentFormsSection,
   PaymentCollectionSection,
   AssignRoomSection,
-  VitalsSection,
   HPISection,
   MedicalHistorySection,
   RxRenewalsSection,
@@ -35,6 +33,7 @@ import {
   AdditionalChargesSection,
   BookFollowUpSection,
 } from './sections/PlaceholderSections';
+import { VitalsSection } from './sections/VitalsSection';
 
 // ============================================================================
 // Types
@@ -64,8 +63,7 @@ export interface WorkflowCanvasProps {
 
 const SECTION_COMPONENTS: Record<string, React.FC> = {
   // Check-in
-  'billing-provider': BillingProviderSection,
-  'supervisor': SupervisorSection,
+  'providers': ProvidersSection,
   'patient-info': PatientInfoSection,
   'patient-cards': PatientCardsSection,
   'specialty': SpecialtySection,
@@ -90,8 +88,7 @@ const SECTION_COMPONENTS: Record<string, React.FC> = {
 // ============================================================================
 
 const SECTION_SUMMARIES: Record<string, string> = {
-  'billing-provider': 'Dr. Chen',
-  'supervisor': 'Dr. Smith',
+  'providers': 'Dr. Patel / Dr. Smith',
   'patient-info': 'Verified',
   'patient-cards': 'Scanned',
   'specialty': 'Primary Care',

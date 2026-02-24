@@ -68,8 +68,7 @@ export const WORKFLOW_PHASES: WorkflowPhaseMeta[] = [
     key: 'check-in',
     label: 'Check-in',
     sections: [
-      { id: 'billing-provider', title: 'Billing Provider', phase: 'check-in' },
-      { id: 'supervisor', title: 'Supervisor', phase: 'check-in' },
+      { id: 'providers', title: 'Providers', phase: 'check-in' },
       { id: 'patient-info', title: 'Patient Info', phase: 'check-in' },
       { id: 'patient-cards', title: 'Patient Cards', phase: 'check-in' },
       { id: 'specialty', title: 'Specialty', phase: 'check-in' },

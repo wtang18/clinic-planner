@@ -4,7 +4,7 @@
  * Skeleton form layouts for each workflow section.
  * No data binding — visual structure only for the prototype.
  *
- * 9 Check-in + 5 Triage + 3 Checkout = 17 sections total.
+ * 8 Check-in + 5 Triage + 3 Checkout = 16 sections total.
  */
 
 import React from 'react';
@@ -15,14 +15,14 @@ import { Button } from '../../../components/primitives/Button';
 // Shared Styles
 // ============================================================================
 
-const formGroup: React.CSSProperties = {
+export const formGroup: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: spaceBetween.coupled,
   marginBottom: spaceAround.default,
 };
 
-const fieldLabel: React.CSSProperties = {
+export const fieldLabel: React.CSSProperties = {
   fontSize: label.xs.medium.fontSize,
   fontWeight: label.xs.medium.fontWeight,
   fontFamily: label.xs.medium.fontFamily,
@@ -30,7 +30,7 @@ const fieldLabel: React.CSSProperties = {
   color: colors.fg.neutral.secondary,
 };
 
-const textInput: React.CSSProperties = {
+export const textInput: React.CSSProperties = {
   padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
   fontSize: 14,
   fontFamily: typography.fontFamily.sans,
@@ -42,7 +42,7 @@ const textInput: React.CSSProperties = {
   boxSizing: 'border-box',
 };
 
-const selectInput: React.CSSProperties = {
+export const selectInput: React.CSSProperties = {
   ...textInput,
   appearance: 'none',
   backgroundImage: `url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")`,
@@ -86,7 +86,7 @@ const checkbox: React.CSSProperties = {
   flexShrink: 0,
 };
 
-const sectionNote: React.CSSProperties = {
+export const sectionNote: React.CSSProperties = {
   fontSize: 12,
   fontFamily: typography.fontFamily.sans,
   color: colors.fg.neutral.spotReadable,
@@ -94,7 +94,7 @@ const sectionNote: React.CSSProperties = {
   marginBottom: spaceAround.compact,
 };
 
-const fieldRow: React.CSSProperties = {
+export const fieldRow: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: '1fr 1fr',
   gap: spaceBetween.related,
@@ -104,30 +104,27 @@ const fieldRow: React.CSSProperties = {
 // Check-in Sections (9)
 // ============================================================================
 
-export const BillingProviderSection: React.FC = () => (
+export const ProvidersSection: React.FC = () => (
   <div>
-    <div style={formGroup}>
-      <label style={fieldLabel}>Billing Provider</label>
-      <select style={selectInput} defaultValue="dr-patel">
-        <option value="dr-patel">Dr. Anita Patel, MD</option>
-        <option value="dr-chen">Dr. Sarah Chen, DO</option>
-        <option value="dr-martinez">Dr. Carlos Martinez, MD</option>
-      </select>
+    <div style={fieldRow}>
+      <div style={formGroup}>
+        <label style={fieldLabel}>Billing Provider</label>
+        <select style={selectInput} defaultValue="dr-patel">
+          <option value="dr-patel">Dr. Anita Patel, MD</option>
+          <option value="dr-chen">Dr. Sarah Chen, DO</option>
+          <option value="dr-martinez">Dr. Carlos Martinez, MD</option>
+        </select>
+      </div>
+      <div style={formGroup}>
+        <label style={fieldLabel}>Supervising Physician</label>
+        <select style={selectInput} defaultValue="dr-patel">
+          <option value="dr-patel">Dr. Anita Patel, MD</option>
+          <option value="dr-chen">Dr. Sarah Chen, DO</option>
+          <option value="none">None (self-supervising)</option>
+        </select>
+      </div>
     </div>
     <p style={sectionNote}>Pre-populated from appointment booking.</p>
-  </div>
-);
-
-export const SupervisorSection: React.FC = () => (
-  <div>
-    <div style={formGroup}>
-      <label style={fieldLabel}>Supervising Physician</label>
-      <select style={selectInput} defaultValue="dr-patel">
-        <option value="dr-patel">Dr. Anita Patel, MD</option>
-        <option value="dr-chen">Dr. Sarah Chen, DO</option>
-        <option value="none">None (self-supervising)</option>
-      </select>
-    </div>
   </div>
 );
 
@@ -316,44 +313,6 @@ export const AssignRoomSection: React.FC = () => (
         {['Room 1', 'Room 2', 'Room 3', 'Room 4', 'Room 5', 'Room 6', 'Pending Results', 'Virtual'].map((label, i) => (
           <div key={label} style={gridButton(i === 1)}>{label}</div>
         ))}
-      </div>
-    </div>
-  </div>
-);
-
-export const VitalsSection: React.FC = () => (
-  <div>
-    <div style={gridContainer(3)}>
-      {[
-        { label: 'Blood Pressure', value: '120/80', unit: 'mmHg' },
-        { label: 'Pulse', value: '72', unit: 'bpm' },
-        { label: 'Resp. Rate', value: '16', unit: '/min' },
-        { label: 'O₂ Sat', value: '98', unit: '%' },
-        { label: 'Temperature', value: '98.6', unit: '°F' },
-        { label: 'Weight', value: '145', unit: 'lbs' },
-      ].map(({ label, value, unit }) => (
-        <div key={label} style={formGroup}>
-          <label style={fieldLabel}>{label}</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <input style={{ ...textInput, width: 80 }} defaultValue={value} />
-            <span style={{ fontSize: 12, color: colors.fg.neutral.secondary, fontFamily: typography.fontFamily.sans }}>{unit}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-    <div style={fieldRow}>
-      <div style={formGroup}>
-        <label style={fieldLabel}>Height</label>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-          <input style={{ ...textInput, width: 50 }} defaultValue="5" />
-          <span style={{ fontSize: 12, color: colors.fg.neutral.secondary }}>ft</span>
-          <input style={{ ...textInput, width: 50 }} defaultValue="6" />
-          <span style={{ fontSize: 12, color: colors.fg.neutral.secondary }}>in</span>
-        </div>
-      </div>
-      <div style={formGroup}>
-        <label style={fieldLabel}>BMI</label>
-        <input style={{ ...textInput, backgroundColor: colors.bg.neutral.subtle }} defaultValue="23.4" readOnly />
       </div>
     </div>
   </div>
