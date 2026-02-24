@@ -45,7 +45,7 @@ function assignGroup(id: string, tab: LegendTab): string {
       if (id.startsWith('nav-')) return 'Go To';
       return 'General';
     case 'charting':
-      if (id.startsWith('mode-') || id === 'visit-workflow') return 'Mode';
+      if (id.startsWith('mode-') || id === 'visit-workflow') return 'Mode / Phase';
       if (INPUT_IDS.has(id)) return 'Input';
       return 'Actions';
     case 'panes':

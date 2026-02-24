@@ -14,7 +14,8 @@ import type { Shortcut, ChordShortcut } from './ShortcutManager';
 export interface ShortcutActions {
   openOmniAdd: () => void;
   toggleTranscription: () => void;
-  switchMode: (mode: string) => void;
+  /** Context-dependent segment switch: 1/2/3 map to phase (workflow) or mode (charting) */
+  contextSegment: (index: number) => void;
   openPalette: () => void;
   save: () => void;
   help: () => void;
@@ -22,6 +23,8 @@ export interface ShortcutActions {
   navigate: (screen: string) => void;
   /** Navigate to a patient workspace slot (1–9) */
   navigateWorkspace: (slot: number) => void;
+  /** Toggle between Workflow and Charting views */
+  toggleWorkflow: () => void;
 }
 
 // ============================================================================
@@ -37,36 +40,37 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
   // Flat shortcuts
   // ------------------------------------------------------------------
   const shortcuts: Shortcut[] = [
-    // Charting — mode switching
+    // Context-dependent segment switching (1/2/3)
+    // In charting: Capture/Process/Review; in workflow: Check-in/Triage/Checkout
     {
       id: 'mode-capture',
       key: '1',
-      description: 'Switch to Capture mode',
+      description: 'First segment (Capture / Check-in)',
       category: 'charting',
-      handler: () => actions.switchMode('capture'),
+      handler: () => actions.contextSegment(1),
     },
     {
       id: 'mode-process',
       key: '2',
-      description: 'Switch to Process mode',
+      description: 'Second segment (Process / Triage)',
       category: 'charting',
-      handler: () => actions.switchMode('process'),
+      handler: () => actions.contextSegment(2),
     },
     {
       id: 'mode-review',
       key: '3',
-      description: 'Switch to Review mode',
+      description: 'Third segment (Review / Checkout)',
       category: 'charting',
-      handler: () => actions.switchMode('review'),
+      handler: () => actions.contextSegment(3),
     },
 
-    // Visit Workflow (canvas pane toggle — future)
+    // Toggle Workflow view
     {
       id: 'visit-workflow',
       key: '0',
-      description: 'Visit Workflow (Coming soon)',
+      description: 'Toggle Workflow view',
       category: 'charting',
-      handler: () => {},
+      handler: () => actions.toggleWorkflow(),
     },
 
     // Charting — actions

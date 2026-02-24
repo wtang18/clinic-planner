@@ -1,8 +1,8 @@
 # EHR Prototype: Information Architecture
 
 > **Status:** Active Design
-> **Last Updated:** 2025-01-31
-> **Related Docs:** [Layout Refactor](./LAYOUT_REFACTOR_PLAN.md) | [Navigation Patterns](./NAVIGATION_PATTERNS.md) | [To-Do Feature](./features/TO_DO.md)
+> **Last Updated:** 2026-02-23
+> **Related Docs:** [Layout Refactor](./LAYOUT_REFACTOR_PLAN.md) | [Navigation Patterns](./NAVIGATION_PATTERNS.md) | [To-Do Feature](./features/TO_DO.md) | [Visit Workflow](./features/VISIT_WORKFLOW.md)
 
 ---
 
@@ -157,6 +157,25 @@ Child tabs represent specific work contexts within a patient workspace:
 - Can be manually closed
 - System suggests cleanup for stale tabs (like Slack)
 
+### Visit Sub-Items (Workflow / Chart)
+
+Active encounters show **Workflow** and **Chart** as sub-items under the visit entry:
+
+```
+├── Sarah Chen
+│   ├── Overview
+│   └── 10/12 · UC Cough              [Triage]
+│       ╰ Workflow
+│       ╰ Chart                        ← active
+```
+
+- Visit row: date prefix + label, right-aligned status badge, tappable (goes to last active state)
+- Sub-items: text-only, no icons, CSS connector arrows (right-angled line from visit row)
+- Past visits: flat, no sub-items (read-only reference)
+- Nav row segmented control is context-dependent: Workflow phases or Chart modes
+
+See [Visit Workflow](./features/VISIT_WORKFLOW.md) for full details.
+
 ### Workspace Persistence
 
 - Workspaces persist during session
@@ -238,4 +257,5 @@ See [FUTURE_CONSIDERATIONS.md](./FUTURE_CONSIDERATIONS.md) for:
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-02-23 | Added Visit sub-items (Workflow/Chart) to Patient Workspace model | Claude + William |
 | 2025-01-31 | Initial IA documentation | Claude + William |

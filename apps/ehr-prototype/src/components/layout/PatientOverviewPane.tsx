@@ -85,8 +85,8 @@ export interface PatientOverviewPaneProps {
 // ============================================================================
 
 const TAB_SEGMENTS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'activity', label: 'Activity' },
+  { key: 'overview', label: 'Overview' },
+  { key: 'activity', label: 'Activity' },
 ];
 
 export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
@@ -209,8 +209,9 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
         <div style={tabBarStyle}>
           <SegmentedControl
             segments={TAB_SEGMENTS}
-            activeSegment={currentTab}
-            onChange={handleTabChange}
+            value={currentTab}
+            onChange={handleTabChange as (key: string) => void}
+            variant="inline"
             size="sm"
             testID="overview-tabs"
           />

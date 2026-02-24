@@ -1,7 +1,7 @@
 # EHR Prototype Documentation
 
 > **Product:** Carbon Health EHR Prototype
-> **Last Updated:** 2025-01-31
+> **Last Updated:** 2026-02-23
 
 ---
 
@@ -20,6 +20,7 @@
 
 | Feature | Document |
 |---------|----------|
+| Visit Workflow | [features/VISIT_WORKFLOW.md](./features/VISIT_WORKFLOW.md) |
 | To-Do Workflow | [features/TO_DO.md](./features/TO_DO.md) |
 | Patient Workspace | Coming soon |
 | Overview Pane | Coming soon |
@@ -64,6 +65,7 @@ docs/
 ├─ LAYOUT_REFACTOR_PLAN.md      ← Technical layout implementation
 ├─ FUTURE_CONSIDERATIONS.md     ← Parking lot for future ideas
 └─ features/
+   ├─ VISIT_WORKFLOW.md         ← Visit Workflow (check-in, triage, checkout)
    ├─ TO_DO.md                  ← To-Do feature documentation
    └─ [additional features]
 ```
@@ -98,13 +100,13 @@ docs/
 - Floating nav row with dynamic controls
 
 ### In Design
-- To-Do workflow and navigation patterns
-- Context bar for To-Do → Patient flows
-- Overview pane Activity tab
+- Visit Workflow (check-in, triage, checkout phases)
+- SegmentedControl generic component
+- Right rail module architecture
 
 ### Planned
-- Full To-Do list views
-- Patient workspace child tabs
+- Visit Context right rail module (triage data in chart view)
+- Scenario-driven workflow defaults
 - Location-based fax inbox
 
 ---
@@ -142,6 +144,7 @@ These docs are designed to be both human and AI-readable:
 ### Design References
 - `resources/layout-wireframe/` - Layout wireframes
 - `resources/to-do/` - To-Do screenshots (reference implementation)
+- `reference/intake/` - Visit Workflow reference design (4-phase concept)
 
 ### External Links
 - Figma designs (link TBD)

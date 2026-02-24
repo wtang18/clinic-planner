@@ -111,7 +111,7 @@ export const App: React.FC<AppProps> = ({
 const AppContent: React.FC = () => {
   const [showShortcutHelp, setShowShortcutHelp] = useState(false);
   const { activePreset, exitDemo, resetDemo } = useDemoMode();
-  const { setMode, navigate } = useNavigation();
+  const { navigate } = useNavigation();
   const screen = useCurrentScreen();
 
   const showHelpUI = screen !== 'home' && screen !== 'demo';
@@ -145,7 +145,11 @@ const AppContent: React.FC = () => {
           window.dispatchEvent(new CustomEvent('ehr:toggle-transcription'));
         }
       },
-      switchMode: (mode) => setMode(mode as 'capture' | 'process' | 'review'),
+      contextSegment: (index) => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('ehr:context-segment', { detail: { index } }));
+        }
+      },
       openPalette: () => {
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('ehr:open-palette'));
@@ -163,8 +167,13 @@ const AppContent: React.FC = () => {
           window.dispatchEvent(new CustomEvent('ehr:navigate-workspace', { detail: { slot } }));
         }
       },
+      toggleWorkflow: () => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('ehr:toggle-workflow'));
+        }
+      },
     });
-  }, [setMode, navigate]);
+  }, [navigate]);
 
   return (
     <View style={styles.content}>

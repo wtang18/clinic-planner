@@ -30,8 +30,8 @@ import { LeftPaneContainer, ViewIconsRow, AIDrawerFooter, type TranscriptSegment
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
-import { ModeSelector } from '../../components/layout/ModeSelector';
 import { PatientIdentityHeader } from '../../components/layout/PatientIdentityHeader';
+import { SegmentedControl, type Segment } from '../../components/primitives/SegmentedControl';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { OmniAddBarV2 as OmniAddBar } from '../../components/omni-add/OmniAddBarV2';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
@@ -48,10 +48,15 @@ import {
   type ToDoItem,
 } from '../../scenarios/todoData';
 
-import { ClipboardList } from 'lucide-react';
+import { ClipboardList, Mic, Brain, FileCheck, Check } from 'lucide-react';
 import { useCurrentMode } from '../../navigation/NavigationContext';
 import { ProcessCanvas } from '../ProcessView';
 import { ReviewCanvas } from '../ReviewView';
+import { WorkflowCanvas, useWorkflowState } from '../WorkflowView';
+import { getScenarioWorkflowDefaults } from '../WorkflowView/workflowScenarios';
+import type { WorkflowPhase } from '../IntakeView/intakeChecklist';
+import { WORKFLOW_PHASES } from '../IntakeView/intakeChecklist';
+import type { Mode } from '../../state/types';
 
 // ============================================================================
 // Types
@@ -346,14 +351,45 @@ export const CaptureView: React.FC = () => {
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
+    viewContext,
+    setViewContext,
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
   } = useCaptureView();
 
+  // Workflow state (phases, sections, accordion)
+  const workflowState = useWorkflowState();
+
+  // Listen for context-dependent segment shortcuts (1/2/3)
+  const MODES_BY_INDEX: Mode[] = ['capture', 'process', 'review'];
+  const PHASES_BY_INDEX: WorkflowPhase[] = ['check-in', 'triage', 'checkout'];
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (e: Event) => {
+      const { index } = (e as CustomEvent).detail;
+      if (index < 1 || index > 3) return;
+      if (viewContext === 'workflow') {
+        workflowState.setActivePhase(PHASES_BY_INDEX[index - 1]);
+      } else {
+        handleModeChange(MODES_BY_INDEX[index - 1]);
+      }
+    };
+    window.addEventListener('ehr:context-segment', handler);
+    return () => window.removeEventListener('ehr:context-segment', handler);
+  }, [viewContext, handleModeChange, workflowState.setActivePhase]);
+
   // Patient and encounter context
   const patient = state.context.patient;
   const encounter = state.context.encounter;
+
+  // Initialize workflow state from scenario defaults on encounter load
+  useEffect(() => {
+    if (!encounter?.id) return;
+    const defaults = getScenarioWorkflowDefaults(encounter.id);
+    workflowState.initFromScenario(defaults.completedPhases, defaults.activePhase);
+    setViewContext(defaults.activeView);
+  }, [encounter?.id]);
 
   // Determine which workspace is currently selected
   const selectedWorkspaceId = selectedNavItem.startsWith('patient-')
@@ -580,13 +616,47 @@ export const CaptureView: React.FC = () => {
   const currentUser = state.session.currentUser;
   const visit = state.context.visit;
 
-  // ModeSelector is a contextual control in the floating nav row
-  const canvasHeaderContent = (
-    <ModeSelector
-      currentMode={state.session.mode}
-      onModeChange={handleModeChange}
-    />
-  );
+  // Build segments for the context-dependent SegmentedControl
+  const getModeIcon = (m: Mode, size: number) => {
+    switch (m) {
+      case 'capture': return <Mic size={size} />;
+      case 'process': return <Brain size={size} />;
+      case 'review': return <FileCheck size={size} />;
+      default: return null;
+    }
+  };
+
+  const chartSegments: Segment<Mode>[] = [
+    { key: 'capture', label: 'Capture', icon: getModeIcon('capture', 16) },
+    { key: 'process', label: 'Process', icon: getModeIcon('process', 16) },
+    { key: 'review', label: 'Review', icon: getModeIcon('review', 16) },
+  ];
+
+  const workflowSegments: Segment<WorkflowPhase>[] = WORKFLOW_PHASES.map((p) => ({
+    key: p.key,
+    label: p.label,
+    badge: workflowState.completedPhases.has(p.key)
+      ? <Check size={12} color={colors.fg.positive.primary} />
+      : undefined,
+  }));
+
+  const canvasHeaderContent = viewContext === 'workflow'
+    ? (
+      <SegmentedControl<WorkflowPhase>
+        segments={workflowSegments}
+        value={workflowState.activePhase}
+        onChange={workflowState.setActivePhase}
+        variant="topBar"
+      />
+    )
+    : (
+      <SegmentedControl<Mode>
+        segments={chartSegments}
+        value={state.session.mode}
+        onChange={handleModeChange}
+        variant="topBar"
+      />
+    );
 
   // Patient identity header for the overview section of floating nav row
   // Uses selected patient data (works for any patient, not just encounter patient)
@@ -755,12 +825,21 @@ export const CaptureView: React.FC = () => {
             headerContent={undefined}
             compactHeaderContent={undefined}
           >
+            {/* Workflow canvas */}
+            {viewContext === 'workflow' && (
+              <WorkflowCanvas
+                phase={workflowState.activePhase}
+                workflowState={workflowState}
+                encounter={encounter}
+              />
+            )}
+
             {/* Process/Review canvas when in non-capture mode */}
-            {mode === 'process' && <ProcessCanvas />}
-            {mode === 'review' && <ReviewCanvas />}
+            {viewContext === 'charting' && mode === 'process' && <ProcessCanvas />}
+            {viewContext === 'charting' && mode === 'review' && <ReviewCanvas />}
 
             {/* Capture mode content */}
-            {mode === 'capture' && viewMode === 'todo-list' && todoViewState && currentCategory && (
+            {viewContext === 'charting' && mode === 'capture' && viewMode === 'todo-list' && todoViewState && currentCategory && (
               <ToDoListView
                 categoryId={todoViewState.categoryId}
                 filterId={todoViewState.filterId}
@@ -775,7 +854,7 @@ export const CaptureView: React.FC = () => {
             )}
 
             {/* To-Do Detail View */}
-            {mode === 'capture' && viewMode === 'todo-detail' && todoViewState?.selectedItem && (
+            {viewContext === 'charting' && mode === 'capture' && viewMode === 'todo-detail' && todoViewState?.selectedItem && (
               <>
                 {/* Back button */}
                 <div
@@ -850,7 +929,7 @@ export const CaptureView: React.FC = () => {
             )}
 
             {/* Patient Workspace View - renders based on active tab */}
-            {mode === 'capture' && viewMode === 'patient' && (() => {
+            {viewContext === 'charting' && mode === 'capture' && viewMode === 'patient' && (() => {
               // Get the selected workspace ID from nav state (format: "patient-{id}")
               const selectedWorkspaceId = selectedNavItem.startsWith('patient-')
                 ? selectedNavItem.replace('patient-', '')

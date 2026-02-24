@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, X, FileText, Mail, Inbox, Heart, Stethoscope, LayoutGrid } from 'lucide-react';
 import { colors, borderRadius, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
 import type { WorkspaceTab, WorkspaceTabType } from '../../context/WorkspaceContext';
+import type { ViewContext } from '../../screens/IntakeView/intakeChecklist';
 import { TranscriptionIndicator, recordingStatusToIndicator } from '../sidebar/TranscriptionIndicator';
 import type { RecordingStatus as BottomBarRecordingStatus } from '../../state/bottomBar/types';
 
@@ -24,6 +25,18 @@ export interface PatientTask {
 
 /** Recording status for a patient workspace (simplified for patient-level display) */
 export type RecordingStatus = 'recording' | 'paused' | 'processing' | 'complete' | 'none';
+
+/** Visit sub-item config for Workflow/Chart toggle. */
+export interface VisitSubItemConfig {
+  /** Tab ID of the visit tab that has sub-items */
+  visitTabId: string;
+  /** Currently active sub-item ('workflow' or 'chart') */
+  activeSubItem: ViewContext;
+  /** Workflow phase badge (e.g., "Triage", "Check-in") */
+  workflowBadge?: { text: string; colorScheme: 'attention' | 'accent' | 'positive' };
+  /** Called when a sub-item is clicked */
+  onSubItemClick: (view: ViewContext) => void;
+}
 
 export interface PatientWorkspaceItemProps {
   /** Patient name */
@@ -52,6 +65,8 @@ export interface PatientWorkspaceItemProps {
    * Used to show indicators on visit tabs.
    */
   tabRecordingStatuses?: Record<string, BottomBarRecordingStatus>;
+  /** Visit sub-items (Workflow/Chart toggle under visit tabs) */
+  visitSubItems?: VisitSubItemConfig[];
   /** Called when patient header is clicked */
   onPatientClick?: () => void;
   /** Called when a task is clicked (legacy) */
@@ -86,6 +101,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
   defaultExpanded = false,
   recordingStatus = 'none',
   tabRecordingStatuses = {},
+  visitSubItems = [],
   onPatientClick,
   onTaskClick,
   onTabClick,
@@ -322,75 +338,103 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
           const isTabHovered = tab.id === hoveredTabId;
           const canClose = tab.type !== 'overview';
           const showTabClose = canClose && isTabHovered;
+          const subItemConfig = visitSubItems.find((s) => s.visitTabId === tab.id);
           return (
-            <div
-              key={tab.id}
-              style={tabItemStyle(tab.id)}
-              onClick={(e) => {
-                e.stopPropagation();
-                onTabClick?.(tab.id);
-              }}
-              onMouseEnter={() => setHoveredTabId(tab.id)}
-              onMouseLeave={() => setHoveredTabId(null)}
-              role="button"
-              tabIndex={0}
-            >
-              {/* Icon / close crossfade — both in the same 14px slot */}
-              <span style={tabIconWrapperStyle}>
-                <span style={{
-                  position: 'absolute',
-                  inset: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: showTabClose ? 0 : 1,
-                  transition: 'opacity 150ms ease',
-                }}>
-                  {getTabIcon(tab.type, isActive)}
+            <React.Fragment key={tab.id}>
+              <div
+                style={tabItemStyle(tab.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTabClick?.(tab.id);
+                }}
+                onMouseEnter={() => setHoveredTabId(tab.id)}
+                onMouseLeave={() => setHoveredTabId(null)}
+                role="button"
+                tabIndex={0}
+              >
+                {/* Icon / close crossfade — both in the same 14px slot */}
+                <span style={tabIconWrapperStyle}>
+                  <span style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: showTabClose ? 0 : 1,
+                    transition: 'opacity 150ms ease',
+                  }}>
+                    {getTabIcon(tab.type, isActive)}
+                  </span>
+                  {canClose && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: showTabClose ? 1 : 0,
+                        transition: 'opacity 150ms ease',
+                        cursor: 'pointer',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTabClose?.(tab.id);
+                      }}
+                    >
+                      <X size={12} color={colors.fg.neutral.secondary} />
+                    </span>
+                  )}
                 </span>
-                {canClose && (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      opacity: showTabClose ? 1 : 0,
-                      transition: 'opacity 150ms ease',
-                      cursor: 'pointer',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onTabClose?.(tab.id);
-                    }}
-                  >
-                    <X size={12} color={colors.fg.neutral.secondary} />
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontFamily: typography.fontFamily.sans,
+                    fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
+                    color: isActive ? colors.fg.accent.primary : colors.fg.neutral.primary,
+                    flex: 1,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {tab.label}
+                </span>
+                {/* Workflow phase badge for visit tabs */}
+                {subItemConfig?.workflowBadge && (
+                  <span style={{
+                    fontSize: 10,
+                    fontFamily: typography.fontFamily.sans,
+                    fontWeight: typography.fontWeight.medium,
+                    padding: '1px 6px',
+                    borderRadius: borderRadius.full,
+                    backgroundColor: subItemConfig.workflowBadge.colorScheme === 'positive'
+                      ? colors.bg.positive.subtle
+                      : subItemConfig.workflowBadge.colorScheme === 'accent'
+                      ? colors.bg.accent.subtle
+                      : colors.bg.attention.subtle,
+                    color: subItemConfig.workflowBadge.colorScheme === 'positive'
+                      ? colors.fg.positive.primary
+                      : subItemConfig.workflowBadge.colorScheme === 'accent'
+                      ? colors.fg.accent.primary
+                      : colors.fg.attention.primary,
+                  }}>
+                    {subItemConfig.workflowBadge.text}
                   </span>
                 )}
-              </span>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.sans,
-                  fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
-                  color: isActive ? colors.fg.accent.primary : colors.fg.neutral.primary,
-                  flex: 1,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {tab.label}
-              </span>
-              {/* Recording indicator for visit tabs */}
-              {tab.type === 'visit' && tabRecordingStatuses[tab.id] && (
-                <TranscriptionIndicator
-                  status={recordingStatusToIndicator(tabRecordingStatuses[tab.id])}
-                  size="sm"
-                />
+                {/* Recording indicator for visit tabs */}
+                {tab.type === 'visit' && tabRecordingStatuses[tab.id] && (
+                  <TranscriptionIndicator
+                    status={recordingStatusToIndicator(tabRecordingStatuses[tab.id])}
+                    size="sm"
+                  />
+                )}
+              </div>
+              {/* Visit sub-items: Workflow / Chart */}
+              {subItemConfig && (
+                <VisitSubItems config={subItemConfig} baseIndent={spaceAround.compact + 32} />
               )}
-            </div>
+            </React.Fragment>
           );
         })}
 
@@ -460,3 +504,93 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
 };
 
 PatientWorkspaceItem.displayName = 'PatientWorkspaceItem';
+
+// ============================================================================
+// Visit Sub-Items (Workflow / Chart connectors)
+// ============================================================================
+
+const SUB_ITEM_LABELS: { view: ViewContext; label: string }[] = [
+  { view: 'workflow', label: 'Workflow' },
+  { view: 'charting', label: 'Chart' },
+];
+
+interface VisitSubItemsProps {
+  config: VisitSubItemConfig;
+  baseIndent: number;
+}
+
+const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => {
+  const [hoveredView, setHoveredView] = useState<ViewContext | null>(null);
+
+  return (
+    <div style={{ position: 'relative', paddingLeft: baseIndent + 10 }}>
+      {/* Vertical connector line */}
+      <div style={{
+        position: 'absolute',
+        left: baseIndent + 3,
+        top: 0,
+        bottom: 12,
+        width: 1,
+        backgroundColor: colors.border.neutral.medium,
+      }} />
+      {SUB_ITEM_LABELS.map(({ view, label }) => {
+        const isActive = config.activeSubItem === view;
+        const isHovered = hoveredView === view;
+        return (
+          <div
+            key={view}
+            style={{
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              gap: spaceBetween.relatedCompact,
+              padding: `3px ${spaceAround.compact}px 3px 10px`,
+              cursor: 'pointer',
+              borderRadius: borderRadius.sm,
+              backgroundColor: isActive
+                ? colors.bg.accent.subtle
+                : isHovered
+                ? colors.bg.neutral.subtle
+                : 'transparent',
+              transition: `background-color ${transitions.fast}`,
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              config.onSubItemClick(view);
+            }}
+            onMouseEnter={() => setHoveredView(view)}
+            onMouseLeave={() => setHoveredView(null)}
+            role="button"
+            tabIndex={0}
+          >
+            {/* Horizontal connector arm */}
+            <div style={{
+              position: 'absolute',
+              left: -7,
+              top: '50%',
+              width: 7,
+              height: 1,
+              backgroundColor: colors.border.neutral.medium,
+            }} />
+            {/* Arrow head */}
+            <span style={{
+              fontSize: 8,
+              color: colors.fg.neutral.spotReadable,
+              marginRight: -4,
+            }}>
+              ▸
+            </span>
+            <span style={{
+              fontSize: 12,
+              fontFamily: typography.fontFamily.sans,
+              fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
+              color: isActive ? colors.fg.accent.primary : colors.fg.neutral.secondary,
+            }}>
+              {label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};

@@ -7,6 +7,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import type { ChartItem, ItemSource } from '../../types';
 import type { Mode } from '../../state/types';
+import type { ViewContext, WorkflowPhase } from '../IntakeView/intakeChecklist';
 import { useDispatch } from '../../hooks';
 import { useItemActions, useSuggestionActions, useDraftActions } from '../../hooks';
 import { materializeChartItem } from '../../utils/chart-item-factory';
@@ -54,6 +55,10 @@ export interface UseCaptureViewResult {
   handleTranscriptionToggle: () => void;
   /** Handle mode change */
   handleModeChange: (mode: Mode) => void;
+  /** Current view context (charting vs intake) */
+  viewContext: ViewContext;
+  /** Set view context */
+  setViewContext: (ctx: ViewContext) => void;
   /** Accept an AI draft — promotes to chart item */
   handleAcceptDraft: (draftId: string) => void;
   /** Edit an AI draft — opens details pane with draft content */
@@ -79,6 +84,7 @@ export function useCaptureView(): UseCaptureViewResult {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isTaskPaneOpen, setIsTaskPaneOpen] = useState(false);
+  const [viewContext, setViewContext] = useState<ViewContext>('charting');
 
   // Handle adding a new item
   const handleItemAdd = useCallback(
@@ -248,6 +254,14 @@ export function useCaptureView(): UseCaptureViewResult {
     return () => window.removeEventListener('ehr:toggle-transcription', handler);
   }, [handleTranscriptionToggle]);
 
+  // Listen for workflow toggle shortcut event (fired by ShortcutManager)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => setViewContext((prev) => (prev === 'charting' ? 'workflow' : 'charting'));
+    window.addEventListener('ehr:toggle-workflow', handler);
+    return () => window.removeEventListener('ehr:toggle-workflow', handler);
+  }, []);
+
   // Handle mode change
   const handleModeChange = useCallback(
     (mode: Mode) => {
@@ -343,6 +357,8 @@ export function useCaptureView(): UseCaptureViewResult {
     handleSuggestionDismiss,
     handleTranscriptionToggle,
     handleModeChange,
+    viewContext,
+    setViewContext,
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
