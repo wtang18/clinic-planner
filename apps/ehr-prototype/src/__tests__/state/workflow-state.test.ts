@@ -122,9 +122,9 @@ describe('WORKFLOW_PHASES', () => {
     expect(WORKFLOW_PHASES.map((p) => p.key)).toEqual(['check-in', 'triage', 'checkout']);
   });
 
-  it('check-in has 9 sections', () => {
+  it('check-in has 8 sections', () => {
     const checkIn = WORKFLOW_PHASES.find((p) => p.key === 'check-in');
-    expect(checkIn?.sections).toHaveLength(9);
+    expect(checkIn?.sections).toHaveLength(8);
   });
 
   it('triage has 5 sections', () => {
@@ -176,23 +176,23 @@ describe('ViewContext type', () => {
 // ============================================================================
 
 describe('SCENARIO_WORKFLOW_DEFAULTS', () => {
-  it('has defaults for uc-cough', () => {
-    const d = SCENARIO_WORKFLOW_DEFAULTS['uc-cough'];
+  it('has defaults for enc-uc-cough-001', () => {
+    const d = SCENARIO_WORKFLOW_DEFAULTS['enc-uc-cough-001'];
     expect(d).toBeDefined();
     expect(d.completedPhases).toEqual(['check-in']);
     expect(d.activeView).toBe('charting');
     expect(d.activePhase).toBe('triage');
   });
 
-  it('has defaults for pc-diabetes', () => {
-    const d = SCENARIO_WORKFLOW_DEFAULTS['pc-diabetes'];
+  it('has defaults for enc-pc-dm-001', () => {
+    const d = SCENARIO_WORKFLOW_DEFAULTS['enc-pc-dm-001'];
     expect(d).toBeDefined();
     expect(d.completedPhases).toEqual(['check-in', 'triage']);
     expect(d.activeView).toBe('charting');
   });
 
-  it('has defaults for awv', () => {
-    const d = SCENARIO_WORKFLOW_DEFAULTS['awv'];
+  it('has defaults for enc-awv-001', () => {
+    const d = SCENARIO_WORKFLOW_DEFAULTS['enc-awv-001'];
     expect(d).toBeDefined();
     expect(d.completedPhases).toEqual([]);
     expect(d.activeView).toBe('workflow');
@@ -202,7 +202,7 @@ describe('SCENARIO_WORKFLOW_DEFAULTS', () => {
 
 describe('getScenarioWorkflowDefaults', () => {
   it('returns known scenario defaults', () => {
-    const d = getScenarioWorkflowDefaults('uc-cough');
+    const d = getScenarioWorkflowDefaults('enc-uc-cough-001');
     expect(d.completedPhases).toEqual(['check-in']);
   });
 

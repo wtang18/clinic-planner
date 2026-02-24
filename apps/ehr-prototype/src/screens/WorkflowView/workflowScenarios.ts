@@ -15,7 +15,7 @@ import type { ScenarioWorkflowState, ViewContext, WorkflowPhase } from '../Intak
 
 export const SCENARIO_WORKFLOW_DEFAULTS: Record<string, ScenarioWorkflowState> = {
   // UC Cough: check-in already done, drop into charting/capture at triage
-  'uc-cough': {
+  'enc-uc-cough-001': {
     completedPhases: ['check-in'],
     activeView: 'charting',
     activePhase: 'triage',
@@ -23,7 +23,7 @@ export const SCENARIO_WORKFLOW_DEFAULTS: Record<string, ScenarioWorkflowState> =
   },
 
   // PC Diabetes follow-up: check-in + triage done, charting in progress
-  'pc-diabetes': {
+  'enc-pc-dm-001': {
     completedPhases: ['check-in', 'triage'],
     activeView: 'charting',
     activePhase: undefined,
@@ -31,7 +31,7 @@ export const SCENARIO_WORKFLOW_DEFAULTS: Record<string, ScenarioWorkflowState> =
   },
 
   // Annual Wellness Visit: nothing complete yet, start in workflow
-  'awv': {
+  'enc-awv-001': {
     completedPhases: [],
     activeView: 'workflow',
     activePhase: 'check-in',
