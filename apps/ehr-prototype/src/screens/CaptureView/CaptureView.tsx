@@ -39,6 +39,8 @@ import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContain
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { DetailsPane } from '../../components/details-pane';
 import { ProcessingRail } from '../../components/processing-rail';
+import { VitalsRail } from '../../components/vitals-rail';
+import { getVitalsForScenario } from '../../data/mock-vitals';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
 import {
@@ -74,7 +76,7 @@ interface ToDoViewState {
 import { useCaptureView } from './useCaptureView';
 import { usePaneShortcuts } from '../../shortcuts/usePaneShortcuts';
 import { captureViewStyles, captureViewAnimations } from './CaptureView.styles';
-import { colors, spaceAround } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 
 // ============================================================================
 // Component
@@ -383,6 +385,13 @@ export const CaptureView: React.FC = () => {
   // Patient and encounter context
   const patient = state.context.patient;
   const encounter = state.context.encounter;
+
+  // Vitals data for the right rail (scenario-keyed mock data)
+  const encounterVitals = useMemo(
+    () => getVitalsForScenario(encounter?.id),
+    [encounter?.id],
+  );
+  const showVitalsRail = mode === 'capture' || mode === 'process';
 
   // Initialize workflow state from scenario defaults on encounter load
   useEffect(() => {
@@ -1089,13 +1098,18 @@ export const CaptureView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Processing Rail */}
-                      <ProcessingRail
-                        onAcceptDraft={handleAcceptDraft}
-                        onEditDraft={handleEditDraft}
-                        onDismissDraft={handleDismissDraft}
-                        style={{ gridColumn: 2, gridRow: 2, alignSelf: 'start' }}
-                      />
+                      {/* Processing Rail + Vitals Rail */}
+                      <div style={{
+                        gridColumn: 2, gridRow: 2, alignSelf: 'start',
+                        display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
+                      }}>
+                        {showVitalsRail && <VitalsRail vitals={encounterVitals} />}
+                        <ProcessingRail
+                          onAcceptDraft={handleAcceptDraft}
+                          onEditDraft={handleEditDraft}
+                          onDismissDraft={handleDismissDraft}
+                        />
+                      </div>
                     </div>
                   </>
                 );
@@ -1214,13 +1228,18 @@ export const CaptureView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Processing Rail */}
-                    <ProcessingRail
-                      onAcceptDraft={handleAcceptDraft}
-                      onEditDraft={handleEditDraft}
-                      onDismissDraft={handleDismissDraft}
-                      style={{ gridColumn: 2, gridRow: 2, alignSelf: 'start' }}
-                    />
+                    {/* Processing Rail + Vitals Rail */}
+                    <div style={{
+                      gridColumn: 2, gridRow: 2, alignSelf: 'start',
+                      display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
+                    }}>
+                      {showVitalsRail && <VitalsRail vitals={encounterVitals} />}
+                      <ProcessingRail
+                        onAcceptDraft={handleAcceptDraft}
+                        onEditDraft={handleEditDraft}
+                        onDismissDraft={handleDismissDraft}
+                      />
+                    </div>
                   </div>
                 </>
               );
