@@ -6,7 +6,7 @@
  */
 
 import React, { useRef } from 'react';
-import { colors, LAYOUT } from '../../styles/foundations';
+import { colors, spaceAround, LAYOUT } from '../../styles/foundations';
 import { FloatingHeader } from './FloatingHeader';
 
 // ============================================================================
@@ -67,7 +67,7 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
 
   const contentStyle: React.CSSProperties = {
     padding: LAYOUT.canvasContentPadding,
-    paddingTop: enableFloatingHeader ? 0 : LAYOUT.canvasContentPadding,
+    paddingTop: enableFloatingHeader ? 0 : spaceAround.nudge4,
     minHeight: '100%',
   };
 

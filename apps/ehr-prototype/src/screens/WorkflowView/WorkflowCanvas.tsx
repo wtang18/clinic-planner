@@ -11,7 +11,10 @@ import { Check } from 'lucide-react';
 import type { WorkflowPhase } from '../IntakeView/intakeChecklist';
 import { WORKFLOW_PHASES } from '../IntakeView/intakeChecklist';
 import { WorkflowSection } from '../../components/workflow/WorkflowSection';
+import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
+import { Button } from '../../components/primitives/Button';
 import type { UseWorkflowStateResult } from './useWorkflowState';
+import type { EncounterMeta } from '../../types';
 import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
 import {
   BillingProviderSection,
@@ -40,11 +43,19 @@ import {
 export interface WorkflowCanvasProps {
   phase: WorkflowPhase;
   workflowState: UseWorkflowStateResult;
-  encounter?: {
-    type?: string;
-    date?: Date;
-    id?: string;
-  };
+  encounter?: EncounterMeta;
+  chiefComplaint?: string;
+  providerName?: string;
+  providerCredentials?: string;
+  room?: string;
+  payer?: string;
+  groupName?: string;
+  visitMode?: 'walk-in' | 'scheduled' | 'virtual';
+  caseId?: string;
+  tags?: string[];
+  locked?: boolean;
+  visitName?: string;
+  onVisitNameChange?: (name: string) => void;
 }
 
 // ============================================================================
@@ -75,6 +86,30 @@ const SECTION_COMPONENTS: Record<string, React.FC> = {
 };
 
 // ============================================================================
+// Section summaries for completed sections
+// ============================================================================
+
+const SECTION_SUMMARIES: Record<string, string> = {
+  'billing-provider': 'Dr. Chen',
+  'supervisor': 'Dr. Smith',
+  'patient-info': 'Verified',
+  'patient-cards': 'Scanned',
+  'specialty': 'Primary Care',
+  'responsible-party': 'Self',
+  'credit-card': 'On file',
+  'consent-forms': 'Signed',
+  'payment-collection': 'Copay collected',
+  'assign-room': 'Room 3',
+  'vitals': 'Recorded',
+  'hpi': 'Documented',
+  'medical-history': 'Reviewed',
+  'rx-renewals': 'None',
+  'review-bill': 'Reviewed',
+  'additional-charges': 'None',
+  'book-follow-up': 'Scheduled',
+};
+
+// ============================================================================
 // Component
 // ============================================================================
 
@@ -82,39 +117,47 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   phase,
   workflowState,
   encounter,
+  chiefComplaint,
+  providerName,
+  providerCredentials,
+  room,
+  payer,
+  groupName,
+  visitMode,
+  caseId,
+  tags,
+  locked,
+  visitName,
+  onVisitNameChange,
 }) => {
   const phaseMeta = WORKFLOW_PHASES.find((p) => p.key === phase);
   if (!phaseMeta) return null;
 
   const isPhaseComplete = workflowState.completedPhases.has(phase);
   const progress = workflowState.phaseProgress(phase);
+  const allDone = progress.done === progress.total && progress.total > 0;
 
   return (
     <div style={styles.wrapper}>
-      {/* Encounter context header */}
+      {/* Encounter context bar */}
       {encounter && (
-        <div style={styles.contextHeader}>
-          <span style={styles.contextLabel}>
-            {encounter.date ? encounter.date.toLocaleDateString() : 'Today'} · {encounter.type || 'Visit'}
-          </span>
-        </div>
+        <EncounterContextBar
+          encounter={encounter}
+          chiefComplaint={chiefComplaint}
+          providerName={providerName}
+          providerCredentials={providerCredentials}
+          room={room}
+          payer={payer}
+          groupName={groupName}
+          caseId={caseId}
+          tags={tags}
+          locked={locked}
+          visitName={visitName}
+          onVisitNameChange={onVisitNameChange}
+          visitMode={visitMode}
+          style={{ paddingLeft: 0, paddingRight: 0 }}
+        />
       )}
-
-      {/* Progress indicator */}
-      <div style={styles.progressRow}>
-        <div style={styles.progressBar}>
-          <div style={{
-            width: progress.total > 0 ? `${(progress.done / progress.total) * 100}%` : '0%',
-            height: '100%',
-            backgroundColor: isPhaseComplete ? colors.fg.positive.primary : colors.fg.accent.primary,
-            borderRadius: 2,
-            transition: 'width 250ms ease',
-          }} />
-        </div>
-        <span style={styles.progressLabel}>
-          {progress.done} of {progress.total} sections
-        </span>
-      </div>
 
       {/* Accordion sections */}
       <div style={styles.sectionsContainer}>
@@ -128,7 +171,9 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
               key={sectionDef.id}
               id={sectionDef.id}
               title={sectionDef.title}
-              state={isExpanded ? 'in_progress' : state}
+              state={state}
+              isExpanded={isExpanded}
+              summary={state === 'complete' ? SECTION_SUMMARIES[sectionDef.id] : undefined}
               onToggle={() => workflowState.toggleSection(sectionDef.id)}
               onComplete={() => workflowState.completeSection(sectionDef.id)}
               onSkip={sectionDef.optional ? () => workflowState.skipSection(sectionDef.id) : undefined}
@@ -143,17 +188,32 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         })}
       </div>
 
-      {/* Complete Phase button */}
+      {/* Complete Phase card with progress */}
       {!isPhaseComplete && (
         <div style={styles.completeCard}>
-          <button
-            type="button"
-            style={styles.completeButton}
+          {/* Progress inside card */}
+          <span style={styles.progressLabel}>
+            {allDone
+              ? 'All sections complete \u2014 ready to advance'
+              : `${progress.done} of ${progress.total} sections`}
+          </span>
+          <div style={styles.progressBar}>
+            <div style={{
+              width: progress.total > 0 ? `${(progress.done / progress.total) * 100}%` : '0%',
+              height: '100%',
+              backgroundColor: allDone ? colors.fg.positive.primary : colors.fg.accent.primary,
+              borderRadius: 2,
+              transition: 'width 250ms ease',
+            }} />
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            leftIcon={<Check size={16} />}
             onClick={() => workflowState.completePhase(phase)}
           >
-            <Check size={16} />
             Complete {phaseMeta.label}
-          </button>
+          </Button>
           <p style={styles.completeHint}>
             Marks all sections as done and advances to the next phase.
           </p>
@@ -184,30 +244,40 @@ const styles = {
     maxWidth: 900,
     width: '100%',
     margin: '0 auto',
-    padding: `${spaceAround.spacious}px ${spaceAround.default}px`,
     display: 'flex',
     flexDirection: 'column',
-    gap: spaceBetween.separated,
   } as React.CSSProperties,
 
-  contextHeader: {
-    marginBottom: spaceBetween.coupled,
+  sectionsContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spaceBetween.repeating,
   } as React.CSSProperties,
 
-  contextLabel: {
+  placeholder: {
     fontSize: 13,
     fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.secondary,
+    color: colors.fg.neutral.spotReadable,
+    fontStyle: 'italic',
+    padding: `${spaceAround.compact}px 0`,
   } as React.CSSProperties,
 
-  progressRow: {
+  completeCard: {
+    marginTop: spaceBetween.related,
+    backgroundColor: colors.bg.neutral.base,
+    border: `1px solid ${colors.border.neutral.low}`,
+    borderRadius: borderRadius.sm,
+    padding: spaceAround.default,
+    textAlign: 'center',
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     gap: spaceBetween.related,
   } as React.CSSProperties,
 
   progressBar: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 300,
     height: 4,
     backgroundColor: colors.bg.neutral.low,
     borderRadius: 2,
@@ -221,52 +291,16 @@ const styles = {
     whiteSpace: 'nowrap',
   } as React.CSSProperties,
 
-  sectionsContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: spaceBetween.relatedCompact,
-  } as React.CSSProperties,
-
-  placeholder: {
-    fontSize: 13,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.spotReadable,
-    fontStyle: 'italic',
-    padding: `${spaceAround.compact}px 0`,
-  } as React.CSSProperties,
-
-  completeCard: {
-    backgroundColor: colors.bg.neutral.base,
-    border: `1px solid ${colors.border.neutral.low}`,
-    borderRadius: borderRadius.sm,
-    padding: spaceAround.default,
-    textAlign: 'center',
-  } as React.CSSProperties,
-
-  completeButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: spaceBetween.repeating,
-    padding: `${spaceAround.compact}px ${spaceAround.spacious}px`,
-    fontSize: 15,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: 600,
-    color: '#fff',
-    backgroundColor: colors.fg.accent.primary,
-    border: 'none',
-    borderRadius: borderRadius.sm,
-    cursor: 'pointer',
-  } as React.CSSProperties,
-
   completeHint: {
     fontSize: 12,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.spotReadable,
-    marginTop: spaceBetween.coupled,
+    marginTop: 0,
     marginBottom: 0,
   } as React.CSSProperties,
 
   completeBanner: {
+    marginTop: spaceBetween.related,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

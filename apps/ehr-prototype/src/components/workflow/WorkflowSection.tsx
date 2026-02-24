@@ -8,8 +8,9 @@
  */
 
 import React, { useState } from 'react';
-import { Check, ChevronRight, ChevronDown, Minus } from 'lucide-react';
+import { Check, ChevronRight, ChevronDown, Minus, Circle } from 'lucide-react';
 import type { SectionState } from '../../screens/IntakeView/intakeChecklist';
+import { Button } from '../primitives/Button';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
@@ -20,6 +21,7 @@ export interface WorkflowSectionProps {
   id: string;
   title: string;
   state: SectionState;
+  isExpanded: boolean;
   summary?: string;
   onToggle: () => void;
   onComplete?: () => void;
@@ -35,6 +37,7 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
   id,
   title,
   state,
+  isExpanded,
   summary,
   onToggle,
   onComplete,
@@ -43,53 +46,33 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const isExpanded = state === 'in_progress';
   const isComplete = state === 'complete';
   const isSkipped = state === 'skipped';
 
-  const cardStyle: React.CSSProperties = {
-    backgroundColor: colors.bg.neutral.base,
-    border: `1px solid ${isExpanded ? colors.border.accent.low : colors.border.neutral.low}`,
-    borderRadius: borderRadius.sm,
-    overflow: 'hidden',
-    transition: `border-color ${transitions.fast}`,
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.relatedCompact,
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    cursor: 'pointer',
-    transition: `background-color ${transitions.fast}`,
-    backgroundColor: isHovered && !isSkipped ? colors.bg.neutral.subtle : 'transparent',
-    opacity: isSkipped ? 0.55 : 1,
-  };
-
-  // Left icon
+  // Left icon — outlined circles for incomplete, filled green check for complete
   const renderLeftIcon = () => {
     if (isComplete) {
       return (
         <span style={{
-          width: 18,
-          height: 18,
+          width: 16,
+          height: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: 9,
+          borderRadius: 8,
           backgroundColor: colors.fg.positive.primary,
           color: '#fff',
           flexShrink: 0,
         }}>
-          <Check size={11} strokeWidth={3} />
+          <Check size={10} strokeWidth={3} />
         </span>
       );
     }
     if (isSkipped) {
       return (
         <span style={{
-          width: 18,
-          height: 18,
+          width: 16,
+          height: 16,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -100,16 +83,25 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
         </span>
       );
     }
-    // Spacer for not_started / in_progress — keeps label alignment consistent
-    return <span style={{ width: 18, flexShrink: 0 }} />;
+    // Outlined circle for not_started / in_progress
+    return (
+      <Circle
+        size={16}
+        color={state === 'in_progress' ? colors.fg.accent.primary : colors.fg.neutral.spotReadable}
+        strokeWidth={1.5}
+        style={{ flexShrink: 0 }}
+      />
+    );
   };
 
-  // Label style
+  // Label style — 14px medium, secondary color; accent only when expanded
   const labelStyle: React.CSSProperties = {
     flex: 1,
     fontSize: 14,
+    lineHeight: '20px',
+    letterSpacing: -0.5,
     fontFamily: typography.fontFamily.sans,
-    fontWeight: isExpanded ? typography.fontWeight.medium : typography.fontWeight.regular,
+    fontWeight: typography.fontWeight.semibold,
     color: isSkipped
       ? colors.fg.neutral.spotReadable
       : isExpanded
@@ -117,7 +109,7 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
       : colors.fg.neutral.primary,
   };
 
-  // Right side
+  // Right side — summary + chevron for non-skipped; N/A for skipped
   const renderRightSide = () => {
     if (isSkipped) {
       return (
@@ -130,30 +122,51 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
         </span>
       );
     }
+    return (
+      <>
+        {!isExpanded && isComplete && summary && (
+          <span style={{
+            fontSize: 12,
+            color: colors.fg.neutral.secondary,
+            fontFamily: typography.fontFamily.sans,
+            maxWidth: 200,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {summary}
+          </span>
+        )}
+        {isExpanded
+          ? <ChevronDown size={14} color={colors.fg.neutral.spotReadable} />
+          : <ChevronRight size={14} color={colors.fg.neutral.spotReadable} />}
+      </>
+    );
+  };
 
-    if (isComplete && summary) {
-      return (
-        <span style={{
-          fontSize: 12,
-          color: colors.fg.neutral.secondary,
-          fontFamily: typography.fontFamily.sans,
-          maxWidth: 200,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
-          {summary}
-        </span>
-      );
-    }
+  // Container — card with border matching overview collapsible cards
+  const containerStyle: React.CSSProperties = {
+    border: `1px solid ${colors.border.neutral.low}`,
+    borderRadius: borderRadius.sm,
+    backgroundColor: colors.bg.neutral.base,
+    overflow: 'hidden',
+  };
 
-    return isExpanded
-      ? <ChevronDown size={14} color={colors.fg.neutral.spotReadable} />
-      : <ChevronRight size={14} color={colors.fg.neutral.spotReadable} />;
+  // Header — CollapsibleGroup style with persistent subtle background
+  const headerStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spaceBetween.relatedCompact,
+    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
+    cursor: 'pointer',
+    transition: `background-color ${transitions.fast}`,
+    backgroundColor: isHovered && !isSkipped ? colors.bg.neutral.subtle : 'transparent',
+    opacity: isSkipped ? 0.55 : 1,
+    userSelect: 'none',
   };
 
   return (
-    <div style={cardStyle} data-testid={`workflow-section-${id}`}>
+    <div style={containerStyle} data-testid={`workflow-section-${id}`}>
       <div
         style={headerStyle}
         onClick={onToggle}
@@ -174,13 +187,18 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
         {renderRightSide()}
       </div>
 
-      {/* Expandable content */}
-      {isExpanded && (
+      {/* Expandable content — always rendered for smooth CSS transitions */}
+      <div style={{
+        maxHeight: isExpanded ? 600 : 0,
+        opacity: isExpanded ? 1 : 0,
+        overflow: 'hidden',
+        transition: `max-height ${transitions.base}, opacity ${transitions.fast}`,
+      }}>
         <div style={{
           padding: `0 ${spaceAround.default}px ${spaceAround.default}px`,
           borderTop: `1px solid ${colors.border.neutral.low}`,
         }}>
-          <div style={{ paddingTop: spaceAround.default }}>
+          <div style={{ paddingTop: spaceAround.compact }}>
             {children}
           </div>
 
@@ -192,45 +210,26 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
             justifyContent: 'flex-end',
           }}>
             {onSkip && (
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={(e) => { e.stopPropagation(); onSkip(); }}
-                style={{
-                  padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.sans,
-                  color: colors.fg.neutral.secondary,
-                  backgroundColor: 'transparent',
-                  border: `1px solid ${colors.border.neutral.medium}`,
-                  borderRadius: borderRadius.sm,
-                  cursor: 'pointer',
-                }}
               >
                 Skip
-              </button>
+              </Button>
             )}
             {onComplete && (
-              <button
-                type="button"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={(e) => { e.stopPropagation(); onComplete(); }}
-                style={{
-                  padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.sans,
-                  fontWeight: typography.fontWeight.medium,
-                  color: '#fff',
-                  backgroundColor: colors.fg.accent.primary,
-                  border: 'none',
-                  borderRadius: borderRadius.sm,
-                  cursor: 'pointer',
-                }}
               >
                 Done
-              </button>
+              </Button>
             )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
