@@ -55,6 +55,7 @@ export const MOCK_PATIENT: PatientContext = {
       payerId: 'BCBS-001',
       payerName: 'Blue Cross Blue Shield',
       memberId: 'BCBS-98765',
+      groupName: 'Acme Corp',
       planType: 'PPO',
     },
   },
@@ -91,6 +92,8 @@ export const MOCK_ENCOUNTER: EncounterMeta = {
   startedAt: new Date(),
   facility: { id: 'fac-main', name: 'Carbon Health — Downtown', address: { line1: '123 Market St', city: 'San Francisco', state: 'CA', zip: '94105' } },
   room: 'Exam 3',
+  caseId: 'UC-2026-0218',
+  tags: ['UC'],
 };
 
 export const MOCK_VISIT: VisitMeta = {

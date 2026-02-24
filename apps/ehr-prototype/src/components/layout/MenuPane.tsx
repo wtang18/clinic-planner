@@ -20,7 +20,7 @@ import {
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions, LAYOUT } from '../../styles/foundations';
 import { MenuSection } from './MenuSection';
 import { MenuNavItem } from './MenuNavItem';
-import { PatientWorkspaceItem, PatientTask, RecordingStatus } from './PatientWorkspaceItem';
+import { PatientWorkspaceItem, PatientTask, RecordingStatus, type VisitSubItemConfig } from './PatientWorkspaceItem';
 import { ToDoCategoryItem, ToDoFilter } from './ToDoCategoryItem';
 import { TODO_CATEGORIES, getCategoryBadgeCount } from '../../scenarios/todoData';
 import type { WorkspaceTab } from '../../context/WorkspaceContext';
@@ -43,6 +43,8 @@ export interface PatientWorkspace {
   currentVisit?: string;
   /** Recording status for this patient */
   recordingStatus?: RecordingStatus;
+  /** Visit sub-items (Workflow/Chart toggle under visit tabs) */
+  visitSubItems?: VisitSubItemConfig[];
 }
 
 /** Registry view identifiers for population health navigation */
@@ -273,6 +275,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                   activeTabId={patient.activeTabId}
                   currentVisit={patient.currentVisit}
                   recordingStatus={patient.recordingStatus}
+                  visitSubItems={patient.visitSubItems}
                   isSelected={selectedItemId === `patient-${patient.id}`}
                   defaultExpanded={patientWorkspaces.length === 1}
                   onPatientClick={() => onPatientSelect?.(patient.id)}

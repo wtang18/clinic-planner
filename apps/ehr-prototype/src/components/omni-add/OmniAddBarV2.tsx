@@ -334,7 +334,6 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
             onClear={handleClear}
             onSpace={handleSpace}
             disabled={disabled}
-            autoFocus
           />
 
           {/* Detail Area */}

@@ -48,7 +48,7 @@ import {
   type ToDoItem,
 } from '../../scenarios/todoData';
 
-import { ClipboardList, Mic, Brain, FileCheck, Check } from 'lucide-react';
+import { ClipboardList, Check } from 'lucide-react';
 import { useCurrentMode } from '../../navigation/NavigationContext';
 import { ProcessCanvas } from '../ProcessView';
 import { ReviewCanvas } from '../ReviewView';
@@ -57,6 +57,7 @@ import { getScenarioWorkflowDefaults } from '../WorkflowView/workflowScenarios';
 import type { WorkflowPhase } from '../IntakeView/intakeChecklist';
 import { WORKFLOW_PHASES } from '../IntakeView/intakeChecklist';
 import type { Mode } from '../../state/types';
+import type { VisitSubItemConfig } from '../../components/layout/PatientWorkspaceItem';
 
 // ============================================================================
 // Types
@@ -528,8 +529,12 @@ export const CaptureView: React.FC = () => {
       const existingWorkspace = workspace.getWorkspace(patient.mrn);
       if (!existingWorkspace) {
         workspace.openWorkspace(patient.mrn, 'patient', patientOverviewData.name);
-        // Add Visit tab for encounter patient
-        const visitLabel = state.context.visit?.chiefComplaint || encounter.type || 'Visit';
+        // Add Visit tab for encounter patient with date prefix
+        const visitType = state.context.visit?.chiefComplaint || encounter.type || 'Visit';
+        const dateStr = (encounter.scheduledAt || encounter.startedAt)
+          ? (encounter.scheduledAt || encounter.startedAt)!.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })
+          : undefined;
+        const visitLabel = dateStr ? `${dateStr} · ${visitType}` : visitType;
         workspace.openTab(patient.mrn, {
           type: 'visit',
           label: visitLabel,
@@ -595,6 +600,28 @@ export const CaptureView: React.FC = () => {
         colors.fg.alert.primary,
       ];
 
+      // Build visit sub-items for encounter patient's visit tabs
+      const visitSubItems: VisitSubItemConfig[] = isCurrentPatient
+        ? ws.tabs
+            .filter((t) => t.type === 'visit')
+            .map((t) => {
+              // Determine workflow badge based on active phase and completion
+              const phaseMeta = WORKFLOW_PHASES.find((p) => p.key === workflowState.activePhase);
+              const allComplete = WORKFLOW_PHASES.every((p) => workflowState.completedPhases.has(p.key));
+              const workflowBadge: VisitSubItemConfig['workflowBadge'] = allComplete
+                ? { text: 'Complete', colorScheme: 'positive' }
+                : phaseMeta
+                ? { text: phaseMeta.label, colorScheme: viewContext === 'workflow' ? 'attention' : 'accent' }
+                : undefined;
+              return {
+                visitTabId: t.id,
+                activeSubItem: viewContext,
+                workflowBadge,
+                onSubItemClick: setViewContext,
+              };
+            })
+        : [];
+
       return {
         id: ws.id,
         name: ws.patientName || 'Unknown Patient',
@@ -608,28 +635,20 @@ export const CaptureView: React.FC = () => {
           ? state.context.visit?.chiefComplaint || encounter?.type
           : undefined,
         recordingStatus: getRecordingStatus(!!isCurrentPatient),
+        visitSubItems,
       };
     });
-  }, [patient, patientOverviewData.name, workspace.workspaces, state.context.visit, encounter, transcriptionStatus]);
+  }, [patient, patientOverviewData.name, workspace.workspaces, state.context.visit, encounter, transcriptionStatus, viewContext, workflowState.activePhase, workflowState.completedPhases]);
 
   // Canvas header content - contextual controls for encounters
   const currentUser = state.session.currentUser;
   const visit = state.context.visit;
 
   // Build segments for the context-dependent SegmentedControl
-  const getModeIcon = (m: Mode, size: number) => {
-    switch (m) {
-      case 'capture': return <Mic size={size} />;
-      case 'process': return <Brain size={size} />;
-      case 'review': return <FileCheck size={size} />;
-      default: return null;
-    }
-  };
-
   const chartSegments: Segment<Mode>[] = [
-    { key: 'capture', label: 'Capture', icon: getModeIcon('capture', 16) },
-    { key: 'process', label: 'Process', icon: getModeIcon('process', 16) },
-    { key: 'review', label: 'Review', icon: getModeIcon('review', 16) },
+    { key: 'capture', label: 'Capture' },
+    { key: 'process', label: 'Process' },
+    { key: 'review', label: 'Review' },
   ];
 
   const workflowSegments: Segment<WorkflowPhase>[] = WORKFLOW_PHASES.map((p) => ({
@@ -831,6 +850,15 @@ export const CaptureView: React.FC = () => {
                 phase={workflowState.activePhase}
                 workflowState={workflowState}
                 encounter={encounter}
+                chiefComplaint={visit?.chiefComplaint}
+                providerName={currentUser?.name}
+                providerCredentials={currentUser?.credentials?.join(', ')}
+                room={encounter.room}
+                payer={patient.insurance?.primary?.payerName}
+                groupName={patient.insurance?.primary?.groupName}
+                caseId={encounter.caseId}
+                tags={encounter.tags}
+                locked={encounter.locked}
               />
             )}
 
@@ -1015,6 +1043,12 @@ export const CaptureView: React.FC = () => {
                         chiefComplaint={visit?.chiefComplaint}
                         providerName={currentUser?.name}
                         providerCredentials={currentUser?.credentials?.join(', ')}
+                        room={encounter.room}
+                        payer={patient.insurance?.primary?.payerName}
+                        groupName={patient.insurance?.primary?.groupName}
+                        caseId={encounter.caseId}
+                        tags={encounter.tags}
+                        locked={encounter.locked}
                         style={{ paddingLeft: 0, paddingRight: 0, gridColumn: 1, gridRow: 1 }}
                       />
                       <div style={{
@@ -1135,6 +1169,12 @@ export const CaptureView: React.FC = () => {
                       chiefComplaint={visit?.chiefComplaint}
                       providerName={currentUser?.name}
                       providerCredentials={currentUser?.credentials?.join(', ')}
+                      room={encounter.room}
+                      payer={patient.insurance?.primary?.payerName}
+                      groupName={patient.insurance?.primary?.groupName}
+                      caseId={encounter.caseId}
+                      tags={encounter.tags}
+                      locked={encounter.locked}
                       style={{ paddingLeft: 0, paddingRight: 0, gridColumn: 1, gridRow: 1 }}
                     />
                     <div style={{

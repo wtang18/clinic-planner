@@ -25,6 +25,12 @@ export interface EncounterMeta {
   // Billing
   appointmentId?: string;
   billingStatus?: BillingStatus;
+
+  // Tracking
+  caseId?: string;
+  tags?: string[];
+  locked?: boolean;
+  lockedAt?: Date;
 }
 
 /** Encounter status progression */

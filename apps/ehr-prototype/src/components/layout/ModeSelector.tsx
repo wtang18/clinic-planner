@@ -7,7 +7,6 @@
  */
 
 import React from 'react';
-import { Mic, Brain, FileCheck } from 'lucide-react';
 import type { Mode } from '../../state/types';
 import { SegmentedControl, type Segment } from '../primitives/SegmentedControl';
 
@@ -30,23 +29,10 @@ export interface ModeSelectorProps {
 // Constants
 // ============================================================================
 
-const getModeIcon = (mode: Mode, size: number): React.ReactNode => {
-  switch (mode) {
-    case 'capture':
-      return <Mic size={size} />;
-    case 'process':
-      return <Brain size={size} />;
-    case 'review':
-      return <FileCheck size={size} />;
-    default:
-      return null;
-  }
-};
-
 const MODE_SEGMENTS: Segment<Mode>[] = [
-  { key: 'capture', label: 'Capture', icon: getModeIcon('capture', 16) },
-  { key: 'process', label: 'Process', icon: getModeIcon('process', 16) },
-  { key: 'review', label: 'Review', icon: getModeIcon('review', 16) },
+  { key: 'capture', label: 'Capture' },
+  { key: 'process', label: 'Process' },
+  { key: 'review', label: 'Review' },
 ];
 
 // ============================================================================

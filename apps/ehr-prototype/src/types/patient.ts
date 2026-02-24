@@ -45,6 +45,7 @@ export interface InsuranceInfo {
   payerName: string;
   memberId: string;
   groupNumber?: string;
+  groupName?: string;
   planType?: string;
 }
 

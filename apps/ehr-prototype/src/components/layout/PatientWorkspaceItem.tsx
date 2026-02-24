@@ -6,8 +6,8 @@
  */
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, X, FileText, Mail, Inbox, Heart, Stethoscope, LayoutGrid } from 'lucide-react';
-import { colors, borderRadius, spaceAround, spaceBetween, typography, transitions } from '../../styles/foundations';
+import { ChevronDown, ChevronRight, X, FileText, Mail, Inbox, Heart, Stethoscope, LayoutGrid, CornerDownRight } from 'lucide-react';
+import { colors, borderRadius, spaceAround, spaceBetween, typography, body, transitions } from '../../styles/foundations';
 import type { WorkspaceTab, WorkspaceTabType } from '../../context/WorkspaceContext';
 import type { ViewContext } from '../../screens/IntakeView/intakeChecklist';
 import { TranscriptionIndicator, recordingStatusToIndicator } from '../sidebar/TranscriptionIndicator';
@@ -260,7 +260,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     }
   };
 
-  const tabItemStyle = (tabId: string): React.CSSProperties => {
+  const tabItemStyle = (tabId: string, hasSubItems: boolean): React.CSSProperties => {
     const isActive = tabId === activeTabId;
     const isTabHovered = tabId === hoveredTabId;
     return {
@@ -272,7 +272,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
       cursor: 'pointer',
       borderRadius: borderRadius.sm,
       backgroundColor: isActive
-        ? colors.bg.accent.subtle
+        ? (hasSubItems ? colors.bg.neutral.subtle : colors.bg.accent.subtle)
         : isTabHovered
         ? colors.bg.neutral.subtle
         : 'transparent',
@@ -339,10 +339,11 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
           const canClose = tab.type !== 'overview';
           const showTabClose = canClose && isTabHovered;
           const subItemConfig = visitSubItems.find((s) => s.visitTabId === tab.id);
+          const hasSubItems = !!subItemConfig;
           return (
             <React.Fragment key={tab.id}>
               <div
-                style={tabItemStyle(tab.id)}
+                style={tabItemStyle(tab.id, hasSubItems)}
                 onClick={(e) => {
                   e.stopPropagation();
                   onTabClick?.(tab.id);
@@ -388,10 +389,12 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
                 </span>
                 <span
                   style={{
-                    fontSize: 13,
+                    fontSize: body.sm.regular.fontSize,
                     fontFamily: typography.fontFamily.sans,
-                    fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
-                    color: isActive ? colors.fg.accent.primary : colors.fg.neutral.primary,
+                    fontWeight: isActive ? body.sm.medium.fontWeight : body.sm.regular.fontWeight,
+                    color: isActive
+                      ? (hasSubItems ? colors.fg.neutral.primary : colors.fg.accent.primary)
+                      : colors.fg.neutral.primary,
                     flex: 1,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -523,16 +526,7 @@ const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => 
   const [hoveredView, setHoveredView] = useState<ViewContext | null>(null);
 
   return (
-    <div style={{ position: 'relative', paddingLeft: baseIndent + 10 }}>
-      {/* Vertical connector line */}
-      <div style={{
-        position: 'absolute',
-        left: baseIndent + 3,
-        top: 0,
-        bottom: 12,
-        width: 1,
-        backgroundColor: colors.border.neutral.medium,
-      }} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.coupled }}>
       {SUB_ITEM_LABELS.map(({ view, label }) => {
         const isActive = config.activeSubItem === view;
         const isHovered = hoveredView === view;
@@ -540,11 +534,11 @@ const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => 
           <div
             key={view}
             style={{
-              position: 'relative',
               display: 'flex',
               alignItems: 'center',
               gap: spaceBetween.relatedCompact,
-              padding: `3px ${spaceAround.compact}px 3px 10px`,
+              padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
+              paddingLeft: baseIndent,
               cursor: 'pointer',
               borderRadius: borderRadius.sm,
               backgroundColor: isActive
@@ -563,28 +557,15 @@ const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => 
             role="button"
             tabIndex={0}
           >
-            {/* Horizontal connector arm */}
-            <div style={{
-              position: 'absolute',
-              left: -7,
-              top: '50%',
-              width: 7,
-              height: 1,
-              backgroundColor: colors.border.neutral.medium,
-            }} />
-            {/* Arrow head */}
+            <CornerDownRight
+              size={14}
+              color={colors.fg.neutral.spotReadable}
+            />
             <span style={{
-              fontSize: 8,
-              color: colors.fg.neutral.spotReadable,
-              marginRight: -4,
-            }}>
-              ▸
-            </span>
-            <span style={{
-              fontSize: 12,
+              fontSize: body.sm.regular.fontSize,
               fontFamily: typography.fontFamily.sans,
-              fontWeight: isActive ? typography.fontWeight.medium : typography.fontWeight.regular,
-              color: isActive ? colors.fg.accent.primary : colors.fg.neutral.secondary,
+              fontWeight: isActive ? body.sm.medium.fontWeight : body.sm.regular.fontWeight,
+              color: isActive ? colors.fg.accent.primary : colors.fg.neutral.primary,
             }}>
               {label}
             </span>

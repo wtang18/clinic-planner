@@ -8,7 +8,8 @@
  */
 
 import React from 'react';
-import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, body, label, transitions } from '../../../styles/foundations';
+import { Button } from '../../../components/primitives/Button';
 
 // ============================================================================
 // Shared Styles
@@ -22,12 +23,11 @@ const formGroup: React.CSSProperties = {
 };
 
 const fieldLabel: React.CSSProperties = {
-  fontSize: 12,
-  fontWeight: 500,
-  fontFamily: typography.fontFamily.sans,
+  fontSize: label.xs.medium.fontSize,
+  fontWeight: label.xs.medium.fontWeight,
+  fontFamily: label.xs.medium.fontFamily,
+  lineHeight: `${label.xs.medium.lineHeight}px`,
   color: colors.fg.neutral.secondary,
-  textTransform: 'uppercase',
-  letterSpacing: 0.5,
 };
 
 const textInput: React.CSSProperties = {
@@ -58,16 +58,17 @@ const gridContainer = (cols: number): React.CSSProperties => ({
 });
 
 const gridButton = (isSelected: boolean): React.CSSProperties => ({
-  padding: `${spaceAround.compact}px`,
-  fontSize: 13,
-  fontFamily: typography.fontFamily.sans,
-  fontWeight: isSelected ? 500 : 400,
+  padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
+  fontSize: body.xs.regular.fontSize,
+  fontFamily: body.xs.regular.fontFamily,
+  fontWeight: isSelected ? body.xs.medium.fontWeight : body.xs.regular.fontWeight,
   textAlign: 'center',
-  border: `1px solid ${isSelected ? colors.border.accent.low : colors.border.neutral.medium}`,
-  borderRadius: borderRadius.sm,
-  backgroundColor: isSelected ? colors.bg.accent.subtle : colors.bg.neutral.base,
-  color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
+  border: `1px solid ${isSelected ? colors.border.accent.medium : colors.border.neutral.low}`,
+  borderRadius: borderRadius.full,
+  backgroundColor: isSelected ? colors.bg.accent.medium : colors.bg.neutral.subtle,
+  color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.secondary,
   cursor: 'pointer',
+  transition: `all ${transitions.fast}`,
 });
 
 const checkRow: React.CSSProperties = {
@@ -480,22 +481,7 @@ export const AdditionalChargesSection: React.FC = () => (
       <label style={fieldLabel}>Add Charge</label>
       <div style={{ display: 'flex', gap: spaceBetween.related }}>
         <input style={{ ...textInput, flex: 1 }} placeholder="CPT code or description" />
-        <button
-          type="button"
-          style={{
-            padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-            fontSize: 13,
-            fontFamily: typography.fontFamily.sans,
-            fontWeight: 500,
-            color: colors.fg.accent.primary,
-            backgroundColor: colors.bg.accent.subtle,
-            border: `1px solid ${colors.border.accent.low}`,
-            borderRadius: borderRadius.sm,
-            cursor: 'pointer',
-          }}
-        >
-          Add
-        </button>
+        <Button variant="secondary" size="sm">Add</Button>
       </div>
     </div>
     <div style={formGroup}>
