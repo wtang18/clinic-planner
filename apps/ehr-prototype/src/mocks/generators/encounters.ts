@@ -119,6 +119,7 @@ export const ENCOUNTER_TEMPLATES = {
       encounter: generateEncounterMeta({
         id: 'enc-uc-cough-001',
         type: 'urgent-care',
+        specialty: 'urgent-care',
         status: 'in-progress',
         scheduledAt: new Date(now.getTime() - 10 * 60 * 1000),
         startedAt: now,
@@ -155,6 +156,7 @@ export const ENCOUNTER_TEMPLATES = {
       encounter: generateEncounterMeta({
         id: 'enc-pc-dm-001',
         type: 'follow-up',
+        specialty: 'primary-care',
         status: 'in-progress',
         scheduledAt: new Date(now.getTime() - 5 * 60 * 1000),
         startedAt: now,
@@ -190,6 +192,7 @@ export const ENCOUNTER_TEMPLATES = {
       encounter: generateEncounterMeta({
         id: 'enc-awv-001',
         type: 'annual-wellness',
+        specialty: 'primary-care',
         status: 'in-progress',
         scheduledAt: new Date(now.getTime() - 10 * 60 * 1000),
         startedAt: now,
@@ -225,6 +228,7 @@ export const ENCOUNTER_TEMPLATES = {
       encounter: generateEncounterMeta({
         id: 'enc-tele-001',
         type: 'telehealth',
+        specialty: 'primary-care',
         status: 'in-progress',
         scheduledAt: now,
         startedAt: now,
@@ -260,6 +264,7 @@ export const ENCOUNTER_TEMPLATES = {
       encounter: generateEncounterMeta({
         id: 'enc-geriatric-001',
         type: 'follow-up',
+        specialty: 'primary-care',
         status: 'in-progress',
         scheduledAt: new Date(now.getTime() - 15 * 60 * 1000),
         startedAt: now,

@@ -7,6 +7,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import type { ToDoItem } from '../scenarios/todoData';
+import type { Specialty } from '../types/encounter';
 
 // ============================================================================
 // Types
@@ -27,6 +28,8 @@ export interface WorkspaceTab {
   sourceFilter?: string;
   /** Source category ID */
   sourceCategoryId?: string;
+  /** Encounter specialty (for visit tabs) */
+  specialty?: Specialty;
 }
 
 export interface Workspace {

@@ -20,8 +20,10 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   error?: string;
   /** Icon on the left */
   leftIcon?: React.ReactNode;
-  /** Icon on the right */
+  /** Icon on the right (mutually exclusive with suffix) */
   rightIcon?: React.ReactNode;
+  /** Text suffix displayed inside the input (e.g., "mmHg", "°F", "lbs") */
+  suffix?: string;
 }
 
 // ============================================================================
@@ -59,6 +61,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       disabled = false,
       leftIcon,
       rightIcon,
+      suffix,
       style,
       ...props
     },
@@ -68,6 +71,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const sizeStyle = sizeStyles[size];
 
     const hasError = !!error;
+    const hasRightAdornment = !!(rightIcon || suffix);
+    // Dynamic right padding: for suffix, scale with text length; for icon, fixed offset
+    const rightPadding = suffix
+      ? suffix.length * 8 + 16
+      : hasRightAdornment
+      ? sizeStyle.padding + 24
+      : sizeStyle.padding;
 
     const wrapperStyle: React.CSSProperties = {
       position: 'relative',
@@ -80,7 +90,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       height: sizeStyle.height,
       padding: sizeStyle.padding,
       paddingLeft: leftIcon ? sizeStyle.padding + 24 : sizeStyle.padding,
-      paddingRight: rightIcon ? sizeStyle.padding + 24 : sizeStyle.padding,
+      paddingRight: rightPadding,
       fontSize: sizeStyle.fontSize,
       fontFamily: typography.fontFamily.sans,
       color: disabled ? colors.fg.neutral.disabled : colors.fg.neutral.primary,
@@ -90,6 +100,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       outline: 'none',
       transition: `all ${transitions.fast}`,
       boxShadow: isFocused ? (hasError ? shadows.focusError : shadows.focus) : 'none',
+      boxSizing: 'border-box',
       ...style,
     };
 
@@ -102,6 +113,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       alignItems: 'center',
       justifyContent: 'center',
       pointerEvents: 'none',
+    };
+
+    const suffixStyle: React.CSSProperties = {
+      position: 'absolute',
+      right: 10,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      fontSize: 12,
+      fontFamily: typography.fontFamily.sans,
+      color: colors.fg.neutral.spotReadable,
+      pointerEvents: 'none',
+      userSelect: 'none',
     };
 
     return (
@@ -127,7 +150,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             aria-describedby={hasError ? `${props.id}-error` : undefined}
             {...props}
           />
-          {rightIcon && (
+          {suffix && (
+            <span style={suffixStyle}>{suffix}</span>
+          )}
+          {rightIcon && !suffix && (
             <span style={{ ...iconStyle, right: sizeStyle.padding }}>{rightIcon}</span>
           )}
         </div>

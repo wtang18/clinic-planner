@@ -26,6 +26,9 @@ export interface EncounterMeta {
   appointmentId?: string;
   billingStatus?: BillingStatus;
 
+  // Clinical
+  specialty?: Specialty;
+
   // Tracking
   caseId?: string;
   tags?: string[];
@@ -52,6 +55,14 @@ export type EncounterType =
   | 'follow-up'
   | 'procedure'
   | 'consult';
+
+/** Clinical specialty for the encounter */
+export type Specialty =
+  | 'urgent-care'
+  | 'primary-care'
+  | 'workplace-health'
+  | 'behavioral-health'
+  | 'clinical-research';
 
 /** Billing status */
 export type BillingStatus = 'pending' | 'coded' | 'submitted' | 'paid';

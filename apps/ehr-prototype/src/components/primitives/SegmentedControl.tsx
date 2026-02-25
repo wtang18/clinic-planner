@@ -166,6 +166,7 @@ function SegmentButton<T extends string>({
         }),
       }
     : {
+        flex: 1,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

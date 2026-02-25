@@ -6,15 +6,15 @@
  * Each section renders placeholder form content.
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Check } from 'lucide-react';
-import type { WorkflowPhase } from '../IntakeView/intakeChecklist';
+import type { WorkflowPhase, SectionState } from '../IntakeView/intakeChecklist';
 import { WORKFLOW_PHASES } from '../IntakeView/intakeChecklist';
 import { WorkflowSection } from '../../components/workflow/WorkflowSection';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
 import { Button } from '../../components/primitives/Button';
 import type { UseWorkflowStateResult } from './useWorkflowState';
-import type { EncounterMeta } from '../../types';
+import type { EncounterMeta, Specialty } from '../../types';
 import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
 import {
   ProvidersSection,
@@ -43,6 +43,7 @@ export interface WorkflowCanvasProps {
   phase: WorkflowPhase;
   workflowState: UseWorkflowStateResult;
   encounter?: EncounterMeta;
+  specialty?: Specialty;
   chiefComplaint?: string;
   providerName?: string;
   providerCredentials?: string;
@@ -107,6 +108,46 @@ const SECTION_SUMMARIES: Record<string, string> = {
 };
 
 // ============================================================================
+// VitalsSectionWithFooter — manages footerLeft state for unit toggle
+// ============================================================================
+
+interface VitalsSectionWithFooterProps {
+  sectionDef: { id: string; title: string; optional?: boolean };
+  state: SectionState;
+  isExpanded: boolean;
+  workflowState: UseWorkflowStateResult;
+}
+
+const VitalsSectionWithFooter: React.FC<VitalsSectionWithFooterProps> = ({
+  sectionDef,
+  state,
+  isExpanded,
+  workflowState,
+}) => {
+  const [footerLeft, setFooterLeft] = useState<React.ReactNode>(null);
+
+  const handleFooterLeft = useCallback((node: React.ReactNode) => {
+    setFooterLeft(node);
+  }, []);
+
+  return (
+    <WorkflowSection
+      id={sectionDef.id}
+      title={sectionDef.title}
+      state={state}
+      isExpanded={isExpanded}
+      summary={state === 'complete' ? SECTION_SUMMARIES[sectionDef.id] : undefined}
+      onToggle={() => workflowState.toggleSection(sectionDef.id)}
+      onComplete={() => workflowState.completeSection(sectionDef.id)}
+      onSkip={sectionDef.optional ? () => workflowState.skipSection(sectionDef.id) : undefined}
+      footerLeft={footerLeft}
+    >
+      <VitalsSection onFooterLeft={handleFooterLeft} />
+    </WorkflowSection>
+  );
+};
+
+// ============================================================================
 // Component
 // ============================================================================
 
@@ -114,6 +155,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
   phase,
   workflowState,
   encounter,
+  specialty,
   chiefComplaint,
   providerName,
   providerCredentials,
@@ -140,6 +182,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
       {encounter && (
         <EncounterContextBar
           encounter={encounter}
+          specialty={specialty}
           chiefComplaint={chiefComplaint}
           providerName={providerName}
           providerCredentials={providerCredentials}
@@ -161,8 +204,21 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
         {phaseMeta.sections.map((sectionDef) => {
           const state = workflowState.sectionStates[sectionDef.id] || 'not_started';
           const isExpanded = workflowState.expandedSectionId === sectionDef.id;
-          const SectionContent = SECTION_COMPONENTS[sectionDef.id];
 
+          // Vitals section uses footerLeft slot for its unit toggle
+          if (sectionDef.id === 'vitals') {
+            return (
+              <VitalsSectionWithFooter
+                key={sectionDef.id}
+                sectionDef={sectionDef}
+                state={state}
+                isExpanded={isExpanded}
+                workflowState={workflowState}
+              />
+            );
+          }
+
+          const SectionContent = SECTION_COMPONENTS[sectionDef.id];
           return (
             <WorkflowSection
               key={sectionDef.id}

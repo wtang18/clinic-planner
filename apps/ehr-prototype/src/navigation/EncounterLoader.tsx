@@ -11,6 +11,8 @@ import { Loader, AlertCircle } from 'lucide-react';
 import { useDispatch } from '../hooks';
 import { ENCOUNTER_TEMPLATES, generateSuggestionsForScenario } from '../mocks';
 import { buildMAItemsForPatient, MA_SOURCE } from '../data/mock-encounter';
+import { getVitalsForScenario } from '../data/mock-vitals';
+import { getTriageItemsForScenario } from '../data/mock-triage';
 import type { EncounterContext } from '../mocks/generators/encounters';
 import { TranscriptionProvider, useTranscription } from '../context/TranscriptionContext';
 import { useAIServices } from '../context/AIServicesContext';
@@ -238,6 +240,24 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
         // Dispatch MA handoff items
         const maItems = getMAItemsForScenario(encounterId, mockData);
         for (const item of maItems) {
+          dispatch({
+            type: 'ITEM_ADDED',
+            payload: { item, source: MA_SOURCE },
+          });
+        }
+
+        // Seed vitals ChartItems (keyed by encounter template ID)
+        const vitalsItems = getVitalsForScenario(mockData.encounter.id);
+        for (const item of vitalsItems) {
+          dispatch({
+            type: 'ITEM_ADDED',
+            payload: { item, source: MA_SOURCE },
+          });
+        }
+
+        // Seed triage narrative/PE ChartItems (CC, HPI, ROS, PE)
+        const triageItems = getTriageItemsForScenario(mockData.encounter.id);
+        for (const item of triageItems) {
           dispatch({
             type: 'ITEM_ADDED',
             payload: { item, source: MA_SOURCE },

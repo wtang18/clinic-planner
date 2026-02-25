@@ -55,21 +55,3 @@ export function cmToFtIn(cm: number): { ft: number; in: number } {
   return { ft, in: inches };
 }
 
-// ============================================================================
-// BMI
-// ============================================================================
-
-/** Compute BMI from metric values (kg, cm). Returns 1 decimal or null if inputs invalid. */
-export function computeBMI(kg: number, cm: number): number | null {
-  if (kg <= 0 || cm <= 0) return null;
-  const meters = cm / 100;
-  return Math.round((kg / (meters * meters)) * 10) / 10;
-}
-
-/** Compute BMI from imperial values (lbs, ft, in). Returns 1 decimal or null if inputs invalid. */
-export function computeBMIImperial(lbs: number, ft: number, inches: number): number | null {
-  if (lbs <= 0) return null;
-  const totalInches = ft * 12 + inches;
-  if (totalInches <= 0) return null;
-  return Math.round((703 * lbs / (totalInches * totalInches)) * 10) / 10;
-}

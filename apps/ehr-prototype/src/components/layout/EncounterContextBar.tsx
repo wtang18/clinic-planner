@@ -10,7 +10,8 @@
 import React, { useState } from 'react';
 import { Lock } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, typography, heading, body, borderRadius, LAYOUT } from '../../styles/foundations';
-import type { EncounterMeta } from '../../types';
+import type { EncounterMeta, Specialty } from '../../types';
+import { getSpecialtyLabel } from '../../utils/specialty';
 
 // ============================================================================
 // Types
@@ -19,6 +20,8 @@ import type { EncounterMeta } from '../../types';
 export interface EncounterContextBarProps {
   /** Encounter metadata */
   encounter: EncounterMeta;
+  /** Encounter specialty */
+  specialty?: Specialty;
   /** Chief complaint (from VisitMeta) */
   chiefComplaint?: string;
   /** Provider name */
@@ -59,19 +62,6 @@ export interface EncounterContextBarProps {
 // Helpers
 // ============================================================================
 
-function formatEncounterType(type: EncounterMeta['type']): string {
-  const labels: Record<string, string> = {
-    'office-visit': 'Office Visit',
-    'urgent-care': 'Urgent Care',
-    'telehealth': 'Telehealth',
-    'annual-wellness': 'Annual Wellness',
-    'follow-up': 'Follow-up',
-    'procedure': 'Procedure',
-    'consult': 'Consult',
-  };
-  return labels[type] || type;
-}
-
 function formatStatus(status: EncounterMeta['status']): string {
   return status.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -90,47 +80,43 @@ function getStatusColor(status: EncounterMeta['status']): string {
   }
 }
 
-function formatVisitMode(mode: 'walk-in' | 'scheduled' | 'virtual'): string {
-  const labels: Record<string, string> = {
-    'walk-in': 'Walk-in',
-    'scheduled': 'Scheduled',
-    'virtual': 'Virtual',
-  };
-  return labels[mode] || mode;
+/** Formats time with timezone (e.g., "10:30 AM PST") */
+function formatTime(date: Date): string {
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short',
+  });
 }
 
-function formatDateTime(date: Date): string {
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-    + ' \u00B7 '
-    + date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+/** Formats concise date with full year (e.g., "2/24/2026") */
+function formatConciseDate(date: Date): string {
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const y = date.getFullYear();
+  return `${m}/${d}/${y}`;
 }
 
-/** Builds a dot-separated metadata array, filtering out undefined items */
+/** Builds a dot-separated metadata array, filtering out undefined items.
+ *  Order: Time+TZ · Specialty · Provider · Payer · Group · Status+Room · Appt ID · Case ID · Locked */
 function buildMetaItems(
   encounter: EncounterMeta,
-  props: Pick<EncounterContextBarProps, 'providerName' | 'providerCredentials' | 'room' | 'payer' | 'groupName' | 'caseId' | 'locked' | 'organization' | 'visitMode'>,
+  props: Pick<EncounterContextBarProps, 'specialty' | 'providerName' | 'providerCredentials' | 'room' | 'payer' | 'groupName' | 'caseId' | 'locked' | 'organization' | 'visitMode'>,
 ): { text: string; color?: string; icon?: React.ReactNode }[] {
   const items: { text: string; color?: string; icon?: React.ReactNode }[] = [];
 
-  // Date/Time
+  // 1. Time + timezone (date now in headline)
   const dateSource = encounter.scheduledAt || encounter.startedAt;
   if (dateSource) {
-    items.push({ text: formatDateTime(dateSource) });
+    items.push({ text: formatTime(dateSource) });
   }
 
-  items.push({ text: formatEncounterType(encounter.type) });
-
-  // Status — override to "Locked" if locked
-  if (props.locked) {
-    items.push({
-      text: 'Locked',
-      color: colors.fg.neutral.spotReadable,
-      icon: <Lock size={11} />,
-    });
-  } else {
-    items.push({ text: formatStatus(encounter.status), color: getStatusColor(encounter.status) });
+  // 2. Specialty label
+  if (props.specialty) {
+    items.push({ text: getSpecialtyLabel(props.specialty) });
   }
 
+  // 3. Provider (+ credentials)
   if (props.providerName) {
     const provider = props.providerCredentials
       ? `${props.providerName}, ${props.providerCredentials}`
@@ -138,14 +124,12 @@ function buildMetaItems(
     items.push({ text: provider });
   }
 
-  if (props.room) {
-    items.push({ text: `Room ${props.room}` });
-  }
-
+  // 4. Payer
   if (props.payer) {
     items.push({ text: props.payer });
   }
 
+  // 5. Group/Employer
   if (props.groupName) {
     items.push({ text: `Group: ${props.groupName}` });
   }
@@ -154,14 +138,27 @@ function buildMetaItems(
     items.push({ text: props.organization });
   }
 
-  if (props.visitMode) {
-    items.push({ text: formatVisitMode(props.visitMode) });
+  // 6. Status + Room (combined when both present)
+  if (props.locked) {
+    const lockText = props.room ? `Locked · Room ${props.room}` : 'Locked';
+    items.push({
+      text: lockText,
+      color: colors.fg.neutral.spotReadable,
+      icon: <Lock size={11} />,
+    });
+  } else {
+    const statusText = props.room
+      ? `${formatStatus(encounter.status)} · Room ${props.room}`
+      : formatStatus(encounter.status);
+    items.push({ text: statusText, color: getStatusColor(encounter.status) });
   }
 
+  // 7. Appt ID
   if (encounter.appointmentId) {
     items.push({ text: `Appt #${encounter.appointmentId.slice(0, 8)}` });
   }
 
+  // 8. Case ID
   if (props.caseId) {
     items.push({ text: `Case #${props.caseId}` });
   }
@@ -198,6 +195,7 @@ const MetaStrip: React.FC<{ items: { text: string; color?: string; icon?: React.
 
 export const EncounterContextBar: React.FC<EncounterContextBarProps> = ({
   encounter,
+  specialty,
   chiefComplaint,
   providerName,
   providerCredentials,
@@ -219,6 +217,7 @@ export const EncounterContextBar: React.FC<EncounterContextBarProps> = ({
   const [editingName, setEditingName] = useState(visitName ?? '');
 
   const metaItems = buildMetaItems(encounter, {
+    specialty,
     providerName,
     providerCredentials,
     room,
@@ -229,6 +228,10 @@ export const EncounterContextBar: React.FC<EncounterContextBarProps> = ({
     organization,
     visitMode,
   });
+
+  // Build headline: "2/24/2026 · Cough x 5 days"
+  const dateSource = encounter.scheduledAt || encounter.startedAt;
+  const headlineDateStr = dateSource ? formatConciseDate(dateSource) : undefined;
 
   if (compact) {
     // Compact: single-row dot-separated (type · status · provider)
@@ -251,9 +254,13 @@ export const EncounterContextBar: React.FC<EncounterContextBarProps> = ({
   return (
     <div style={{ ...styles.container, ...style }} data-testid={testID}>
       <div style={styles.inner}>
-        {/* Row 1: Chief complaint headline */}
-        {chiefComplaint && (
-          <span style={styles.headline}>{chiefComplaint}</span>
+        {/* Row 1: Date + Chief complaint headline (e.g., "2/24/2026 · Cough x 5 days") */}
+        {(headlineDateStr || chiefComplaint) && (
+          <span style={styles.headline}>
+            {headlineDateStr && chiefComplaint
+              ? `${headlineDateStr} · ${chiefComplaint}`
+              : headlineDateStr || chiefComplaint}
+          </span>
         )}
 
         {/* Row 1b: Editable visit name */}

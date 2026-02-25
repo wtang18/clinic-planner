@@ -26,6 +26,8 @@ export interface WorkflowSectionProps {
   onToggle: () => void;
   onComplete?: () => void;
   onSkip?: () => void;
+  /** Content rendered left-aligned in the action row (e.g., unit toggle) */
+  footerLeft?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -42,6 +44,7 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
   onToggle,
   onComplete,
   onSkip,
+  footerLeft,
   children,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -202,31 +205,34 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
             {children}
           </div>
 
-          {/* Action buttons */}
+          {/* Action row: optional left content + right-aligned buttons */}
           <div style={{
             display: 'flex',
+            alignItems: 'center',
             gap: spaceBetween.related,
             marginTop: spaceAround.default,
-            justifyContent: 'flex-end',
           }}>
-            {onSkip && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => { e.stopPropagation(); onSkip(); }}
-              >
-                Skip
-              </Button>
-            )}
-            {onComplete && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={(e) => { e.stopPropagation(); onComplete(); }}
-              >
-                Done
-              </Button>
-            )}
+            {footerLeft}
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: spaceBetween.related }}>
+              {onSkip && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); onSkip(); }}
+                >
+                  Skip
+                </Button>
+              )}
+              {onComplete && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); onComplete(); }}
+                >
+                  Done
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -47,8 +47,6 @@ const VITAL_CONFIG: Record<VitalType, { label: string; unit: string; icon?: stri
   'spo2': { label: 'SpO2', unit: '%' },
   'weight': { label: 'Weight', unit: 'lbs' },
   'height': { label: 'Height', unit: 'in' },
-  'bmi': { label: 'BMI', unit: '' },
-  'pain-scale': { label: 'Pain', unit: '/10' },
 };
 
 // ============================================================================

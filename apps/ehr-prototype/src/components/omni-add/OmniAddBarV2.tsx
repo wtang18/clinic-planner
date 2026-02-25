@@ -13,7 +13,7 @@
  */
 
 import React, { useReducer, useCallback, useEffect, useMemo, useRef } from 'react';
-import type { ChartItem, ItemCategory, ItemIntent } from '../../types/chart-items';
+import type { ChartItem, ItemCategory, ItemIntent, VitalMeasurement, VitalType, OxygenDelivery } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import {
   omniInputReducer,
@@ -272,19 +272,42 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   }, [category, onItemAdd]);
 
   const handleVitalsSubmit = useCallback((vitalsData: VitalsData) => {
+    // Build VitalMeasurement[] from non-empty numeric fields
+    const fieldMap: { key: keyof VitalsData; type: VitalType; defaultUnit: string; unitKey?: keyof VitalsData }[] = [
+      { key: 'systolicBP', type: 'bp-systolic', defaultUnit: 'mmHg' },
+      { key: 'diastolicBP', type: 'bp-diastolic', defaultUnit: 'mmHg' },
+      { key: 'heartRate', type: 'pulse', defaultUnit: 'bpm' },
+      { key: 'respiratoryRate', type: 'resp', defaultUnit: '/min' },
+      { key: 'spO2', type: 'spo2', defaultUnit: '%' },
+      { key: 'temperature', type: 'temp', defaultUnit: '\u00B0F', unitKey: 'temperatureUnit' },
+      { key: 'height', type: 'height', defaultUnit: 'in', unitKey: 'heightUnit' },
+      { key: 'weight', type: 'weight', defaultUnit: 'lbs', unitKey: 'weightUnit' },
+    ];
+
+    const measurements: VitalMeasurement[] = [];
+    for (const { key, type, defaultUnit, unitKey } of fieldMap) {
+      const value = vitalsData[key];
+      if (value !== undefined && typeof value === 'number') {
+        const unit = unitKey ? (vitalsData[unitKey] as string || defaultUnit) : defaultUnit;
+        measurements.push({ type, value, unit });
+      }
+    }
+
+    // Build display text summary
     const parts: string[] = [];
     if (vitalsData.systolicBP && vitalsData.diastolicBP) parts.push(`BP ${vitalsData.systolicBP}/${vitalsData.diastolicBP}`);
     if (vitalsData.heartRate) parts.push(`HR ${vitalsData.heartRate}`);
-    if (vitalsData.temperature) parts.push(`Temp ${vitalsData.temperature}\u00B0F`);
+    if (vitalsData.temperature) parts.push(`Temp ${vitalsData.temperature}${vitalsData.temperatureUnit || '\u00B0F'}`);
     if (vitalsData.spO2) parts.push(`SpO2 ${vitalsData.spO2}%`);
     if (vitalsData.respiratoryRate) parts.push(`RR ${vitalsData.respiratoryRate}`);
+
     onItemAdd({
       category: 'vitals',
       displayText: parts.join(' \u00B7 ') || 'Vitals',
       data: {
-        measurements: [],
+        measurements,
         capturedAt: new Date(),
-        ...vitalsData,
+        oxygenDelivery: vitalsData.oxyOn || undefined,
       },
     } as Partial<ChartItem>);
     const itemId = `item-${Date.now()}`;

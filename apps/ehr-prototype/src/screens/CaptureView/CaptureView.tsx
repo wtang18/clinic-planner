@@ -39,8 +39,8 @@ import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContain
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { DetailsPane } from '../../components/details-pane';
 import { ProcessingRail } from '../../components/processing-rail';
-import { VitalsRail } from '../../components/vitals-rail';
-import { getVitalsForScenario } from '../../data/mock-vitals';
+import { TriageModule } from '../../components/triage';
+import type { VitalsItem, NarrativeItem, PhysicalExamItem } from '../../types/chart-items';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
 import {
@@ -386,13 +386,29 @@ export const CaptureView: React.FC = () => {
   const patient = state.context.patient;
   const encounter = state.context.encounter;
 
-  // Vitals data for the right rail (scenario-keyed mock data)
+  // Vitals items from chart state (seeded by EncounterLoader)
   const encounterVitals = useMemo(
-    () => getVitalsForScenario(encounter?.id),
-    [encounter?.id],
+    () => items.filter((item): item is VitalsItem => item.category === 'vitals'),
+    [items],
   );
-  const showVitalsRail = mode === 'capture' || mode === 'process';
 
+  // Triage narrative/PE items from chart state (seeded by EncounterLoader)
+  const ccItem = useMemo(
+    () => items.find((item): item is NarrativeItem => item.category === 'chief-complaint'),
+    [items],
+  );
+  const hpiItem = useMemo(
+    () => items.find((item): item is NarrativeItem => item.category === 'hpi'),
+    [items],
+  );
+  const rosItem = useMemo(
+    () => items.find((item): item is NarrativeItem => item.category === 'ros'),
+    [items],
+  );
+  const peItems = useMemo(
+    () => items.filter((item): item is PhysicalExamItem => item.category === 'physical-exam'),
+    [items],
+  );
   // Initialize workflow state from scenario defaults on encounter load
   useEffect(() => {
     if (!encounter?.id) return;
@@ -547,6 +563,7 @@ export const CaptureView: React.FC = () => {
         workspace.openTab(patient.mrn, {
           type: 'visit',
           label: visitLabel,
+          specialty: encounter.specialty,
         });
       }
     }
@@ -717,6 +734,7 @@ export const CaptureView: React.FC = () => {
   const canvasPaneHeader = (
     <EncounterContextBar
       encounter={encounter}
+      specialty={encounter.specialty}
       chiefComplaint={visit?.chiefComplaint}
       providerName={currentUser?.name}
       providerCredentials={currentUser?.credentials?.join(', ')}
@@ -727,6 +745,7 @@ export const CaptureView: React.FC = () => {
   const compactCanvasHeader = (
     <EncounterContextBar
       encounter={encounter}
+      specialty={encounter.specialty}
       chiefComplaint={visit?.chiefComplaint}
       providerName={currentUser?.name}
       compact
@@ -859,6 +878,7 @@ export const CaptureView: React.FC = () => {
                 phase={workflowState.activePhase}
                 workflowState={workflowState}
                 encounter={encounter}
+                specialty={encounter.specialty}
                 chiefComplaint={visit?.chiefComplaint}
                 providerName={currentUser?.name}
                 providerCredentials={currentUser?.credentials?.join(', ')}
@@ -1042,13 +1062,14 @@ export const CaptureView: React.FC = () => {
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: 'minmax(0, 1fr) auto',
-                      gridTemplateRows: 'auto 1fr',
+                      gridTemplateRows: 'auto auto 1fr',
                       flex: 1,
                       minHeight: 0,
                       columnGap: spaceAround.defaultPlus,
                     }}>
                       <EncounterContextBar
                         encounter={encounter}
+                        specialty={encounter.specialty}
                         chiefComplaint={visit?.chiefComplaint}
                         providerName={currentUser?.name}
                         providerCredentials={currentUser?.credentials?.join(', ')}
@@ -1060,9 +1081,27 @@ export const CaptureView: React.FC = () => {
                         locked={encounter.locked}
                         style={{ paddingLeft: 0, paddingRight: 0, gridColumn: 1, gridRow: 1 }}
                       />
+
+                      {/* Triage module — between context bar and chart items */}
                       <div style={{
                         ...captureViewStyles.contentWrapper,
                         gridColumn: 1, gridRow: 2,
+                        marginBottom: spaceBetween.repeating,
+                      }}>
+                        <TriageModule
+                          vitals={encounterVitals}
+                          chiefComplaint={visit?.chiefComplaint}
+                          ccItem={ccItem}
+                          hpiItem={hpiItem}
+                          rosItem={rosItem}
+                          peItems={peItems}
+                          onItemClick={(itemId) => handleItemSelect(itemId)}
+                        />
+                      </div>
+
+                      <div style={{
+                        ...captureViewStyles.contentWrapper,
+                        gridColumn: 1, gridRow: 3,
                         minWidth: 0, overflowY: 'auto', paddingBottom: 80,
                       }}>
                         {/* Chart items list */}
@@ -1098,12 +1137,11 @@ export const CaptureView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Processing Rail + Vitals Rail */}
+                      {/* Processing Rail — spans rows 2-3 */}
                       <div style={{
-                        gridColumn: 2, gridRow: 2, alignSelf: 'start',
+                        gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
                         display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                       }}>
-                        {showVitalsRail && <VitalsRail vitals={encounterVitals} />}
                         <ProcessingRail
                           onAcceptDraft={handleAcceptDraft}
                           onEditDraft={handleEditDraft}
@@ -1173,13 +1211,14 @@ export const CaptureView: React.FC = () => {
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'minmax(0, 1fr) auto',
-                    gridTemplateRows: 'auto 1fr',
+                    gridTemplateRows: 'auto auto 1fr',
                     flex: 1,
                     minHeight: 0,
                     columnGap: spaceAround.defaultPlus,
                   }}>
                     <EncounterContextBar
                       encounter={encounter}
+                      specialty={encounter.specialty}
                       chiefComplaint={visit?.chiefComplaint}
                       providerName={currentUser?.name}
                       providerCredentials={currentUser?.credentials?.join(', ')}
@@ -1191,9 +1230,27 @@ export const CaptureView: React.FC = () => {
                       locked={encounter.locked}
                       style={{ paddingLeft: 0, paddingRight: 0, gridColumn: 1, gridRow: 1 }}
                     />
+
+                    {/* Triage module */}
                     <div style={{
                       ...captureViewStyles.contentWrapper,
                       gridColumn: 1, gridRow: 2,
+                      marginBottom: spaceBetween.repeating,
+                    }}>
+                      <TriageModule
+                        vitals={encounterVitals}
+                        chiefComplaint={visit?.chiefComplaint}
+                        ccItem={ccItem}
+                        hpiItem={hpiItem}
+                        rosItem={rosItem}
+                        peItems={peItems}
+                        onItemClick={(itemId) => handleItemSelect(itemId)}
+                      />
+                    </div>
+
+                    <div style={{
+                      ...captureViewStyles.contentWrapper,
+                      gridColumn: 1, gridRow: 3,
                       minWidth: 0, overflowY: 'auto', paddingBottom: 80,
                     }}>
                       <div style={captureViewStyles.chartItemsList}>
@@ -1228,12 +1285,11 @@ export const CaptureView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Processing Rail + Vitals Rail */}
+                    {/* Processing Rail — spans rows 2-3 */}
                     <div style={{
-                      gridColumn: 2, gridRow: 2, alignSelf: 'start',
+                      gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
                       display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                     }}>
-                      {showVitalsRail && <VitalsRail vitals={encounterVitals} />}
                       <ProcessingRail
                         onAcceptDraft={handleAcceptDraft}
                         onEditDraft={handleEditDraft}

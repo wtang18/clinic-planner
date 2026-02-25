@@ -213,7 +213,6 @@ export function generatePcDiabetesInitialState(): EncounterState {
         { type: 'temp', value: 98.2, unit: '°F' },
         { type: 'weight', value: 198, unit: 'lbs' },
         { type: 'height', value: 70, unit: 'in' },
-        { type: 'bmi', value: 28.4, unit: 'kg/m²', flag: 'high' },
       ],
       capturedAt: new Date(),
       position: 'sitting',

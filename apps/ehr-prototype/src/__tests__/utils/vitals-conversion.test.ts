@@ -1,7 +1,7 @@
 /**
  * Vitals Conversion Tests
  *
- * Pure logic tests for temperature, weight, height, and BMI conversions.
+ * Pure logic tests for temperature, weight, and height conversions.
  */
 
 import { describe, it, expect } from 'vitest';
@@ -12,8 +12,6 @@ import {
   kgToLbs,
   ftInToCm,
   cmToFtIn,
-  computeBMI,
-  computeBMIImperial,
 } from '../../utils/vitals-conversion';
 
 // ============================================================================
@@ -121,41 +119,3 @@ describe('cmToFtIn', () => {
   });
 });
 
-// ============================================================================
-// BMI
-// ============================================================================
-
-describe('computeBMI', () => {
-  it('computes BMI for 65.8 kg, 167.6 cm → ~23.4', () => {
-    const bmi = computeBMI(65.8, 167.6);
-    expect(bmi).toBe(23.4);
-  });
-
-  it('returns null for zero weight', () => {
-    expect(computeBMI(0, 170)).toBeNull();
-  });
-
-  it('returns null for zero height', () => {
-    expect(computeBMI(70, 0)).toBeNull();
-  });
-
-  it('returns null for negative values', () => {
-    expect(computeBMI(-70, 170)).toBeNull();
-    expect(computeBMI(70, -170)).toBeNull();
-  });
-});
-
-describe('computeBMIImperial', () => {
-  it('computes BMI for 145 lbs, 5\'6" → ~23.4', () => {
-    const bmi = computeBMIImperial(145, 5, 6);
-    expect(bmi).toBe(23.4);
-  });
-
-  it('returns null for zero weight', () => {
-    expect(computeBMIImperial(0, 5, 6)).toBeNull();
-  });
-
-  it('returns null for zero height', () => {
-    expect(computeBMIImperial(145, 0, 0)).toBeNull();
-  });
-});

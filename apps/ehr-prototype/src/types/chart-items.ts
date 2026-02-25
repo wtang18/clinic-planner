@@ -248,9 +248,9 @@ export type VitalType =
   | 'resp'
   | 'spo2'
   | 'weight'
-  | 'height'
-  | 'bmi'
-  | 'pain-scale';
+  | 'height';
+
+export type OxygenDelivery = 'none' | 'nasal-cannula' | 'face-mask' | 'non-rebreather' | 'ventilator';
 
 export interface VitalMeasurement {
   type: VitalType;
@@ -264,6 +264,7 @@ export interface VitalsItem extends ChartItemBase {
   data: {
     measurements: VitalMeasurement[];
     capturedAt: Date;
+    oxygenDelivery?: OxygenDelivery;
     position?: 'sitting' | 'standing' | 'supine';
   };
 }

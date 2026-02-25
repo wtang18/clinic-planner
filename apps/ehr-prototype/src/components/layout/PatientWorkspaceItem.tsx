@@ -12,6 +12,7 @@ import type { WorkspaceTab, WorkspaceTabType } from '../../context/WorkspaceCont
 import type { ViewContext } from '../../screens/IntakeView/intakeChecklist';
 import { TranscriptionIndicator, recordingStatusToIndicator } from '../sidebar/TranscriptionIndicator';
 import type { RecordingStatus as BottomBarRecordingStatus } from '../../state/bottomBar/types';
+import { SpecialtyBadge } from '../primitives/SpecialtyBadge';
 
 // ============================================================================
 // Types
@@ -240,12 +241,16 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     }
   };
 
-  const getTabIcon = (type: WorkspaceTabType, isActive: boolean) => {
+  const getTabIcon = (tab: WorkspaceTab, isActive: boolean) => {
     const color = isActive ? colors.fg.accent.primary : colors.fg.neutral.secondary;
-    switch (type) {
+    switch (tab.type) {
       case 'overview':
         return <LayoutGrid size={14} color={color} />;
       case 'visit':
+        // Use SpecialtyBadge when specialty is set, otherwise fall back to Stethoscope
+        if (tab.specialty) {
+          return <SpecialtyBadge specialty={tab.specialty} size="xs" />;
+        }
         return <Stethoscope size={14} color={color} />;
       case 'task':
         return <FileText size={14} color={color} />;
@@ -364,7 +369,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
                     opacity: showTabClose ? 0 : 1,
                     transition: 'opacity 150ms ease',
                   }}>
-                    {getTabIcon(tab.type, isActive)}
+                    {getTabIcon(tab, isActive)}
                   </span>
                   {canClose && (
                     <span

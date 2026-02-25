@@ -2,20 +2,20 @@
  * VitalsSection Component
  *
  * Enhanced vitals triage input with structured fields, inline unit suffixes,
- * and imperial/metric toggle. Auto-computes BMI from height + weight.
+ * and imperial/metric toggle.
  *
  * Layout: 3-column grid matching reference design.
  * - Row 1: Systolic / Diastolic / Pulse
  * - Row 2: Resp Rate / O₂ Sat / Oxy On
  * - Row 3: Temperature / Height / Weight
- * - BMI: read-only computed field
  * - Toggle: imperial/metric SegmentedControl
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { SegmentedControl, type Segment } from '../../../components/primitives/SegmentedControl';
-import { formGroup, fieldLabel, textInput, selectInput, fieldRow, sectionNote } from './PlaceholderSections';
-import { colors, spaceBetween, typography, borderRadius } from '../../../styles/foundations';
+import { Input } from '../../../components/primitives/Input';
+import { formGroup, fieldLabel, selectInput } from './PlaceholderSections';
+import { spaceBetween } from '../../../styles/foundations';
 import type { UnitSystem } from '../../../types/vitals';
 import {
   fToC,
@@ -24,67 +24,23 @@ import {
   kgToLbs,
   ftInToCm,
   cmToFtIn,
-  computeBMI,
-  computeBMIImperial,
 } from '../../../utils/vitals-conversion';
-
-// ============================================================================
-// UnitInput — local helper
-// ============================================================================
-
-interface UnitInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  unit: string;
-  readOnly?: boolean;
-  width?: number | string;
-  type?: string;
-}
-
-const UnitInput: React.FC<UnitInputProps> = ({ value, onChange, unit, readOnly, width, type = 'text' }) => (
-  <div style={{
-    position: 'relative',
-    width: width || '100%',
-    display: 'inline-flex',
-  }}>
-    <input
-      type={type}
-      style={{
-        ...textInput,
-        width: '100%',
-        paddingRight: unit.length * 8 + 16,
-        backgroundColor: readOnly ? colors.bg.neutral.subtle : textInput.backgroundColor,
-      }}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      readOnly={readOnly}
-    />
-    <span style={{
-      position: 'absolute',
-      right: 10,
-      top: '50%',
-      transform: 'translateY(-50%)',
-      fontSize: 12,
-      fontFamily: typography.fontFamily.sans,
-      color: colors.fg.neutral.spotReadable,
-      pointerEvents: 'none',
-      userSelect: 'none',
-    }}>
-      {unit}
-    </span>
-  </div>
-);
 
 // ============================================================================
 // VitalsSection
 // ============================================================================
+
+export interface VitalsSectionProps {
+  /** Callback to expose the unit toggle for external placement (e.g., WorkflowSection footerLeft) */
+  onFooterLeft?: (node: React.ReactNode) => void;
+}
 
 const unitSegments: Segment<UnitSystem>[] = [
   { key: 'imperial', label: 'Imperial' },
   { key: 'metric', label: 'Metric' },
 ];
 
-export const VitalsSection: React.FC = () => {
+export const VitalsSection: React.FC<VitalsSectionProps> = ({ onFooterLeft } = {}) => {
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('imperial');
 
   // Vital field values (always stored in current unit system)
@@ -99,29 +55,6 @@ export const VitalsSection: React.FC = () => {
   const [heightIn, setHeightIn] = useState('6');
   const [heightCm, setHeightCm] = useState('167.6');
   const [weight, setWeight] = useState('145');
-  const [bmi, setBmi] = useState('23.4');
-
-  // Auto-compute BMI on height/weight change
-  useEffect(() => {
-    const w = parseFloat(weight);
-    if (isNaN(w) || w <= 0) {
-      setBmi('--');
-      return;
-    }
-
-    let result: number | null = null;
-    if (unitSystem === 'imperial') {
-      const ft = parseInt(heightFt) || 0;
-      const inches = parseInt(heightIn) || 0;
-      result = computeBMIImperial(w, ft, inches);
-    } else {
-      const cm = parseFloat(heightCm);
-      if (!isNaN(cm)) {
-        result = computeBMI(w, cm);
-      }
-    }
-    setBmi(result !== null ? String(result) : '--');
-  }, [weight, heightFt, heightIn, heightCm, unitSystem]);
 
   // Handle unit system toggle — convert existing values
   const handleUnitToggle = useCallback((newSystem: UnitSystem) => {
@@ -156,6 +89,21 @@ export const VitalsSection: React.FC = () => {
     setUnitSystem(newSystem);
   }, [unitSystem, temp, weight, heightFt, heightIn, heightCm]);
 
+  // Push toggle to parent's footer slot when available
+  useEffect(() => {
+    if (onFooterLeft) {
+      onFooterLeft(
+        <SegmentedControl<UnitSystem>
+          segments={unitSegments}
+          value={unitSystem}
+          onChange={handleUnitToggle}
+          variant="inline"
+          size="sm"
+        />
+      );
+    }
+  }, [onFooterLeft, unitSystem, handleUnitToggle]);
+
   const gridStyles: React.CSSProperties = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr 1fr',
@@ -168,15 +116,15 @@ export const VitalsSection: React.FC = () => {
       <div style={gridStyles}>
         <div style={formGroup}>
           <label style={fieldLabel}>Systolic</label>
-          <UnitInput value={systolic} onChange={setSystolic} unit="mmHg" />
+          <Input type="number" size="sm" value={systolic} onChange={e => setSystolic(e.target.value)} suffix="mmHg" />
         </div>
         <div style={formGroup}>
           <label style={fieldLabel}>Diastolic</label>
-          <UnitInput value={diastolic} onChange={setDiastolic} unit="mmHg" />
+          <Input type="number" size="sm" value={diastolic} onChange={e => setDiastolic(e.target.value)} suffix="mmHg" />
         </div>
         <div style={formGroup}>
           <label style={fieldLabel}>Pulse</label>
-          <UnitInput value={pulse} onChange={setPulse} unit="bpm" />
+          <Input type="number" size="sm" value={pulse} onChange={e => setPulse(e.target.value)} suffix="bpm" />
         </div>
       </div>
 
@@ -184,11 +132,11 @@ export const VitalsSection: React.FC = () => {
       <div style={gridStyles}>
         <div style={formGroup}>
           <label style={fieldLabel}>Resp. Rate</label>
-          <UnitInput value={respRate} onChange={setRespRate} unit="/min" />
+          <Input type="number" size="sm" value={respRate} onChange={e => setRespRate(e.target.value)} suffix="/min" />
         </div>
         <div style={formGroup}>
           <label style={fieldLabel}>O₂ Sat</label>
-          <UnitInput value={spo2} onChange={setSpo2} unit="%" />
+          <Input type="number" size="sm" value={spo2} onChange={e => setSpo2(e.target.value)} suffix="%" />
         </div>
         <div style={formGroup}>
           <label style={fieldLabel}>Oxy On</label>
@@ -210,44 +158,32 @@ export const VitalsSection: React.FC = () => {
       <div style={gridStyles}>
         <div style={formGroup}>
           <label style={fieldLabel}>Temperature</label>
-          <UnitInput
-            value={temp}
-            onChange={setTemp}
-            unit={unitSystem === 'imperial' ? '°F' : '°C'}
-          />
+          <Input type="number" size="sm" value={temp} onChange={e => setTemp(e.target.value)} suffix={unitSystem === 'imperial' ? '°F' : '°C'} />
         </div>
         <div style={formGroup}>
           <label style={fieldLabel}>Height</label>
           {unitSystem === 'imperial' ? (
             <div style={{ display: 'flex', gap: 4 }}>
-              <UnitInput value={heightFt} onChange={setHeightFt} unit="ft" width="50%" />
-              <UnitInput value={heightIn} onChange={setHeightIn} unit="in" width="50%" />
+              <div style={{ flex: 1 }}>
+                <Input type="number" size="sm" value={heightFt} onChange={e => setHeightFt(e.target.value)} suffix="ft" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <Input type="number" size="sm" value={heightIn} onChange={e => setHeightIn(e.target.value)} suffix="in" />
+              </div>
             </div>
           ) : (
-            <UnitInput value={heightCm} onChange={setHeightCm} unit="cm" />
+            <Input type="number" size="sm" value={heightCm} onChange={e => setHeightCm(e.target.value)} suffix="cm" />
           )}
         </div>
         <div style={formGroup}>
           <label style={fieldLabel}>Weight</label>
-          <UnitInput
-            value={weight}
-            onChange={setWeight}
-            unit={unitSystem === 'imperial' ? 'lbs' : 'kg'}
-          />
+          <Input type="number" size="sm" value={weight} onChange={e => setWeight(e.target.value)} suffix={unitSystem === 'imperial' ? 'lbs' : 'kg'} />
         </div>
       </div>
 
-      {/* BMI + Unit Toggle */}
-      <div style={fieldRow}>
-        <div style={formGroup}>
-          <label style={fieldLabel}>BMI</label>
-          <UnitInput value={bmi} onChange={() => {}} unit="" readOnly />
-        </div>
-        <div style={{
-          ...formGroup,
-          justifyContent: 'flex-end',
-          alignItems: 'flex-end',
-        }}>
+      {/* Unit Toggle — rendered inline when no parent slot is available */}
+      {!onFooterLeft && (
+        <div style={{ display: 'flex', marginTop: spaceBetween.related }}>
           <SegmentedControl<UnitSystem>
             segments={unitSegments}
             value={unitSystem}
@@ -256,7 +192,7 @@ export const VitalsSection: React.FC = () => {
             size="sm"
           />
         </div>
-      </div>
+      )}
     </div>
   );
 };

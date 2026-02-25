@@ -367,6 +367,32 @@ The rail provides persistent contextual information alongside the main content c
 
 ---
 
+## Visit Workflow Refinements
+
+### ~~Triage Module in Charting View~~ — IMPLEMENTED
+
+Inline expandable TriageModule card replaces VitalsRail. Shows CC + vitals with OOR flagging in charting view. Clicking vitals opens VitalsDetailForm in DetailsPane.
+
+### ~~Visit Menu Item & Title Consistency~~ — IMPLEMENTED
+
+SpecialtyBadge replaces Stethoscope icon in menu visit items. Context bar headline shows `M/D/YYYY · CC text`. Meta strip reordered: Time+TZ · Specialty · Provider · Payer · Group · Status+Room · Appt ID · Case ID.
+
+### ~~Specialty Badges~~ — IMPLEMENTED
+
+`Specialty` type on `EncounterMeta`, `SpecialtyBadge` primitive (neutral style, no color differentiation). Abbreviations: UC, PC, W, BH, CR.
+
+### ~~Context Bar Refinements~~ — IMPLEMENTED
+
+Date moved to headline, time+TZ first in meta strip, specialty label added, status + room merged, encounter type removed (replaced by specialty).
+
+### General Principles Established
+- Be very judicious/intentional about where and how to use color
+- All clinical objects should flow through unified DetailsPane pattern (not inline editing)
+- Overview should always be an accurate overarching view; chart shows what is documented in this encounter
+- Retakes/updates flow through OmniAdd → update both inline module AND patient overview
+
+---
+
 ## Cross-Location Features
 
 ### Multi-Location Dashboard
@@ -444,3 +470,5 @@ When revisiting deferred items, consider:
 | 2025-02-21 | Updated: NL Parsing → Dx/Procedure only | Lab/Allergy/Imaging/Referral keyword parsing implemented |
 | 2025-02-22 | No change needed | Typed buildData() returns completed; data model nesting entry already removed |
 | 2025-02-22 | Added: AI Suggestions section | Verb disambiguation, cross-category switching, multi-resolution deferred from med intent + narrative work |
+| 2026-02-24 | Added: Visit Workflow Refinements | Triage module, visit titles, specialty badges, context bar, general principles from vitals ChartItem session |
+| 2026-02-24 | Implemented: Visit Workflow Refinements | Triage module, specialty badges, context bar enhancements, visit menu badges — all marked IMPLEMENTED |
