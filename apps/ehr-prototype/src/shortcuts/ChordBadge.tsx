@@ -6,17 +6,22 @@
  * Positioned to the left of the help hub button.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { shortcutManager } from './ShortcutManager';
-import { colors, transitions } from '../styles/foundations';
+import { colors, transitions, LAYOUT, GLASS_BUTTON_HEIGHT } from '../styles/foundations';
 
 export const ChordBadge: React.FC = () => {
   const [leader, setLeader] = useState<string | null>(null);
+  const [placeholder, setPlaceholder] = useState(false);
+  const placeholderTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const unsub = shortcutManager.subscribe((event) => {
       if (event.type === 'chord-start') {
         setLeader(event.leader ?? null);
+        // Clear placeholder when a new chord starts
+        setPlaceholder(false);
+        if (placeholderTimeout.current) clearTimeout(placeholderTimeout.current);
       } else if (event.type === 'chord-complete' || event.type === 'chord-cancel') {
         setLeader(null);
       }
@@ -24,12 +29,27 @@ export const ChordBadge: React.FC = () => {
     return unsub;
   }, []);
 
-  const visible = leader !== null;
+  // Listen for placeholder chord fires (unimplemented destinations)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = () => {
+      setPlaceholder(true);
+      if (placeholderTimeout.current) clearTimeout(placeholderTimeout.current);
+      placeholderTimeout.current = setTimeout(() => setPlaceholder(false), 1500);
+    };
+    window.addEventListener('ehr:chord-placeholder', handler);
+    return () => {
+      window.removeEventListener('ehr:chord-placeholder', handler);
+      if (placeholderTimeout.current) clearTimeout(placeholderTimeout.current);
+    };
+  }, []);
+
+  const visible = leader !== null || placeholder;
 
   const style: React.CSSProperties = {
     position: 'fixed',
-    bottom: 'calc(16px + var(--legend-panel-height, 0px))',
-    right: 68, // 16px gap + 44px button + 8px spacing
+    bottom: `calc(${LAYOUT.floatingInset}px + var(--legend-panel-height, 0px))`,
+    right: LAYOUT.floatingInset + GLASS_BUTTON_HEIGHT + 8, // inset + button + spacing
     height: 24,
     display: 'flex',
     alignItems: 'center',
@@ -51,9 +71,14 @@ export const ChordBadge: React.FC = () => {
     zIndex: 250,
   };
 
+  const placeholderStyle: React.CSSProperties = {
+    ...style,
+    color: colors.fg.neutral.spotReadable,
+  };
+
   return (
-    <div style={style} aria-hidden="true" data-testid="chord-badge">
-      {leader ? `${leader.toUpperCase()} →` : ''}
+    <div style={placeholder ? placeholderStyle : style} aria-hidden="true" data-testid="chord-badge">
+      {leader ? `${leader.toUpperCase()} →` : placeholder ? 'Coming soon' : ''}
     </div>
   );
 };

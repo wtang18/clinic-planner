@@ -256,6 +256,11 @@ export class ShortcutManager {
   // Event bus
   // ========================================================================
 
+  /** Emit a 'fired' event for shortcuts handled outside ShortcutManager (e.g., ⌘K). */
+  notifyFired(shortcutId: string): void {
+    this.emit({ type: 'fired', shortcutId, timestamp: Date.now() });
+  }
+
   /** Subscribe to shortcut events. Returns an unsubscribe function. */
   subscribe(listener: ShortcutListener): () => void {
     this.listeners.add(listener);

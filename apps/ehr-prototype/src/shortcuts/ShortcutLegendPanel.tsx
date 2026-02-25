@@ -3,7 +3,7 @@
  *
  * Bottom-docked, Figma-style legend panel with grouped columns.
  * Features:
- * - 3 tabs: Navigate / Panes / Charting
+ * - 3 tabs: Navigate / Panes / Encounter
  * - Grouped columns with uppercase headers
  * - Highlight-on-fire: rows flash when their shortcut is pressed
  * - "Tried" tracking with checkmarks
@@ -36,7 +36,7 @@ const PANEL_HEIGHT = 220;
 const TABS: { id: LegendTab; label: string }[] = [
   { id: 'navigate', label: 'Navigate' },
   { id: 'panes', label: 'Panes' },
-  { id: 'charting', label: 'Charting' },
+  { id: 'charting', label: 'Encounter' },
 ];
 
 // ============================================================================
@@ -224,6 +224,7 @@ const EntryRow: React.FC<{
   flashing: boolean;
 }> = ({ entry, tried, flashing }) => {
   const rowStyle: React.CSSProperties = {
+    position: 'relative',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -233,12 +234,16 @@ const EntryRow: React.FC<{
     transition: `background-color 200ms ease`,
   };
 
+  const checkStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: -14,
+    top: '50%',
+    transform: 'translateY(-50%)',
+  };
+
   const descStyle: React.CSSProperties = {
     fontSize: 13,
     color: tried ? colors.fg.neutral.primary : colors.fg.neutral.secondary,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
   };
 
   const badgeStyle: React.CSSProperties = {
@@ -253,10 +258,12 @@ const EntryRow: React.FC<{
 
   return (
     <div style={rowStyle}>
-      <span style={descStyle}>
-        {tried && <Check size={10} color={colors.fg.positive.primary} strokeWidth={3} />}
-        {entry.description}
-      </span>
+      {tried && (
+        <span style={checkStyle}>
+          <Check size={10} color={colors.fg.positive.primary} strokeWidth={3} />
+        </span>
+      )}
+      <span style={descStyle}>{entry.description}</span>
       <span style={badgeStyle}>{entry.displayKey}</span>
     </div>
   );
@@ -301,14 +308,14 @@ const tabBarStyle: React.CSSProperties = {
 const columnsContainerStyle: React.CSSProperties = {
   flex: 1,
   overflow: 'auto',
-  padding: `0 ${spaceAround.default}px ${spaceAround.compact}px`,
+  padding: `${spaceAround.tight}px ${spaceAround.default}px ${spaceAround.compact}px`,
   display: 'flex',
   justifyContent: 'center',
-  gap: 40,
+  gap: 52,
 };
 
 const columnStyle: React.CSSProperties = {
-  minWidth: 220,
+  minWidth: 260,
   display: 'flex',
   flexDirection: 'column',
 };

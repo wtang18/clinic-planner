@@ -21,6 +21,7 @@
 import React, { useEffect, useRef, useCallback, useContext, createContext } from 'react';
 import { Platform } from 'react-native';
 import { useCoordination } from './useCoordination';
+import { shortcutManager } from '../shortcuts/ShortcutManager';
 
 // ============================================================================
 // Input Registration Context
@@ -144,6 +145,7 @@ export function useAIKeyboardShortcuts(
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         handleAIQuickAccess();
+        shortcutManager.notifyFired('palette');
         return;
       }
 

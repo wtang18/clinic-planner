@@ -57,7 +57,7 @@ export function usePaneShortcuts(
       {
         id: 'pane-toggle',
         key: 'mod+\\',
-        description: 'Toggle left pane',
+        description: 'Toggle open / closed',
         category: 'panes',
         handler: () => {
           const s = stateRef.current;
@@ -68,7 +68,7 @@ export function usePaneShortcuts(
       {
         id: 'overview-toggle',
         key: 'mod+shift+\\',
-        description: 'Toggle overview pane',
+        description: 'Toggle open / closed',
         category: 'panes',
         handler: () => {
           const s = stateRef.current;
@@ -79,7 +79,7 @@ export function usePaneShortcuts(
       {
         id: 'pane-cycle-fwd',
         key: 'mod+]',
-        description: 'Next left pane view',
+        description: 'Next View',
         category: 'panes',
         handler: () => {
           const s = stateRef.current;
@@ -97,7 +97,7 @@ export function usePaneShortcuts(
       {
         id: 'pane-cycle-back',
         key: 'mod+[',
-        description: 'Previous left pane view',
+        description: 'Previous View',
         category: 'panes',
         handler: () => {
           const s = stateRef.current;
@@ -115,7 +115,7 @@ export function usePaneShortcuts(
       {
         id: 'overview-cycle-fwd',
         key: 'mod+shift+]',
-        description: 'Next overview tab',
+        description: 'Next View',
         category: 'panes',
         handler: () => {
           const s = stateRef.current;
@@ -132,7 +132,7 @@ export function usePaneShortcuts(
       {
         id: 'overview-cycle-back',
         key: 'mod+shift+[',
-        description: 'Previous overview tab',
+        description: 'Previous View',
         category: 'panes',
         handler: () => {
           const s = stateRef.current;

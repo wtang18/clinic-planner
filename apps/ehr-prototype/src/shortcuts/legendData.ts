@@ -31,26 +31,31 @@ export interface LegendEntry {
 // Group assignment
 // ============================================================================
 
-/** IDs that belong to the "Quick Nav" group (utility/workspace destinations). */
-const QUICK_NAV_IDS = new Set(['nav-todo', 'nav-settings', 'nav-workspace']);
+/** IDs that belong to the "To-Do" group (task-oriented destinations). */
+const TODO_IDS = new Set(['nav-todo', 'nav-fax', 'nav-messages', 'nav-care']);
 
-/** IDs that belong to the "Input" group (data entry tools). */
-const INPUT_IDS = new Set(['omni-add', 'palette']);
+/** IDs that belong to the "General" group (utility shortcuts). */
+const GENERAL_IDS = new Set(['nav-search', 'nav-settings', 'help']);
+
+/** IDs hidden from the legend display (shortcut stays registered). */
+const LEGEND_HIDDEN = new Set(['save']);
 
 /** Assign a group label based on shortcut/chord ID. */
 function assignGroup(id: string, tab: LegendTab): string {
   switch (tab) {
     case 'navigate':
-      if (id.startsWith('nav-') && QUICK_NAV_IDS.has(id)) return 'Quick Nav';
+      if (TODO_IDS.has(id)) return 'To-Do';
+      if (GENERAL_IDS.has(id)) return 'General';
       if (id.startsWith('nav-')) return 'Go To';
       return 'General';
     case 'charting':
-      if (id.startsWith('mode-') || id === 'visit-workflow') return 'Mode / Phase';
-      if (INPUT_IDS.has(id)) return 'Input';
-      return 'Actions';
+      if (id.startsWith('mode-') || id === 'visit-workflow') return 'View';
+      if (id === 'omni-add' || id === 'transcription') return 'Chart';
+      if (id === 'palette' || id === 'escape') return 'Tools';
+      return 'Tools';
     case 'panes':
-      if (id.startsWith('overview-')) return 'Overview';
-      return 'Left Pane';
+      if (id.startsWith('overview-')) return 'Center Context Pane';
+      return 'Left Menu Pane';
     default:
       return 'Other';
   }
@@ -62,34 +67,36 @@ function assignGroup(id: string, tab: LegendTab): string {
 
 /** Explicit sort order for entries within their group. Lower = first. */
 const SORT_ORDER: Record<string, number> = {
-  // Navigate → Go To (main screen destinations)
+  // Navigate → Go To
   'nav-home': 0,
   'nav-visits': 1,
   'nav-patients': 2,
-  'nav-search': 3,
-  // Navigate → Quick Nav (utility/workspace)
-  'nav-todo': 0,
-  'nav-settings': 1,
-  'nav-workspace': 2,
+  'nav-workspace': 3,
   // Navigate → General
-  'help': 0,
-  // Charting → Mode
+  'nav-search': 0,
+  'nav-settings': 1,
+  'help': 2,
+  // Navigate → To-Do
+  'nav-todo': 0,
+  'nav-fax': 1,
+  'nav-messages': 2,
+  'nav-care': 3,
+  // Charting → View
   'mode-capture': 0,
   'mode-process': 1,
   'mode-review': 2,
   'visit-workflow': 3,
-  // Charting → Input
+  // Charting → Chart
   'omni-add': 0,
-  'palette': 1,
-  // Charting → Actions
-  'save': 0,
   'transcription': 1,
-  'escape': 2,
-  // Panes → Left Pane
+  // Charting → Tools
+  'palette': 0,
+  'escape': 1,
+  // Panes → Left Menu Pane
   'pane-toggle': 0,
   'pane-cycle-fwd': 1,
   'pane-cycle-back': 2,
-  // Panes → Overview
+  // Panes → Center Context Pane
   'overview-toggle': 0,
   'overview-cycle-fwd': 1,
   'overview-cycle-back': 2,
@@ -108,6 +115,7 @@ export function buildLegendEntries(isMac: boolean): LegendEntry[] {
 
   // Flat shortcuts
   for (const shortcut of shortcutManager.getAll()) {
+    if (LEGEND_HIDDEN.has(shortcut.id)) continue;
     const tab = categoryToLegendTab(shortcut.category);
     entries.push({
       id: shortcut.id,

@@ -68,7 +68,7 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
     {
       id: 'visit-workflow',
       key: '0',
-      description: 'Toggle Workflow view',
+      description: 'Toggle Workflow / Chart',
       category: 'charting',
       handler: () => actions.toggleWorkflow(),
     },
@@ -92,7 +92,7 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
 
     {
       id: 'transcription',
-      key: 'mod+shift+t',
+      key: 'r',
       description: 'Start/Pause transcription',
       category: 'charting',
       handler: actions.toggleTranscription,
@@ -128,7 +128,7 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
       id: 'nav-home',
       leader: 'g',
       follower: 'h',
-      description: 'Go to Home',
+      description: 'Home',
       category: 'navigation',
       handler: () => actions.navigate('home'),
     },
@@ -136,25 +136,31 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
       id: 'nav-visits',
       leader: 'g',
       follower: 'v',
-      description: 'Go to Visits',
+      description: 'Visits',
       category: 'navigation',
-      handler: () => actions.navigate('home'), // placeholder until Visits screen exists
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
     },
     {
       id: 'nav-patients',
       leader: 'g',
       follower: 'p',
-      description: 'Go to All Patients',
+      description: 'All Patients',
       category: 'navigation',
-      handler: () => actions.navigate('home'), // placeholder
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
     },
     {
       id: 'nav-search',
       leader: 'g',
       follower: 's',
-      description: 'Go to Search',
+      description: 'Search',
       category: 'navigation',
-      handler: () => actions.navigate('home'), // placeholder
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
     },
     {
       id: 'nav-settings',
@@ -168,9 +174,41 @@ export function registerDefaultShortcuts(actions: ShortcutActions): () => void {
       id: 'nav-todo',
       leader: 'g',
       follower: 't',
-      description: 'Go to To-Do',
+      description: 'Tasks',
       category: 'navigation',
-      handler: () => actions.navigate('home'), // placeholder
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
+    },
+    {
+      id: 'nav-fax',
+      leader: 'g',
+      follower: 'f',
+      description: 'Fax Inbox',
+      category: 'navigation',
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
+    },
+    {
+      id: 'nav-messages',
+      leader: 'g',
+      follower: 'm',
+      description: 'Messages',
+      category: 'navigation',
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
+    },
+    {
+      id: 'nav-care',
+      leader: 'g',
+      follower: 'c',
+      description: 'Care Adherence',
+      category: 'navigation',
+      handler: () => {
+        if (typeof window !== 'undefined') window.dispatchEvent(new Event('ehr:chord-placeholder'));
+      },
     },
     // G→1 through G→9: patient workspace slots
     ...Array.from({ length: 9 }, (_, i) => ({

@@ -7,7 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { HelpCircle, X } from 'lucide-react';
-import { colors, glass, transitions, zIndex as zIndexTokens, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
+import { colors, glass, transitions, zIndex as zIndexTokens, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS, LAYOUT } from '../../styles/foundations';
 import { HelpMenu } from './HelpMenu';
 
 // ============================================================================
@@ -48,8 +48,8 @@ export const HelpHubButton: React.FC<HelpHubButtonProps> = ({
 
   const buttonStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: 'calc(16px + var(--legend-panel-height, 0px))',
-    right: 16,
+    bottom: `calc(${LAYOUT.floatingInset}px + var(--legend-panel-height, 0px))`,
+    right: LAYOUT.floatingInset,
     width: GLASS_BUTTON_HEIGHT,
     height: GLASS_BUTTON_HEIGHT,
     borderRadius: GLASS_BUTTON_RADIUS,

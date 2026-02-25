@@ -7,7 +7,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Keyboard, BookOpen, HelpCircle } from 'lucide-react';
-import { colors, spaceAround, borderRadius, glass, transitions } from '../../styles/foundations';
+import { colors, spaceAround, borderRadius, glass, transitions, LAYOUT, GLASS_BUTTON_HEIGHT } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -56,8 +56,8 @@ export const HelpMenu: React.FC<HelpMenuProps> = ({ onToggleLegend, onClose }) =
 
   const containerStyle: React.CSSProperties = {
     position: 'fixed',
-    bottom: 'calc(68px + var(--legend-panel-height, 0px))',
-    right: 16,
+    bottom: `calc(${LAYOUT.floatingInset + GLASS_BUTTON_HEIGHT + 8}px + var(--legend-panel-height, 0px))`,
+    right: LAYOUT.floatingInset,
     width: 220,
     ...glass.floatingPanel,
     borderRadius: borderRadius.md,
