@@ -134,7 +134,7 @@ export const ShortcutLegendPanel: React.FC<ShortcutLegendPanelProps> = ({
     };
   }, [isOpen]);
 
-  // Close on Escape (capture phase — checked before other Escape handlers)
+  // Keyboard navigation: Escape closes, Left/Right arrows cycle tabs
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
@@ -142,6 +142,16 @@ export const ShortcutLegendPanel: React.FC<ShortcutLegendPanelProps> = ({
         e.stopPropagation();
         e.preventDefault();
         onClose();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        setActiveTab((prev) => {
+          const idx = TABS.findIndex((t) => t.id === prev);
+          const delta = e.key === 'ArrowRight' ? 1 : -1;
+          const next = (idx + delta + TABS.length) % TABS.length;
+          return TABS[next].id;
+        });
       }
     };
     document.addEventListener('keydown', handler, true);
