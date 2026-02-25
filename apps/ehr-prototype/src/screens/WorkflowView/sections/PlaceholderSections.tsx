@@ -32,8 +32,8 @@ export const fieldLabel: React.CSSProperties = {
 
 export const textInput: React.CSSProperties = {
   padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-  fontSize: 14,
-  fontFamily: typography.fontFamily.sans,
+  fontSize: body.sm.regular.fontSize,
+  fontFamily: body.sm.regular.fontFamily,
   border: `1px solid ${colors.border.neutral.medium}`,
   borderRadius: borderRadius.sm,
   backgroundColor: colors.bg.neutral.base,
@@ -54,15 +54,23 @@ export const selectInput: React.CSSProperties = {
 const gridContainer = (cols: number): React.CSSProperties => ({
   display: 'grid',
   gridTemplateColumns: `repeat(${cols}, 1fr)`,
-  gap: spaceBetween.related,
+  gap: spaceBetween.repeating,
 });
 
-const gridButton = (isSelected: boolean): React.CSSProperties => ({
-  padding: `${spaceAround.nudge4}px ${spaceAround.tight}px`,
-  fontSize: body.xs.regular.fontSize,
-  fontFamily: body.xs.regular.fontFamily,
-  fontWeight: isSelected ? body.xs.medium.fontWeight : body.xs.regular.fontWeight,
+const gridButton = (isSelected: boolean, size: 'sm' | 'md' = 'sm'): React.CSSProperties => ({
+  height: size === 'md' ? 32 : undefined,
+  padding: size === 'md'
+    ? `0 ${spaceAround.compact}px`
+    : `${spaceAround.nudge4}px ${spaceAround.tight}px`,
+  fontSize: size === 'md' ? body.sm.regular.fontSize : body.xs.regular.fontSize,
+  fontFamily: size === 'md' ? body.sm.regular.fontFamily : body.xs.regular.fontFamily,
+  fontWeight: isSelected
+    ? (size === 'md' ? body.sm.medium.fontWeight : body.xs.medium.fontWeight)
+    : (size === 'md' ? body.sm.regular.fontWeight : body.xs.regular.fontWeight),
   textAlign: 'center',
+  display: size === 'md' ? 'flex' : undefined,
+  alignItems: size === 'md' ? 'center' : undefined,
+  justifyContent: size === 'md' ? 'center' : undefined,
   border: `1px solid ${isSelected ? colors.border.accent.medium : colors.border.neutral.low}`,
   borderRadius: borderRadius.full,
   backgroundColor: isSelected ? colors.bg.accent.medium : colors.bg.neutral.subtle,
@@ -84,14 +92,6 @@ const checkbox: React.CSSProperties = {
   borderRadius: 3,
   border: `2px solid ${colors.border.neutral.medium}`,
   flexShrink: 0,
-};
-
-export const sectionNote: React.CSSProperties = {
-  fontSize: 12,
-  fontFamily: typography.fontFamily.sans,
-  color: colors.fg.neutral.spotReadable,
-  fontStyle: 'italic',
-  marginBottom: spaceAround.compact,
 };
 
 export const fieldRow: React.CSSProperties = {
@@ -124,7 +124,6 @@ export const ProvidersSection: React.FC = () => (
         </select>
       </div>
     </div>
-    <p style={sectionNote}>Pre-populated from appointment booking.</p>
   </div>
 );
 
@@ -170,8 +169,8 @@ export const PatientCardsSection: React.FC = () => (
         flexDirection: 'column',
         gap: 4,
         color: colors.fg.neutral.spotReadable,
-        fontSize: 13,
-        fontFamily: typography.fontFamily.sans,
+        fontSize: body.xs.regular.fontSize,
+        fontFamily: body.xs.regular.fontFamily,
       }}>
         <span style={{ fontSize: 24 }}>🪪</span>
         <span>Photo ID</span>
@@ -186,14 +185,13 @@ export const PatientCardsSection: React.FC = () => (
         flexDirection: 'column',
         gap: 4,
         color: colors.fg.neutral.spotReadable,
-        fontSize: 13,
-        fontFamily: typography.fontFamily.sans,
+        fontSize: body.xs.regular.fontSize,
+        fontFamily: body.xs.regular.fontFamily,
       }}>
         <span style={{ fontSize: 24 }}>💳</span>
         <span>Insurance Card</span>
       </div>
     </div>
-    <p style={{ ...sectionNote, marginTop: spaceAround.compact }}>Tap to upload or capture from camera.</p>
   </div>
 );
 
@@ -216,10 +214,10 @@ export const ResponsiblePartySection: React.FC = () => (
     <div style={formGroup}>
       <label style={fieldLabel}>Responsible Party Type</label>
       <div style={gridContainer(2)}>
-        <div style={gridButton(true)}>Insurance</div>
-        <div style={gridButton(false)}>Worker&apos;s Comp</div>
-        <div style={gridButton(false)}>Org / School</div>
-        <div style={gridButton(false)}>Patient (Self-Pay)</div>
+        <div style={gridButton(true, 'md')}>Insurance</div>
+        <div style={gridButton(false, 'md')}>Worker&apos;s Comp</div>
+        <div style={gridButton(false, 'md')}>Org / School</div>
+        <div style={gridButton(false, 'md')}>Patient (Self-Pay)</div>
       </div>
     </div>
     <div style={formGroup}>
@@ -252,25 +250,24 @@ export const CreditCardSection: React.FC = () => (
     }}>
       <span style={{ fontSize: 18 }}>💳</span>
       <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary }}>
+        <div style={{ fontSize: body.sm.regular.fontSize, fontFamily: body.sm.regular.fontFamily, color: colors.fg.neutral.primary }}>
           •••• •••• •••• 4242
         </div>
-        <div style={{ fontSize: 12, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.secondary }}>
+        <div style={{ fontSize: body.xs.regular.fontSize, fontFamily: body.xs.regular.fontFamily, color: colors.fg.neutral.secondary }}>
           Visa · Exp 08/27
         </div>
       </div>
     </div>
-    <p style={{ ...sectionNote, marginTop: spaceAround.compact }}>Card on file from previous visit.</p>
   </div>
 );
 
 export const ConsentFormsSection: React.FC = () => (
   <div>
-    {['General Consent to Treatment', 'HIPAA Notice of Privacy Practices', 'Financial Responsibility Agreement', 'Telehealth Consent (if applicable)'].map((label) => (
-      <div key={label} style={checkRow}>
+    {['General Consent to Treatment', 'HIPAA Notice of Privacy Practices', 'Financial Responsibility Agreement', 'Telehealth Consent (if applicable)'].map((item) => (
+      <div key={item} style={checkRow}>
         <div style={checkbox} />
-        <span style={{ fontSize: 14, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary }}>
-          {label}
+        <span style={{ fontSize: body.sm.regular.fontSize, fontFamily: body.sm.regular.fontFamily, color: colors.fg.neutral.primary }}>
+          {item}
         </span>
       </div>
     ))}
@@ -311,7 +308,7 @@ export const AssignRoomSection: React.FC = () => (
       <label style={fieldLabel}>Select Room</label>
       <div style={gridContainer(4)}>
         {['Room 1', 'Room 2', 'Room 3', 'Room 4', 'Room 5', 'Room 6', 'Pending Results', 'Virtual'].map((label, i) => (
-          <div key={label} style={gridButton(i === 1)}>{label}</div>
+          <div key={label} style={gridButton(i === 1, 'md')}>{label}</div>
         ))}
       </div>
     </div>
@@ -336,18 +333,17 @@ export const HPISection: React.FC = () => (
 
 export const MedicalHistorySection: React.FC = () => (
   <div>
-    <p style={sectionNote}>Review and update patient medical history.</p>
     {[
       'Allergies reviewed — no changes',
       'Current medications reviewed — no changes',
       'Past medical history reviewed',
       'Family history reviewed',
       'Social history reviewed',
-    ].map((label) => (
-      <div key={label} style={checkRow}>
+    ].map((item) => (
+      <div key={item} style={checkRow}>
         <div style={checkbox} />
-        <span style={{ fontSize: 14, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary }}>
-          {label}
+        <span style={{ fontSize: body.sm.regular.fontSize, fontFamily: body.sm.regular.fontFamily, color: colors.fg.neutral.primary }}>
+          {item}
         </span>
       </div>
     ))}
@@ -356,7 +352,6 @@ export const MedicalHistorySection: React.FC = () => (
 
 export const RxRenewalsSection: React.FC = () => (
   <div>
-    <p style={sectionNote}>Active medications eligible for renewal.</p>
     {[
       { med: 'Lisinopril 10mg', freq: 'Daily', renewal: true },
       { med: 'Metformin 500mg', freq: 'Twice daily', renewal: false },
@@ -375,14 +370,14 @@ export const RxRenewalsSection: React.FC = () => (
           borderColor: renewal ? colors.border.accent.low : colors.border.neutral.medium,
         }} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 14, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary }}>{med}</div>
-          <div style={{ fontSize: 12, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.secondary }}>{freq}</div>
+          <div style={{ fontSize: body.sm.regular.fontSize, fontFamily: body.sm.regular.fontFamily, color: colors.fg.neutral.primary }}>{med}</div>
+          <div style={{ fontSize: body.xs.regular.fontSize, fontFamily: body.xs.regular.fontFamily, color: colors.fg.neutral.secondary }}>{freq}</div>
         </div>
         {renewal && (
           <span style={{
-            fontSize: 11,
-            fontFamily: typography.fontFamily.sans,
-            fontWeight: 500,
+            fontSize: body.xs.medium.fontSize,
+            fontFamily: body.xs.medium.fontFamily,
+            fontWeight: body.xs.medium.fontWeight,
             color: colors.fg.accent.primary,
           }}>
             Renew
@@ -416,8 +411,8 @@ export const ReviewBillSection: React.FC = () => (
           borderBottom: `1px solid ${colors.border.neutral.low}`,
         }}>
           <span style={{ fontSize: 12, fontFamily: 'monospace', color: colors.fg.neutral.secondary, width: 50 }}>{code}</span>
-          <span style={{ fontSize: 14, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary, flex: 1 }}>{desc}</span>
-          <span style={{ fontSize: 14, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary }}>{amount}</span>
+          <span style={{ fontSize: body.sm.regular.fontSize, fontFamily: body.sm.regular.fontFamily, color: colors.fg.neutral.primary, flex: 1 }}>{desc}</span>
+          <span style={{ fontSize: body.sm.regular.fontSize, fontFamily: body.sm.regular.fontFamily, color: colors.fg.neutral.primary }}>{amount}</span>
         </div>
       ))}
       <div style={{
@@ -427,8 +422,8 @@ export const ReviewBillSection: React.FC = () => (
         padding: `${spaceAround.compact}px`,
         backgroundColor: colors.bg.neutral.subtle,
       }}>
-        <span style={{ fontSize: 13, fontFamily: typography.fontFamily.sans, fontWeight: 500, color: colors.fg.neutral.secondary }}>Total:</span>
-        <span style={{ fontSize: 13, fontFamily: typography.fontFamily.sans, fontWeight: 600, color: colors.fg.neutral.primary }}>$235.00</span>
+        <span style={{ fontSize: body.sm.medium.fontSize, fontFamily: body.sm.medium.fontFamily, fontWeight: body.sm.medium.fontWeight, color: colors.fg.neutral.secondary }}>Total:</span>
+        <span style={{ fontSize: body.sm.medium.fontSize, fontFamily: body.sm.medium.fontFamily, fontWeight: typography.fontWeight.semibold, color: colors.fg.neutral.primary }}>$235.00</span>
       </div>
     </div>
   </div>

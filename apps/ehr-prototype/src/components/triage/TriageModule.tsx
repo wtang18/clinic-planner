@@ -345,7 +345,7 @@ export const TriageModule: React.FC<TriageModuleProps> = ({
 
   const projected = useMemo(() => projectVitals(vitals), [vitals]);
   const gridCells = useMemo(() => projectVitalsGrid(vitals), [vitals]);
-  const gridCols = containerWidth === 0 ? 6 : containerWidth >= 860 ? 6 : containerWidth >= 360 ? 3 : 2;
+  const gridCols = containerWidth === 0 ? 6 : containerWidth >= 860 ? 6 : containerWidth >= 420 ? 3 : 2;
   const hasVitals = projected.length > 0;
 
   // Determine CC display text

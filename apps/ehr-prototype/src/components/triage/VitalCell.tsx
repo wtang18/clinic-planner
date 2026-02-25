@@ -60,7 +60,7 @@ function flagColor(flag?: VitalCellReading['flag']): string {
 
 function flagSecondaryColor(flag?: VitalCellReading['flag']): string {
   if (flag === 'high' || flag === 'low' || flag === 'critical') return colors.fg.alert.secondary;
-  return colors.fg.neutral.secondary;
+  return colors.fg.neutral.spotReadable;
 }
 
 // ============================================================================
@@ -212,11 +212,11 @@ const styles = {
   } as React.CSSProperties,
 
   valueSecondary: {
-    fontSize: body.sm.medium.fontSize,
-    fontWeight: body.sm.medium.fontWeight,
+    fontSize: body.sm.regular.fontSize,
+    fontWeight: body.sm.regular.fontWeight,
     fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.secondary,
-    lineHeight: `${body.sm.medium.lineHeight}px`,
+    color: colors.fg.neutral.spotReadable,
+    lineHeight: `${body.sm.regular.lineHeight}px`,
   } as React.CSSProperties,
 
   label: {

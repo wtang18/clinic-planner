@@ -15,7 +15,7 @@ import { EncounterContextBar } from '../../components/layout/EncounterContextBar
 import { Button } from '../../components/primitives/Button';
 import type { UseWorkflowStateResult } from './useWorkflowState';
 import type { EncounterMeta, Specialty } from '../../types';
-import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, body, label as labelToken } from '../../styles/foundations';
 import {
   ProvidersSection,
   PatientInfoSection,
@@ -108,6 +108,18 @@ const SECTION_SUMMARIES: Record<string, string> = {
 };
 
 // ============================================================================
+// Section helper text (rendered inline with Done button)
+// ============================================================================
+
+const SECTION_HELPERS: Record<string, string> = {
+  'providers': 'Pre-populated from appointment booking.',
+  'patient-cards': 'Tap to upload or capture from camera.',
+  'credit-card': 'Card on file from previous visit.',
+  'medical-history': 'Review and update patient medical history.',
+  'rx-renewals': 'Active medications eligible for renewal.',
+};
+
+// ============================================================================
 // VitalsSectionWithFooter — manages footerLeft state for unit toggle
 // ============================================================================
 
@@ -116,6 +128,7 @@ interface VitalsSectionWithFooterProps {
   state: SectionState;
   isExpanded: boolean;
   workflowState: UseWorkflowStateResult;
+  helperText?: string;
 }
 
 const VitalsSectionWithFooter: React.FC<VitalsSectionWithFooterProps> = ({
@@ -123,6 +136,7 @@ const VitalsSectionWithFooter: React.FC<VitalsSectionWithFooterProps> = ({
   state,
   isExpanded,
   workflowState,
+  helperText,
 }) => {
   const [footerLeft, setFooterLeft] = useState<React.ReactNode>(null);
 
@@ -141,6 +155,7 @@ const VitalsSectionWithFooter: React.FC<VitalsSectionWithFooterProps> = ({
       onComplete={() => workflowState.completeSection(sectionDef.id)}
       onSkip={sectionDef.optional ? () => workflowState.skipSection(sectionDef.id) : undefined}
       footerLeft={footerLeft}
+      helperText={helperText}
     >
       <VitalsSection onFooterLeft={handleFooterLeft} />
     </WorkflowSection>
@@ -214,6 +229,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
                 state={state}
                 isExpanded={isExpanded}
                 workflowState={workflowState}
+                helperText={SECTION_HELPERS[sectionDef.id]}
               />
             );
           }
@@ -230,6 +246,7 @@ export const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({
               onToggle={() => workflowState.toggleSection(sectionDef.id)}
               onComplete={() => workflowState.completeSection(sectionDef.id)}
               onSkip={sectionDef.optional ? () => workflowState.skipSection(sectionDef.id) : undefined}
+              helperText={SECTION_HELPERS[sectionDef.id]}
             >
               {SectionContent ? <SectionContent /> : (
                 <div style={styles.placeholder}>
@@ -308,8 +325,8 @@ const styles = {
   } as React.CSSProperties,
 
   placeholder: {
-    fontSize: 13,
-    fontFamily: typography.fontFamily.sans,
+    fontSize: body.xs.regular.fontSize,
+    fontFamily: body.xs.regular.fontFamily,
     color: colors.fg.neutral.spotReadable,
     fontStyle: 'italic',
     padding: `${spaceAround.compact}px 0`,
@@ -338,15 +355,15 @@ const styles = {
   } as React.CSSProperties,
 
   progressLabel: {
-    fontSize: 12,
-    fontFamily: typography.fontFamily.sans,
+    fontSize: labelToken.xs.regular.fontSize,
+    fontFamily: labelToken.xs.regular.fontFamily,
     color: colors.fg.neutral.secondary,
     whiteSpace: 'nowrap',
   } as React.CSSProperties,
 
   completeHint: {
-    fontSize: 12,
-    fontFamily: typography.fontFamily.sans,
+    fontSize: labelToken.xs.regular.fontSize,
+    fontFamily: labelToken.xs.regular.fontFamily,
     color: colors.fg.neutral.spotReadable,
     marginTop: 0,
     marginBottom: 0,
@@ -364,9 +381,9 @@ const styles = {
   } as React.CSSProperties,
 
   completeBannerText: {
-    fontSize: 15,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: 500,
+    fontSize: body.md.medium.fontSize,
+    fontFamily: body.md.medium.fontFamily,
+    fontWeight: body.md.medium.fontWeight,
     color: colors.fg.positive.primary,
   } as React.CSSProperties,
 };

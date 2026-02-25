@@ -7,7 +7,7 @@
  * Pure local state — no persistence or backend wiring.
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { WorkflowPhase, SectionState } from '../IntakeView/intakeChecklist';
 import { WORKFLOW_PHASES } from '../IntakeView/intakeChecklist';
 
@@ -65,9 +65,39 @@ function getSectionsForPhase(phase: WorkflowPhase) {
 // ============================================================================
 
 export function useWorkflowState(): UseWorkflowStateResult {
-  const [activePhase, setActivePhase] = useState<WorkflowPhase>('check-in');
+  const [activePhase, setActivePhaseRaw] = useState<WorkflowPhase>('check-in');
   const [sectionStates, setSectionStates] = useState<Record<string, SectionState>>({});
   const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
+
+  // Auto-expand the first incomplete section for a given phase.
+  // Called on phase transitions (setActivePhase, completePhase, initFromScenario).
+  const autoExpandFirstIncomplete = useCallback(
+    (phase: WorkflowPhase, states: Record<string, SectionState>) => {
+      const sections = getSectionsForPhase(phase);
+      // Don't auto-expand if all sections are already done
+      const allDone = sections.every((s) => {
+        const st = states[s.id];
+        return st === 'complete' || st === 'skipped';
+      });
+      if (allDone) {
+        setExpandedSectionId(null);
+        return;
+      }
+      const first = sections.find((s) => {
+        const st = states[s.id];
+        return st !== 'complete' && st !== 'skipped';
+      });
+      if (first) {
+        setExpandedSectionId(first.id);
+        setSectionStates((prev) => {
+          const current = prev[first.id];
+          if (current === 'complete' || current === 'skipped') return prev;
+          return { ...prev, [first.id]: 'in_progress' };
+        });
+      }
+    },
+    [],
+  );
 
   // Derived: completed phases
   const completedPhases = useMemo(() => {
@@ -83,6 +113,28 @@ export function useWorkflowState(): UseWorkflowStateResult {
     }
     return result;
   }, [sectionStates]);
+
+  // Public setActivePhase: change phase + auto-expand first incomplete section
+  const setActivePhase = useCallback(
+    (phase: WorkflowPhase) => {
+      setActivePhaseRaw(phase);
+      // Read latest sectionStates via updater to avoid stale closure
+      setSectionStates((currentStates) => {
+        autoExpandFirstIncomplete(phase, currentStates);
+        return currentStates; // no mutation, just reading
+      });
+    },
+    [autoExpandFirstIncomplete],
+  );
+
+  // Auto-expand on initial mount for the default phase
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (mountedRef.current) return;
+    mountedRef.current = true;
+    autoExpandFirstIncomplete(activePhase, sectionStates);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleSection = useCallback((sectionId: string) => {
     setExpandedSectionId((prev) => {
@@ -138,6 +190,8 @@ export function useWorkflowState(): UseWorkflowStateResult {
 
   const completePhase = useCallback((phase: WorkflowPhase) => {
     const sections = getSectionsForPhase(phase);
+    const newStates: Record<string, SectionState> = {};
+
     setSectionStates((prev) => {
       const next = { ...prev };
       for (const section of sections) {
@@ -145,18 +199,19 @@ export function useWorkflowState(): UseWorkflowStateResult {
           next[section.id] = 'complete';
         }
       }
+      Object.assign(newStates, next);
       return next;
     });
 
-    // Collapse all sections
-    setExpandedSectionId(null);
-
-    // Auto-advance to next phase
-    const next = nextPhase(phase);
-    if (next) {
-      setActivePhase(next);
+    // Auto-advance to next phase + auto-expand its first section
+    const nextP = nextPhase(phase);
+    if (nextP) {
+      setActivePhaseRaw(nextP);
+      autoExpandFirstIncomplete(nextP, newStates);
+    } else {
+      setExpandedSectionId(null);
     }
-  }, []);
+  }, [autoExpandFirstIncomplete]);
 
   const phaseProgress = useCallback(
     (phase: WorkflowPhase): PhaseProgress => {
@@ -181,16 +236,21 @@ export function useWorkflowState(): UseWorkflowStateResult {
         }
       }
       setSectionStates(newStates);
-      setExpandedSectionId(null);
-      if (phase) {
-        setActivePhase(phase);
-      } else if (completed.length > 0) {
-        // Set to next incomplete phase
-        const next = nextPhase(completed[completed.length - 1]);
-        if (next) setActivePhase(next);
+
+      // Determine target phase
+      let targetPhase: WorkflowPhase | undefined = phase;
+      if (!targetPhase && completed.length > 0) {
+        targetPhase = nextPhase(completed[completed.length - 1]);
+      }
+
+      if (targetPhase) {
+        setActivePhaseRaw(targetPhase);
+        autoExpandFirstIncomplete(targetPhase, newStates);
+      } else {
+        setExpandedSectionId(null);
       }
     },
-    [],
+    [autoExpandFirstIncomplete],
   );
 
   return {

@@ -11,7 +11,7 @@ import React, { useState } from 'react';
 import { Check, ChevronRight, ChevronDown, Minus, Circle } from 'lucide-react';
 import type { SectionState } from '../../screens/IntakeView/intakeChecklist';
 import { Button } from '../primitives/Button';
-import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, body } from '../../styles/foundations';
 
 // ============================================================================
 // Types
@@ -28,6 +28,8 @@ export interface WorkflowSectionProps {
   onSkip?: () => void;
   /** Content rendered left-aligned in the action row (e.g., unit toggle) */
   footerLeft?: React.ReactNode;
+  /** Helper text rendered left-aligned in the action row */
+  helperText?: string;
   children: React.ReactNode;
 }
 
@@ -45,6 +47,7 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
   onComplete,
   onSkip,
   footerLeft,
+  helperText,
   children,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -205,7 +208,7 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
             {children}
           </div>
 
-          {/* Action row: optional left content + right-aligned buttons */}
+          {/* Action row: optional left content + helper text + right-aligned buttons */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -213,6 +216,15 @@ export const WorkflowSection: React.FC<WorkflowSectionProps> = ({
             marginTop: spaceAround.default,
           }}>
             {footerLeft}
+            {helperText && (
+              <span style={{
+                fontSize: body.xs.regular.fontSize,
+                fontFamily: body.xs.regular.fontFamily,
+                color: colors.fg.neutral.spotReadable,
+              }}>
+                {helperText}
+              </span>
+            )}
             <div style={{ marginLeft: 'auto', display: 'flex', gap: spaceBetween.related }}>
               {onSkip && (
                 <Button
