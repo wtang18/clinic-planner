@@ -153,14 +153,19 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
   };
 
   const iconStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 16,
+    height: 16,
     color: colors.fg.neutral.secondary,
     flexShrink: 0,
   };
 
   const labelStyle: React.CSSProperties = {
     flex: 1,
-    fontSize: 13,
-    fontWeight: 500,
+    fontSize: 14,
+    fontWeight: typography.fontWeight.regular,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.primary,
   };
@@ -170,7 +175,7 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
     maxHeight: isExpanded ? filters.length * 32 + 8 : 0,
     opacity: isExpanded ? 1 : 0,
     transition: `max-height ${transitions.base}, opacity ${transitions.fast}`,
-    paddingLeft: 28, // Align with category label
+    paddingLeft: 0,
   };
 
   const filterRowStyle = (filterId: string): React.CSSProperties => {
@@ -180,11 +185,12 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
+      padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+      paddingLeft: 28 + spaceAround.compact,
       borderRadius: borderRadius.sm,
       cursor: 'pointer',
       backgroundColor: isSelected
-        ? colors.bg.accent.subtle
+        ? colors.bg.accent.low
         : isHovered
         ? colors.bg.neutral.subtle
         : 'transparent',
@@ -195,9 +201,9 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
   const filterLabelStyle = (filterId: string): React.CSSProperties => {
     const isSelected = filterId === selectedFilterId;
     return {
-      fontSize: 13,
+      fontSize: 14,
       fontFamily: typography.fontFamily.sans,
-      fontWeight: isSelected ? 500 : 400,
+      fontWeight: typography.fontWeight.regular,
       color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.secondary,
     };
   };
@@ -225,7 +231,7 @@ export const ToDoCategoryItem: React.FC<ToDoCategoryItemProps> = ({
         </span>
         <span style={labelStyle}>{label}</span>
         {badge !== undefined && badge > 0 && (
-          <Badge count={badge} size="sm" variant="info" />
+          <Badge count={badge} size="sm" variant="info" style={{ backgroundColor: colors.bg.transparent.subtle }} />
         )}
         <div style={chevronStyle} onClick={handleChevronClick}>
           <ChevronRight size={14} />

@@ -32,7 +32,7 @@ export const SpecialtyBadge: React.FC<SpecialtyBadgeProps> = ({ specialty, size 
       fontSize: isXs ? 9 : 10,
       fontWeight: 600,
       fontFamily: typography.fontFamily.sans,
-      backgroundColor: colors.bg.neutral.subtle,
+      backgroundColor: colors.bg.transparent.subtle,
       color: colors.fg.neutral.secondary,
       borderRadius: borderRadius.xs,
       padding: isXs ? '0 3px' : '0 4px',

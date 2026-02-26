@@ -59,7 +59,7 @@ export const MenuNavItem: React.FC<MenuNavItemProps> = ({
       ? spaceAround.compact + (indentLevel + 1) * 16
       : spaceAround.compact,
     backgroundColor: isSelected
-      ? colors.bg.accent.subtle
+      ? colors.bg.accent.low
       : isHovered
       ? colors.bg.neutral.subtle
       : 'transparent',
@@ -83,6 +83,8 @@ export const MenuNavItem: React.FC<MenuNavItemProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    width: 16,
+    height: 16,
     color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.secondary,
     flexShrink: 0,
   };
@@ -90,7 +92,7 @@ export const MenuNavItem: React.FC<MenuNavItemProps> = ({
   const labelStyle: React.CSSProperties = {
     fontSize: 14,
     fontFamily: typography.fontFamily.sans,
-    fontWeight: isSelected ? typography.fontWeight.medium : typography.fontWeight.regular,
+    fontWeight: typography.fontWeight.regular,
     color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
     whiteSpace: 'nowrap',
     overflow: 'hidden',

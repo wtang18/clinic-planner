@@ -114,6 +114,7 @@ export const Badge: React.FC<BadgeProps> = ({
           fontWeight: typography.fontWeight.medium,
           fontFamily: typography.fontFamily.sans,
           borderRadius: borderRadius.full,
+          ...style,
         }}
       >
         {displayCount}
