@@ -16,6 +16,8 @@ import { getTriageItemsForScenario } from '../data/mock-triage';
 import type { EncounterContext } from '../mocks/generators/encounters';
 import { TranscriptionProvider, useTranscription } from '../context/TranscriptionContext';
 import { useAIServices } from '../context/AIServicesContext';
+import { useDraftEngine } from '../hooks/useDraftEngine';
+import { useTaskLifecycleSimulator } from '../hooks/useTaskLifecycleSimulator';
 import { getScheduleForEncounter } from './suggestion-schedule';
 import type { ScheduledSuggestion } from './suggestion-schedule';
 import { colors, spaceAround, typography } from '../styles/foundations';
@@ -203,6 +205,38 @@ const SuggestionScheduleRunner: React.FC<{
 SuggestionScheduleRunner.displayName = 'SuggestionScheduleRunner';
 
 // ============================================================================
+// DraftEngineRunner
+//
+// Starts the draft engine after the first transcript segment arrives.
+// Must be rendered inside TranscriptionProvider.
+// ============================================================================
+
+const DraftEngineRunner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { segments } = useTranscription();
+  const hasSegments = segments.length > 0;
+
+  useDraftEngine({ enabled: hasSegments });
+
+  return <>{children}</>;
+};
+
+DraftEngineRunner.displayName = 'DraftEngineRunner';
+
+// ============================================================================
+// TaskLifecycleRunner
+//
+// Auto-progresses background tasks through their lifecycle on timers.
+// Must be rendered inside the encounter store provider.
+// ============================================================================
+
+const TaskLifecycleRunner: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useTaskLifecycleSimulator();
+  return <>{children}</>;
+};
+
+TaskLifecycleRunner.displayName = 'TaskLifecycleRunner';
+
+// ============================================================================
 // Component
 // ============================================================================
 
@@ -307,11 +341,15 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
     );
   }
 
-  // Loaded: wrap children with per-encounter TranscriptionProvider + schedule runner
+  // Loaded: wrap children with per-encounter providers and runners
   return (
     <TranscriptionProvider mockScenario={getTranscriptScenario(encounterId)}>
       <SuggestionScheduleRunner encounterId={encounterId}>
-        {children}
+        <DraftEngineRunner>
+          <TaskLifecycleRunner>
+            {children}
+          </TaskLifecycleRunner>
+        </DraftEngineRunner>
       </SuggestionScheduleRunner>
     </TranscriptionProvider>
   );
