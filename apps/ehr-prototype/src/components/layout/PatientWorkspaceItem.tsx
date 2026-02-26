@@ -24,9 +24,6 @@ export interface PatientTask {
   type: 'urgent' | 'routine' | 'signoff';
 }
 
-/** Recording status for a patient workspace (simplified for patient-level display) */
-export type RecordingStatus = 'recording' | 'paused' | 'processing' | 'complete' | 'none';
-
 /** Visit sub-item config for Workflow/Chart toggle. */
 export interface VisitSubItemConfig {
   /** Tab ID of the visit tab that has sub-items */
@@ -58,8 +55,6 @@ export interface PatientWorkspaceItemProps {
   isSelected?: boolean;
   /** Initial expanded state */
   defaultExpanded?: boolean;
-  /** Recording status for this patient's encounter (patient-level summary) */
-  recordingStatus?: RecordingStatus;
   /**
    * Recording status by tab ID (for encounter-level indicators).
    * Map of tabId -> RecordingStatus from bottomBar state.
@@ -100,7 +95,6 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
   currentVisit,
   isSelected = false,
   defaultExpanded = false,
-  recordingStatus = 'none',
   tabRecordingStatuses = {},
   visitSubItems = [],
   onPatientClick,
@@ -114,7 +108,9 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isHovered, setIsHovered] = useState(false);
+  const [isCloseHovered, setIsCloseHovered] = useState(false);
   const [hoveredTabId, setHoveredTabId] = useState<string | null>(null);
+  const [hoveredCloseTabId, setHoveredCloseTabId] = useState<string | null>(null);
 
   const displayInitials = initials || name.split(' ').map(n => n[0]).join('').slice(0, 2);
 
@@ -132,8 +128,8 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     alignItems: 'center',
     gap: spaceBetween.relatedCompact,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
-    backgroundColor: isSelected
-      ? colors.bg.accent.subtle
+    backgroundColor: isSelected && !isExpanded
+      ? colors.bg.accent.low
       : isHovered
       ? colors.bg.neutral.subtle
       : 'transparent',
@@ -189,17 +185,19 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     justifyContent: 'center',
     width: 24,
     height: 24,
-    backgroundColor: colors.bg.neutral.medium,
+    backgroundColor: isCloseHovered
+      ? colors.bg.transparent.low
+      : colors.bg.transparent.subtle,
     borderRadius: borderRadius.full,
     opacity: showCloseOnAvatar ? 1 : 0,
-    transition: `opacity 150ms ease`,
+    transition: `opacity 150ms ease, background-color ${transitions.fast}`,
     cursor: 'pointer',
   };
 
   const nameStyle: React.CSSProperties = {
     fontSize: 14,
     fontFamily: typography.fontFamily.sans,
-    fontWeight: isSelected ? typography.fontWeight.medium : typography.fontWeight.regular,
+    fontWeight: typography.fontWeight.regular,
     color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
     flex: 1,
     whiteSpace: 'nowrap',
@@ -218,7 +216,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.relatedCompact,
-    padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
     paddingLeft: spaceAround.compact + 32, // Indent for avatar + chevron
     cursor: 'pointer',
     borderRadius: borderRadius.sm,
@@ -265,19 +263,34 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     }
   };
 
+  const getTabIconWithRecording = (
+    tab: WorkspaceTab,
+    isActive: boolean,
+    recordingStatus?: BottomBarRecordingStatus,
+  ): React.ReactNode => {
+    if (tab.type !== 'visit' || !recordingStatus) {
+      return getTabIcon(tab, isActive);
+    }
+    const indicatorStatus = recordingStatusToIndicator(recordingStatus);
+    if (indicatorStatus === 'none') {
+      return getTabIcon(tab, isActive);
+    }
+    return <TranscriptionIndicator status={indicatorStatus} size="md" />;
+  };
+
   const tabItemStyle = (tabId: string, hasSubItems: boolean): React.CSSProperties => {
-    const isActive = tabId === activeTabId;
+    const isActive = isSelected && tabId === activeTabId;
     const isTabHovered = tabId === hoveredTabId;
     return {
       display: 'flex',
       alignItems: 'center',
       gap: spaceBetween.relatedCompact,
-      padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
-      paddingLeft: spaceAround.compact + 32,
+      padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+      paddingLeft: spaceAround.compact,
       cursor: 'pointer',
       borderRadius: borderRadius.sm,
       backgroundColor: isActive
-        ? (hasSubItems ? colors.bg.neutral.subtle : colors.bg.accent.subtle)
+        ? (hasSubItems ? 'transparent' : colors.bg.accent.low)
         : isTabHovered
         ? colors.bg.neutral.subtle
         : 'transparent',
@@ -285,11 +298,24 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
     };
   };
 
-  // Styles for tab icon / close crossfade
-  const tabIconWrapperStyle: React.CSSProperties = {
+  // Close column — 24px wide, aligned under avatar
+  const tabCloseColStyle: React.CSSProperties = {
     position: 'relative',
-    width: 14,
-    height: 14,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 16,
+    flexShrink: 0,
+  };
+
+  // Icon column — 16px, always visible
+  const tabIconStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 16,
+    height: 16,
     flexShrink: 0,
   };
 
@@ -319,18 +345,13 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
               e.stopPropagation();
               onWorkspaceClose?.();
             }}
+            onMouseEnter={() => setIsCloseHovered(true)}
+            onMouseLeave={() => setIsCloseHovered(false)}
           >
             <X size={12} color={colors.fg.neutral.secondary} />
           </span>
         </span>
         <span style={nameStyle}>{name}</span>
-        {/* Recording status indicator */}
-        {recordingStatus !== 'none' && (
-          <TranscriptionIndicator
-            status={recordingStatus === 'complete' ? 'complete' : recordingStatus}
-            size="sm"
-          />
-        )}
         <span style={expandButtonStyle}>
           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </span>
@@ -339,7 +360,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
       <div style={childrenContainerStyle}>
         {/* Workspace Tabs (new) */}
         {hasWorkspaceTabs && workspaceTabs.map((tab) => {
-          const isActive = tab.id === activeTabId;
+          const isActive = isSelected && tab.id === activeTabId;
           const isTabHovered = tab.id === hoveredTabId;
           const canClose = tab.type !== 'overview';
           const showTabClose = canClose && isTabHovered;
@@ -358,48 +379,41 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
                 role="button"
                 tabIndex={0}
               >
-                {/* Icon / close crossfade — both in the same 14px slot */}
-                <span style={tabIconWrapperStyle}>
-                  <span style={{
-                    position: 'absolute',
-                    inset: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: showTabClose ? 0 : 1,
-                    transition: 'opacity 150ms ease',
-                  }}>
-                    {getTabIcon(tab, isActive)}
-                  </span>
-                  {canClose && (
+                {/* Close column — 24px wide, aligned under avatar */}
+                <span style={tabCloseColStyle}>
+                  {canClose && isTabHovered && (
                     <span
                       style={{
                         position: 'absolute',
-                        inset: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        opacity: showTabClose ? 1 : 0,
-                        transition: 'opacity 150ms ease',
+                        top: '50%', left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 24, height: 24,
+                        backgroundColor: hoveredCloseTabId === tab.id
+                          ? colors.bg.transparent.low
+                          : colors.bg.transparent.subtle,
+                        borderRadius: borderRadius.full,
                         cursor: 'pointer',
+                        transition: `background-color ${transitions.fast}`,
                       }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onTabClose?.(tab.id);
-                      }}
+                      onClick={(e) => { e.stopPropagation(); onTabClose?.(tab.id); }}
+                      onMouseEnter={() => setHoveredCloseTabId(tab.id)}
+                      onMouseLeave={() => setHoveredCloseTabId(null)}
                     >
                       <X size={12} color={colors.fg.neutral.secondary} />
                     </span>
                   )}
                 </span>
+                {/* Icon — always visible */}
+                <span style={tabIconStyle}>
+                  {getTabIconWithRecording(tab, isActive, tabRecordingStatuses[tab.id])}
+                </span>
                 <span
                   style={{
                     fontSize: body.sm.regular.fontSize,
                     fontFamily: typography.fontFamily.sans,
-                    fontWeight: isActive ? body.sm.medium.fontWeight : body.sm.regular.fontWeight,
-                    color: isActive
-                      ? (hasSubItems ? colors.fg.neutral.primary : colors.fg.accent.primary)
-                      : colors.fg.neutral.primary,
+                    fontWeight: body.sm.regular.fontWeight,
+                    color: isActive ? colors.fg.accent.primary : colors.fg.neutral.primary,
                     flex: 1,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -416,11 +430,7 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
                     fontWeight: typography.fontWeight.medium,
                     padding: '1px 6px',
                     borderRadius: borderRadius.full,
-                    backgroundColor: subItemConfig.workflowBadge.colorScheme === 'positive'
-                      ? colors.bg.positive.subtle
-                      : subItemConfig.workflowBadge.colorScheme === 'accent'
-                      ? colors.bg.accent.subtle
-                      : colors.bg.attention.subtle,
+                    backgroundColor: colors.bg.transparent.subtle,
                     color: subItemConfig.workflowBadge.colorScheme === 'positive'
                       ? colors.fg.positive.primary
                       : subItemConfig.workflowBadge.colorScheme === 'accent'
@@ -430,17 +440,10 @@ export const PatientWorkspaceItem: React.FC<PatientWorkspaceItemProps> = ({
                     {subItemConfig.workflowBadge.text}
                   </span>
                 )}
-                {/* Recording indicator for visit tabs */}
-                {tab.type === 'visit' && tabRecordingStatuses[tab.id] && (
-                  <TranscriptionIndicator
-                    status={recordingStatusToIndicator(tabRecordingStatuses[tab.id])}
-                    size="sm"
-                  />
-                )}
               </div>
               {/* Visit sub-items: Workflow / Chart */}
               {subItemConfig && (
-                <VisitSubItems config={subItemConfig} baseIndent={spaceAround.compact + 32} />
+                <VisitSubItems config={subItemConfig} isFocused={isSelected && tab.id === activeTabId} />
               )}
             </React.Fragment>
           );
@@ -524,16 +527,17 @@ const SUB_ITEM_LABELS: { view: ViewContext; label: string }[] = [
 
 interface VisitSubItemsProps {
   config: VisitSubItemConfig;
-  baseIndent: number;
+  /** Whether the parent workspace is the currently focused nav item */
+  isFocused?: boolean;
 }
 
-const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => {
+const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, isFocused = true }) => {
   const [hoveredView, setHoveredView] = useState<ViewContext | null>(null);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.coupled }}>
       {SUB_ITEM_LABELS.map(({ view, label }) => {
-        const isActive = config.activeSubItem === view;
+        const isActive = isFocused && config.activeSubItem === view;
         const isHovered = hoveredView === view;
         return (
           <div
@@ -542,12 +546,12 @@ const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => 
               display: 'flex',
               alignItems: 'center',
               gap: spaceBetween.relatedCompact,
-              padding: `${spaceAround.nudge6}px ${spaceAround.compact}px`,
-              paddingLeft: baseIndent,
+              padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+              paddingLeft: spaceAround.compact,
               cursor: 'pointer',
               borderRadius: borderRadius.sm,
               backgroundColor: isActive
-                ? colors.bg.accent.subtle
+                ? colors.bg.accent.low
                 : isHovered
                 ? colors.bg.neutral.subtle
                 : 'transparent',
@@ -562,14 +566,19 @@ const VisitSubItems: React.FC<VisitSubItemsProps> = ({ config, baseIndent }) => 
             role="button"
             tabIndex={0}
           >
-            <CornerDownRight
-              size={14}
-              color={colors.fg.neutral.spotReadable}
-            />
+            {/* Spacer — aligns with close col / avatar */}
+            <span style={{ width: 24, height: 16, flexShrink: 0 }} />
+            {/* ↳ icon in 16px container */}
+            <span style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 16, height: 16, flexShrink: 0,
+            }}>
+              <CornerDownRight size={14} color={colors.fg.neutral.spotReadable} />
+            </span>
             <span style={{
               fontSize: body.sm.regular.fontSize,
               fontFamily: typography.fontFamily.sans,
-              fontWeight: isActive ? body.sm.medium.fontWeight : body.sm.regular.fontWeight,
+              fontWeight: body.sm.regular.fontWeight,
               color: isActive ? colors.fg.accent.primary : colors.fg.neutral.primary,
             }}>
               {label}

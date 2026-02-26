@@ -14,7 +14,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Pause } from 'lucide-react';
 import { colors, borderRadius } from '../../styles/foundations';
 import type { RecordingStatus } from '../../state/bottomBar/types';
 
@@ -70,8 +70,9 @@ export const TranscriptionIndicator: React.FC<TranscriptionIndicatorProps> = ({
     ...style,
   };
 
-  // Recording: Pulsing red dot
+  // Recording: Pulsing red dot (10px dot in 14px container; 1.2× pulse peaks at 12px)
   if (status === 'recording') {
+    const dotSize = SIZES.sm;
     return (
       <motion.span
         style={containerStyle}
@@ -80,8 +81,8 @@ export const TranscriptionIndicator: React.FC<TranscriptionIndicatorProps> = ({
       >
         <motion.span
           style={{
-            width: pixelSize,
-            height: pixelSize,
+            width: dotSize,
+            height: dotSize,
             backgroundColor: colors.fg.alert.secondary,
             borderRadius: borderRadius.full,
           }}
@@ -99,17 +100,14 @@ export const TranscriptionIndicator: React.FC<TranscriptionIndicatorProps> = ({
     );
   }
 
-  // Paused: Amber dot
+  // Paused: Amber pause icon
   if (status === 'paused') {
     return (
       <span style={containerStyle} data-testid={testID} aria-label="Recording paused">
-        <span
-          style={{
-            width: pixelSize,
-            height: pixelSize,
-            backgroundColor: colors.fg.attention.primary,
-            borderRadius: borderRadius.full,
-          }}
+        <Pause
+          size={pixelSize}
+          color={colors.fg.attention.primary}
+          fill={colors.fg.attention.primary}
         />
       </span>
     );
