@@ -20,7 +20,8 @@ import {
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions, LAYOUT } from '../../styles/foundations';
 import { MenuSection } from './MenuSection';
 import { MenuNavItem } from './MenuNavItem';
-import { PatientWorkspaceItem, PatientTask, RecordingStatus, type VisitSubItemConfig } from './PatientWorkspaceItem';
+import { PatientWorkspaceItem, PatientTask, type VisitSubItemConfig } from './PatientWorkspaceItem';
+import type { RecordingStatus as BottomBarRecordingStatus } from '../../state/bottomBar/types';
 import { ToDoCategoryItem, ToDoFilter } from './ToDoCategoryItem';
 import { TODO_CATEGORIES, getCategoryBadgeCount } from '../../scenarios/todoData';
 import type { WorkspaceTab } from '../../context/WorkspaceContext';
@@ -41,8 +42,8 @@ export interface PatientWorkspace {
   /** Active tab ID */
   activeTabId?: string;
   currentVisit?: string;
-  /** Recording status for this patient */
-  recordingStatus?: RecordingStatus;
+  /** Recording statuses by tab ID (encounter-level indicators) */
+  tabRecordingStatuses?: Record<string, BottomBarRecordingStatus>;
   /** Visit sub-items (Workflow/Chart toggle under visit tabs) */
   visitSubItems?: VisitSubItemConfig[];
 }
@@ -274,7 +275,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                   workspaceTabs={patient.workspaceTabs}
                   activeTabId={patient.activeTabId}
                   currentVisit={patient.currentVisit}
-                  recordingStatus={patient.recordingStatus}
+                  tabRecordingStatuses={patient.tabRecordingStatuses}
                   visitSubItems={patient.visitSubItems}
                   isSelected={selectedItemId === `patient-${patient.id}`}
                   defaultExpanded={patientWorkspaces.length === 1}

@@ -176,7 +176,7 @@ export const CaptureView: React.FC = () => {
   const handleToDoFilterSelect = (categoryId: string, filterId: string) => {
     setViewMode('todo-list');
     setTodoViewState({ categoryId, filterId });
-    setSelectedNavItem('');
+    setSelectedNavItem('todo');
     // Clear navigation context when navigating to To-Do list
     todoNav.clearNavigation();
   };
@@ -271,14 +271,6 @@ export const CaptureView: React.FC = () => {
     setSelectedNavItem(`patient-${workspaceId}`);
   }, [workspace, state.context.patient]);
 
-  // Handle workspace tab click
-  const handleTabClick = useCallback((patientId: string, tabId: string) => {
-    workspace.switchTab(patientId, tabId);
-    setViewMode('patient');
-    setTodoViewState(null);
-    setSelectedNavItem(`patient-${patientId}`);
-  }, [workspace]);
-
   // Handle workspace tab close
   const handleTabClose = useCallback((patientId: string, tabId: string) => {
     workspace.closeTab(patientId, tabId);
@@ -290,7 +282,7 @@ export const CaptureView: React.FC = () => {
     if (result) {
       setViewMode('todo-list');
       setTodoViewState({ categoryId: result.categoryId, filterId: result.filterId });
-      setSelectedNavItem('');
+      setSelectedNavItem('todo');
     }
   }, [todoNav]);
 
@@ -303,6 +295,7 @@ export const CaptureView: React.FC = () => {
       const patientName = nextItem.patient.name;
       workspace.openWorkspace(workspaceId, 'patient', patientName);
       setSelectedNavItem(`patient-${workspaceId}`);
+      setTodoViewState(null);
     }
   }, [todoNav, workspace]);
 
@@ -363,6 +356,24 @@ export const CaptureView: React.FC = () => {
 
   // Workflow state (phases, sections, accordion)
   const workflowState = useWorkflowState();
+
+  // Handle workspace tab click (after workflowState/setViewContext are available)
+  const handleTabClick = useCallback((patientId: string, tabId: string) => {
+    workspace.switchTab(patientId, tabId);
+    setSelectedNavItem(`patient-${patientId}`);
+
+    // Location forwarding: auto-set viewContext based on visit tab workflow phase
+    const ws = workspace.getWorkspace(patientId);
+    const tab = ws?.tabs.find(t => t.id === tabId);
+    if (tab?.type === 'visit') {
+      const phase = workflowState.activePhase;
+      setViewContext(phase === 'checkout' ? 'charting' : 'workflow');
+    }
+
+    setViewMode('patient');
+    setTodoViewState(null);
+    todoNav.clearNavigation();
+  }, [workspace, workflowState.activePhase, setViewContext, todoNav]);
 
   // Listen for context-dependent segment shortcuts (1/2/3)
   const MODES_BY_INDEX: Mode[] = ['capture', 'process', 'review'];
@@ -569,6 +580,13 @@ export const CaptureView: React.FC = () => {
     }
   }, [patient?.mrn, patientOverviewData.name, workspace, encounter]);
 
+  // Auto-initialize selectedNavItem when patient loads
+  useEffect(() => {
+    if (patient && !selectedNavItem) {
+      setSelectedNavItem(`patient-${patient.mrn}`);
+    }
+  }, [patient?.mrn, selectedNavItem]);
+
   // Create transcription session for BottomBarContainer's TranscriptionModule
   useEffect(() => {
     if (patient && encounter && !activeSession) {
@@ -585,14 +603,6 @@ export const CaptureView: React.FC = () => {
     // Get all patient workspaces from context
     const allWorkspaces = workspace.workspaces.filter(w => w.type === 'patient');
 
-    // Determine recording status for encounter patient
-    const getRecordingStatus = (isEncounterPatient: boolean): 'recording' | 'complete' | 'none' => {
-      if (!isEncounterPatient) return 'none';
-      if (transcriptionStatus === 'recording') return 'recording';
-      if (transcriptionStatus === 'processing') return 'complete';
-      return 'none';
-    };
-
     if (allWorkspaces.length === 0 && patient) {
       // Fallback to current patient if no workspaces yet
       return [{
@@ -603,7 +613,7 @@ export const CaptureView: React.FC = () => {
         workspaceTabs: [],
         activeTabId: '',
         currentVisit: state.context.visit?.chiefComplaint || encounter?.type,
-        recordingStatus: getRecordingStatus(true),
+        tabRecordingStatuses: {},
       }];
     }
 
@@ -643,7 +653,13 @@ export const CaptureView: React.FC = () => {
                 visitTabId: t.id,
                 activeSubItem: viewContext,
                 workflowBadge,
-                onSubItemClick: setViewContext,
+                onSubItemClick: (view) => {
+                  setViewContext(view);
+                  workspace.switchTab(ws.id, t.id);
+                  setViewMode('patient');
+                  setTodoViewState(null);
+                  setSelectedNavItem(`patient-${ws.id}`);
+                },
               };
             })
         : [];
@@ -660,7 +676,13 @@ export const CaptureView: React.FC = () => {
         currentVisit: isCurrentPatient
           ? state.context.visit?.chiefComplaint || encounter?.type
           : undefined,
-        recordingStatus: getRecordingStatus(!!isCurrentPatient),
+        tabRecordingStatuses: isCurrentPatient
+          ? Object.fromEntries(
+              ws.tabs
+                .filter(t => t.type === 'visit')
+                .map(t => [t.id, transcriptionStatus])
+            )
+          : {},
         visitSubItems,
       };
     });
@@ -789,7 +811,9 @@ export const CaptureView: React.FC = () => {
             menuPaneProps={{
               patientWorkspaces,
               selectedItemId: selectedNavItem,
-              selectedToDoFilter: todoViewState ? `${todoViewState.categoryId}/${todoViewState.filterId}` : undefined,
+              selectedToDoFilter: todoViewState && !selectedNavItem.startsWith('patient-')
+                ? `${todoViewState.categoryId}/${todoViewState.filterId}`
+                : undefined,
               onNavItemSelect: handleNavItemSelect,
               onToDoFilterSelect: handleToDoFilterSelect,
               onRegistryViewSelect: handleRegistryViewSelect,
