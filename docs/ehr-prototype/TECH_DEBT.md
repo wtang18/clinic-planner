@@ -204,6 +204,6 @@ Add `reasonForVisit?: string` to `VisitMeta` type.
 
 ## Related Documentation
 
-- [State Contract](./initial-setup/STATE_CONTRACT.md) - Type definitions
-- [AI Integration](./initial-setup/AI_INTEGRATION.md) - AI service architecture
-- [Chart Items](./initial-setup/CHART_ITEMS.md) - ChartItem type structure
+- [State Contract](./archive/initial-setup/STATE_CONTRACT.md) - Type definitions
+- [AI Integration](./archive/initial-setup/AI_INTEGRATION.md) - AI service architecture
+- [Chart Items](./archive/initial-setup/CHART_ITEMS.md) - ChartItem type structure

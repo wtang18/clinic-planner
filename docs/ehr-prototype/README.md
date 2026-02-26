@@ -5,7 +5,7 @@ Documentation for the EHR prototype application (`apps/ehr-prototype`).
 ## Status
 
 **Implementation**: Complete (Phases 1-6)
-**Last Updated**: 2026-01-26
+**Last Updated**: 2026-02-26
 
 ## Documentation Index
 
@@ -15,32 +15,11 @@ Documentation for the EHR prototype application (`apps/ehr-prototype`).
 | [LAYOUT_REFACTOR_PLAN.md](./LAYOUT_REFACTOR_PLAN.md) | Phased implementation plan for layout refactor |
 | [TECH_DEBT.md](./TECH_DEBT.md) | Tracked TypeScript errors and technical debt |
 | [TEST_ROADMAP.md](../../apps/ehr-prototype/docs/TEST_ROADMAP.md) | Testing strategy and roadmap |
-| [initial-setup/](./initial-setup/) | Phase implementation prompts and specifications |
+| [Demo Scenarios](../../apps/ehr-prototype/docs/demo/) | Demo walkthroughs and feature coverage matrix |
 
-### Initial Setup Documents
+### Archive
 
-| Document | Description |
-|----------|-------------|
-| [OVERVIEW.md](./initial-setup/OVERVIEW.md) | Project overview and architecture |
-| [STATE_CONTRACT.md](./initial-setup/STATE_CONTRACT.md) | State types and contracts |
-| [CHART_ITEMS.md](./initial-setup/CHART_ITEMS.md) | Chart item type definitions |
-| [CARE_GAPS.md](./initial-setup/CARE_GAPS.md) | Care gap specifications |
-| [SUGGESTIONS_TASKS.md](./initial-setup/SUGGESTIONS_TASKS.md) | Suggestion and task systems |
-| [AI_INTEGRATION.md](./initial-setup/AI_INTEGRATION.md) | AI service architecture |
-| [PARALLEL_STREAMS.md](./initial-setup/PARALLEL_STREAMS.md) | Parallel processing design |
-| [VISIT_SCENARIOS.md](./initial-setup/VISIT_SCENARIOS.md) | Demo visit scenarios |
-| [SUPPORTING_TYPES.md](./initial-setup/SUPPORTING_TYPES.md) | Supporting type definitions |
-
-### Phase Prompts
-
-| Phase | Description | Status |
-|-------|-------------|--------|
-| [PHASE_1_PROMPTS.md](./initial-setup/PHASE_1_PROMPTS.md) | Foundation & State | Complete |
-| [PHASE_2_PROMPTS.md](./initial-setup/PHASE_2_PROMPTS.md) | UI Components | Complete |
-| [PHASE_3_PROMPTS.md](./initial-setup/PHASE_3_PROMPTS.md) | Navigation & Views | Complete |
-| [PHASE_4_PROMPTS.md](./initial-setup/PHASE_4_PROMPTS.md) | AI Services | Complete |
-| [PHASE_5_PROMPTS.md](./initial-setup/PHASE_5_PROMPTS.md) | Integration | Complete |
-| [PHASE_6_PROMPTS.md](./initial-setup/PHASE_6_PROMPTS.md) | Demo Polish & E2E | Complete |
+The `archive/initial-setup/` folder contains original phase implementation prompts and specifications from the initial build (Phases 1-6). These are preserved for historical reference but are no longer actively maintained — the codebase and its tests are the source of truth for current behavior.
 
 ## Quick Links
 
