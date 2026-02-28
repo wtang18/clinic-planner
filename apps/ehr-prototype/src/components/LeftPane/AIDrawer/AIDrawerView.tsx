@@ -10,12 +10,14 @@
  * @see AI_DRAWER.md for full specification
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { AIContextHeader, type ContextScope } from './AIContextHeader';
 export type { ContextScope };
 import { SuggestionsSection } from './SuggestionsSection';
 import { ConversationHistory, type ConversationMessage } from './ConversationHistory';
+import { SuggestionList } from '../../suggestions/SuggestionList';
+import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
 import type { Suggestion } from '../../../types/suggestions';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
 
@@ -59,8 +61,18 @@ export interface AIDrawerViewProps {
   onSuggestionDismiss?: (id: string, reason?: string) => void;
   /** Called when suggestion is accepted with field changes */
   onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
-  /** Called when follow-up action is clicked */
-  onFollowUpClick?: (actionId: string) => void;
+  /** Follow-up suggestion objects from AI responses */
+  followUpSuggestions?: Suggestion[];
+  /** Accept a follow-up suggestion */
+  onFollowUpAccept?: (id: string) => void;
+  /** Dismiss a follow-up suggestion */
+  onFollowUpDismiss?: (id: string) => void;
+  /** Accept a follow-up suggestion with changes */
+  onFollowUpAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
+  /** Non-chart follow-up actions (e.g., Copy to clipboard) */
+  nonChartFollowUps?: Array<{ id: string; label: string }>;
+  /** Handle non-chart follow-up action */
+  onNonChartAction?: (actionId: string) => void;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID */
@@ -157,12 +169,25 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
   onSuggestionAccept,
   onSuggestionDismiss,
   onSuggestionAcceptWithChanges,
-  onFollowUpClick,
+  followUpSuggestions = [],
+  onFollowUpAccept,
+  onFollowUpDismiss,
+  onFollowUpAcceptWithChanges,
+  nonChartFollowUps = [],
+  onNonChartAction,
   style,
   testID,
   children,
 }) => {
-  const hasContent = suggestions.length > 0 || messages.length > 0 || isLoading;
+  const hasContent = suggestions.length > 0 || messages.length > 0 || isLoading || followUpSuggestions.length > 0;
+
+  // Edit-before-accept state for follow-up suggestions
+  const [editingFollowUpId, setEditingFollowUpId] = useState<string | null>(null);
+  const editingFollowUp = editingFollowUpId
+    ? followUpSuggestions.find(s => s.id === editingFollowUpId) ?? null
+    : null;
+
+  const activeFollowUps = followUpSuggestions.filter(s => s.status === 'active');
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -242,9 +267,41 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
             <ConversationHistory
               messages={messages}
               isLoading={isLoading}
-              onFollowUpClick={onFollowUpClick}
+              onFollowUpClick={onNonChartAction}
               style={{ flex: 1 }}
             />
+
+            {/* Structural divider between conversation and follow-up content */}
+            {(editingFollowUp || activeFollowUps.length > 0) && (
+              <div style={{ borderTop: `1px solid ${colors.border.neutral.low}` }} />
+            )}
+
+            {/* Follow-up suggestions from AI responses */}
+            {editingFollowUp && onFollowUpAcceptWithChanges ? (
+              <div style={{ padding: spaceAround.default }}>
+                <SuggestionEditPanel
+                  suggestion={editingFollowUp}
+                  theme="light"
+                  onAccept={(id, data) => {
+                    onFollowUpAcceptWithChanges(id, data);
+                    setEditingFollowUpId(null);
+                  }}
+                  onCancel={() => setEditingFollowUpId(null)}
+                />
+              </div>
+            ) : activeFollowUps.length > 0 && onFollowUpAccept && onFollowUpDismiss ? (
+              <div style={{ padding: `0 ${spaceAround.default}px ${spaceAround.default}px` }}>
+                <SuggestionList
+                  suggestions={activeFollowUps}
+                  onAccept={onFollowUpAccept}
+                  onDismiss={onFollowUpDismiss}
+                  onEdit={(id) => setEditingFollowUpId(id)}
+                  variant="compact"
+                  theme="light"
+                  showHeader={false}
+                />
+              </div>
+            ) : null}
           </>
         ) : (
           /* Empty State */

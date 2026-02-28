@@ -36,6 +36,8 @@ import {
 export interface SuggestionEditPanelProps {
   suggestion: Suggestion;
   theme?: 'light' | 'dark';
+  /** When true, header sticks to top of scroll container with gradient fade below */
+  stickyHeader?: boolean;
   onAccept: (suggestionId: string, data: Record<string, unknown>) => void;
   onCancel: () => void;
 }
@@ -89,6 +91,7 @@ function buildEditInstructionsLine(
 export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
   suggestion,
   theme = 'light',
+  stickyHeader = false,
   onAccept,
   onCancel,
 }) => {
@@ -152,6 +155,77 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
     return null;
   }
 
+  // When stickyHeader is true, render a split layout: fixed header + scrollable body with maskImage fade
+  if (stickyHeader) {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: spaceBetween.coupled }} data-testid="suggestion-edit-panel">
+        {/* Header — fixed above scroll, no special bg */}
+        <div style={headerStyle(isDark)}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: spaceBetween.coupled, flex: 1, minWidth: 0 }}>
+            {badge && <span style={badgeStyle(isDark)}>{badge}</span>}
+            <span style={labelStyle(isDark)}>{label}</span>
+          </div>
+        </div>
+
+        {/* Scrollable body with top fade mask */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          maskImage: 'linear-gradient(to bottom, transparent, black 8px, black calc(100% - 8px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 8px, black calc(100% - 8px), transparent)',
+        }}>
+          {/* Field rows */}
+          <div style={fieldRowsStyle}>
+            {fieldConfigs.map((config) => (
+              <FieldRow
+                key={config.key}
+                label={config.label}
+                options={config.options}
+                selected={fieldSelections[config.key] ?? null}
+                onSelect={(value) => handleFieldChange(config.key, value)}
+                allowOther={config.allowOther}
+                theme={theme}
+              />
+            ))}
+          </div>
+
+          {/* Instructions preview */}
+          {instructionsLine && (
+            <div style={instructionsStyle(isDark)}>
+              {instructionsLine.split('\n').map((line, i) => (
+                <div key={i}>{line}</div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer actions — outside scroll body so mask fade doesn't affect buttons */}
+        <div style={stickyFooterStyle}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              clearEditMode();
+              onCancel();
+            }}
+            style={{ color: isDark ? 'rgba(255,255,255,0.6)' : colors.fg.neutral.spotReadable }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            shape="pill"
+            onClick={handleAdd}
+            data-testid="suggestion-edit-add-btn"
+          >
+            Add with changes
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={containerStyle(isDark)} data-testid="suggestion-edit-panel">
       {/* Header */}
@@ -202,7 +276,7 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
         <Button
           variant="primary"
           size="sm"
-          shape="rect"
+          shape="pill"
           onClick={handleAdd}
           data-testid="suggestion-edit-add-btn"
         >
@@ -279,7 +353,7 @@ const NarrativeEditPanel: React.FC<NarrativeEditPanelProps> = ({
         <Button
           variant="primary"
           size="sm"
-          shape="rect"
+          shape="pill"
           onClick={handleAdd}
           data-testid="suggestion-edit-add-btn"
         >
@@ -308,7 +382,6 @@ const headerStyle = (isDark: boolean): React.CSSProperties => ({
   justifyContent: 'space-between',
   gap: spaceBetween.repeating,
   paddingBottom: spaceAround.tight,
-  borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : colors.border.neutral.low}`,
 });
 
 const badgeStyle = (isDark: boolean): React.CSSProperties => ({
@@ -373,4 +446,12 @@ const footerStyle: React.CSSProperties = {
   justifyContent: 'flex-end',
   gap: spaceBetween.repeating,
   paddingTop: spaceAround.tight,
+};
+
+/** Footer for sticky layout — sits outside scroll body, unaffected by mask fade */
+const stickyFooterStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: spaceBetween.repeating,
+  padding: `${spaceAround.tight}px ${spaceAround.default}px`,
 };
