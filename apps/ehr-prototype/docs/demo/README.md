@@ -64,6 +64,15 @@ Each walkthrough file follows the same format:
 
 See [COVERAGE.md](COVERAGE.md) for the full feature-by-scenario matrix with implementation status.
 
+## Planned Refinements
+
+Design discussions and open questions for features that affect demo behavior. Pick these up in future sessions.
+
+| Feature | Doc | Status |
+|---|---|---|
+| [Tx Workspace Scoping](planned/tx-workspace-scoping.md) | Auto-pause recording when navigating away from patient workspace, global recording indicator in menu pane, tap-to-return | Open questions on auto-resume, multi-session constraints |
+| [Care Protocols](planned/care-protocols.md) | Guideline-driven checklists in reference pane or via AI palette responses | Two paths proposed (AI palette vs. dedicated tab), starting with AI palette |
+
 ## Related Docs
 
 - [COVERAGE.md](COVERAGE.md) — Feature implementation status matrix

@@ -202,14 +202,18 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
     return (
       <div style={styles.container} data-testid="detail-area-category">
         <ItemPills items={items} onSelect={onItemSelect} />
-        {!text && items.slice(0, 3).map((item) => (
-          <SuggestionCard
-            key={item.id}
-            item={item}
-            onAdd={onItemAdd}
-            onEdit={handleEditClick}
-          />
-        ))}
+        {!text && items.slice(0, 3).length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: spaceBetween.repeating }}>
+            {items.slice(0, 3).map((item) => (
+              <SuggestionCard
+                key={item.id}
+                item={item}
+                onAdd={onItemAdd}
+                onEdit={handleEditClick}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   }

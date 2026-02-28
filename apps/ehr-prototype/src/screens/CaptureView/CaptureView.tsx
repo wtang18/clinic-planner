@@ -35,6 +35,7 @@ import { SegmentedControl, type Segment } from '../../components/primitives/Segm
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { OmniAddBarV2 as OmniAddBar } from '../../components/omni-add/OmniAddBarV2';
 import { useAIAssistant } from '../../hooks/useAIAssistant';
+import { useAIConversation } from '../../hooks/useAIConversation';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { DetailsPane } from '../../components/details-pane';
@@ -353,6 +354,9 @@ export const CaptureView: React.FC = () => {
     handleEditDraft,
     handleDismissDraft,
   } = useCaptureView();
+
+  // AI Conversation state (canned queries/responses for demo)
+  const aiConversation = useAIConversation('uc-cough', { onAddChartItem: handleItemAdd });
 
   // Workflow state (phases, sections, accordion)
   const workflowState = useWorkflowState();
@@ -842,25 +846,27 @@ export const CaptureView: React.FC = () => {
               patientName: patientOverviewData.name,
               encounterLabel: state.context.visit?.chiefComplaint || encounter?.type,
               suggestions: activeSuggestions,
-              messages: [],
-              isLoading: aiState.isLoading,
+              messages: aiConversation.messages,
+              isLoading: aiConversation.isLoading,
               onSuggestionAccept: handleSuggestionAccept,
               onSuggestionDismiss: handleSuggestionDismiss,
               onSuggestionAcceptWithChanges: handleSuggestionAcceptWithChanges,
+              followUpSuggestions: aiConversation.followUpSuggestions,
+              onFollowUpAccept: aiConversation.handleFollowUpAccept,
+              onFollowUpDismiss: aiConversation.handleFollowUpDismiss,
+              onFollowUpAcceptWithChanges: aiConversation.handleFollowUpAcceptWithChanges,
+              nonChartFollowUps: aiConversation.nonChartFollowUps,
+              onNonChartAction: aiConversation.handleNonChartAction,
               availableContextLevels: ['encounter', 'patient', 'section'],
-              onContextLevelChange: (level: string) => console.log('Drawer context:', level),
             }}
             aiDrawerFooter={
               <AIDrawerFooter
                 quickActions={aiActions.getQuickActions()}
-                onQuickActionClick={(actionId) => {
-                  console.log('Quick action:', actionId);
-                }}
-                onSend={(message) => {
-                  console.log('AI message:', message);
-                }}
-                disabled={aiState.isLoading}
+                onQuickActionClick={aiConversation.handleQuickAction}
+                onSend={aiConversation.sendMessage}
+                disabled={aiConversation.isLoading}
                 placeholder="Ask AI..."
+                cannedQueries={aiConversation.cannedQueries.map(q => q.text)}
               />
             }
           />
@@ -1336,9 +1342,18 @@ export const CaptureView: React.FC = () => {
             patientName={patientOverviewData.name}
             contextTarget={{ type: 'encounter', label: state.context.visit?.chiefComplaint || encounter?.type || 'Visit' }}
             availableContextLevels={['encounter', 'patient', 'section']}
-            onContextLevelChange={(level) => console.log('Context level:', level)}
             quickActions={aiActions.getQuickActions()}
-            onQuickActionClick={(actionId) => console.log('Quick action:', actionId)}
+            onQuickActionClick={aiConversation.handleQuickAction}
+            onSend={aiConversation.sendMessage}
+            paletteResponse={aiConversation.paletteResponse}
+            followUpSuggestions={aiConversation.followUpSuggestions}
+            onFollowUpAccept={aiConversation.handleFollowUpAccept}
+            onFollowUpDismiss={aiConversation.handleFollowUpDismiss}
+            onFollowUpAcceptWithChanges={aiConversation.handleFollowUpAcceptWithChanges}
+            nonChartFollowUps={aiConversation.nonChartFollowUps}
+            onNonChartAction={aiConversation.handleNonChartAction}
+            onClearResponse={aiConversation.clearPaletteResponse}
+            cannedQueries={aiConversation.cannedQueries.map(q => q.text)}
             transcriptionEnabled={true}
           />
         }

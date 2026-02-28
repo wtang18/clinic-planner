@@ -143,7 +143,7 @@ export const SuggestionList: React.FC<SuggestionListProps> = ({
   const compactListStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    gap: spaceBetween.coupled,
+    gap: spaceBetween.repeating,
   };
 
   const exitingStyle: React.CSSProperties = {

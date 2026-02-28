@@ -11,6 +11,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
+import { LightMarkdown } from '../../../utils/lightweight-markdown';
 
 // ============================================================================
 // Types
@@ -106,11 +107,6 @@ const AIMessage: React.FC<AIMessageProps> = ({
 
   const contentStyle: React.CSSProperties = {
     maxWidth: '90%',
-    fontSize: 14,
-    fontFamily: typography.fontFamily.sans,
-    lineHeight: 1.6,
-    color: colors.fg.neutral.primary,
-    whiteSpace: 'pre-wrap',
   };
 
   const actionsContainerStyle: React.CSSProperties = {
@@ -134,7 +130,9 @@ const AIMessage: React.FC<AIMessageProps> = ({
 
   return (
     <div style={containerStyle}>
-      <div style={contentStyle}>{content}</div>
+      <div style={contentStyle}>
+        <LightMarkdown content={content} theme="light" style={{ fontFamily: typography.fontFamily.sans }} />
+      </div>
 
       {/* Follow-up actions - only on latest response */}
       {showFollowUps && followUpActions && followUpActions.length > 0 && (
@@ -304,6 +302,9 @@ export const ConversationHistory: React.FC<ConversationHistoryProps> = ({
       onScroll={handleScroll}
       data-testid={testID}
     >
+      {/* Spacer pushes messages to bottom when content doesn't fill container */}
+      <div style={{ flex: 1 }} />
+
       <AnimatePresence mode="popLayout">
         {messages.map((message) => (
           <motion.div

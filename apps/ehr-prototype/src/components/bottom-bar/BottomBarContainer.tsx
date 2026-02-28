@@ -22,6 +22,7 @@ import type { AIMinibarContent } from '../ai-ui/AIMinibar';
 import type { Suggestion, Alert } from '../../types/suggestions';
 import type { ContextTarget, ContextTargetType } from './ai/AISurfaceModule';
 import type { QuickAction } from '../../hooks/useAIAssistant';
+import type { ConversationMessage } from '../LeftPane/AIDrawer/ConversationHistory';
 import type { TranscriptionSession, RecordingStatus } from '../../state/bottomBar/types';
 
 // ============================================================================
@@ -67,6 +68,26 @@ export interface BottomBarContainerProps {
   quickActions?: QuickAction[];
   /** Called when a quick action is clicked */
   onQuickActionClick?: (actionId: string) => void;
+  /** Called when user sends a message from the palette input */
+  onSend?: (value: string) => void;
+  /** Ephemeral AI response for palette display */
+  paletteResponse?: ConversationMessage | null;
+  /** Follow-up suggestion objects from AI responses */
+  followUpSuggestions?: Suggestion[];
+  /** Accept a follow-up suggestion */
+  onFollowUpAccept?: (id: string) => void;
+  /** Dismiss a follow-up suggestion */
+  onFollowUpDismiss?: (id: string) => void;
+  /** Accept a follow-up suggestion with changes */
+  onFollowUpAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
+  /** Non-chart follow-up actions (e.g., Copy to clipboard) */
+  nonChartFollowUps?: Array<{ id: string; label: string }>;
+  /** Handle non-chart follow-up action */
+  onNonChartAction?: (actionId: string) => void;
+  /** Called when user clears/dismisses the palette response */
+  onClearResponse?: () => void;
+  /** Canned query texts for ArrowUp/Down cycling */
+  cannedQueries?: string[];
   /** Whether transcription is enabled */
   transcriptionEnabled?: boolean;
   /** Custom styles */
@@ -93,6 +114,16 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   onContextLevelChange,
   quickActions,
   onQuickActionClick,
+  onSend,
+  paletteResponse,
+  followUpSuggestions,
+  onFollowUpAccept,
+  onFollowUpDismiss,
+  onFollowUpAcceptWithChanges,
+  nonChartFollowUps,
+  onNonChartAction,
+  onClearResponse,
+  cannedQueries,
   transcriptionEnabled = true,
   style,
   testID = 'bottom-bar-container',
@@ -272,6 +303,16 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
                   onAlertAcknowledge={onAlertAcknowledge}
                   quickActions={quickActions}
                   onQuickActionClick={onQuickActionClick}
+                  onSend={onSend}
+                  paletteResponse={paletteResponse}
+                  followUpSuggestions={followUpSuggestions}
+                  onFollowUpAccept={onFollowUpAccept}
+                  onFollowUpDismiss={onFollowUpDismiss}
+                  onFollowUpAcceptWithChanges={onFollowUpAcceptWithChanges}
+                  nonChartFollowUps={nonChartFollowUps}
+                  onNonChartAction={onNonChartAction}
+                  onClearResponse={onClearResponse}
+                  cannedQueries={cannedQueries}
                   badgeCount={badgeCount > 0 ? badgeCount : undefined}
                   testID="ai-module"
                 />

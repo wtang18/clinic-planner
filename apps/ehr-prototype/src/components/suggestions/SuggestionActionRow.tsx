@@ -11,7 +11,7 @@
  */
 
 import React from 'react';
-import { Ban } from 'lucide-react';
+import { Ban, Pencil } from 'lucide-react';
 import type { Suggestion } from '../../types/suggestions';
 import type { ItemIntent } from '../../types/chart-items';
 import { getCategoryBadge, buildSuggestionSummary } from '../../utils/suggestion-helpers';
@@ -97,10 +97,11 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: spaceBetween.repeating,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
     backgroundColor: isDark ? 'rgba(255,255,255,0.04)' : colors.bg.transparent.min,
+    border: isDark ? '1px solid rgba(255,255,255,0.06)' : `1px solid ${colors.border.neutral.subtle}`,
     borderRadius: borderRadius.sm,
     transition: `all ${transitions.fast}`,
     ...(exiting ? { opacity: 0, transform: 'translateX(-10px)' } : {}),
@@ -121,11 +122,10 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
     letterSpacing: 0.5,
     flexShrink: 0,
     lineHeight: '16px',
-    marginTop: 2,
   };
 
   const labelStyle: React.CSSProperties = {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
     color: isDark ? colors.fg.neutral.inversePrimary : colors.fg.neutral.primary,
@@ -135,7 +135,7 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
   };
 
   const summaryStyle: React.CSSProperties = {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: typography.fontFamily.mono,
     color: isDark ? 'rgba(255,255,255,0.5)' : colors.fg.neutral.spotReadable,
     whiteSpace: 'nowrap',
@@ -178,23 +178,19 @@ export const SuggestionActionRow: React.FC<SuggestionActionRowProps> = ({
           style={{ color: isDark ? 'rgba(255,255,255,0.5)' : colors.fg.neutral.spotReadable }}
         />
         {canEdit && (
-          <Button
+          <IconButton
+            icon={<Pencil size={14} />}
+            label="Edit"
             variant="ghost"
             size="sm"
             onClick={() => onEdit(suggestion.id)}
-            style={{
-              color: isDark ? 'rgba(255,255,255,0.7)' : colors.fg.neutral.secondary,
-              height: 28,
-              padding: '0 8px',
-            }}
-          >
-            Edit
-          </Button>
+            style={{ color: isDark ? 'rgba(255,255,255,0.7)' : colors.fg.neutral.secondary }}
+          />
         )}
         <Button
           variant="primary"
           size="xs"
-          shape="rect"
+          shape="pill"
           onClick={() => onAccept(suggestion.id)}
           style={{ height: 28, padding: '0 10px' }}
         >

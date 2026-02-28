@@ -11,10 +11,12 @@
  */
 
 import React from 'react';
+import { Pencil } from 'lucide-react';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import { buildItemSummary, getCategoryBadge } from '../../utils/suggestion-helpers';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { Button } from '../primitives/Button';
+import { IconButton } from '../primitives/IconButton';
 
 // ============================================================================
 // Types
@@ -62,21 +64,23 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
 
       {/* Right: actions */}
       <div style={styles.actions}>
-        <Button
+        <IconButton
+          icon={<Pencil size={14} />}
+          label="Edit"
           variant="ghost"
           size="sm"
           onClick={() => onEdit(item)}
           disabled={disabled}
           data-testid={`suggestion-edit-${item.id}`}
-        >
-          Edit
-        </Button>
+        />
         <Button
           variant="primary"
-          size="sm"
+          size="xs"
+          shape="pill"
           onClick={() => onAdd(item)}
           disabled={disabled}
           data-testid={`suggestion-add-${item.id}`}
+          style={{ height: 28, padding: '0 10px' }}
         >
           Add{showShortcutHint && <span style={{ opacity: 0.7, marginLeft: 4, fontSize: 11 }}>⌘↩</span>}
         </Button>
@@ -97,10 +101,10 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: spaceBetween.repeating,
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    backgroundColor: colors.bg.neutral.subtle,
-    border: `1px solid ${colors.border.neutral.low}`,
-    borderRadius: borderRadius.md,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    backgroundColor: colors.bg.transparent.min,
+    border: `1px solid ${colors.border.neutral.subtle}`,
+    borderRadius: borderRadius.sm,
     transition: `border-color ${transitions.fast}`,
   },
   content: {
@@ -114,12 +118,12 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: `2px ${spaceAround.nudge6}px`,
+    padding: `1px ${spaceAround.nudge4}px`,
     fontSize: 10,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.fg.accent.primary,
-    backgroundColor: colors.bg.accent.subtle,
+    color: colors.fg.transparent.medium,
+    backgroundColor: colors.bg.transparent.subtle,
     borderRadius: borderRadius.xs,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,

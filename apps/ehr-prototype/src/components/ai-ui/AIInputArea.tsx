@@ -42,6 +42,8 @@ export interface AIInputAreaProps {
   showDrawerButton?: boolean;
   /** Whether to show microphone button */
   showMicButton?: boolean;
+  /** Canned query texts for ArrowUp/Down cycling */
+  cannedQueries?: string[];
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID */
@@ -65,11 +67,13 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
   maxHeight = 120,
   showDrawerButton = true,
   showMicButton = true,
+  cannedQueries,
   style,
   testID,
 }) => {
   const [internalValue, setInternalValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [cycleIndex, setCycleIndex] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Register with keyboard shortcuts for ⌘K focus
@@ -120,12 +124,26 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Check if current value matches a canned query (cycling mode)
+  const isCycledValue = cycleIndex !== null && cannedQueries && cannedQueries[cycleIndex] === value;
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    setCycleIndex(null); // Reset cycling on any character input
     if (controlledValue === undefined) {
       setInternalValue(newValue);
     }
     onChange?.(newValue);
+  };
+
+  const setCycledQuery = (index: number) => {
+    if (!cannedQueries || cannedQueries.length === 0) return;
+    const query = cannedQueries[index];
+    setCycleIndex(index);
+    if (controlledValue === undefined) {
+      setInternalValue(query);
+    }
+    onChange?.(query);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -133,6 +151,32 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
     // EXCEPT Tab for accessibility navigation
     if (e.key !== 'Tab') {
       e.stopPropagation();
+    }
+
+    // ArrowUp/Down cycling through canned queries
+    if (cannedQueries && cannedQueries.length > 0 && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      const isEmpty = !value.trim();
+      if (isEmpty || isCycledValue) {
+        e.preventDefault();
+        if (e.key === 'ArrowUp') {
+          const next = cycleIndex === null ? cannedQueries.length - 1 : (cycleIndex - 1 + cannedQueries.length) % cannedQueries.length;
+          setCycledQuery(next);
+        } else {
+          const next = cycleIndex === null ? 0 : (cycleIndex + 1) % cannedQueries.length;
+          setCycledQuery(next);
+        }
+        return;
+      }
+    }
+
+    // Escape clears input and resets cycle
+    if (e.key === 'Escape') {
+      setCycleIndex(null);
+      if (controlledValue === undefined) {
+        setInternalValue('');
+      }
+      onChange?.('');
+      return;
     }
 
     // Enter to send, Shift+Enter for newline
@@ -145,6 +189,7 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
   const handleSend = () => {
     if (value.trim() && onSend) {
       onSend(value.trim());
+      setCycleIndex(null);
       if (controlledValue === undefined) {
         setInternalValue('');
       }
@@ -270,7 +315,7 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
 
         {/* Control row - contained within input */}
         <div style={controlRowStyle}>
-          {/* Left controls - Mic button */}
+          {/* Left controls - Mic button + cycle hint */}
           <div style={leftControlsStyle}>
             {showMicButton && (
               <button
@@ -292,6 +337,16 @@ export const AIInputArea: React.FC<AIInputAreaProps> = ({
               >
                 <Mic size={16} />
               </button>
+            )}
+            {isCycledValue && cannedQueries && (
+              <span style={{
+                fontSize: 11,
+                color: 'rgba(255, 255, 255, 0.4)',
+                fontFamily: typography.fontFamily.sans,
+                whiteSpace: 'nowrap',
+              }}>
+                {(cycleIndex ?? 0) + 1} of {cannedQueries.length}
+              </span>
             )}
           </div>
 

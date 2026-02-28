@@ -95,7 +95,8 @@
       "Bash({ echo \"=== COORDINATION SYSTEM \\(Context + useReducer\\) ===\" wc -l src/state/coordination/*.ts src/hooks/useCoordination.tsx echo \"\" echo \"=== ENCOUNTER STORE \\(Redux-style\\) ===\" wc -l src/state/reducers/*.ts src/state/store/*.ts src/state/actions/*.ts src/context/EncounterContext.tsx src/hooks/useEncounterState.tsx echo \"\" echo \"=== TESTS FOR COORDINATION ===\" wc -l src/__tests__/state/coordination/*.ts src/__tests__/integration/*.test.ts)",
       "Bash(})",
       "Bash(wc:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

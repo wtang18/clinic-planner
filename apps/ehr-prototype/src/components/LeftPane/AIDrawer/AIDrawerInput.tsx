@@ -39,6 +39,8 @@ export interface AIDrawerInputProps {
   showMicButton?: boolean;
   /** Whether to show paste/attach button */
   showPasteButton?: boolean;
+  /** Canned query texts for ArrowUp/Down cycling */
+  cannedQueries?: string[];
   /** Reference to focus the input */
   inputRef?: React.RefObject<HTMLTextAreaElement>;
   /** Custom styles */
@@ -63,12 +65,14 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
   maxHeight = 120,
   showMicButton = true,
   showPasteButton = false,
+  cannedQueries,
   inputRef: externalRef,
   style,
   testID,
 }) => {
   const [internalValue, setInternalValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [cycleIndex, setCycleIndex] = useState<number | null>(null);
   const internalTextareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = externalRef || internalTextareaRef;
 
@@ -112,18 +116,58 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
     return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Check if current value matches a canned query (cycling mode)
+  const isCycledValue = cycleIndex !== null && cannedQueries && cannedQueries[cycleIndex] === value;
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    setCycleIndex(null);
     if (controlledValue === undefined) {
       setInternalValue(newValue);
     }
     onChange?.(newValue);
   };
 
+  const setCycledQuery = (index: number) => {
+    if (!cannedQueries || cannedQueries.length === 0) return;
+    const query = cannedQueries[index];
+    setCycleIndex(index);
+    if (controlledValue === undefined) {
+      setInternalValue(query);
+    }
+    onChange?.(query);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Stop keyboard events from bubbling except Tab
     if (e.key !== 'Tab') {
       e.stopPropagation();
+    }
+
+    // ArrowUp/Down cycling through canned queries
+    if (cannedQueries && cannedQueries.length > 0 && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      const isEmpty = !value.trim();
+      if (isEmpty || isCycledValue) {
+        e.preventDefault();
+        if (e.key === 'ArrowUp') {
+          const next = cycleIndex === null ? cannedQueries.length - 1 : (cycleIndex - 1 + cannedQueries.length) % cannedQueries.length;
+          setCycledQuery(next);
+        } else {
+          const next = cycleIndex === null ? 0 : (cycleIndex + 1) % cannedQueries.length;
+          setCycledQuery(next);
+        }
+        return;
+      }
+    }
+
+    // Escape clears input and resets cycle
+    if (e.key === 'Escape') {
+      setCycleIndex(null);
+      if (controlledValue === undefined) {
+        setInternalValue('');
+      }
+      onChange?.('');
+      return;
     }
 
     // Enter to send, Shift+Enter for newline
@@ -136,6 +180,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
   const handleSend = () => {
     if (value.trim() && onSend) {
       onSend(value.trim());
+      setCycleIndex(null);
       if (controlledValue === undefined) {
         setInternalValue('');
       }
@@ -236,7 +281,7 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
         />
 
         <div style={controlRowStyle}>
-          {/* Left controls - Mic button */}
+          {/* Left controls - Mic button + cycle hint */}
           <div style={buttonGroupStyle}>
             {showMicButton && (
               <button
@@ -258,6 +303,16 @@ export const AIDrawerInput: React.FC<AIDrawerInputProps> = ({
               >
                 <Mic size={16} />
               </button>
+            )}
+            {isCycledValue && cannedQueries && (
+              <span style={{
+                fontSize: 11,
+                color: colors.fg.neutral.disabled,
+                fontFamily: typography.fontFamily.sans,
+                whiteSpace: 'nowrap',
+              }}>
+                {(cycleIndex ?? 0) + 1} of {cannedQueries.length}
+              </span>
             )}
           </div>
 

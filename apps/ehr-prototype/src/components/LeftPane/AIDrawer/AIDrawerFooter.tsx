@@ -38,6 +38,8 @@ export interface AIDrawerFooterProps {
   disabled?: boolean;
   /** Placeholder text for input */
   placeholder?: string;
+  /** Canned query texts for ArrowUp/Down cycling */
+  cannedQueries?: string[];
   /** Reference to focus the input (for ⌘K) */
   inputRef?: React.RefObject<HTMLTextAreaElement>;
   /** Custom styles */
@@ -61,6 +63,7 @@ export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
   isListening = false,
   disabled = false,
   placeholder = 'Ask AI...',
+  cannedQueries,
   inputRef,
   style,
   testID,
@@ -98,6 +101,7 @@ export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
           disabled={disabled}
           showMicButton={true}
           showPasteButton={false}
+          cannedQueries={cannedQueries}
           inputRef={inputRef}
         />
       )}
