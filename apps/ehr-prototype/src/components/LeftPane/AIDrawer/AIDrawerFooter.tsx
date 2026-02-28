@@ -167,8 +167,8 @@ export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
         )
       )}
 
-      {/* Input Row — always visible */}
-      {onSend && (
+      {/* Input Row — hidden during editing to reduce visual noise */}
+      {!editingSuggestion && onSend && (
         <AIDrawerInput
           value={inputValue}
           onChange={onInputChange}

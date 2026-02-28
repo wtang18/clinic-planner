@@ -50,6 +50,7 @@ import type { QuickAction } from '../../../hooks/useAIAssistant';
 import type { ConversationMessage } from '../../LeftPane/AIDrawer/ConversationHistory';
 import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
 import { LightMarkdown } from '../../../utils/lightweight-markdown';
+import { SuggestionList } from '../../suggestions/SuggestionList';
 import { SuggestionModule } from '../../suggestions/SuggestionModule';
 import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
 
@@ -621,7 +622,7 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
 
       {editingSuggestion && onSuggestionAcceptWithChanges ? (
         /* Edit mode: just the edit panel, nothing else */
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${spaceAround.default}px ${spaceAround.default}px 0`, minHeight: 0 }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${spaceAround.default}px 0 0 ${spaceAround.default}px`, minHeight: 0 }}>
           <SuggestionEditPanel
             suggestion={editingSuggestion}
             theme="dark"
@@ -668,6 +669,20 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
                   theme="dark"
                   style={{ fontFamily: typography.fontFamily.sans }}
                 />
+                {/* Chart-item suggestions inline with response */}
+                {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
+                  <div style={{ marginTop: 12 }}>
+                    <SuggestionList
+                      suggestions={actionSuggestions}
+                      onAccept={onSuggestionAccept}
+                      onDismiss={onSuggestionDismiss}
+                      onEdit={(id) => setEditingSuggestionId(id)}
+                      variant="compact"
+                      theme="dark"
+                      showHeader={false}
+                    />
+                  </div>
+                )}
                 {/* Non-chart follow-ups as action buttons */}
                 {nonChartFollowUps.length > 0 && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
@@ -778,8 +793,8 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
             )}
           </div>
           )}
-          {/* Suggestion Module — between content and input, mutually exclusive with quick actions */}
-          {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
+          {/* Suggestion Module — between content and input, only when no response (idle moment) */}
+          {!paletteResponse && actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
             <SuggestionModule
               suggestions={suggestions}
               onAccept={onSuggestionAccept}

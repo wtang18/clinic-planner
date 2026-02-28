@@ -160,7 +160,7 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
     return (
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, gap: spaceBetween.coupled }} data-testid="suggestion-edit-panel">
         {/* Header — fixed above scroll, no special bg */}
-        <div style={headerStyle(isDark)}>
+        <div style={{ ...headerStyle(isDark), paddingRight: spaceAround.default }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: spaceBetween.coupled, flex: 1, minWidth: 0 }}>
             {badge && <span style={badgeStyle(isDark)}>{badge}</span>}
             <span style={labelStyle(isDark)}>{label}</span>
@@ -171,6 +171,7 @@ export const SuggestionEditPanel: React.FC<SuggestionEditPanelProps> = ({
         <div style={{
           flex: 1,
           overflowY: 'auto',
+          paddingRight: spaceAround.default,
           maskImage: 'linear-gradient(to bottom, transparent, black 8px, black calc(100% - 8px), transparent)',
           WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 8px, black calc(100% - 8px), transparent)',
         }}>
@@ -453,5 +454,5 @@ const stickyFooterStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'flex-end',
   gap: spaceBetween.repeating,
-  padding: `${spaceAround.tight}px ${spaceAround.default}px`,
+  padding: spaceAround.compact,
 };
