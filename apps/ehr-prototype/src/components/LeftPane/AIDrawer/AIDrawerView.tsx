@@ -10,15 +10,11 @@
  * @see AI_DRAWER.md for full specification
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { AIContextHeader, type ContextScope } from './AIContextHeader';
 export type { ContextScope };
-import { SuggestionsSection } from './SuggestionsSection';
 import { ConversationHistory, type ConversationMessage } from './ConversationHistory';
-import { SuggestionList } from '../../suggestions/SuggestionList';
-import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
-import type { Suggestion } from '../../../types/suggestions';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
 
 // ============================================================================
@@ -34,8 +30,6 @@ export interface AIDrawerViewProps {
   encounterLabel?: string;
   /** Specific item label (for item-level scope) */
   itemLabel?: string;
-  /** Active suggestions */
-  suggestions?: Suggestion[];
   /** Conversation messages */
   messages?: ConversationMessage[];
   /** Whether AI is processing */
@@ -55,20 +49,6 @@ export interface AIDrawerViewProps {
   onOpenActivityLog?: () => void;
   /** Called when scope is broadened */
   onBroadenScope?: () => void;
-  /** Called when suggestion is accepted */
-  onSuggestionAccept?: (id: string) => void;
-  /** Called when suggestion is dismissed */
-  onSuggestionDismiss?: (id: string, reason?: string) => void;
-  /** Called when suggestion is accepted with field changes */
-  onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
-  /** Follow-up suggestion objects from AI responses */
-  followUpSuggestions?: Suggestion[];
-  /** Accept a follow-up suggestion */
-  onFollowUpAccept?: (id: string) => void;
-  /** Dismiss a follow-up suggestion */
-  onFollowUpDismiss?: (id: string) => void;
-  /** Accept a follow-up suggestion with changes */
-  onFollowUpAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Non-chart follow-up actions (e.g., Copy to clipboard) */
   nonChartFollowUps?: Array<{ id: string; label: string }>;
   /** Handle non-chart follow-up action */
@@ -157,7 +137,6 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
   patientName,
   encounterLabel,
   itemLabel,
-  suggestions = [],
   messages = [],
   isLoading = false,
   isReadOnly = false,
@@ -166,28 +145,13 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
   onContextLevelChange,
   onOpenActivityLog,
   onBroadenScope,
-  onSuggestionAccept,
-  onSuggestionDismiss,
-  onSuggestionAcceptWithChanges,
-  followUpSuggestions = [],
-  onFollowUpAccept,
-  onFollowUpDismiss,
-  onFollowUpAcceptWithChanges,
   nonChartFollowUps = [],
   onNonChartAction,
   style,
   testID,
   children,
 }) => {
-  const hasContent = suggestions.length > 0 || messages.length > 0 || isLoading || followUpSuggestions.length > 0;
-
-  // Edit-before-accept state for follow-up suggestions
-  const [editingFollowUpId, setEditingFollowUpId] = useState<string | null>(null);
-  const editingFollowUp = editingFollowUpId
-    ? followUpSuggestions.find(s => s.id === editingFollowUpId) ?? null
-    : null;
-
-  const activeFollowUps = followUpSuggestions.filter(s => s.status === 'active');
+  const hasContent = messages.length > 0 || isLoading;
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -253,16 +217,6 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
       <div style={scrollContentStyle}>
         {hasContent ? (
           <>
-            {/* Suggestions Section */}
-            {suggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
-              <SuggestionsSection
-                suggestions={suggestions}
-                onAccept={onSuggestionAccept}
-                onDismiss={onSuggestionDismiss}
-                onAcceptWithChanges={onSuggestionAcceptWithChanges}
-              />
-            )}
-
             {/* Conversation History */}
             <ConversationHistory
               messages={messages}
@@ -270,38 +224,6 @@ export const AIDrawerView: React.FC<AIDrawerViewProps> = ({
               onFollowUpClick={onNonChartAction}
               style={{ flex: 1 }}
             />
-
-            {/* Structural divider between conversation and follow-up content */}
-            {(editingFollowUp || activeFollowUps.length > 0) && (
-              <div style={{ borderTop: `1px solid ${colors.border.neutral.low}` }} />
-            )}
-
-            {/* Follow-up suggestions from AI responses */}
-            {editingFollowUp && onFollowUpAcceptWithChanges ? (
-              <div style={{ padding: spaceAround.default }}>
-                <SuggestionEditPanel
-                  suggestion={editingFollowUp}
-                  theme="light"
-                  onAccept={(id, data) => {
-                    onFollowUpAcceptWithChanges(id, data);
-                    setEditingFollowUpId(null);
-                  }}
-                  onCancel={() => setEditingFollowUpId(null)}
-                />
-              </div>
-            ) : activeFollowUps.length > 0 && onFollowUpAccept && onFollowUpDismiss ? (
-              <div style={{ padding: `0 ${spaceAround.default}px ${spaceAround.default}px` }}>
-                <SuggestionList
-                  suggestions={activeFollowUps}
-                  onAccept={onFollowUpAccept}
-                  onDismiss={onFollowUpDismiss}
-                  onEdit={(id) => setEditingFollowUpId(id)}
-                  variant="compact"
-                  theme="light"
-                  showHeader={false}
-                />
-              </div>
-            ) : null}
           </>
         ) : (
           /* Empty State */

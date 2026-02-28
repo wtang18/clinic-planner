@@ -17,7 +17,6 @@ export type { PaneContentProps } from './PaneContent';
 export {
   AIDrawerView,
   AIContextHeader,
-  SuggestionsSection,
   ConversationHistory,
   AIDrawerFooter,
   QuickActionsRow,
@@ -27,7 +26,6 @@ export type {
   AIDrawerViewProps,
   AIContextHeaderProps,
   ContextScope,
-  SuggestionsSectionProps,
   ConversationHistoryProps,
   ConversationMessage,
   MessageType,

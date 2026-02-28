@@ -7,3 +7,4 @@
 export { SuggestionChip, type SuggestionChipProps } from './SuggestionChip';
 export { SuggestionCard, type SuggestionCardProps } from './SuggestionCard';
 export { SuggestionList, type SuggestionListProps } from './SuggestionList';
+export { SuggestionModule, type SuggestionModuleProps } from './SuggestionModule';

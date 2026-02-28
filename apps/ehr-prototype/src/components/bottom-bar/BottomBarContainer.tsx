@@ -72,14 +72,6 @@ export interface BottomBarContainerProps {
   onSend?: (value: string) => void;
   /** Ephemeral AI response for palette display */
   paletteResponse?: ConversationMessage | null;
-  /** Follow-up suggestion objects from AI responses */
-  followUpSuggestions?: Suggestion[];
-  /** Accept a follow-up suggestion */
-  onFollowUpAccept?: (id: string) => void;
-  /** Dismiss a follow-up suggestion */
-  onFollowUpDismiss?: (id: string) => void;
-  /** Accept a follow-up suggestion with changes */
-  onFollowUpAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Non-chart follow-up actions (e.g., Copy to clipboard) */
   nonChartFollowUps?: Array<{ id: string; label: string }>;
   /** Handle non-chart follow-up action */
@@ -116,10 +108,6 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
   onQuickActionClick,
   onSend,
   paletteResponse,
-  followUpSuggestions,
-  onFollowUpAccept,
-  onFollowUpDismiss,
-  onFollowUpAcceptWithChanges,
   nonChartFollowUps,
   onNonChartAction,
   onClearResponse,
@@ -305,10 +293,6 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
                   onQuickActionClick={onQuickActionClick}
                   onSend={onSend}
                   paletteResponse={paletteResponse}
-                  followUpSuggestions={followUpSuggestions}
-                  onFollowUpAccept={onFollowUpAccept}
-                  onFollowUpDismiss={onFollowUpDismiss}
-                  onFollowUpAcceptWithChanges={onFollowUpAcceptWithChanges}
                   nonChartFollowUps={nonChartFollowUps}
                   onNonChartAction={onNonChartAction}
                   onClearResponse={onClearResponse}

@@ -10,9 +10,6 @@ export type { AIDrawerViewProps } from './AIDrawerView';
 export { AIContextHeader } from './AIContextHeader';
 export type { AIContextHeaderProps, ContextScope } from './AIContextHeader';
 
-export { SuggestionsSection } from './SuggestionsSection';
-export type { SuggestionsSectionProps } from './SuggestionsSection';
-
 export { ConversationHistory } from './ConversationHistory';
 export type {
   ConversationHistoryProps,

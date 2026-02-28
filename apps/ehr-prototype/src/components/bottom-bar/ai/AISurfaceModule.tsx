@@ -50,7 +50,7 @@ import type { QuickAction } from '../../../hooks/useAIAssistant';
 import type { ConversationMessage } from '../../LeftPane/AIDrawer/ConversationHistory';
 import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
 import { LightMarkdown } from '../../../utils/lightweight-markdown';
-import { SuggestionList } from '../../suggestions/SuggestionList';
+import { SuggestionModule } from '../../suggestions/SuggestionModule';
 import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
 
 // ============================================================================
@@ -110,14 +110,6 @@ export interface AISurfaceModuleProps {
   onSend?: (value: string) => void;
   /** Ephemeral AI response for palette single-turn display */
   paletteResponse?: ConversationMessage | null;
-  /** Suggestion objects from follow-up actions */
-  followUpSuggestions?: Suggestion[];
-  /** Accept a follow-up suggestion */
-  onFollowUpAccept?: (id: string) => void;
-  /** Dismiss a follow-up suggestion */
-  onFollowUpDismiss?: (id: string) => void;
-  /** Accept a follow-up suggestion with changes */
-  onFollowUpAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Non-chart follow-up actions (e.g., Copy to clipboard) */
   nonChartFollowUps?: Array<{ id: string; label: string }>;
   /** Handle non-chart follow-up action */
@@ -452,10 +444,6 @@ interface PaletteContentProps {
   onClearContext?: () => void;
   onSend?: (value: string) => void;
   paletteResponse?: ConversationMessage | null;
-  followUpSuggestions?: Suggestion[];
-  onFollowUpAccept?: (id: string) => void;
-  onFollowUpDismiss?: (id: string) => void;
-  onFollowUpAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   nonChartFollowUps?: Array<{ id: string; label: string }>;
   onNonChartAction?: (actionId: string) => void;
   onClearResponse?: () => void;
@@ -479,10 +467,6 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
   onClearContext,
   onSend,
   paletteResponse,
-  followUpSuggestions = [],
-  onFollowUpAccept,
-  onFollowUpDismiss,
-  onFollowUpAcceptWithChanges,
   nonChartFollowUps = [],
   onNonChartAction,
   onClearResponse,
@@ -513,15 +497,25 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
     if (!paletteResponse || !responseScrollRef.current) return;
     const el = responseScrollRef.current;
     setIsScrolledToBottom(el.scrollHeight - el.clientHeight < 10);
-  }, [paletteResponse, followUpSuggestions, nonChartFollowUps]);
+  }, [paletteResponse, nonChartFollowUps]);
 
-  // Edit-before-accept state (for both regular suggestions and follow-up suggestions)
+  // Suggestion module collapse state
+  const [moduleCollapsed, setModuleCollapsed] = useState(false);
+
+  // Auto-expand when suggestion count increases
+  const prevActionCountRef = useRef(actionSuggestions.length);
+  useEffect(() => {
+    if (actionSuggestions.length > prevActionCountRef.current) {
+      setModuleCollapsed(false);
+    }
+    prevActionCountRef.current = actionSuggestions.length;
+  }, [actionSuggestions.length]);
+
+  // Edit-before-accept state
   const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null);
   const editingSuggestion = editingSuggestionId
-    ? (suggestions.find(s => s.id === editingSuggestionId) ?? followUpSuggestions.find(s => s.id === editingSuggestionId) ?? null)
+    ? (suggestions.find(s => s.id === editingSuggestionId) ?? null)
     : null;
-  // Determine which accept-with-changes handler to use based on which list the suggestion came from
-  const isEditingFollowUp = editingSuggestionId ? followUpSuggestions.some(s => s.id === editingSuggestionId) : false;
 
   const showContextLevelSelector = onContextLevelChange && availableContextLevels && availableContextLevels.length > 0;
 
@@ -625,7 +619,7 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
         )}
       </div>
 
-      {editingSuggestion && (isEditingFollowUp ? onFollowUpAcceptWithChanges : onSuggestionAcceptWithChanges) ? (
+      {editingSuggestion && onSuggestionAcceptWithChanges ? (
         /* Edit mode: just the edit panel, nothing else */
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${spaceAround.default}px ${spaceAround.default}px 0`, minHeight: 0 }}>
           <SuggestionEditPanel
@@ -633,11 +627,7 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
             theme="dark"
             stickyHeader
             onAccept={(id, data) => {
-              if (isEditingFollowUp) {
-                onFollowUpAcceptWithChanges?.(id, data);
-              } else {
-                onSuggestionAcceptWithChanges?.(id, data);
-              }
+              onSuggestionAcceptWithChanges(id, data);
               setEditingSuggestionId(null);
             }}
             onCancel={() => setEditingSuggestionId(null)}
@@ -678,20 +668,6 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
                   theme="dark"
                   style={{ fontFamily: typography.fontFamily.sans }}
                 />
-                {/* Chart-item follow-ups as SuggestionList */}
-                {followUpSuggestions.length > 0 && onFollowUpAccept && onFollowUpDismiss && (
-                  <div style={{ marginTop: 12 }}>
-                    <SuggestionList
-                      suggestions={followUpSuggestions}
-                      onAccept={onFollowUpAccept}
-                      onDismiss={onFollowUpDismiss}
-                      onEdit={(id) => setEditingSuggestionId(id)}
-                      variant="compact"
-                      theme="dark"
-                      showHeader={false}
-                    />
-                  </div>
-                )}
                 {/* Non-chart follow-ups as action buttons */}
                 {nonChartFollowUps.length > 0 && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
@@ -757,70 +733,62 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
             </div>
           ) : (
           <div style={{ flex: 1, overflow: 'auto', padding: spaceAround.default }}>
-            {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss ? (
-              /* Suggestions */
-              <div>
-                <div style={{ fontSize: 11, fontWeight: typography.fontWeight.semibold, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-                  Suggested Actions
-                </div>
-                <SuggestionList
-                  suggestions={actionSuggestions.slice(0, 3)}
-                  onAccept={(id) => onSuggestionAccept(id)}
-                  onDismiss={(id) => onSuggestionDismiss(id)}
-                  onEdit={(id) => setEditingSuggestionId(id)}
-                  variant="compact"
-                  theme="dark"
-                  showHeader={false}
-                />
-              </div>
-            ) : (
-              /* Quick Actions or Empty State */
-              <>
-                {quickActions && quickActions.length > 0 && onQuickActionClick ? (
-                  <div
-                    className="ai-palette-actions"
+            {/* Quick Actions or Empty State (no response, no suggestions inline) */}
+            {quickActions && quickActions.length > 0 && onQuickActionClick ? (
+              <div
+                className="ai-palette-actions"
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  overflowX: 'auto',
+                  margin: `0 -${spaceAround.default}px`,
+                  padding: `0 ${spaceAround.default}px`,
+                  scrollbarWidth: 'none',
+                }}
+              >
+                <style>{`.ai-palette-actions::-webkit-scrollbar { display: none; }`}</style>
+                {quickActions.map((action) => (
+                  <Button
+                    key={action.id}
+                    variant="secondary"
+                    size="sm"
+                    shape="rounded"
+                    onClick={() => onQuickActionClick(action.id)}
                     style={{
-                      display: 'flex',
-                      gap: 8,
-                      overflowX: 'auto',
-                      margin: `0 -${spaceAround.default}px`,
-                      padding: `0 ${spaceAround.default}px`,
-                      scrollbarWidth: 'none',
+                      backgroundColor: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      color: colors.fg.neutral.inversePrimary,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      backdropFilter: 'none',
+                      WebkitBackdropFilter: 'none',
                     }}
                   >
-                    <style>{`.ai-palette-actions::-webkit-scrollbar { display: none; }`}</style>
-                    {quickActions.map((action) => (
-                      <Button
-                        key={action.id}
-                        variant="secondary"
-                        size="sm"
-                        shape="rounded"
-                        onClick={() => onQuickActionClick(action.id)}
-                        style={{
-                          backgroundColor: 'rgba(255,255,255,0.08)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          color: colors.fg.neutral.inversePrimary,
-                          whiteSpace: 'nowrap',
-                          flexShrink: 0,
-                          backdropFilter: 'none',
-                          WebkitBackdropFilter: 'none',
-                        }}
-                      >
-                        {action.label}
-                      </Button>
-                    ))}
-                  </div>
-                ) : (
-                  activeSuggestions.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
-                      <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
-                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
-                    </div>
-                  )
-                )}
-              </>
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            ) : (
+              activeSuggestions.length === 0 && (
+                <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
+                  <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
+                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
+                </div>
+              )
             )}
           </div>
+          )}
+          {/* Suggestion Module — between content and input, mutually exclusive with quick actions */}
+          {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
+            <SuggestionModule
+              suggestions={suggestions}
+              onAccept={onSuggestionAccept}
+              onDismiss={onSuggestionDismiss}
+              onEdit={(id) => setEditingSuggestionId(id)}
+              theme="dark"
+              collapsed={moduleCollapsed}
+              onToggleCollapse={() => setModuleCollapsed(!moduleCollapsed)}
+            />
           )}
           {/* Input Area */}
           <AIInputArea
@@ -863,10 +831,6 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
   badgeCount,
   onSend,
   paletteResponse,
-  followUpSuggestions,
-  onFollowUpAccept,
-  onFollowUpDismiss,
-  onFollowUpAcceptWithChanges,
   nonChartFollowUps,
   onNonChartAction,
   onClearResponse,
@@ -1081,10 +1045,6 @@ export const AISurfaceModule: React.FC<AISurfaceModuleProps> = ({
           onClearContext={onClearContext}
           onSend={onSend}
           paletteResponse={paletteResponse}
-          followUpSuggestions={followUpSuggestions}
-          onFollowUpAccept={onFollowUpAccept}
-          onFollowUpDismiss={onFollowUpDismiss}
-          onFollowUpAcceptWithChanges={onFollowUpAcceptWithChanges}
           nonChartFollowUps={nonChartFollowUps}
           onNonChartAction={onNonChartAction}
           onClearResponse={onClearResponse}

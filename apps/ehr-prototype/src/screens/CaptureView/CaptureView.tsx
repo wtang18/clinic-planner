@@ -358,6 +358,40 @@ export const CaptureView: React.FC = () => {
   // AI Conversation state (canned queries/responses for demo)
   const aiConversation = useAIConversation('uc-cough', { onAddChartItem: handleItemAdd });
 
+  // Merge ambient + follow-up suggestions into a single array
+  const mergedSuggestions = useMemo(
+    () => [...activeSuggestions, ...aiConversation.followUpSuggestions],
+    [activeSuggestions, aiConversation.followUpSuggestions],
+  );
+
+  // Unified handlers that route by ID prefix (ai-fu- → follow-up, else → ambient)
+  const handleMergedAccept = useCallback(
+    (id: string) => {
+      id.startsWith('ai-fu-')
+        ? aiConversation.handleFollowUpAccept(id)
+        : handleSuggestionAccept(id);
+    },
+    [aiConversation.handleFollowUpAccept, handleSuggestionAccept],
+  );
+
+  const handleMergedDismiss = useCallback(
+    (id: string) => {
+      id.startsWith('ai-fu-')
+        ? aiConversation.handleFollowUpDismiss(id)
+        : handleSuggestionDismiss(id);
+    },
+    [aiConversation.handleFollowUpDismiss, handleSuggestionDismiss],
+  );
+
+  const handleMergedAcceptWithChanges = useCallback(
+    (id: string, data: Record<string, unknown>) => {
+      id.startsWith('ai-fu-')
+        ? aiConversation.handleFollowUpAcceptWithChanges(id, data)
+        : handleSuggestionAcceptWithChanges(id, data);
+    },
+    [aiConversation.handleFollowUpAcceptWithChanges, handleSuggestionAcceptWithChanges],
+  );
+
   // Workflow state (phases, sections, accordion)
   const workflowState = useWorkflowState();
 
@@ -845,22 +879,18 @@ export const CaptureView: React.FC = () => {
               scope: 'encounter',
               patientName: patientOverviewData.name,
               encounterLabel: state.context.visit?.chiefComplaint || encounter?.type,
-              suggestions: activeSuggestions,
               messages: aiConversation.messages,
               isLoading: aiConversation.isLoading,
-              onSuggestionAccept: handleSuggestionAccept,
-              onSuggestionDismiss: handleSuggestionDismiss,
-              onSuggestionAcceptWithChanges: handleSuggestionAcceptWithChanges,
-              followUpSuggestions: aiConversation.followUpSuggestions,
-              onFollowUpAccept: aiConversation.handleFollowUpAccept,
-              onFollowUpDismiss: aiConversation.handleFollowUpDismiss,
-              onFollowUpAcceptWithChanges: aiConversation.handleFollowUpAcceptWithChanges,
               nonChartFollowUps: aiConversation.nonChartFollowUps,
               onNonChartAction: aiConversation.handleNonChartAction,
               availableContextLevels: ['encounter', 'patient', 'section'],
             }}
             aiDrawerFooter={
               <AIDrawerFooter
+                suggestions={mergedSuggestions}
+                onSuggestionAccept={handleMergedAccept}
+                onSuggestionDismiss={handleMergedDismiss}
+                onSuggestionAcceptWithChanges={handleMergedAcceptWithChanges}
                 quickActions={aiActions.getQuickActions()}
                 onQuickActionClick={aiConversation.handleQuickAction}
                 onSend={aiConversation.sendMessage}
@@ -1335,10 +1365,10 @@ export const CaptureView: React.FC = () => {
         aiControlSurface={
           <BottomBarContainer
             aiContent={enrichedContent}
-            suggestions={activeSuggestions}
-            onSuggestionAccept={handleSuggestionAccept}
-            onSuggestionDismiss={handleSuggestionDismiss}
-            onSuggestionAcceptWithChanges={handleSuggestionAcceptWithChanges}
+            suggestions={mergedSuggestions}
+            onSuggestionAccept={handleMergedAccept}
+            onSuggestionDismiss={handleMergedDismiss}
+            onSuggestionAcceptWithChanges={handleMergedAcceptWithChanges}
             patientName={patientOverviewData.name}
             contextTarget={{ type: 'encounter', label: state.context.visit?.chiefComplaint || encounter?.type || 'Visit' }}
             availableContextLevels={['encounter', 'patient', 'section']}
@@ -1346,10 +1376,6 @@ export const CaptureView: React.FC = () => {
             onQuickActionClick={aiConversation.handleQuickAction}
             onSend={aiConversation.sendMessage}
             paletteResponse={aiConversation.paletteResponse}
-            followUpSuggestions={aiConversation.followUpSuggestions}
-            onFollowUpAccept={aiConversation.handleFollowUpAccept}
-            onFollowUpDismiss={aiConversation.handleFollowUpDismiss}
-            onFollowUpAcceptWithChanges={aiConversation.handleFollowUpAcceptWithChanges}
             nonChartFollowUps={aiConversation.nonChartFollowUps}
             onNonChartAction={aiConversation.handleNonChartAction}
             onClearResponse={aiConversation.clearPaletteResponse}

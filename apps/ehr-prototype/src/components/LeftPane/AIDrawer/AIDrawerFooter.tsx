@@ -1,23 +1,41 @@
 /**
  * AIDrawerFooter Component
  *
- * Opaque footer for the AI drawer containing quick actions row and input row.
- * This is the only opaque element in the drawer, anchored to the bottom.
+ * Opaque footer for the AI drawer containing the unified suggestion module
+ * (mutually exclusive with quick actions), plus the input row.
+ *
+ * Rendering priority (mutually exclusive):
+ * 1. SuggestionEditPanel — when editing a suggestion inline
+ * 2. SuggestionModule — when active suggestions exist
+ * 3. QuickActionsRow — fallback when no suggestions
  *
  * @see AI_DRAWER.md §7 for full specification
+ * @see docs/demo/planned/suggestion-consolidation.md
  */
 
-import React, { useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { QuickActionsRow } from './QuickActionsRow';
 import { AIDrawerInput } from './AIDrawerInput';
+import { SuggestionModule } from '../../suggestions/SuggestionModule';
+import { SuggestionEditPanel } from '../../suggestions/SuggestionEditPanel';
+import type { Suggestion } from '../../../types/suggestions';
 import type { QuickAction } from '../../../hooks/useAIAssistant';
-import { colors, spaceAround, borderRadius } from '../../../styles/foundations';
+import { SUGGESTION_ACTION_TYPES } from '../../../utils/suggestions';
+import { colors, spaceAround } from '../../../styles/foundations';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface AIDrawerFooterProps {
+  /** Merged suggestions (ambient + follow-up) */
+  suggestions?: Suggestion[];
+  /** Called when a suggestion is accepted */
+  onSuggestionAccept?: (id: string) => void;
+  /** Called when a suggestion is dismissed */
+  onSuggestionDismiss?: (id: string) => void;
+  /** Called when a suggestion is accepted with field changes */
+  onSuggestionAcceptWithChanges?: (id: string, data: Record<string, unknown>) => void;
   /** Quick actions to display */
   quickActions?: QuickAction[];
   /** Called when a quick action is clicked */
@@ -53,6 +71,10 @@ export interface AIDrawerFooterProps {
 // ============================================================================
 
 export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
+  suggestions = [],
+  onSuggestionAccept,
+  onSuggestionDismiss,
+  onSuggestionAcceptWithChanges,
   quickActions = [],
   onQuickActionClick,
   inputValue,
@@ -68,6 +90,37 @@ export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
   style,
   testID,
 }) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [editingSuggestionId, setEditingSuggestionId] = useState<string | null>(null);
+
+  // Count active action-type suggestions for auto-expand
+  const activeCount = suggestions.filter(
+    (s) =>
+      s.status === 'active' &&
+      SUGGESTION_ACTION_TYPES.includes(s.type as (typeof SUGGESTION_ACTION_TYPES)[number]),
+  ).length;
+
+  // Auto-expand when suggestion count increases
+  const prevCountRef = useRef(activeCount);
+  useEffect(() => {
+    if (activeCount > prevCountRef.current) {
+      setIsCollapsed(false);
+    }
+    prevCountRef.current = activeCount;
+  }, [activeCount]);
+
+  // Find editing suggestion
+  const editingSuggestion = editingSuggestionId
+    ? suggestions.find((s) => s.id === editingSuggestionId) ?? null
+    : null;
+
+  // Clear editing state if suggestion is no longer active
+  useEffect(() => {
+    if (editingSuggestionId && !editingSuggestion) {
+      setEditingSuggestionId(null);
+    }
+  }, [editingSuggestionId, editingSuggestion]);
+
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
@@ -79,16 +132,42 @@ export const AIDrawerFooter: React.FC<AIDrawerFooterProps> = ({
 
   return (
     <footer style={containerStyle} data-testid={testID}>
-      {/* Quick Actions Row */}
-      {quickActions.length > 0 && onQuickActionClick && (
-        <QuickActionsRow
-          actions={quickActions}
-          onActionClick={onQuickActionClick}
-          disabled={disabled}
+      {/* Priority 1: Edit panel (replaces everything above input) */}
+      {editingSuggestion && onSuggestionAcceptWithChanges ? (
+        <div style={{ padding: spaceAround.default }}>
+          <SuggestionEditPanel
+            suggestion={editingSuggestion}
+            theme="light"
+            onAccept={(id, data) => {
+              onSuggestionAcceptWithChanges(id, data);
+              setEditingSuggestionId(null);
+            }}
+            onCancel={() => setEditingSuggestionId(null)}
+          />
+        </div>
+      ) : activeCount > 0 && onSuggestionAccept && onSuggestionDismiss ? (
+        /* Priority 2: Suggestion module */
+        <SuggestionModule
+          suggestions={suggestions}
+          onAccept={onSuggestionAccept}
+          onDismiss={onSuggestionDismiss}
+          onEdit={(id) => setEditingSuggestionId(id)}
+          theme="light"
+          collapsed={isCollapsed}
+          onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         />
+      ) : (
+        /* Priority 3: Quick actions */
+        quickActions.length > 0 && onQuickActionClick && (
+          <QuickActionsRow
+            actions={quickActions}
+            onActionClick={onQuickActionClick}
+            disabled={disabled}
+          />
+        )
       )}
 
-      {/* Input Row */}
+      {/* Input Row — always visible */}
       {onSend && (
         <AIDrawerInput
           value={inputValue}
