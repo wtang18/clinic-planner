@@ -209,6 +209,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
     pointerEvents: menuCollapsed ? 'none' : 'auto',
     display: 'flex',
     flexDirection: 'column',
+    overflow: 'hidden', // Clip child backgrounds at rounded corners
   };
 
   // Menu pane internal header - button aligned with nav row buttons
