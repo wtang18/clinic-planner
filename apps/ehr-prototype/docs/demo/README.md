@@ -70,6 +70,8 @@ Design discussions and open questions for features that affect demo behavior. Pi
 
 | Feature | Doc | Status |
 |---|---|---|
+| [Process Tab Philosophy](planned/process-tab-philosophy.md) | Role-agnostic work queue, live-updating AI drafts, activity logs, multi-thread visibility | Core principle defined; implementation phases TBD |
+| [Suggestion Consolidation](planned/suggestion-consolidation.md) | Unified bottom module for suggestions in drawer + palette, mutual exclusivity with quick actions | Design complete; 3-phase implementation outlined |
 | [Tx Workspace Scoping](planned/tx-workspace-scoping.md) | Auto-pause recording when navigating away from patient workspace, global recording indicator in menu pane, tap-to-return | Open questions on auto-resume, multi-session constraints |
 | [Care Protocols](planned/care-protocols.md) | Guideline-driven checklists in reference pane or via AI palette responses | Two paths proposed (AI palette vs. dedicated tab), starting with AI palette |
 
