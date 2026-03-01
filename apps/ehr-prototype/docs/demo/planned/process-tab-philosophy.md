@@ -1,7 +1,7 @@
 # Process Tab — Design Philosophy & Evolution
 
-**Status**: Design discussion — not yet implemented
-**Last discussed**: 2026-02-27
+**Status**: Design discussion — partially implemented (draft lifecycle + cancel refresh shipped)
+**Last discussed**: 2026-03-01
 
 ## Goal
 
@@ -52,15 +52,20 @@ The Process tab already supports this implicitly — medication tasks, lab tasks
 
 ### Future: Role Filters
 
-Quick filters within the Process tab let any team member focus:
+**Decision (2026-03-01):** Role filter should span ALL chart views (Capture, Process, Overview), not just Process. It's a global lens on the encounter, not a tab-specific feature.
+
+Options:
 
 ```
-[All] [Mine] [MA] [Provider] [AI] [System]
+[All] [Mine] [Custom...]
 ```
 
 - **Default**: All (bird's-eye view of everything happening for this patient)
 - **"Mine"**: Based on logged-in role, shows only relevant items
-- **Filters are lenses, not separate surfaces** — one Process tab, multiple views
+- **Custom**: User-defined filter (e.g., MA + AI)
+- **Filters are lenses, not separate surfaces** — one encounter, multiple views across all tabs
+
+**UI placement:** Floating pill centered at top of content area. Stays visible as context bar compresses on scroll (see Context Bar Scroll Compression below).
 
 The processing rail (compact sidebar in Capture mode) should always be unfiltered — it's situational awareness, not a task list.
 
@@ -71,6 +76,20 @@ MAs work primarily in the triage tab (workflow mode) for structured intake tasks
 - **Triage tab**: MA's primary workflow (check-in sections, vitals, allergies review)
 - **Process tab**: Operational tasks that arise from charting decisions (specimen collection, order routing)
 - **Provider sees both**: What the MA completed in triage + what's pending in Process
+
+## Context Bar Scroll Compression
+
+**Decision (2026-03-01):** The encounter context bar should compress into the top bar area upon scrolling down, similar to the patient context header block in the Overview pane.
+
+### Behavior
+
+1. **At scroll top**: Full context bar renders inline at its natural position (visit time, specialty, chief complaint, provider name, status)
+2. **On scroll down**: Context bar animates into the sticky top bar area. Abbreviated content: visit time, specialty, current status only (for brevity)
+3. **On scroll back to top**: Title fades from top bar and scrolls down inline, restoring the full context bar rendering
+
+### Relationship to Role Filter
+
+The role filter pill floats centered at top of the content area, below the context bar. When the context bar compresses, the filter pill remains anchored at the top of the scrollable content.
 
 ## Live-Updating AI Drafts
 
@@ -89,10 +108,21 @@ The `updating` state prevents mid-air changes — the provider can see the draft
 ### Versioning
 
 - **Display**: Always show latest version with "Updated" badge when content has changed
-- **History**: Track prior versions in an activity log accessible from the draft card
-- **No diff view** for now — complexity not justified. Provider sees latest, can check log if needed
+- **History**: Track prior versions in an activity log accessible from the details pane
+- **Revert UI**: Include a "Revert to v{N}" affordance in the version history, but for demo it shows the action without actually performing the revert (visual only)
+- **No diff view** for now — complexity not justified. Provider sees latest, can check version list if needed
 
-### Activity Log Pattern
+### Activity Log & Version History — Details Pane Pattern
+
+**Decision (2026-03-01):** Activity log and version history render inside the existing DetailsPane component (the same drawer used for chart item details), not inline in the draft card.
+
+**Flow:** Tapping a draft card's "Edit" action opens the DetailsPane for that draft, which includes:
+1. Full content editor
+2. Activity log tab showing version history with timestamps
+3. Version viewing (expand to see previous content)
+4. Revert UI affordance (button shown, not functional for demo)
+
+This reuses the existing `DetailsPane` component, extended with an activity/version tab.
 
 Every Process tab item can have a provenance trail. This generalizes beyond drafts:
 
@@ -125,15 +155,25 @@ The original motivation: how to show multiple AI processes happening concurrentl
 - Optional role filters for focused views
 - Sign-off gate at bottom
 
+## Resolved Decisions
+
+1. **Activity log rendering**: Activity log and version history render in the DetailsPane (details drawer), not inline in draft cards.
+
+2. **Draft update triggers**: Manual refresh for demo — provider clicks "Refresh" to trigger re-generation. Live auto-updating deferred to post-demo.
+
+3. **Role filter scope**: Cross-view (All / Mine / Custom), not Process-tab-specific. Floating pill at top of content area.
+
+4. **Revert**: UI affordance shown (button in version history) but not functional for demo.
+
 ## Open Questions
 
 1. **Activity log storage**: Should activity log entries live on the item/task/draft objects themselves (simple), or in a separate `activityLog` collection in encounter state (normalized)? The former is simpler for prototype; the latter scales better.
 
-2. **Draft update triggers**: What signals that a draft should re-enter `updating` state? Options: new transcript segment arrives, provider adds a related chart item, AI detects a correction opportunity. For prototype, probably just transcript-driven.
+2. **Role filter persistence**: Should the selected filter persist across mode switches (capture → process → capture)? Or reset to "All" each time? Leaning toward persist within a session.
 
-3. **Role filter persistence**: Should the selected filter persist across mode switches (capture → process → capture)? Or reset to "All" each time? Leaning toward persist within a session.
+3. **Processing rail + role filter interaction**: If provider has "Mine" filter active and switches to Capture mode, should the compact rail also filter? Argued above for "always unfiltered" — but worth revisiting if users find the inconsistency jarring.
 
-4. **Processing rail + role filter interaction**: If provider has "Mine" filter active in Process tab and switches to Capture mode, should the compact rail also filter? Argued above for "always unfiltered" — but worth revisiting if users find the inconsistency jarring.
+4. **Context bar compression animation**: Exact timing and easing for the scroll compression. Should it be a smooth spring transition or a discrete threshold?
 
 ## Key Files
 
