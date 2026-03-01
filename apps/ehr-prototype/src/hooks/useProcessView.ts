@@ -37,6 +37,7 @@ import {
 import { useStore } from './useEncounterState';
 import { selectDraft } from '../state/selectors/drafts';
 import { materializeChartItem } from '../utils/chart-item-factory';
+import { getMockDraftContent, getMockConfidence } from '../services/draft-engine';
 
 // ============================================================================
 // Types
@@ -68,6 +69,8 @@ export interface UseProcessViewResult {
   handleAcceptDraft: (draftId: string) => void;
   handleEditDraft: (draftId: string) => void;
   handleDismissDraft: (draftId: string) => void;
+  handleRefreshDraft: (draftId: string) => void;
+  handleCancelRefresh: (draftId: string) => void;
   handleBatchAction: (batchType: BatchType, action: string, taskIds?: string[]) => void;
   handleSignOff: () => void;
   handleModeChange: (mode: Mode) => void;
@@ -231,6 +234,33 @@ export function useProcessView(): UseProcessViewResult {
     [dismissDraftAction]
   );
 
+  // Handle refreshing/cancelling an AI draft
+  const { refreshDraft: refreshAction, cancelRefresh: cancelRefreshAction, completeRefresh: completeRefreshAction } = useDraftActions();
+  const handleRefreshDraft = useCallback(
+    (draftId: string) => {
+      const currentState = store.getState();
+      const draft = selectDraft(currentState, draftId);
+      if (!draft || draft.status !== 'pending') return;
+
+      refreshAction(draftId);
+
+      setTimeout(() => {
+        const content = getMockDraftContent(draft.category);
+        const confidence = getMockConfidence(draft.category);
+        completeRefreshAction(draftId, content, confidence);
+      }, 2500);
+    },
+    [store, refreshAction, completeRefreshAction]
+  );
+
+  // Cancel an in-progress refresh — reverts updating → pending without changing content
+  const handleCancelRefresh = useCallback(
+    (draftId: string) => {
+      cancelRefreshAction(draftId);
+    },
+    [cancelRefreshAction]
+  );
+
   // Batch actions: send all, collect samples, associate all Dx
   const handleBatchAction = useCallback(
     (batchType: BatchType, action: string, taskIds?: string[]) => {
@@ -297,6 +327,8 @@ export function useProcessView(): UseProcessViewResult {
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
+    handleRefreshDraft,
+    handleCancelRefresh,
     handleBatchAction,
     handleSignOff,
     handleModeChange,

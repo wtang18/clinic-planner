@@ -17,6 +17,8 @@ export interface ProcessingRailProps {
   onAcceptDraft?: (draftId: string) => void;
   onEditDraft?: (draftId: string) => void;
   onDismissDraft?: (draftId: string) => void;
+  onRefreshDraft?: (draftId: string) => void;
+  onCancelRefresh?: (draftId: string) => void;
   onOpenTaskDetails?: (taskId: string) => void;
   style?: React.CSSProperties;
 }
@@ -25,6 +27,8 @@ export function ProcessingRail({
   onAcceptDraft,
   onEditDraft,
   onDismissDraft,
+  onRefreshDraft,
+  onCancelRefresh,
   onOpenTaskDetails,
   style,
 }: ProcessingRailProps) {
@@ -49,6 +53,8 @@ export function ProcessingRail({
             onAcceptDraft={onAcceptDraft}
             onEditDraft={onEditDraft}
             onDismissDraft={onDismissDraft}
+            onRefreshDraft={onRefreshDraft}
+            onCancelRefresh={onCancelRefresh}
             onOpenTaskDetails={onOpenTaskDetails}
           />
         ))}
@@ -83,6 +89,6 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: 0.3,
   },
   content: {
-    padding: `${spaceAround.tight}px 0`,
+    padding: 0,
   },
 };

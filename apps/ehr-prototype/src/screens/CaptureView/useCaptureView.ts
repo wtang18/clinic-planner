@@ -15,6 +15,7 @@ import { useTranscription } from '../../context/TranscriptionContext';
 import { useStore } from '../../hooks/useEncounterState';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { selectDraft } from '../../state/selectors/drafts';
+import { getMockDraftContent, getMockConfidence } from '../../services/draft-engine';
 
 // ============================================================================
 // Types
@@ -65,6 +66,10 @@ export interface UseCaptureViewResult {
   handleEditDraft: (draftId: string) => void;
   /** Dismiss an AI draft */
   handleDismissDraft: (draftId: string) => void;
+  /** Refresh an AI draft — re-generates content */
+  handleRefreshDraft: (draftId: string) => void;
+  /** Cancel an in-progress draft refresh */
+  handleCancelRefresh: (draftId: string) => void;
 }
 
 // ============================================================================
@@ -339,6 +344,34 @@ export function useCaptureView(): UseCaptureViewResult {
     [dismissDraftAction]
   );
 
+  // Handle refreshing/cancelling an AI draft
+  const { refreshDraft: refreshDraftAction, cancelRefresh: cancelRefreshAction, completeRefresh: completeRefreshAction } = useDraftActions();
+  const handleRefreshDraft = useCallback(
+    (draftId: string) => {
+      const currentState = store.getState();
+      const draft = selectDraft(currentState, draftId);
+      if (!draft || draft.status !== 'pending') return;
+
+      refreshDraftAction(draftId);
+
+      // After short delay, complete with refreshed content
+      setTimeout(() => {
+        const content = getMockDraftContent(draft.category);
+        const confidence = getMockConfidence(draft.category);
+        completeRefreshAction(draftId, content, confidence);
+      }, 2500);
+    },
+    [store, refreshDraftAction, completeRefreshAction]
+  );
+
+  // Cancel an in-progress draft refresh — reverts updating → pending
+  const handleCancelRefresh = useCallback(
+    (draftId: string) => {
+      cancelRefreshAction(draftId);
+    },
+    [cancelRefreshAction]
+  );
+
   return {
     selectedItemId,
     setSelectedItemId,
@@ -362,5 +395,7 @@ export function useCaptureView(): UseCaptureViewResult {
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
+    handleRefreshDraft,
+    handleCancelRefresh,
   };
 }

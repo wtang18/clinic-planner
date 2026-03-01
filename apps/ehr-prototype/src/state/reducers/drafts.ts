@@ -24,6 +24,22 @@ export function draftsReducer(
       };
     }
 
+    case 'DRAFT_CONTENT_READY': {
+      const { id, content, confidence } = action.payload;
+      const existing = state[id];
+      if (!existing) return state;
+
+      return {
+        ...state,
+        [id]: {
+          ...existing,
+          status: 'pending',
+          content,
+          confidence,
+        },
+      };
+    }
+
     case 'DRAFT_ACCEPTED': {
       const { id } = action.payload;
       const existing = state[id];
@@ -62,6 +78,51 @@ export function draftsReducer(
         [id]: {
           ...existing,
           status: 'dismissed',
+        },
+      };
+    }
+
+    case 'DRAFT_REFRESH': {
+      const { id } = action.payload;
+      const existing = state[id];
+      if (!existing || existing.status !== 'pending') return state;
+
+      return {
+        ...state,
+        [id]: {
+          ...existing,
+          status: 'updating',
+        },
+      };
+    }
+
+    case 'DRAFT_CANCEL_REFRESH': {
+      const { id } = action.payload;
+      const existing = state[id];
+      if (!existing || existing.status !== 'updating') return state;
+
+      return {
+        ...state,
+        [id]: {
+          ...existing,
+          status: 'pending',
+        },
+      };
+    }
+
+    case 'DRAFT_REFRESH_COMPLETE': {
+      const { id, content, confidence } = action.payload;
+      const existing = state[id];
+      if (!existing || existing.status !== 'updating') return state;
+
+      return {
+        ...state,
+        [id]: {
+          ...existing,
+          status: 'pending',
+          content,
+          confidence,
+          version: (existing.version ?? 1) + 1,
         },
       };
     }

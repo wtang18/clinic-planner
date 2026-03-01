@@ -23,6 +23,9 @@ import {
   draftAccepted,
   draftEdited,
   draftDismissed,
+  draftRefresh,
+  draftCancelRefresh,
+  draftRefreshComplete,
 } from '../state/actions/draft-actions';
 import { useSelector, useDispatch } from './useEncounterState';
 
@@ -92,6 +95,12 @@ export interface DraftActions {
   editDraft: (id: string, content: string) => void;
   /** Dismiss a draft */
   dismissDraft: (id: string) => void;
+  /** Start a refresh (pending → updating) */
+  refreshDraft: (id: string) => void;
+  /** Cancel an in-progress refresh (updating → pending, content unchanged) */
+  cancelRefresh: (id: string) => void;
+  /** Complete a refresh (updating → pending with new content) */
+  completeRefresh: (id: string, content: string, confidence?: number) => void;
 }
 
 /** Get actions for managing drafts */
@@ -111,6 +120,15 @@ export function useDraftActions(): DraftActions {
       },
       dismissDraft: (id: string) => {
         dispatch(draftDismissed(id));
+      },
+      refreshDraft: (id: string) => {
+        dispatch(draftRefresh(id));
+      },
+      cancelRefresh: (id: string) => {
+        dispatch(draftCancelRefresh(id));
+      },
+      completeRefresh: (id: string, content: string, confidence?: number) => {
+        dispatch(draftRefreshComplete(id, content, confidence));
       },
     }),
     [dispatch]

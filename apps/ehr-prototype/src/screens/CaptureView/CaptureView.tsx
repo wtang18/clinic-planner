@@ -77,7 +77,7 @@ interface ToDoViewState {
 import { useCaptureView } from './useCaptureView';
 import { usePaneShortcuts } from '../../shortcuts/usePaneShortcuts';
 import { captureViewStyles, captureViewAnimations } from './CaptureView.styles';
-import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, LAYOUT } from '../../styles/foundations';
 
 // ============================================================================
 // Component
@@ -353,6 +353,8 @@ export const CaptureView: React.FC = () => {
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
+    handleRefreshDraft,
+    handleCancelRefresh,
   } = useCaptureView();
 
   // AI Conversation state (canned queries/responses for demo)
@@ -1197,15 +1199,18 @@ export const CaptureView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Processing Rail — spans rows 2-3 */}
+                      {/* Processing Rail — spans rows 2-3, sticky to stay visible */}
                       <div style={{
                         gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
+                        position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
                         display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                       }}>
                         <ProcessingRail
                           onAcceptDraft={handleAcceptDraft}
                           onEditDraft={handleEditDraft}
                           onDismissDraft={handleDismissDraft}
+                          onRefreshDraft={handleRefreshDraft}
+                          onCancelRefresh={handleCancelRefresh}
                         />
                       </div>
                     </div>
@@ -1345,15 +1350,18 @@ export const CaptureView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Processing Rail — spans rows 2-3 */}
+                    {/* Processing Rail — spans rows 2-3, sticky to stay visible */}
                     <div style={{
                       gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
+                      position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
                       display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                     }}>
                       <ProcessingRail
                         onAcceptDraft={handleAcceptDraft}
                         onEditDraft={handleEditDraft}
                         onDismissDraft={handleDismissDraft}
+                        onRefreshDraft={handleRefreshDraft}
+                        onCancelRefresh={handleCancelRefresh}
                       />
                     </div>
                   </div>

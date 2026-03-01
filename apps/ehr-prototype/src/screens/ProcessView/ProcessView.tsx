@@ -59,6 +59,8 @@ export const ProcessCanvas: React.FC = () => {
     handleAcceptDraft,
     handleEditDraft,
     handleDismissDraft,
+    handleRefreshDraft,
+    handleCancelRefresh,
     handleBatchAction,
     handleSignOff,
     handleModeChange,
@@ -156,6 +158,8 @@ export const ProcessCanvas: React.FC = () => {
           onAcceptDraft={handleAcceptDraft}
           onEditDraft={handleEditDraft}
           onDismissDraft={handleDismissDraft}
+          onRefreshDraft={handleRefreshDraft}
+          onCancelRefresh={handleCancelRefresh}
         />
 
         {/* Operational batch sections */}

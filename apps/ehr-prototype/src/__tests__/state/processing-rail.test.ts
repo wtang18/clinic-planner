@@ -18,7 +18,14 @@ import type { EncounterState } from '../../state/types';
 import { draftsReducer } from '../../state/reducers/drafts';
 import { rootReducer } from '../../state/reducers/root';
 import { itemAdded, taskCreated } from '../../state/actions/creators';
-import { draftGenerated, draftAccepted } from '../../state/actions/draft-actions';
+import {
+  draftGenerated,
+  draftAccepted,
+  draftContentReady,
+  draftRefresh,
+  draftCancelRefresh,
+  draftRefreshComplete,
+} from '../../state/actions/draft-actions';
 import { TASK_TEMPLATES } from '../../mocks/generators/tasks';
 import {
   selectAllDrafts,
@@ -383,6 +390,20 @@ describe('Draft Selectors', () => {
     expect(ids).toEqual(['draft-hpi', 'draft-ros']);
   });
 
+  it('selectActiveDrafts includes updating drafts', () => {
+    const updatingDraft = makeDraft({ id: 'draft-upd', status: 'updating', category: 'hpi', label: 'HPI Draft' });
+    const stateWithUpdating = stateWith({
+      drafts: {
+        'draft-hpi': pendingDraft,
+        'draft-upd': updatingDraft,
+        'draft-cc': acceptedDraft,
+      },
+    });
+    const active = selectActiveDrafts(stateWithUpdating);
+    expect(active).toHaveLength(2);
+    expect(active.map(d => d.id).sort()).toEqual(['draft-hpi', 'draft-upd']);
+  });
+
   it('selectDraftsByCategory returns drafts for a category', () => {
     const hpiDrafts = selectDraftsByCategory(state, 'hpi');
     expect(hpiDrafts).toHaveLength(1);
@@ -405,6 +426,14 @@ describe('Draft Selectors', () => {
     expect(selectHasDraftForCategory(state, 'physical-exam')).toBe(false);
     // plan has no draft at all
     expect(selectHasDraftForCategory(state, 'plan')).toBe(false);
+  });
+
+  it('selectHasDraftForCategory returns true for updating category', () => {
+    const updatingDraft = makeDraft({ id: 'draft-upd', status: 'updating', category: 'plan', label: 'Plan Draft' });
+    const stateWithUpdating = stateWith({
+      drafts: { 'draft-upd': updatingDraft },
+    });
+    expect(selectHasDraftForCategory(stateWithUpdating, 'plan')).toBe(true);
   });
 });
 
@@ -531,6 +560,14 @@ describe('Aggregate Status', () => {
     expect(batch.aggregateStatus).toBe('in-progress');
   });
 
+  it('draft batch: in-progress when only updating', () => {
+    const state = stateWith({
+      drafts: { 'd1': makeDraft({ id: 'd1', status: 'updating' }) },
+    });
+    const batch = selectProcessingBatches(state).find(b => b.type === 'ai-drafts')!;
+    expect(batch.aggregateStatus).toBe('in-progress');
+  });
+
   it('task batch: needs-attention when pending-review', () => {
     const medItem = makeMedicationItem();
     const task = makeTask({ id: 't1', status: 'pending-review', trigger: { action: 'ITEM_ADDED', itemId: 'med-1' } });
@@ -573,6 +610,62 @@ describe('Aggregate Status', () => {
     });
     const count = selectTotalNeedsAttentionCount(state);
     expect(count).toBe(2); // 1 draft (needs-attention) + 1 task (needs-attention)
+  });
+});
+
+// ============================================================================
+// 5b. Status Breakdown
+// ============================================================================
+
+describe('Status Breakdown', () => {
+  it('draft batch: breakdown counts generating + pending', () => {
+    const state = stateWith({
+      drafts: {
+        'd1': makeGeneratingDraft({ id: 'd1' }),
+        'd2': makeDraft({ id: 'd2', status: 'pending', category: 'ros', label: 'ROS Draft' }),
+        'd3': makeDraft({ id: 'd3', status: 'updating', category: 'plan', label: 'Plan Draft' }),
+      },
+    });
+    const batch = selectProcessingBatches(state).find(b => b.type === 'ai-drafts')!;
+    expect(batch.statusBreakdown).toEqual({
+      inProgress: 2,     // generating + updating
+      needsAttention: 1, // pending
+      complete: 0,       // drafts never complete
+    });
+  });
+
+  it('task batch: breakdown counts queued + pending-review + ready', () => {
+    const medItem = makeMedicationItem();
+    const queuedTask = makeTask({ id: 't1', status: 'queued', trigger: { action: 'ITEM_ADDED', itemId: 'med-1' } });
+    const reviewTask = makeTask({ id: 't2', status: 'pending-review', trigger: { action: 'ITEM_ADDED', itemId: 'med-1' } });
+    const failedTask = makeTask({ id: 't3', status: 'failed', trigger: { action: 'ITEM_ADDED', itemId: 'med-1' } });
+    const readyTask = makeTask({ id: 't4', status: 'ready', trigger: { action: 'ITEM_ADDED', itemId: 'med-1' } });
+    const state = stateWith({
+      items: { 'med-1': medItem },
+      tasks: { 't1': queuedTask, 't2': reviewTask, 't3': failedTask, 't4': readyTask },
+    });
+    const batch = selectProcessingBatches(state).find(b => b.type === 'prescriptions')!;
+    expect(batch.statusBreakdown).toEqual({
+      inProgress: 1,     // queued
+      needsAttention: 2, // pending-review + failed
+      complete: 1,       // ready
+    });
+  });
+
+  it('empty batch: breakdown is all zeros', () => {
+    const state = stateWith({});
+    const batch = selectProcessingBatches(state).find(b => b.type === 'ai-drafts')!;
+    expect(batch.statusBreakdown).toEqual({
+      inProgress: 0,
+      needsAttention: 0,
+      complete: 0,
+    });
+  });
+
+  it('prescriptions batch label is "Rx"', () => {
+    const state = stateWith({});
+    const batch = selectProcessingBatches(state).find(b => b.type === 'prescriptions')!;
+    expect(batch.label).toBe('Rx');
   });
 });
 
@@ -736,11 +829,11 @@ describe('Integration: Full Draft Lifecycle Through Reducer', () => {
     expect(afterGenerate.entities.drafts['draft-lifecycle']).toBeDefined();
     expect(afterGenerate.entities.drafts['draft-lifecycle'].status).toBe('generating');
 
-    // 2. Update to pending (simulate content ready — via a second DRAFT_GENERATED with content)
-    const readyDraft = { ...draft, status: 'pending' as const, content: 'Full content' };
-    const afterReady = rootReducer(afterGenerate, draftGenerated(readyDraft));
+    // 2. Content ready — generating → pending via DRAFT_CONTENT_READY
+    const afterReady = rootReducer(afterGenerate, draftContentReady('draft-lifecycle', 'Full content', 0.88));
     expect(afterReady.entities.drafts['draft-lifecycle'].status).toBe('pending');
     expect(afterReady.entities.drafts['draft-lifecycle'].content).toBe('Full content');
+    expect(afterReady.entities.drafts['draft-lifecycle'].confidence).toBe(0.88);
 
     // 3. Accept draft
     const afterAccept = rootReducer(afterReady, draftAccepted('draft-lifecycle'));
@@ -749,5 +842,255 @@ describe('Integration: Full Draft Lifecycle Through Reducer', () => {
     // 4. Verify no longer in active/pending selectors
     expect(selectActiveDrafts(afterAccept)).toHaveLength(0);
     expect(selectPendingDraftCount(afterAccept)).toBe(0);
+  });
+});
+
+// ============================================================================
+// 8. DRAFT_CONTENT_READY Reducer
+// ============================================================================
+
+describe('Drafts Reducer — DRAFT_CONTENT_READY', () => {
+  it('transitions generating draft to pending with content', () => {
+    const draft = makeGeneratingDraft({ id: 'gen-1' });
+    const state: Record<string, AIDraft> = { 'gen-1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_CONTENT_READY',
+      payload: { id: 'gen-1', content: 'Generated HPI content', confidence: 0.88 },
+    });
+
+    expect(result['gen-1'].status).toBe('pending');
+    expect(result['gen-1'].content).toBe('Generated HPI content');
+    expect(result['gen-1'].confidence).toBe(0.88);
+  });
+
+  it('preserves other draft fields', () => {
+    const draft = makeGeneratingDraft({ id: 'gen-1', label: 'ROS Draft', category: 'ros' });
+    const state: Record<string, AIDraft> = { 'gen-1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_CONTENT_READY',
+      payload: { id: 'gen-1', content: 'ROS content', confidence: 0.82 },
+    });
+
+    expect(result['gen-1'].label).toBe('ROS Draft');
+    expect(result['gen-1'].category).toBe('ros');
+    expect(result['gen-1'].source).toBe('ambient-recording');
+  });
+
+  it('returns same state for non-existent draft', () => {
+    const state: Record<string, AIDraft> = {};
+    const result = dispatch(state, {
+      type: 'DRAFT_CONTENT_READY',
+      payload: { id: 'nonexistent', content: 'Content' },
+    });
+    expect(result).toBe(state);
+  });
+});
+
+// ============================================================================
+// 9. DRAFT_REFRESH and DRAFT_REFRESH_COMPLETE Reducer
+// ============================================================================
+
+describe('Drafts Reducer — DRAFT_REFRESH', () => {
+  it('transitions pending draft to updating', () => {
+    const draft = makeDraft({ id: 'r1', status: 'pending' });
+    const state: Record<string, AIDraft> = { 'r1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH',
+      payload: { id: 'r1' },
+    });
+
+    expect(result['r1'].status).toBe('updating');
+  });
+
+  it('is no-op for non-pending draft', () => {
+    const draft = makeGeneratingDraft({ id: 'r1' }); // status: generating
+    const state: Record<string, AIDraft> = { 'r1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH',
+      payload: { id: 'r1' },
+    });
+
+    // Should not transition from generating
+    expect(result).toBe(state);
+  });
+
+  it('returns same state for non-existent draft', () => {
+    const state: Record<string, AIDraft> = {};
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH',
+      payload: { id: 'nonexistent' },
+    });
+    expect(result).toBe(state);
+  });
+});
+
+describe('Drafts Reducer — DRAFT_REFRESH_COMPLETE', () => {
+  it('transitions to pending with new content and bumped version', () => {
+    const draft = makeDraft({ id: 'r1', status: 'updating', version: 1 });
+    const state: Record<string, AIDraft> = { 'r1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH_COMPLETE',
+      payload: { id: 'r1', content: 'Refreshed content', confidence: 0.90 },
+    });
+
+    expect(result['r1'].status).toBe('pending');
+    expect(result['r1'].content).toBe('Refreshed content');
+    expect(result['r1'].confidence).toBe(0.90);
+    expect(result['r1'].version).toBe(2);
+  });
+
+  it('handles draft with no prior version (defaults to 1, bumps to 2)', () => {
+    const draft = makeDraft({ id: 'r1', status: 'updating' });
+    // version is undefined by default
+    const state: Record<string, AIDraft> = { 'r1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH_COMPLETE',
+      payload: { id: 'r1', content: 'New content', confidence: 0.85 },
+    });
+
+    expect(result['r1'].version).toBe(2);
+  });
+
+  it('returns same state for non-existent draft', () => {
+    const state: Record<string, AIDraft> = {};
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH_COMPLETE',
+      payload: { id: 'nonexistent', content: 'Content' },
+    });
+    expect(result).toBe(state);
+  });
+});
+
+// ============================================================================
+// 10. Full Two-Phase Lifecycle Through rootReducer
+// ============================================================================
+
+describe('Integration: Two-Phase Draft Lifecycle', () => {
+  it('generate (shell) → content ready → refresh → refresh complete → accept', () => {
+    const baseState = createInitialState();
+    const shell = makeDraft({ id: 'draft-2phase', status: 'generating', content: '', category: 'hpi' });
+
+    // 1. Shell draft appears (generating)
+    const afterShell = rootReducer(baseState, draftGenerated(shell));
+    expect(afterShell.entities.drafts['draft-2phase'].status).toBe('generating');
+    expect(afterShell.entities.drafts['draft-2phase'].content).toBe('');
+
+    // 2. Content ready (generating → pending)
+    const afterContent = rootReducer(afterShell, draftContentReady('draft-2phase', 'Full HPI', 0.88));
+    expect(afterContent.entities.drafts['draft-2phase'].status).toBe('pending');
+    expect(afterContent.entities.drafts['draft-2phase'].content).toBe('Full HPI');
+
+    // 3. Refresh (pending → updating)
+    const afterRefresh = rootReducer(afterContent, draftRefresh('draft-2phase'));
+    expect(afterRefresh.entities.drafts['draft-2phase'].status).toBe('updating');
+
+    // 4. Refresh complete (updating → pending with bumped version)
+    const afterComplete = rootReducer(afterRefresh, draftRefreshComplete('draft-2phase', 'Updated HPI', 0.90));
+    expect(afterComplete.entities.drafts['draft-2phase'].status).toBe('pending');
+    expect(afterComplete.entities.drafts['draft-2phase'].content).toBe('Updated HPI');
+    expect(afterComplete.entities.drafts['draft-2phase'].version).toBe(2);
+
+    // 5. Accept
+    const afterAccept = rootReducer(afterComplete, draftAccepted('draft-2phase'));
+    expect(afterAccept.entities.drafts['draft-2phase'].status).toBe('accepted');
+    expect(selectActiveDrafts(afterAccept)).toHaveLength(0);
+  });
+});
+
+// ============================================================================
+// 11. DRAFT_CANCEL_REFRESH Reducer
+// ============================================================================
+
+describe('Drafts Reducer — DRAFT_CANCEL_REFRESH', () => {
+  it('transitions updating draft to pending with content unchanged', () => {
+    const draft = makeDraft({ id: 'c1', status: 'updating', content: 'Original content', confidence: 0.85 });
+    const state: Record<string, AIDraft> = { 'c1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_CANCEL_REFRESH',
+      payload: { id: 'c1' },
+    });
+
+    expect(result['c1'].status).toBe('pending');
+    expect(result['c1'].content).toBe('Original content');
+    expect(result['c1'].confidence).toBe(0.85);
+  });
+
+  it('is no-op if status is not updating', () => {
+    const draft = makeDraft({ id: 'c1', status: 'pending' });
+    const state: Record<string, AIDraft> = { 'c1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_CANCEL_REFRESH',
+      payload: { id: 'c1' },
+    });
+
+    expect(result).toBe(state);
+  });
+
+  it('is no-op if draft does not exist', () => {
+    const state: Record<string, AIDraft> = {};
+
+    const result = dispatch(state, {
+      type: 'DRAFT_CANCEL_REFRESH',
+      payload: { id: 'nonexistent' },
+    });
+
+    expect(result).toBe(state);
+  });
+});
+
+// ============================================================================
+// 12. DRAFT_REFRESH_COMPLETE Guard — no-op after cancel
+// ============================================================================
+
+describe('Drafts Reducer — DRAFT_REFRESH_COMPLETE guard', () => {
+  it('is no-op when status is pending (cancelled refresh timer fires)', () => {
+    const draft = makeDraft({ id: 'g1', status: 'pending', content: 'Kept content', version: 1 });
+    const state: Record<string, AIDraft> = { 'g1': draft };
+
+    const result = dispatch(state, {
+      type: 'DRAFT_REFRESH_COMPLETE',
+      payload: { id: 'g1', content: 'Should be ignored', confidence: 0.99 },
+    });
+
+    expect(result).toBe(state);
+    expect(result['g1'].content).toBe('Kept content');
+    expect(result['g1'].version).toBe(1);
+  });
+});
+
+// ============================================================================
+// 13. Integration: Cancel Refresh Through rootReducer
+// ============================================================================
+
+describe('Integration: Cancel Refresh Lifecycle', () => {
+  it('refresh → cancel → delayed complete is no-op', () => {
+    const baseState = createInitialState();
+    const draft = makeDraft({ id: 'draft-cancel', status: 'pending', content: 'Original', category: 'hpi' });
+
+    // 1. Add draft
+    const afterGen = rootReducer(baseState, draftGenerated(draft));
+    expect(afterGen.entities.drafts['draft-cancel'].status).toBe('pending');
+
+    // 2. Start refresh (pending → updating)
+    const afterRefresh = rootReducer(afterGen, draftRefresh('draft-cancel'));
+    expect(afterRefresh.entities.drafts['draft-cancel'].status).toBe('updating');
+
+    // 3. Cancel refresh (updating → pending, content unchanged)
+    const afterCancel = rootReducer(afterRefresh, draftCancelRefresh('draft-cancel'));
+    expect(afterCancel.entities.drafts['draft-cancel'].status).toBe('pending');
+    expect(afterCancel.entities.drafts['draft-cancel'].content).toBe('Original');
+
+    // 4. Delayed refresh complete fires — should be no-op (status is pending, not updating)
+    const afterDelayed = rootReducer(afterCancel, draftRefreshComplete('draft-cancel', 'New content', 0.95));
+    expect(afterDelayed.entities.drafts['draft-cancel'].status).toBe('pending');
+    expect(afterDelayed.entities.drafts['draft-cancel'].content).toBe('Original');
   });
 });
