@@ -13,7 +13,7 @@ import { colors } from '../../styles/foundations';
 
 export interface SpinnerProps {
   /** Size */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   /** Color */
   color?: string;
 }
@@ -23,6 +23,7 @@ export interface SpinnerProps {
 // ============================================================================
 
 const sizes = {
+  xs: 10,
   sm: 16,
   md: 24,
   lg: 32,

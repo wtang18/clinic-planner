@@ -54,9 +54,11 @@ export const selectDraftsByCategory = (
 export const selectPendingDraftCount = (state: EncounterState): number =>
   selectPendingDrafts(state).length;
 
-/** Select active drafts (pending or generating — visible in the rail) */
+/** Select active drafts (pending, generating, or updating — visible in the rail) */
 export const selectActiveDrafts = (state: EncounterState): AIDraft[] =>
-  selectAllDrafts(state).filter(d => d.status === 'pending' || d.status === 'generating');
+  selectAllDrafts(state).filter(
+    d => d.status === 'pending' || d.status === 'generating' || d.status === 'updating'
+  );
 
 /** Check if a draft exists for a given category (prevents duplicate generation) */
 export const selectHasDraftForCategory = (
@@ -64,5 +66,6 @@ export const selectHasDraftForCategory = (
   category: ItemCategory
 ): boolean =>
   selectAllDrafts(state).some(
-    d => d.category === category && (d.status === 'pending' || d.status === 'generating')
+    d => d.category === category &&
+      (d.status === 'pending' || d.status === 'generating' || d.status === 'updating')
   );

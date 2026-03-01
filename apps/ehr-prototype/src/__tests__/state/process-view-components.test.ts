@@ -193,6 +193,25 @@ describe('DraftSection', () => {
     expect(activeDrafts).toHaveLength(2);
   });
 
+  it('includes updating drafts as active', () => {
+    const drafts: AIDraft[] = [
+      makeDraft({ id: 'd1', status: 'pending' }),
+      makeDraft({ id: 'd2', status: 'updating', content: 'old content' }),
+      makeDraft({ id: 'd3', status: 'dismissed' }),
+    ];
+    const activeDrafts = drafts.filter(
+      d => d.status === 'pending' || d.status === 'generating' || d.status === 'updating'
+    );
+    expect(activeDrafts).toHaveLength(2);
+  });
+
+  it('updating drafts show no action buttons', () => {
+    const draft = makeDraft({ id: 'd1', status: 'updating' });
+    // Actions are only shown when status is 'pending'
+    const showActions = draft.status === 'pending';
+    expect(showActions).toBe(false);
+  });
+
   it('full content not truncated for pending drafts', () => {
     const longContent = 'A'.repeat(200);
     const draft = makeDraft({ content: longContent });

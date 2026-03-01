@@ -86,22 +86,76 @@ export function createDraftEngine(
     const content = getMockDraftContent(stage.category);
     if (!content) return;
 
+    const draftId = `draft-${nanoid(8)}`;
+    const label = enrichTarget ? `Updated ${stage.label.replace(' Draft', '')}` : stage.label;
+
+    // Phase 1: Dispatch "generating" shell (no content yet)
     const draft: AIDraft = {
-      id: `draft-${nanoid(8)}`,
+      id: draftId,
       category: stage.category,
-      content,
-      status: 'pending',
+      content: '',
+      status: 'generating',
       generatedAt: new Date(),
       source: 'ambient-recording',
       enrichesItemId: enrichTarget?.id,
-      label: enrichTarget ? `Updated ${stage.label.replace(' Draft', '')}` : stage.label,
-      confidence: getMockConfidence(stage.category),
+      label,
     };
 
     dispatch({
       type: 'DRAFT_GENERATED',
       payload: { draft },
     });
+
+    // Phase 2: After generation duration, deliver actual content
+    const genDuration = stage.generationDurationMs ?? 3000;
+    const contentTimer = setTimeout(() => {
+      if (!running) return;
+      dispatch({
+        type: 'DRAFT_CONTENT_READY',
+        payload: {
+          id: draftId,
+          content,
+          confidence: getMockConfidence(stage.category),
+        },
+      });
+
+      // Schedule auto-refresh after content is ready
+      scheduleAutoRefresh(draftId, stage.category);
+    }, genDuration);
+    timers.push(contentTimer);
+  }
+
+  function scheduleAutoRefresh(draftId: string, category: ItemCategory) {
+    const refreshDelay = config.refreshDelayMs ?? 20000;
+    const refreshDuration = config.refreshDurationMs ?? 2500;
+
+    const refreshTimer = setTimeout(() => {
+      if (!running) return;
+
+      // Guard: only refresh if still pending
+      const currentState = getState();
+      const draft = currentState.entities.drafts[draftId];
+      if (!draft || draft.status !== 'pending') return;
+
+      // Transition to updating
+      dispatch({ type: 'DRAFT_REFRESH', payload: { id: draftId } });
+
+      // After refresh duration, deliver updated content
+      const completeTimer = setTimeout(() => {
+        if (!running) return;
+        const content = getMockDraftContent(category);
+        dispatch({
+          type: 'DRAFT_REFRESH_COMPLETE',
+          payload: {
+            id: draftId,
+            content,
+            confidence: getMockConfidence(category),
+          },
+        });
+      }, refreshDuration);
+      timers.push(completeTimer);
+    }, refreshDelay);
+    timers.push(refreshTimer);
   }
 
   return { start, stop, isRunning };

@@ -12,6 +12,7 @@ import type {
   BatchItem,
   BatchAggregateStatus,
   BatchType,
+  StatusBreakdown,
 } from '../../types/drafts';
 import { selectAllTasks } from './entities';
 import { selectActiveDrafts } from './drafts';
@@ -69,7 +70,7 @@ export function selectProcessingBatches(state: EncounterState): BatchSummary[] {
 
   return [
     buildDraftBatch(activeDrafts),
-    buildTaskBatch('prescriptions', 'Prescriptions', rxTasks),
+    buildTaskBatch('prescriptions', 'Rx', rxTasks),
     buildTaskBatch('labs', 'Labs', labTasks),
     buildTaskBatch('imaging', 'Imaging', imagingTasks),
     buildTaskBatch('referrals', 'Referrals', referralTasks),
@@ -114,6 +115,7 @@ function buildDraftBatch(
     label: 'AI Drafts',
     items,
     aggregateStatus: computeDraftAggregateStatus(drafts),
+    statusBreakdown: computeDraftBreakdown(drafts),
     count: items.length,
   };
 }
@@ -135,6 +137,7 @@ function buildTaskBatch(
     label,
     items,
     aggregateStatus: computeTaskAggregateStatus(tasks),
+    statusBreakdown: computeTaskBreakdown(tasks),
     count: items.length,
   };
 }
@@ -144,10 +147,22 @@ function computeDraftAggregateStatus(
 ): BatchAggregateStatus {
   if (drafts.length === 0) return 'idle';
   const hasPending = drafts.some(d => d.status === 'pending');
-  const hasGenerating = drafts.some(d => d.status === 'generating');
+  const hasGenerating = drafts.some(d => d.status === 'generating' || d.status === 'updating');
   if (hasPending) return 'needs-attention';
   if (hasGenerating) return 'in-progress';
   return 'idle';
+}
+
+function computeDraftBreakdown(
+  drafts: import('../../types/drafts').AIDraft[]
+): StatusBreakdown {
+  let inProgress = 0;
+  let needsAttention = 0;
+  for (const d of drafts) {
+    if (d.status === 'generating' || d.status === 'updating') inProgress++;
+    else if (d.status === 'pending') needsAttention++;
+  }
+  return { inProgress, needsAttention, complete: 0 };
 }
 
 function computeTaskAggregateStatus(tasks: BackgroundTask[]): BatchAggregateStatus {
@@ -160,4 +175,16 @@ function computeTaskAggregateStatus(tasks: BackgroundTask[]): BatchAggregateStat
   const allReady = tasks.every(t => t.status === 'ready');
   if (allReady) return 'complete';
   return 'idle';
+}
+
+function computeTaskBreakdown(tasks: BackgroundTask[]): StatusBreakdown {
+  let inProgress = 0;
+  let needsAttention = 0;
+  let complete = 0;
+  for (const t of tasks) {
+    if (t.status === 'queued' || t.status === 'processing') inProgress++;
+    else if (t.status === 'pending-review' || t.status === 'failed') needsAttention++;
+    else if (t.status === 'ready') complete++;
+  }
+  return { inProgress, needsAttention, complete };
 }

@@ -17,6 +17,7 @@ import type { ItemCategory } from './chart-items';
 /** Draft lifecycle status */
 export type DraftStatus =
   | 'generating'  // AI is actively producing content
+  | 'updating'    // Content being refreshed with new transcript data
   | 'pending'     // Content ready, awaiting provider review
   | 'accepted'    // Provider accepted, promoted to chart item
   | 'dismissed';  // Provider dismissed
@@ -44,6 +45,8 @@ export interface AIDraft {
   label: string;
   /** AI confidence score (0-1) */
   confidence?: number;
+  /** Version number — increments when content is refreshed */
+  version?: number;
 }
 
 // ============================================================================
@@ -65,6 +68,13 @@ export type BatchAggregateStatus =
   | 'in-progress'
   | 'complete';
 
+/** Per-status counts for a batch, used for inline display in the rail */
+export interface StatusBreakdown {
+  inProgress: number;
+  needsAttention: number;
+  complete: number;
+}
+
 /** A unified batch item — wraps either a task or a draft for the rail UI */
 export type BatchItem =
   | { kind: 'task'; taskId: string; label: string; status: string }
@@ -76,5 +86,6 @@ export interface BatchSummary {
   label: string;
   items: BatchItem[];
   aggregateStatus: BatchAggregateStatus;
+  statusBreakdown: StatusBreakdown;
   count: number;
 }

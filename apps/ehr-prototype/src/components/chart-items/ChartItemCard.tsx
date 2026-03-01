@@ -297,7 +297,7 @@ export const ChartItemCard: React.FC<ChartItemCardProps> = ({
     display: 'flex',
     alignItems: 'flex-start',
     gap: spaceBetween.repeating,
-    padding: spaceAround.tight,
+    padding: spaceAround.compact,
     cursor: onSelect ? 'pointer' : 'default',
     transition: `all ${transitions.fast}`,
     ...style,

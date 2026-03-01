@@ -688,4 +688,20 @@ describe('selectProcessViewDrafts', () => {
     expect(active).toHaveLength(2);
     expect(active.map(d => d.id).sort()).toEqual(['d1', 'd2']);
   });
+
+  it('includes updating drafts in active drafts', () => {
+    const pending = makeDraft({ id: 'd1', status: 'pending' });
+    const updating = makeDraft({ id: 'd2', status: 'updating', content: 'old content' });
+    const dismissed = makeDraft({ id: 'd3', status: 'dismissed' });
+    const state = stateWith({
+      drafts: {
+        [pending.id]: pending,
+        [updating.id]: updating,
+        [dismissed.id]: dismissed,
+      },
+    });
+    const active = selectProcessViewDrafts(state);
+    expect(active).toHaveLength(2);
+    expect(active.map(d => d.id).sort()).toEqual(['d1', 'd2']);
+  });
 });

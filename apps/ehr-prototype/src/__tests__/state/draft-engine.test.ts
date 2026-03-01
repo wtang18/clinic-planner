@@ -92,15 +92,17 @@ describe('Draft Engine — Timer-Based Generation', () => {
     expect(dispatched[0].type).toBe('DRAFT_GENERATED');
     if (dispatched[0].type === 'DRAFT_GENERATED') {
       expect(dispatched[0].payload.draft.category).toBe('chief-complaint');
-      expect(dispatched[0].payload.draft.status).toBe('pending');
+      expect(dispatched[0].payload.draft.status).toBe('generating');
     }
 
     // Advance to second stage (HPI at 1500ms)
+    // At t=1500ms: CC shell (t=300) + CC content ready (t=500) + HPI shell (t=1500) = 3 dispatches
     vi.advanceTimersByTime(1200);
-    expect(dispatched).toHaveLength(2);
-    if (dispatched[1].type === 'DRAFT_GENERATED') {
-      expect(dispatched[1].payload.draft.category).toBe('hpi');
-    }
+    const hpiShell = dispatched.filter(
+      (a): a is Extract<EncounterAction, { type: 'DRAFT_GENERATED' }> => a.type === 'DRAFT_GENERATED'
+    );
+    expect(hpiShell).toHaveLength(2);
+    expect(hpiShell[1].payload.draft.category).toBe('hpi');
 
     engine.stop();
   });
@@ -118,13 +120,18 @@ describe('Draft Engine — Timer-Based Generation', () => {
     engine.start();
     vi.advanceTimersByTime(10000); // More than enough for all fast stages
 
-    expect(dispatched).toHaveLength(6);
-    const categories = dispatched
-      .filter((a): a is Extract<EncounterAction, { type: 'DRAFT_GENERATED' }> => a.type === 'DRAFT_GENERATED')
-      .map(a => a.payload.draft.category);
+    // 6 DRAFT_GENERATED (shells) + 6 DRAFT_CONTENT_READY = 12 dispatches
+    const shells = dispatched.filter(
+      (a): a is Extract<EncounterAction, { type: 'DRAFT_GENERATED' }> => a.type === 'DRAFT_GENERATED'
+    );
+    expect(shells).toHaveLength(6);
+    const categories = shells.map(a => a.payload.draft.category);
     expect(categories).toEqual([
       'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'instruction',
     ]);
+
+    const contentReady = dispatched.filter(a => a.type === 'DRAFT_CONTENT_READY');
+    expect(contentReady).toHaveLength(6);
 
     engine.stop();
   });
@@ -345,5 +352,211 @@ describe('Mock Draft Content', () => {
     expect(getMockConfidence('hpi')).toBeLessThanOrEqual(1);
     expect(getMockConfidence('plan')).toBeGreaterThan(0);
     expect(getMockConfidence('plan')).toBeLessThanOrEqual(1);
+  });
+});
+
+// ============================================================================
+// 6. Two-Phase Generation
+// ============================================================================
+
+describe('Draft Engine — Two-Phase Generation', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('dispatches DRAFT_GENERATED with generating status (shell) at stage delay', () => {
+    const dispatched: EncounterAction[] = [];
+    const state = makeState();
+
+    const engine = createDraftEngine(
+      (action) => dispatched.push(action),
+      () => state,
+      { stages: FAST_DRAFT_STAGES, detectEnrichment: false }
+    );
+
+    engine.start();
+    vi.advanceTimersByTime(300); // CC stage fires (300ms for fast)
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0].type).toBe('DRAFT_GENERATED');
+    if (dispatched[0].type === 'DRAFT_GENERATED') {
+      expect(dispatched[0].payload.draft.status).toBe('generating');
+      expect(dispatched[0].payload.draft.content).toBe('');
+      expect(dispatched[0].payload.draft.confidence).toBeUndefined();
+    }
+
+    engine.stop();
+  });
+
+  it('dispatches DRAFT_CONTENT_READY after generation duration', () => {
+    const dispatched: EncounterAction[] = [];
+    const state = makeState();
+
+    // Use custom stage with known generationDurationMs
+    const testStages = [
+      { category: 'chief-complaint' as const, label: 'CC Draft', delayMs: 100, generationDurationMs: 500 },
+    ];
+
+    const engine = createDraftEngine(
+      (action) => dispatched.push(action),
+      () => state,
+      { stages: testStages, detectEnrichment: false }
+    );
+
+    engine.start();
+
+    // At 100ms: shell dispatched
+    vi.advanceTimersByTime(100);
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0].type).toBe('DRAFT_GENERATED');
+
+    // At 600ms (100 + 500): content ready dispatched
+    vi.advanceTimersByTime(500);
+    expect(dispatched).toHaveLength(2);
+    expect(dispatched[1].type).toBe('DRAFT_CONTENT_READY');
+    if (dispatched[1].type === 'DRAFT_CONTENT_READY') {
+      expect(dispatched[1].payload.content.length).toBeGreaterThan(0);
+      expect(dispatched[1].payload.confidence).toBeGreaterThan(0);
+    }
+
+    engine.stop();
+  });
+
+  it('does not dispatch DRAFT_CONTENT_READY if engine is stopped', () => {
+    const dispatched: EncounterAction[] = [];
+    const state = makeState();
+
+    const testStages = [
+      { category: 'chief-complaint' as const, label: 'CC Draft', delayMs: 100, generationDurationMs: 500 },
+    ];
+
+    const engine = createDraftEngine(
+      (action) => dispatched.push(action),
+      () => state,
+      { stages: testStages, detectEnrichment: false }
+    );
+
+    engine.start();
+    vi.advanceTimersByTime(100); // Shell dispatched
+    expect(dispatched).toHaveLength(1);
+
+    engine.stop(); // Stop before content ready
+
+    vi.advanceTimersByTime(1000);
+    // Should still only have the 1 shell dispatch
+    expect(dispatched).toHaveLength(1);
+  });
+});
+
+// ============================================================================
+// 7. Auto-Refresh Scheduling
+// ============================================================================
+
+describe('Draft Engine — Auto-Refresh', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('schedules DRAFT_REFRESH after content ready + refreshDelayMs', () => {
+    const dispatched: EncounterAction[] = [];
+    let currentState = makeState();
+
+    const testStages = [
+      { category: 'chief-complaint' as const, label: 'CC Draft', delayMs: 100, generationDurationMs: 200 },
+    ];
+
+    const engine = createDraftEngine(
+      (action) => {
+        dispatched.push(action);
+        // Simulate state updates for the guard checks
+        if (action.type === 'DRAFT_GENERATED') {
+          currentState = makeState({
+            drafts: { [action.payload.draft.id]: action.payload.draft },
+          });
+        } else if (action.type === 'DRAFT_CONTENT_READY') {
+          const existing = Object.values(currentState.entities.drafts)[0];
+          if (existing) {
+            currentState = makeState({
+              drafts: { [existing.id]: { ...existing, status: 'pending', content: action.payload.content } },
+            });
+          }
+        }
+      },
+      () => currentState,
+      { stages: testStages, detectEnrichment: false, refreshDelayMs: 1000, refreshDurationMs: 300 }
+    );
+
+    engine.start();
+
+    // t=100: shell
+    vi.advanceTimersByTime(100);
+    expect(dispatched).toHaveLength(1);
+
+    // t=300: content ready
+    vi.advanceTimersByTime(200);
+    expect(dispatched).toHaveLength(2);
+    expect(dispatched[1].type).toBe('DRAFT_CONTENT_READY');
+
+    // t=1300: DRAFT_REFRESH (1000ms after content ready)
+    vi.advanceTimersByTime(1000);
+    expect(dispatched).toHaveLength(3);
+    expect(dispatched[2].type).toBe('DRAFT_REFRESH');
+
+    // t=1600: DRAFT_REFRESH_COMPLETE (300ms after refresh)
+    vi.advanceTimersByTime(300);
+    expect(dispatched).toHaveLength(4);
+    expect(dispatched[3].type).toBe('DRAFT_REFRESH_COMPLETE');
+
+    engine.stop();
+  });
+
+  it('does not auto-refresh if draft is no longer pending', () => {
+    const dispatched: EncounterAction[] = [];
+    let currentState = makeState();
+
+    const testStages = [
+      { category: 'chief-complaint' as const, label: 'CC Draft', delayMs: 100, generationDurationMs: 200 },
+    ];
+
+    const engine = createDraftEngine(
+      (action) => {
+        dispatched.push(action);
+        if (action.type === 'DRAFT_GENERATED') {
+          currentState = makeState({
+            drafts: { [action.payload.draft.id]: action.payload.draft },
+          });
+        } else if (action.type === 'DRAFT_CONTENT_READY') {
+          const existing = Object.values(currentState.entities.drafts)[0];
+          if (existing) {
+            // Simulate: draft was accepted before refresh kicks in
+            currentState = makeState({
+              drafts: { [existing.id]: { ...existing, status: 'accepted', content: action.payload.content } },
+            });
+          }
+        }
+      },
+      () => currentState,
+      { stages: testStages, detectEnrichment: false, refreshDelayMs: 1000, refreshDurationMs: 300 }
+    );
+
+    engine.start();
+
+    // t=100: shell, t=300: content ready
+    vi.advanceTimersByTime(300);
+    expect(dispatched).toHaveLength(2);
+
+    // t=1300: should NOT dispatch DRAFT_REFRESH (draft is accepted)
+    vi.advanceTimersByTime(1000);
+    expect(dispatched).toHaveLength(2); // No new dispatches
+
+    engine.stop();
   });
 });
