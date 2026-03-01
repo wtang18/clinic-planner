@@ -7,10 +7,10 @@
  * @see TRANSCRIPTION_DRAWER.md for full specification
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { TranscriptionContextHeader } from './TranscriptionContextHeader';
 import { ViewIndicatorPill } from './ViewIndicatorPill';
-import { TranscriptContent, type TranscriptSegment } from './TranscriptContent';
+import { TranscriptContent, type TranscriptSegment, type TranscriptContentRef } from './TranscriptContent';
 import { TranscriptionControlsFooter } from './TranscriptionControlsFooter';
 import type { RecordingStatus } from '../../../state/bottomBar/types';
 import { colors } from '../../../styles/foundations';
@@ -77,7 +77,7 @@ export const TranscriptionDrawerView: React.FC<TranscriptionDrawerViewProps> = (
   testID,
 }) => {
   const [isScrolledUp, setIsScrolledUp] = useState(false);
-  const [scrollToBottomFn, setScrollToBottomFn] = useState<(() => void) | null>(null);
+  const transcriptRef = useRef<TranscriptContentRef>(null);
 
   const isRecording = status === 'recording';
   const hasSegments = segments.length > 0;
@@ -87,11 +87,9 @@ export const TranscriptionDrawerView: React.FC<TranscriptionDrawerViewProps> = (
     setIsScrolledUp(!isAtBottom);
   }, []);
 
-  // Handle [↓ Latest] button click
+  // Handle [↓ Latest] button click — scrolls transcript to bottom
   const handleScrollToLatest = useCallback(() => {
-    // In a real implementation, we'd have a ref to TranscriptContent
-    // For now, we trigger the scroll via state change
-    setIsScrolledUp(false);
+    transcriptRef.current?.scrollToBottom();
   }, []);
 
   const containerStyle: React.CSSProperties = {
@@ -102,50 +100,50 @@ export const TranscriptionDrawerView: React.FC<TranscriptionDrawerViewProps> = (
     ...style,
   };
 
-  // Floating elements zone (header + pill)
-  const floatingZoneStyle: React.CSSProperties = {
-    position: 'relative',
-    zIndex: 10,
-    flexShrink: 0,
-  };
-
-  // Scroll content area
-  const scrollAreaStyle: React.CSSProperties = {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-    // Negative margin to allow content to scroll behind floating elements
-    marginTop: -60, // Approximate height of header + pill
-    paddingTop: 60,
-  };
-
   return (
     <div style={containerStyle} data-testid={testID}>
-      {/* Floating zone: Context header + View indicator pill */}
-      <div style={floatingZoneStyle}>
+      {/* Context header — fixed at top */}
+      <div style={{ flexShrink: 0 }}>
         <TranscriptionContextHeader
           patientName={patientName}
           patientInitials={patientInitials}
           encounterLabel={encounterLabel}
           onOpenSettings={onOpenSettings}
         />
-        <ViewIndicatorPill
-          status={status}
-          isScrolledUp={isScrolledUp}
-          onScrollToLatest={handleScrollToLatest}
-        />
       </div>
 
-      {/* Scroll content area */}
-      <TranscriptContent
-        segments={segments}
-        isRecording={isRecording}
-        onScrollChange={handleScrollChange}
-        showLowConfidence={showLowConfidence}
-        topPadding={0}
-        style={{ flex: 1 }}
-      />
+      {/* Content area with floating pill overlay */}
+      <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Floating status pill — glassy overlay, content scrolls behind */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 10,
+          display: 'flex',
+          justifyContent: 'center',
+          pointerEvents: 'none',
+        }}>
+          <ViewIndicatorPill
+            status={status}
+            isScrolledUp={isScrolledUp}
+            onScrollToLatest={handleScrollToLatest}
+            style={{ pointerEvents: 'auto' }}
+          />
+        </div>
+
+        {/* Transcript scrollable content */}
+        <TranscriptContent
+          ref={transcriptRef}
+          segments={segments}
+          isRecording={isRecording}
+          onScrollChange={handleScrollChange}
+          showLowConfidence={showLowConfidence}
+          topPadding={36}
+          style={{ flex: 1 }}
+        />
+      </div>
 
       {/* Controls footer */}
       <div style={{ flexShrink: 0 }}>

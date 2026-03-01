@@ -747,17 +747,16 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
               )}
             </div>
           ) : (
-          <div style={{ flex: 1, overflow: 'auto', padding: spaceAround.default }}>
-            {/* Quick Actions or Empty State (no response, no suggestions inline) */}
-            {quickActions && quickActions.length > 0 && onQuickActionClick ? (
+          <div style={{ flex: 1, overflow: 'auto', minHeight: 0 }}>
+            {/* Quick Actions — only when no active suggestions (mutually exclusive) */}
+            {actionSuggestions.length === 0 && quickActions && quickActions.length > 0 && onQuickActionClick ? (
               <div
                 className="ai-palette-actions"
                 style={{
                   display: 'flex',
                   gap: 8,
                   overflowX: 'auto',
-                  margin: `0 -${spaceAround.default}px`,
-                  padding: `0 ${spaceAround.default}px`,
+                  padding: `${spaceAround.default}px ${spaceAround.default}px 0`,
                   scrollbarWidth: 'none',
                 }}
               >
@@ -783,27 +782,25 @@ const PaletteContent: React.FC<PaletteContentProps> = ({
                   </Button>
                 ))}
               </div>
-            ) : (
-              activeSuggestions.length === 0 && (
-                <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
-                  <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
-                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
-                </div>
-              )
+            ) : actionSuggestions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, width: '100%' }}>
+                <Sparkles size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 12 }} />
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', margin: 0 }}>AI assistance available</p>
+              </div>
+            ) : null}
+            {/* Suggestion Module — inside scrollable area for proper overflow */}
+            {actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
+              <SuggestionModule
+                suggestions={suggestions}
+                onAccept={onSuggestionAccept}
+                onDismiss={onSuggestionDismiss}
+                onEdit={(id) => setEditingSuggestionId(id)}
+                theme="dark"
+                collapsed={moduleCollapsed}
+                onToggleCollapse={() => setModuleCollapsed(!moduleCollapsed)}
+              />
             )}
           </div>
-          )}
-          {/* Suggestion Module — between content and input, only when no response (idle moment) */}
-          {!paletteResponse && actionSuggestions.length > 0 && onSuggestionAccept && onSuggestionDismiss && (
-            <SuggestionModule
-              suggestions={suggestions}
-              onAccept={onSuggestionAccept}
-              onDismiss={onSuggestionDismiss}
-              onEdit={(id) => setEditingSuggestionId(id)}
-              theme="dark"
-              collapsed={moduleCollapsed}
-              onToggleCollapse={() => setModuleCollapsed(!moduleCollapsed)}
-            />
           )}
           {/* Input Area */}
           <AIInputArea

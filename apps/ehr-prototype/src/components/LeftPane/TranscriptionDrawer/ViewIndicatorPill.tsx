@@ -49,7 +49,7 @@ export const ViewIndicatorPill: React.FC<ViewIndicatorPillProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spaceBetween.relatedCompact,
+    gap: spaceBetween.repeating,
     padding: `${spaceAround.tight}px 0`,
     ...style,
   };
@@ -60,8 +60,10 @@ export const ViewIndicatorPill: React.FC<ViewIndicatorPillProps> = ({
     gap: spaceBetween.coupled,
     padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
     backgroundColor: isRecording
-      ? colors.bg.alert.subtle
-      : colors.bg.neutral.subtle,
+      ? 'rgba(255, 237, 224, 0.75)'
+      : 'rgba(243, 243, 243, 0.75)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     borderRadius: borderRadius.full,
     fontSize: 12,
     fontFamily: typography.fontFamily.sans,
@@ -69,6 +71,7 @@ export const ViewIndicatorPill: React.FC<ViewIndicatorPillProps> = ({
     color: isRecording
       ? colors.fg.alert.secondary
       : colors.fg.neutral.secondary,
+    boxShadow: '0 1px 4px rgba(0, 0, 0, 0.06)',
   };
 
   const latestButtonStyle: React.CSSProperties = {

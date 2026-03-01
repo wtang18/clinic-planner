@@ -7,7 +7,7 @@
  * @see TRANSCRIPTION_DRAWER.md §5 for full specification
  */
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { colors, spaceAround, spaceBetween, borderRadius, typography } from '../../../styles/foundations';
 
@@ -32,6 +32,10 @@ export interface TranscriptSegment {
   isActive?: boolean;
   /** Confidence level (0-1), for low-confidence flagging */
   confidence?: number;
+}
+
+export interface TranscriptContentRef {
+  scrollToBottom: () => void;
 }
 
 export interface TranscriptContentProps {
@@ -210,7 +214,7 @@ const EmptyState: React.FC = () => {
 // Component
 // ============================================================================
 
-export const TranscriptContent: React.FC<TranscriptContentProps> = ({
+export const TranscriptContent = forwardRef<TranscriptContentRef, TranscriptContentProps>(({
   segments,
   isRecording = false,
   onScrollChange,
@@ -218,7 +222,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
   topPadding = 0,
   style,
   testID,
-}) => {
+}, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
 
@@ -240,7 +244,7 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
     onScrollChange?.(isAtBottom);
   }, [onScrollChange]);
 
-  // Method to scroll to bottom (exposed via ref or callback)
+  // Scroll to bottom — exposed via imperative handle
   const scrollToBottom = useCallback(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -248,6 +252,8 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
       onScrollChange?.(true);
     }
   }, [onScrollChange]);
+
+  useImperativeHandle(ref, () => ({ scrollToBottom }), [scrollToBottom]);
 
   const containerStyle: React.CSSProperties = {
     flex: 1,
@@ -278,6 +284,6 @@ export const TranscriptContent: React.FC<TranscriptContentProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
 
 TranscriptContent.displayName = 'TranscriptContent';
