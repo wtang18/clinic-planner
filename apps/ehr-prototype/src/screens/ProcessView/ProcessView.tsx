@@ -1,9 +1,9 @@
 /**
  * ProcessView Screen
  *
- * Operational batch view for completing outstanding work and signing off.
- * Shows items organized by batch (AI Drafts, Prescriptions, Labs, Imaging, Referrals)
- * with a sign-off section at the bottom.
+ * Operational batch view for completing outstanding work.
+ * Shows items organized by batch (AI Drafts, Prescriptions, Labs, Imaging, Referrals).
+ * Sign-off lives in ReviewView only.
  *
  * ProcessCanvas is the canvas-only content rendered inside CaptureView's
  * single AdaptiveLayout. ProcessView is the legacy wrapper (kept for
@@ -19,7 +19,6 @@ import type { BatchType } from '../../types/drafts';
 import { DetailsPane } from '../../components/details-pane/DetailsPane';
 import { BatchSection } from '../../components/process-view/BatchSection';
 import { DraftSection } from '../../components/process-view/DraftSection';
-import { SignOff } from '../../components/process-view/SignOff';
 import { EmptyState } from '../../components/primitives/EmptyState';
 
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
@@ -47,11 +46,6 @@ export const ProcessCanvas: React.FC = () => {
   const {
     batches,
     drafts,
-    checklist,
-    emLevel,
-    outstandingCount,
-    signOffBlockers,
-    isSigningOff,
     selectedItemId,
     scopedAddCategory,
     handleItemSelect,
@@ -62,7 +56,6 @@ export const ProcessCanvas: React.FC = () => {
     handleRefreshDraft,
     handleCancelRefresh,
     handleBatchAction,
-    handleSignOff,
     handleModeChange,
     handleScopedAdd,
     handleClearScopedAdd,
@@ -115,14 +108,6 @@ export const ProcessCanvas: React.FC = () => {
       }
     },
     [handleBatchAction]
-  );
-
-  // Handle checklist section tap → navigate to capture mode
-  const handleChecklistSectionTap = useCallback(
-    (sectionId: string) => {
-      handleModeChange('capture');
-    },
-    [handleModeChange]
   );
 
   // Empty state: no patient/encounter
@@ -191,18 +176,6 @@ export const ProcessCanvas: React.FC = () => {
             style={styles.emptyState}
           />
         )}
-
-        {/* Sign-Off section */}
-        <SignOff
-          encounter={encounter}
-          checklist={checklist}
-          emLevel={emLevel}
-          outstandingCount={outstandingCount}
-          blockers={signOffBlockers}
-          isSigningOff={isSigningOff}
-          onSignOff={handleSignOff}
-          onChecklistSectionTap={handleChecklistSectionTap}
-        />
 
         {/* Bottom spacing */}
         <div style={{ height: spaceBetween.separated }} />

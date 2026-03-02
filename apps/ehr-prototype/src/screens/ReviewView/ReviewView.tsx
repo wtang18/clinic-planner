@@ -27,6 +27,7 @@ import { CareGapList } from '../../components/care-gaps/CareGapList';
 import { DetailsPane } from '../../components/details-pane';
 import { OmniAddBarV2 as OmniAddBar } from '../../components/omni-add/OmniAddBarV2';
 import { SafetyAlertBanner } from '../../components/safety/SafetyAlertBanner';
+import { EMLevel } from '../../components/process-view/EMLevel';
 import { FileText, Check, AlertTriangle, Circle } from 'lucide-react';
 
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
@@ -131,6 +132,7 @@ export const ReviewCanvas: React.FC = () => {
     safetyAlerts,
     signOffBlockers,
     isSigningOff,
+    emLevel,
     handleItemEdit,
     handleItemUpdate,
     handleItemRemove,
@@ -269,7 +271,12 @@ export const ReviewCanvas: React.FC = () => {
           onSignOff={handleSignOff}
           blockers={signOffBlockers}
           isSigningOff={isSigningOff}
-        />
+        >
+          <EMLevel
+            emLevel={emLevel}
+            style={{ marginBottom: 16 }}
+          />
+        </SignOffSection>
 
         {/* Bottom spacing */}
         <div style={{ height: spaceBetween.separated }} />

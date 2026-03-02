@@ -4,8 +4,10 @@
 
 export { ProcessingRail, RAIL_WIDTH } from './ProcessingRail';
 export type { ProcessingRailProps } from './ProcessingRail';
-export { RailGutter } from './RailGutter';
-export type { RailGutterProps } from './RailGutter';
+export { RailFloatingStatus } from './RailFloatingStatus';
+export type { RailFloatingStatusProps } from './RailFloatingStatus';
+export { CompletenessCompact } from './CompletenessCompact';
+export type { CompletenessCompactProps } from './CompletenessCompact';
 export { BatchSummaryRow } from './BatchSummaryRow';
 export type { BatchSummaryRowProps } from './BatchSummaryRow';
 export { ProcessingItemRow } from './ProcessingItemRow';

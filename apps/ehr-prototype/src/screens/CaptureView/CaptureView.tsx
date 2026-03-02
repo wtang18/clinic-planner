@@ -39,7 +39,7 @@ import { useAIConversation } from '../../hooks/useAIConversation';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import { TaskPane } from '../../components/tasks/TaskPane';
 import { DetailsPane } from '../../components/details-pane';
-import { ProcessingRail } from '../../components/processing-rail';
+import { ProcessingRail, RailFloatingStatus } from '../../components/processing-rail';
 import { TriageModule } from '../../components/triage';
 import type { VitalsItem, NarrativeItem, PhysicalExamItem } from '../../types/chart-items';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
@@ -1181,11 +1181,11 @@ export const CaptureView: React.FC = () => {
                     {contextBar}
                     <div ref={gridRef} style={{
                       display: 'grid',
-                      gridTemplateColumns: railTier === 'hidden' ? '1fr' : 'minmax(0, 1fr) auto',
+                      gridTemplateColumns: railTier === 'full' ? 'minmax(0, 1fr) auto' : '1fr',
                       gridTemplateRows: 'auto auto 1fr',
                       flex: 1,
                       minHeight: 0,
-                      columnGap: railTier === 'hidden' ? 0 : spaceAround.defaultPlus,
+                      columnGap: railTier === 'full' ? spaceAround.defaultPlus : 0,
                     }}>
                       <EncounterContextBar
                         encounter={encounter}
@@ -1208,6 +1208,11 @@ export const CaptureView: React.FC = () => {
                         gridColumn: 1, gridRow: 2,
                         marginBottom: spaceBetween.repeating,
                       }}>
+                        {railTier === 'float' && (
+                          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: spaceBetween.repeating }}>
+                            <RailFloatingStatus onTap={() => handleModeChange('process')} />
+                          </div>
+                        )}
                         <TriageModule
                           vitals={encounterVitals}
                           chiefComplaint={visit?.chiefComplaint}
@@ -1258,14 +1263,13 @@ export const CaptureView: React.FC = () => {
                       </div>
 
                       {/* Processing Rail — spans rows 2-3, sticky to stay visible */}
-                      {railTier !== 'hidden' && (
+                      {railTier === 'full' && (
                         <div style={{
                           gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
                           position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
                           display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                         }}>
                           <ProcessingRail
-                            variant={railTier}
                             onAcceptDraft={handleAcceptDraft}
                             onEditDraft={handleEditDraft}
                             onDismissDraft={handleDismissDraft}
@@ -1336,11 +1340,11 @@ export const CaptureView: React.FC = () => {
                   {contextBar}
                   <div ref={gridRef} style={{
                     display: 'grid',
-                    gridTemplateColumns: railTier === 'hidden' ? '1fr' : 'minmax(0, 1fr) auto',
+                    gridTemplateColumns: railTier === 'full' ? 'minmax(0, 1fr) auto' : '1fr',
                     gridTemplateRows: 'auto auto 1fr',
                     flex: 1,
                     minHeight: 0,
-                    columnGap: railTier === 'hidden' ? 0 : spaceAround.defaultPlus,
+                    columnGap: railTier === 'full' ? spaceAround.defaultPlus : 0,
                   }}>
                     <EncounterContextBar
                       encounter={encounter}
@@ -1363,6 +1367,11 @@ export const CaptureView: React.FC = () => {
                       gridColumn: 1, gridRow: 2,
                       marginBottom: spaceBetween.repeating,
                     }}>
+                      {railTier === 'float' && (
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: spaceBetween.repeating }}>
+                          <RailFloatingStatus onTap={() => handleModeChange('process')} />
+                        </div>
+                      )}
                       <TriageModule
                         vitals={encounterVitals}
                         chiefComplaint={visit?.chiefComplaint}
@@ -1412,14 +1421,13 @@ export const CaptureView: React.FC = () => {
                     </div>
 
                     {/* Processing Rail — spans rows 2-3, sticky to stay visible */}
-                    {railTier !== 'hidden' && (
+                    {railTier === 'full' && (
                       <div style={{
                         gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
                         position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
                         display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                       }}>
                         <ProcessingRail
-                          variant={railTier}
                           onAcceptDraft={handleAcceptDraft}
                           onEditDraft={handleEditDraft}
                           onDismissDraft={handleDismissDraft}

@@ -10,11 +10,13 @@ import { useCallback, useState, useMemo } from 'react';
 import type { ChartItem, ItemCategory } from '../../types';
 import type { Mode } from '../../state/types';
 import type { SafetyAlert } from '../../services/safety/types';
+import type { EMLevel } from '../../state/selectors/process-view';
 import type { SignOffBlocker } from './SignOffSection';
 import { useNavigation } from '../../navigation/NavigationContext';
 import {
   useEncounterState,
   useDispatch,
+  useSelector,
   useChartItems,
   useOpenCareGaps,
   usePendingTasks,
@@ -26,6 +28,7 @@ import {
 import { useStore } from '../../hooks/useEncounterState';
 import { selectItem } from '../../state/selectors/entities';
 import { selectCriticalUnacknowledgedAlerts } from '../../state/selectors/safety';
+import { selectMockEMLevel } from '../../state/selectors/process-view';
 
 // ============================================================================
 // Types
@@ -56,6 +59,8 @@ export interface UseReviewViewResult {
   signOffBlockers: SignOffBlocker[];
   /** Whether sign-off is in progress */
   isSigningOff: boolean;
+  /** Mock E&M level */
+  emLevel: EMLevel;
 
   // Actions
   handleItemEdit: (itemId: string) => void;
@@ -99,6 +104,7 @@ export function useReviewView(): UseReviewViewResult {
   const diagnoses = useDiagnoses();
   const { updateItem, deleteItem } = useItemActions();
   const { alerts: safetyAlerts, acknowledgeAlert } = useSafetyAlerts();
+  const emLevel = useSelector(selectMockEMLevel);
 
   // Local state
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -278,6 +284,7 @@ export function useReviewView(): UseReviewViewResult {
     safetyAlerts,
     signOffBlockers,
     isSigningOff,
+    emLevel,
     handleItemEdit,
     handleItemUpdate,
     handleItemRemove,

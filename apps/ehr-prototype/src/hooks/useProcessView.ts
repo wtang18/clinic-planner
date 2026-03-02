@@ -2,37 +2,26 @@
  * useProcessView Hook
  *
  * Orchestration hook for the Process view — combines batch data,
- * draft actions, sign-off state, item selection, and scoped add.
+ * draft actions, item selection, and scoped add.
+ * Sign-off lives in ReviewView only.
  */
 
-import { useCallback, useState, useMemo } from 'react';
+import { useCallback, useState } from 'react';
 import type { ChartItem, ItemCategory, AIDraft } from '../types';
 import type { Mode } from '../state/types';
 import type { BatchType } from '../types/drafts';
-import type { SignOffBlocker } from '../screens/ReviewView/SignOffSection';
 import { useNavigation } from '../navigation/NavigationContext';
 import {
   selectProcessViewBatches,
   selectProcessViewDrafts,
-  selectCompletenessChecklist,
-  selectMockEMLevel,
-  selectOutstandingItemCount,
 } from '../state/selectors/process-view';
-import type {
-  ProcessBatch,
-  ChecklistItem,
-  EMLevel,
-} from '../state/selectors/process-view';
+import type { ProcessBatch } from '../state/selectors/process-view';
 import {
   useEncounterState,
   useDispatch,
   useItemActions,
   useTaskActions,
   useDraftActions,
-  useChartItems,
-  usePendingTasks,
-  useItemsRequiringReview,
-  useDiagnoses,
 } from '../hooks';
 import { useStore } from './useEncounterState';
 import { selectDraft } from '../state/selectors/drafts';
@@ -48,16 +37,6 @@ export interface UseProcessViewResult {
   batches: ProcessBatch[];
   /** Active AI drafts for the draft section */
   drafts: AIDraft[];
-  /** Encounter completeness checklist (8 sections) */
-  checklist: ChecklistItem[];
-  /** Mock E&M level */
-  emLevel: EMLevel;
-  /** Count of items needing attention */
-  outstandingCount: number;
-  /** Sign-off blockers */
-  signOffBlockers: SignOffBlocker[];
-  /** Whether sign-off is in progress */
-  isSigningOff: boolean;
   /** Currently selected item ID (opens details pane) */
   selectedItemId: string | null;
   /** Category for scoped add (set by inline "+") */
@@ -72,7 +51,6 @@ export interface UseProcessViewResult {
   handleRefreshDraft: (draftId: string) => void;
   handleCancelRefresh: (draftId: string) => void;
   handleBatchAction: (batchType: BatchType, action: string, taskIds?: string[]) => void;
-  handleSignOff: () => void;
   handleModeChange: (mode: Mode) => void;
   handleScopedAdd: (category: ItemCategory) => void;
   handleClearScopedAdd: () => void;
@@ -90,73 +68,14 @@ export function useProcessView(): UseProcessViewResult {
   const { addItem, updateItem } = useItemActions();
   const { approveTask, batchApprove } = useTaskActions();
   const { acceptDraft: acceptDraftAction, dismissDraft: dismissDraftAction } = useDraftActions();
-  const allItems = useChartItems();
-  const pendingTasks = usePendingTasks();
-  const itemsRequiringReview = useItemsRequiringReview();
-  const diagnoses = useDiagnoses();
 
   // Local state
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [isSigningOff, setIsSigningOff] = useState(false);
   const [scopedAddCategory, setScopedAddCategory] = useState<ItemCategory | null>(null);
 
   // Derived state from selectors
   const batches = selectProcessViewBatches(state);
   const drafts = selectProcessViewDrafts(state);
-  const checklist = selectCompletenessChecklist(state);
-  const emLevel = selectMockEMLevel(state);
-  const outstandingCount = selectOutstandingItemCount(state);
-
-  // Sign-off blockers (same logic as ReviewView)
-  const signOffBlockers = useMemo((): SignOffBlocker[] => {
-    const blockers: SignOffBlocker[] = [];
-
-    if (itemsRequiringReview.length > 0) {
-      blockers.push({
-        type: 'unreviewed-ai',
-        message: `${itemsRequiringReview.length} AI-generated item${itemsRequiringReview.length !== 1 ? 's' : ''} require${itemsRequiringReview.length === 1 ? 's' : ''} review`,
-        severity: 'error',
-      });
-    }
-
-    if (pendingTasks.length > 0) {
-      blockers.push({
-        type: 'pending-task',
-        message: `${pendingTasks.length} task${pendingTasks.length !== 1 ? 's' : ''} still pending`,
-        severity: 'error',
-      });
-    }
-
-    if (diagnoses.length === 0) {
-      blockers.push({
-        type: 'missing-dx',
-        message: 'No diagnosis documented',
-        severity: 'warning',
-      });
-    }
-
-    const noteItems = allItems.filter((i) => i.category === 'note');
-    if (noteItems.length === 0) {
-      blockers.push({
-        type: 'missing-note',
-        message: 'No visit note generated',
-        severity: 'warning',
-      });
-    }
-
-    const incompleteItems = allItems.filter(
-      (item) => item.status === 'pending-review'
-    );
-    if (incompleteItems.length > 0) {
-      blockers.push({
-        type: 'incomplete-item',
-        message: `${incompleteItems.length} item${incompleteItems.length !== 1 ? 's' : ''} pending review`,
-        severity: 'warning',
-      });
-    }
-
-    return blockers;
-  }, [itemsRequiringReview, pendingTasks, diagnoses, allItems]);
 
   // ---- Actions ----
 
@@ -279,20 +198,6 @@ export function useProcessView(): UseProcessViewResult {
     [batchApprove, approveTask]
   );
 
-  const handleSignOff = useCallback(async () => {
-    setIsSigningOff(true);
-    try {
-      dispatch({
-        type: 'ENCOUNTER_SIGNED',
-        payload: { signedAt: new Date() },
-      });
-    } catch (error) {
-      console.error('Sign-off failed:', error);
-    } finally {
-      setIsSigningOff(false);
-    }
-  }, [dispatch]);
-
   const handleModeChange = useCallback(
     (mode: Mode) => {
       dispatch({
@@ -315,11 +220,6 @@ export function useProcessView(): UseProcessViewResult {
   return {
     batches,
     drafts,
-    checklist,
-    emLevel,
-    outstandingCount,
-    signOffBlockers,
-    isSigningOff,
     selectedItemId,
     scopedAddCategory,
     handleItemSelect,
@@ -330,7 +230,6 @@ export function useProcessView(): UseProcessViewResult {
     handleRefreshDraft,
     handleCancelRefresh,
     handleBatchAction,
-    handleSignOff,
     handleModeChange,
     handleScopedAdd,
     handleClearScopedAdd,

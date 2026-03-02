@@ -16,5 +16,4 @@ export type { CompletenessChecklistProps } from './CompletenessChecklist';
 export { EMLevel } from './EMLevel';
 export type { EMLevelProps } from './EMLevel';
 
-export { SignOff } from './SignOff';
-export type { SignOffProps } from './SignOff';
+// SignOff removed — sign-off lives in ReviewView only.

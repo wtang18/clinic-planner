@@ -11,21 +11,19 @@ Make the processing rail responsive to available canvas width, and surface encou
 
 ### What exists
 - **ProcessingRail** (`src/components/processing-rail/ProcessingRail.tsx`): fixed 200px column in CaptureView's CSS grid, sticky-positioned. Shows batch summaries (AI Drafts, Rx, Labs, Imaging, Referrals) with expand/collapse per batch.
+- **RailFloatingStatus** (`src/components/processing-rail/RailFloatingStatus.tsx`): compact floating pill for narrow widths. Shows aggregate processing status (icon + label), `position: sticky` with `glass.floating` blur, taps to Process view. Replaces the old gutter/hidden tiers.
+- **Two-tier responsive system**: `RailTier = 'full' | 'float'`. Single breakpoint at 640px container width. `useContainerWidth()` hook measures the canvas grid container.
 - **CompletenessChecklist** (`src/components/process-view/CompletenessChecklist.tsx`): 8-row checklist with status icons, badges, and tappable rows. Currently only rendered inside ProcessView's `SignOff` section — buried at the bottom.
 - **EMLevel / Charge Capture** (`src/components/process-view/EMLevel.tsx`): E&M code (99211-99215) with level bar and 6 element rows. Labeled "Informational" but the product has a charge navigator feature for editing; the default is automatic calculation. Also only inside ProcessView's `SignOff`.
 - **SignOffSection** (`src/screens/ReviewView/SignOffSection.tsx`): shared sign-off component with `children` slot. ProcessView passes checklist + E&M as children; ReviewView passes nothing.
 
 ### What doesn't exist
-- No responsive behavior — rail is always 200px or hidden (when empty)
-- No compact variants of completeness or E&M for the rail
-- No breakpoint-aware layout switching
+- No compact variants of completeness or E&M for the full rail
 - ReviewView doesn't show completeness or E&M
-- No icon gutter / collapsed rail state
 - No tab badges for mobile
 
 ### Related deferred items
 - "Unified morphing right rail" — single rail adapting per mode (separate concern, not blocked by this work)
-- "Responsive layout" — processing rail fixed at 200px, no responsive behavior
 
 ## Design Decisions
 
@@ -43,75 +41,65 @@ The E&M level auto-calculates by default based on documented elements, but the c
 
 ## Responsive Tiers
 
-### Tier 1: Full rail (canvas width > 600px)
+### Tier: Full rail (container width >= 640px)
 
-200px rail with two new sections above the existing batch summaries:
+200px rail with batch summaries. Future: two new sections above — completeness and E&M.
 
 ```
 ┌──────────────────────┐
-│ COMPLETENESS         │
-│ ████████░░░░  5/8    │  ← compact progress bar + fraction
+│ COMPLETENESS         │  ← Phase 2
+│ ████████░░░░  5/8    │
 ├──────────────────────┤
-│ CHARGE      99213    │  ← code pill + mini level bar
+│ CHARGE      99213    │  ← Phase 2
 │ ▮▮▮░░               │
 ├──────────────────────┤
-│ PROCESSING           │  ← existing header
+│ PROCESSING           │  ← exists
 │ ▶ AI Drafts    ⟳2 ●1│
 │ ▶ Prescriptions  ✓3  │
 │   ...                │
 └──────────────────────┘
 ```
 
-**Completeness row**: single row — label, mini horizontal progress bar, `n/m` fraction. Color transitions: all green (complete), amber (some pending), neutral (mostly not started). Tappable — navigates to Review view or expands inline detail.
+### Tier: Float (container width < 640px)
 
-**E&M row**: label, CPT code in a pill badge, mini 5-segment level bar below. Tappable — opens charge navigator. Shows "auto" or "manual" indicator if overridden.
-
-### Tier 2: Icon gutter (canvas width 400-600px)
-
-Rail collapses to ~40px vertical icon strip, same grid position:
+No rail column. A compact floating status pill renders inline (right-aligned) above the triage module. It uses `position: sticky` to pin below the top bar on scroll with a `glass.floating` blur treatment.
 
 ```
-┌────┐
-│ ◔  │  ← completeness: circular progress ring (green/amber/red fill)
-│213 │  ← E&M: CPT code as small text in pill
-│ ●  │  ← processing: aggregate status dot (spinner/red/green)
-└────┘
+                    ┌─────────────────────────┐
+                    │ ⚠ 2 items need attention │
+                    └─────────────────────────┘
 ```
 
-Each icon is tappable — opens a popover with the full detail (the same content as the 200px tier, rendered in a floating card anchored to the icon).
+Tapping the pill navigates to Process view where full details live.
 
-### Tier 3: Hidden rail + tab badges (canvas width < 400px, mobile)
+### Future: Mobile tab badges (deferred)
 
-Rail is completely hidden. Status communicated via:
-- **Badges on top bar segmented control** tabs (Capture / Process / Review) — dot or count indicating items needing attention
-- **Inline content in views** — completeness and E&M render directly in ProcessView and ReviewView (already exists for Process, needs adding to Review via `SignOffSection` children slot)
-
-This tier is **deferred to mobile phase**.
+Tab badges on the Capture / Process / Review segmented control, communicating status via dot or count indicators. Deferred to mobile phase.
 
 ## Implementation Plan
 
-### Phase 1: Responsive rail infrastructure
-1. **`useCanvasWidth` hook** — measures the canvas work pane width (not viewport, since left panels eat space). Returns current tier: `'full' | 'gutter' | 'hidden'`.
-2. **CaptureView grid changes** — grid column 2 width adapts based on tier. `RAIL_WIDTH` becomes dynamic.
-3. **Rail container** — `ProcessingRail` accepts a `variant` prop (`'full' | 'gutter'`) and renders accordingly. At `'hidden'`, CaptureView doesn't render the rail column.
+### Phase 1: Responsive rail infrastructure ✅ COMPLETE
+1. **`useContainerWidth` hook** — measures the canvas grid container width via `ResizeObserver` callback ref.
+2. **Two-tier system** — `RailTier = 'full' | 'float'`, single breakpoint at 640px container width.
+3. **CaptureView grid changes** — grid column adapts based on tier. Full tier renders 200px ProcessingRail, float tier renders inline `RailFloatingStatus` pill.
+4. **`RailFloatingStatus`** — compact sticky pill with `glass.floating` blur, aggregate status icon + label, taps to Process view.
 
-### Phase 2: Compact completeness + E&M rows for full rail
-4. **`CompletenessCompact`** — progress bar + fraction row for the 200px rail. Reads from `selectCompletenessChecklist`.
-5. **`ChargeCaptureCompact`** — code pill + level bar row. Reads from `selectMockEMLevel`. Tappable.
-6. **Wire into `ProcessingRail`** — new rows rendered above batch summaries.
+### Phase 2: Compact completeness in rail ✅ COMPLETE (refined)
+5. **`CompletenessCompact`** — always-expanded detail rows with status icons per clinical section + n/m fraction header. No progress bar, no collapse toggle.
+6. **`ChargeCaptureCompact`** — created then **removed** (E&M not actionable during charting; lives in sign-off only).
+7. **Wire into `ProcessingRail`** — completeness + processing as separate module cards with 8px gap. Processing section guarded by `hasAnyItems`.
 
-### Phase 3: Icon gutter
-7. **`RailGutter`** component — 40px icon strip with completeness ring, E&M pill, processing dot.
-8. **Popover on tap** — floating card with detail content, anchored to the tapped icon.
+### Phase 3: Sign-off consolidation ✅ COMPLETE (refined)
+8. **Sign-off removed from ProcessView** — lives in ReviewView only. Process view focuses on operations.
+9. **ReviewView sign-off** — shows `EMLevel` as children to `SignOffSection`. Completeness removed from sign-off (lives in rail only).
+10. **Sign-off defaults aligned** — "Sign & Close Encounter" used everywhere (was "Sign Encounter" in ReviewView).
 
-### Phase 4: ReviewView completeness + E&M (quick win)
-9. **`useReviewView`** — call `selectCompletenessChecklist` and `selectMockEMLevel` selectors.
-10. **ReviewView sign-off** — pass checklist + E&M as `children` to `SignOffSection`.
+### Phase 5+: Rail as navigation hub (planned)
+See `rail-navigation-hub.md` for deep-linking, processing restructure (AI embedded in domain areas), and sign-off as completeness row.
 
-### Phase 5: Mobile (deferred)
-11. Tab badge component + badge state derivation
-12. Rail hidden at mobile breakpoint
-13. Inline modules in Process/Review views (mostly already done)
+### Phase 4: Mobile (deferred)
+10. Tab badge component + badge state derivation
+11. Inline modules in Process/Review views (mostly already done)
 
 ## Breakpoint Detection
 
@@ -124,9 +112,10 @@ A `useCanvasWidth` hook using `ResizeObserver` on the canvas container element i
 
 ## Resolved Questions
 
-1. **Gutter icon behavior** — **popover**. Tapping a gutter icon opens a floating card with detail content, anchored to the icon. More surgical than expanding the full rail.
+1. **Gutter vs float** — **float**. The old 3-tier system (full / gutter / hidden) was replaced with 2 tiers (full / float). A floating status pill preserves processing awareness at all narrow widths without the complexity of a 40px icon strip with popovers.
 2. **Completeness row in full rail** — **expand inline**. Tapping the compact completeness row expands to show the 8 checklist rows within the rail. Keeps the provider in charting context.
-3. **Build order** — responsive shell first (hook → grid → variant prop), then fill in compact content rows.
+3. **Build order** — responsive shell first (hook → grid → tier logic), then fill in compact content rows.
+4. **Float pill action** — navigates to Process view (not a popover). Keeps interaction model simple.
 
 ## Open Questions
 

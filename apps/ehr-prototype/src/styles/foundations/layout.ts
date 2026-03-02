@@ -12,7 +12,6 @@ export const LAYOUT = {
   overviewWidth: 360,
   aiDrawerWidth: 320,
   railWidth: 200,
-  railGutterWidth: 40,
 
   // Floating inset (menu pane distance from viewport edges)
   floatingInset: 8,
@@ -39,29 +38,24 @@ export type Layout = typeof LAYOUT;
 
 /**
  * Rail display variant based on available canvas width.
- * - 'full':   200px rail with batch summaries + compact status rows
- * - 'gutter': 40px icon strip with tappable popovers
- * - 'hidden': rail not rendered (mobile / very narrow)
+ * - 'full':  200px sidebar with batch summaries + compact status rows
+ * - 'float': no sidebar column; a compact floating status pill keeps
+ *            processing awareness visible at narrow / mobile widths
  */
-export type RailTier = 'full' | 'gutter' | 'hidden';
+export type RailTier = 'full' | 'float';
 
 /**
- * Container-width breakpoints for rail tier transitions.
- * These measure the grid container (canvas + rail + gap), not the viewport.
- *
- * - Above FULL: 200px rail, canvas gets remainder (~440px+)
- * - Above GUTTER: 40px gutter, canvas gets remainder (~400px+)
- * - Below GUTTER: rail hidden, canvas gets full width
+ * Container-width breakpoint for rail tier transition.
+ * Measures the grid container (canvas + rail + gap), not the viewport.
  *
  * FULL is set at 640 so the full rail appears at typical desktop widths
  * when menu (360px) + overview (360px) panes are both open, leaving
- * ~700px for the canvas container.
+ * ~700px for the canvas container. Below 640 the rail collapses to a
+ * floating status pill inline with content.
  */
 export const RAIL_BREAKPOINTS = {
   /** Container width above which the full 200px rail is shown */
   full: 640,
-  /** Container width above which the 40px gutter is shown */
-  gutter: 440,
 } as const;
 
 /**
@@ -70,8 +64,7 @@ export const RAIL_BREAKPOINTS = {
 export function getRailTier(containerWidth: number): RailTier {
   if (containerWidth === 0) return 'full'; // Not yet measured — show full by default
   if (containerWidth >= RAIL_BREAKPOINTS.full) return 'full';
-  if (containerWidth >= RAIL_BREAKPOINTS.gutter) return 'gutter';
-  return 'hidden';
+  return 'float';
 }
 
 /**
@@ -80,7 +73,6 @@ export function getRailTier(containerWidth: number): RailTier {
 export function getRailWidth(tier: RailTier): number {
   switch (tier) {
     case 'full': return LAYOUT.railWidth;
-    case 'gutter': return LAYOUT.railGutterWidth;
-    case 'hidden': return 0;
+    case 'float': return 0;
   }
 }

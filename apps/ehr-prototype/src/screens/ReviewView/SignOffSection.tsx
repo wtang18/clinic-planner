@@ -31,11 +31,11 @@ export interface SignOffSectionProps {
   blockers: SignOffBlocker[];
   /** Whether sign-off is in progress */
   isSigningOff?: boolean;
-  /** Header title — defaults to "Sign Encounter" */
+  /** Header title — defaults to "Sign & Close Encounter" */
   title?: string;
-  /** Header subtitle — defaults to "Review and sign off on your documentation" */
+  /** Header subtitle — defaults to "Review completeness and sign off on your documentation" */
   subtitle?: string;
-  /** Button label — defaults to "Sign Encounter" */
+  /** Button label — defaults to "Sign & Close Encounter" */
   buttonLabel?: string;
   /** Content rendered between header and blockers (e.g., checklist, E&M level) */
   children?: React.ReactNode;
@@ -54,9 +54,9 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
   onSignOff,
   blockers,
   isSigningOff = false,
-  title = 'Sign Encounter',
-  subtitle: subtitleText = 'Review and sign off on your documentation',
-  buttonLabel = 'Sign Encounter',
+  title = 'Sign & Close Encounter',
+  subtitle: subtitleText = 'Review completeness and sign off on your documentation',
+  buttonLabel = 'Sign & Close Encounter',
   children,
   testId = 'sign-off-section',
   style,
