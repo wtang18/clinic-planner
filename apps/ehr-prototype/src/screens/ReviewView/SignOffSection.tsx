@@ -31,6 +31,16 @@ export interface SignOffSectionProps {
   blockers: SignOffBlocker[];
   /** Whether sign-off is in progress */
   isSigningOff?: boolean;
+  /** Header title — defaults to "Sign Encounter" */
+  title?: string;
+  /** Header subtitle — defaults to "Review and sign off on your documentation" */
+  subtitle?: string;
+  /** Button label — defaults to "Sign Encounter" */
+  buttonLabel?: string;
+  /** Content rendered between header and blockers (e.g., checklist, E&M level) */
+  children?: React.ReactNode;
+  /** data-testid on the Card wrapper — defaults to "sign-off-section" */
+  testId?: string;
   /** Custom styles */
   style?: React.CSSProperties;
 }
@@ -44,6 +54,11 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
   onSignOff,
   blockers,
   isSigningOff = false,
+  title = 'Sign Encounter',
+  subtitle: subtitleText = 'Review and sign off on your documentation',
+  buttonLabel = 'Sign Encounter',
+  children,
+  testId = 'sign-off-section',
   style,
 }) => {
   const hasErrors = blockers.some((b) => b.severity === 'error');
@@ -57,7 +72,7 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
     <Card
       variant="elevated"
       padding="md"
-      data-testid="sign-off-section"
+      data-testid={testId}
       style={{
         ...styles.container,
         ...style,
@@ -69,12 +84,15 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
           <PenTool size={16} />
         </div>
         <div>
-          <h3 style={styles.title}>Sign Encounter</h3>
+          <h3 style={styles.title}>{title}</h3>
           <p style={styles.subtitle}>
-            Review and sign off on your documentation
+            {subtitleText}
           </p>
         </div>
       </div>
+
+      {/* Extra content (e.g., checklist, E&M level) */}
+      {children}
 
       {/* Blockers */}
       {hasBlockers && (
@@ -159,7 +177,7 @@ export const SignOffSection: React.FC<SignOffSectionProps> = ({
         style={styles.signButton}
         data-testid="sign-off-btn"
       >
-        {isSigningOff ? 'Signing...' : 'Sign Encounter'}
+        {isSigningOff ? 'Signing...' : buttonLabel}
       </Button>
 
       {/* Legal note */}
