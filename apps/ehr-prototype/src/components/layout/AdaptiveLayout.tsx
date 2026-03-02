@@ -32,6 +32,8 @@ export interface AdaptiveLayoutProps {
   overviewHeaderContent?: React.ReactNode;
   /** Custom header content for canvas section (contextual controls like ModeSelector) */
   canvasHeaderContent?: React.ReactNode;
+  /** Encounter context shown in nav row when canvas scrolls past the in-canvas context bar */
+  scrolledCanvasContent?: React.ReactNode;
   /** Custom content rendered in the menu pane header (left of close button) */
   menuPaneHeaderContent?: React.ReactNode;
   /** Patient identity info (shown in nav row when overview collapsed) */
@@ -86,6 +88,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   aiControlSurface,
   overviewHeaderContent,
   canvasHeaderContent,
+  scrolledCanvasContent,
   menuPaneHeaderContent,
   patientIdentity,
   isToDoView = false,
@@ -154,14 +157,14 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
     top: 0,
     left: 0,
     right: 0,
-    height: headerHeight,
+    height: 64,
     zIndex: zIndexTokens.sticky - 1, // Below nav row
     pointerEvents: 'none',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
-    // Smooth gradient: transparent at bottom → full blur at top
-    maskImage: 'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,1) 100%)',
-    WebkitMaskImage: 'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,1) 100%)',
+    backdropFilter: 'blur(32px)',
+    WebkitBackdropFilter: 'blur(32px)',
+    // Steep gradient: transparent at bottom → near-opaque quickly → full at top
+    maskImage: 'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.92) 70%, rgba(0,0,0,1) 100%)',
+    WebkitMaskImage: 'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,0.75) 40%, rgba(0,0,0,0.92) 70%, rgba(0,0,0,1) 100%)',
   };
 
   // Floating menu pane inset (must match menuPaneContainerStyle)
@@ -249,6 +252,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
           overviewWidth={overviewWidth}
           overviewHeaderContent={overviewHeaderContent}
           canvasHeaderContent={canvasHeaderContent}
+          scrolledCanvasContent={scrolledCanvasContent}
           patientIdentity={patientIdentity}
           isToDoView={isToDoView}
           todoTitle={todoTitle}

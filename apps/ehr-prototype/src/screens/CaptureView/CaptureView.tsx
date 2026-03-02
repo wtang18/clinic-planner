@@ -77,7 +77,7 @@ interface ToDoViewState {
 import { useCaptureView } from './useCaptureView';
 import { usePaneShortcuts } from '../../shortcuts/usePaneShortcuts';
 import { captureViewStyles, captureViewAnimations } from './CaptureView.styles';
-import { colors, spaceAround, spaceBetween, LAYOUT } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, LAYOUT } from '../../styles/foundations';
 
 // ============================================================================
 // Component
@@ -133,6 +133,7 @@ export const CaptureView: React.FC = () => {
   const [todoViewState, setTodoViewState] = useState<ToDoViewState | null>(null);
   const [selectedNavItem, setSelectedNavItem] = useState<string>('');
   const [todoSearchQuery, setTodoSearchQuery] = useState<string>('');
+  const [canvasScrolled, setCanvasScrolled] = useState(false);
 
   // Update AI context based on view mode
   useEffect(() => {
@@ -814,6 +815,56 @@ export const CaptureView: React.FC = () => {
     />
   );
 
+  // Encounter context shown in nav row when canvas scrolls past the in-canvas context bar.
+  // Styled identically to PatientIdentityHeader stacked variant (15px semibold name / 12px meta).
+  const scrolledCanvasContent = useMemo(() => {
+    if (!canvasScrolled || !encounter) return undefined;
+
+    // Build the same date · provider · status line that compact EncounterContextBar shows
+    const dateSource = encounter.scheduledAt || encounter.startedAt;
+    const dateStr = dateSource
+      ? `${dateSource.getMonth() + 1}/${dateSource.getDate()}/${dateSource.getFullYear()}`
+      : undefined;
+    const provider = currentUser?.name
+      ? (currentUser.credentials ? `${currentUser.name}, ${currentUser.credentials.join(', ')}` : currentUser.name)
+      : undefined;
+    const statusLabel = encounter.status.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+    const metaParts = [dateStr, provider, statusLabel].filter(Boolean);
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spaceBetween.coupled, minWidth: 0 }}>
+        <div style={{
+          fontSize: 15,
+          fontFamily: typography.fontFamily.sans,
+          fontWeight: typography.fontWeight.semibold,
+          color: colors.fg.neutral.primary,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          {visit?.chiefComplaint || encounter.type || 'Visit'}
+        </div>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spaceBetween.coupled,
+          fontSize: 12,
+          fontFamily: typography.fontFamily.sans,
+          color: colors.fg.neutral.secondary,
+          whiteSpace: 'nowrap',
+        }}>
+          {metaParts.map((part, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <span style={{ color: colors.fg.neutral.disabled }}>&middot;</span>}
+              <span>{part}</span>
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  }, [canvasScrolled, encounter, currentUser, visit?.chiefComplaint]);
+
   // Enrich To-Do context content with navigation callbacks for AI minibar
   let enrichedContent = aiState.content;
   if (aiState.content.type === 'todo-context') {
@@ -922,6 +973,7 @@ export const CaptureView: React.FC = () => {
         }
         overviewHeaderContent={viewMode === 'patient' && selectedOverviewHeaderContent ? selectedOverviewHeaderContent : undefined}
         canvasHeaderContent={viewMode === 'patient' && isViewingEncounterPatient ? canvasHeaderContent : undefined}
+        scrolledCanvasContent={viewMode === 'patient' && isViewingEncounterPatient ? scrolledCanvasContent : undefined}
         patientIdentity={viewMode === 'patient' && selectedPatientIdentity ? selectedPatientIdentity : undefined}
         isToDoView={viewMode !== 'patient'}
         todoTitle={currentCategory?.label}
@@ -933,6 +985,7 @@ export const CaptureView: React.FC = () => {
           <CanvasPane
             headerContent={undefined}
             compactHeaderContent={undefined}
+            onScrolledChange={setCanvasScrolled}
           >
             {/* Workflow canvas */}
             {viewContext === 'workflow' && (

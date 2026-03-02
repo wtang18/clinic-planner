@@ -5,7 +5,7 @@
  * The canvas is where chart items are displayed and OmniAdd appears inline.
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { colors, spaceAround, LAYOUT } from '../../styles/foundations';
 import { FloatingHeader } from './FloatingHeader';
 
@@ -26,11 +26,20 @@ export interface CanvasPaneProps {
   headerCollapsedHeight?: number;
   /** Whether to enable floating header behavior */
   enableFloatingHeader?: boolean;
+  /** Called when scroll crosses the context bar threshold */
+  onScrolledChange?: (scrolled: boolean) => void;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID */
   testID?: string;
 }
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Scroll threshold (px past headerHeight) before context bar is considered scrolled away */
+const SCROLL_THRESHOLD = 40;
 
 // ============================================================================
 // Component
@@ -43,10 +52,29 @@ export const CanvasPane: React.FC<CanvasPaneProps> = ({
   headerExpandedHeight = 72,
   headerCollapsedHeight = 48,
   enableFloatingHeader = false, // Disabled - top-level blur mask in AdaptiveLayout handles this now
+  onScrolledChange,
   style,
   testID,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrolledRef = useRef(false);
+
+  // Track scroll position and notify parent when context bar scrolls out of view
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el || !onScrolledChange) return;
+
+    const handleScroll = () => {
+      const scrolled = el.scrollTop > SCROLL_THRESHOLD;
+      if (scrolled !== scrolledRef.current) {
+        scrolledRef.current = scrolled;
+        onScrolledChange(scrolled);
+      }
+    };
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [onScrolledChange]);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',

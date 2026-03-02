@@ -234,8 +234,28 @@ export const EncounterContextBar: React.FC<EncounterContextBarProps> = ({
   const headlineDateStr = dateSource ? formatConciseDate(dateSource) : undefined;
 
   if (compact) {
-    // Compact: single-row dot-separated (type · status · provider)
-    const compactItems = metaItems.slice(0, 3);
+    // Compact: time · provider · status (most useful at a glance)
+    const compactItems: { text: string; color?: string; icon?: React.ReactNode }[] = [];
+
+    // Date
+    const compactDateSource = encounter.scheduledAt || encounter.startedAt;
+    if (compactDateSource) compactItems.push({ text: formatConciseDate(compactDateSource) });
+
+    // Provider
+    if (providerName) {
+      const provider = providerCredentials ? `${providerName}, ${providerCredentials}` : providerName;
+      compactItems.push({ text: provider });
+    }
+
+    // Status (+ Room if available)
+    if (locked) {
+      const lockText = room ? `Locked · Room ${room}` : 'Locked';
+      compactItems.push({ text: lockText, color: colors.fg.neutral.spotReadable, icon: <Lock size={11} /> });
+    } else {
+      const statusText = room ? `${formatStatus(encounter.status)} · Room ${room}` : formatStatus(encounter.status);
+      compactItems.push({ text: statusText, color: getStatusColor(encounter.status) });
+    }
+
     return (
       <div
         style={{

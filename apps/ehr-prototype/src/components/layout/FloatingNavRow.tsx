@@ -60,6 +60,8 @@ export interface FloatingNavRowProps {
   onBack?: () => void;
   /** Whether back button should be shown */
   showBackButton?: boolean;
+  /** Encounter context shown in canvas zone when user scrolls past context bar */
+  scrolledCanvasContent?: React.ReactNode;
   /** Height of the header row */
   height?: number;
   /** Custom styles */
@@ -95,6 +97,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   onSearchChange,
   onBack,
   showBackButton = false,
+  scrolledCanvasContent,
   height = DEFAULT_HEIGHT,
   style,
   testID,
@@ -336,6 +339,25 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
               showMenuButton={false}
               style={{ marginLeft: LAYOUT.buttonGap }} // 12px gap from buttons
             />
+          )}
+
+          {/* Encounter context — appears when canvas content scrolls past the in-canvas context bar */}
+          {!isToDoView && scrolledCanvasContent && (
+            <>
+              {/* Vertical divider when patient identity is also showing */}
+              {overviewCollapsed && patientIdentity && (
+                <div style={{
+                  width: 1,
+                  height: 28,
+                  backgroundColor: colors.border.neutral.low,
+                  flexShrink: 0,
+                  marginLeft: spaceBetween.relatedCompact,
+                }} />
+              )}
+              <div style={{ marginLeft: overviewCollapsed && patientIdentity ? spaceBetween.relatedCompact : LAYOUT.buttonGap }}>
+                {scrolledCanvasContent}
+              </div>
+            </>
           )}
 
           {/* To-Do view title and count */}

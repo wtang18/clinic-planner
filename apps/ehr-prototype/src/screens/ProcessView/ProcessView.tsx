@@ -146,9 +146,16 @@ export const ProcessCanvas: React.FC = () => {
       <div style={styles.mainContent}>
         <EncounterContextBar
           encounter={encounter}
+          specialty={encounter.specialty}
           chiefComplaint={state.context.visit?.chiefComplaint}
           providerName={state.session.currentUser?.name}
           providerCredentials={state.session.currentUser?.credentials?.join(', ')}
+          room={encounter.room}
+          payer={patient.insurance?.primary?.payerName}
+          groupName={patient.insurance?.primary?.groupName}
+          caseId={encounter.caseId}
+          tags={encounter.tags}
+          locked={encounter.locked}
           style={{ paddingLeft: 0, paddingRight: 0 }}
         />
 
