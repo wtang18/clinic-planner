@@ -231,6 +231,9 @@ export type { UseSafetyAlertsResult } from './useSafetyAlerts';
 export { useEncounterLifecycle } from './useEncounterLifecycle';
 export type { EncounterPhase, UseEncounterLifecycleResult } from './useEncounterLifecycle';
 
+// Container Width Hook
+export { useContainerWidth } from './useContainerWidth';
+
 // Encounter Layout Hook
 export { useEncounterLayout } from './useEncounterLayout';
 

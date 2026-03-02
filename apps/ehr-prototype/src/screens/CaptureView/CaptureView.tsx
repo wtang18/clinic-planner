@@ -77,7 +77,8 @@ interface ToDoViewState {
 import { useCaptureView } from './useCaptureView';
 import { usePaneShortcuts } from '../../shortcuts/usePaneShortcuts';
 import { captureViewStyles, captureViewAnimations } from './CaptureView.styles';
-import { colors, spaceAround, spaceBetween, typography, LAYOUT } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, LAYOUT, getRailTier } from '../../styles/foundations';
+import { useContainerWidth } from '../../hooks/useContainerWidth';
 
 // ============================================================================
 // Component
@@ -134,6 +135,10 @@ export const CaptureView: React.FC = () => {
   const [selectedNavItem, setSelectedNavItem] = useState<string>('');
   const [todoSearchQuery, setTodoSearchQuery] = useState<string>('');
   const [canvasScrolled, setCanvasScrolled] = useState(false);
+
+  // Responsive rail — measure canvas grid container to derive rail tier
+  const [gridWidth, gridRef] = useContainerWidth();
+  const railTier = getRailTier(gridWidth);
 
   // Update AI context based on view mode
   useEffect(() => {
@@ -1174,13 +1179,13 @@ export const CaptureView: React.FC = () => {
                 return (
                   <>
                     {contextBar}
-                    <div style={{
+                    <div ref={gridRef} style={{
                       display: 'grid',
-                      gridTemplateColumns: 'minmax(0, 1fr) auto',
+                      gridTemplateColumns: railTier === 'hidden' ? '1fr' : 'minmax(0, 1fr) auto',
                       gridTemplateRows: 'auto auto 1fr',
                       flex: 1,
                       minHeight: 0,
-                      columnGap: spaceAround.defaultPlus,
+                      columnGap: railTier === 'hidden' ? 0 : spaceAround.defaultPlus,
                     }}>
                       <EncounterContextBar
                         encounter={encounter}
@@ -1253,19 +1258,22 @@ export const CaptureView: React.FC = () => {
                       </div>
 
                       {/* Processing Rail — spans rows 2-3, sticky to stay visible */}
-                      <div style={{
-                        gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
-                        position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
-                        display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
-                      }}>
-                        <ProcessingRail
-                          onAcceptDraft={handleAcceptDraft}
-                          onEditDraft={handleEditDraft}
-                          onDismissDraft={handleDismissDraft}
-                          onRefreshDraft={handleRefreshDraft}
-                          onCancelRefresh={handleCancelRefresh}
-                        />
-                      </div>
+                      {railTier !== 'hidden' && (
+                        <div style={{
+                          gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
+                          position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
+                          display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
+                        }}>
+                          <ProcessingRail
+                            variant={railTier}
+                            onAcceptDraft={handleAcceptDraft}
+                            onEditDraft={handleEditDraft}
+                            onDismissDraft={handleDismissDraft}
+                            onRefreshDraft={handleRefreshDraft}
+                            onCancelRefresh={handleCancelRefresh}
+                          />
+                        </div>
+                      )}
                     </div>
                   </>
                 );
@@ -1326,13 +1334,13 @@ export const CaptureView: React.FC = () => {
               return (
                 <>
                   {contextBar}
-                  <div style={{
+                  <div ref={gridRef} style={{
                     display: 'grid',
-                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                    gridTemplateColumns: railTier === 'hidden' ? '1fr' : 'minmax(0, 1fr) auto',
                     gridTemplateRows: 'auto auto 1fr',
                     flex: 1,
                     minHeight: 0,
-                    columnGap: spaceAround.defaultPlus,
+                    columnGap: railTier === 'hidden' ? 0 : spaceAround.defaultPlus,
                   }}>
                     <EncounterContextBar
                       encounter={encounter}
@@ -1404,19 +1412,22 @@ export const CaptureView: React.FC = () => {
                     </div>
 
                     {/* Processing Rail — spans rows 2-3, sticky to stay visible */}
-                    <div style={{
-                      gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
-                      position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
-                      display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
-                    }}>
-                      <ProcessingRail
-                        onAcceptDraft={handleAcceptDraft}
-                        onEditDraft={handleEditDraft}
-                        onDismissDraft={handleDismissDraft}
-                        onRefreshDraft={handleRefreshDraft}
-                        onCancelRefresh={handleCancelRefresh}
-                      />
-                    </div>
+                    {railTier !== 'hidden' && (
+                      <div style={{
+                        gridColumn: 2, gridRow: '2 / -1', alignSelf: 'start',
+                        position: 'sticky', top: LAYOUT.headerHeight + LAYOUT.canvasContentPadding,
+                        display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
+                      }}>
+                        <ProcessingRail
+                          variant={railTier}
+                          onAcceptDraft={handleAcceptDraft}
+                          onEditDraft={handleEditDraft}
+                          onDismissDraft={handleDismissDraft}
+                          onRefreshDraft={handleRefreshDraft}
+                          onCancelRefresh={handleCancelRefresh}
+                        />
+                      </div>
+                    )}
                   </div>
                 </>
               );

@@ -1,19 +1,27 @@
 /**
  * ProcessingRail
  *
- * Compact sidebar showing operational batch summaries during capture mode.
- * Displays AI Drafts, Prescriptions, Labs, Imaging, and Referrals batches.
+ * Responsive sidebar showing operational batch summaries during capture mode.
+ * Supports two variants:
+ * - 'full' (200px): batch summary rows with expand/collapse
+ * - 'gutter' (40px): icon strip with aggregate status indicators
+ *
  * Always visible when there are items; hidden when empty.
  */
 
 import React from 'react';
 import { useProcessingBatches } from '../../hooks/useProcessingBatches';
 import { BatchSummaryRow } from './BatchSummaryRow';
-import { colors, spaceAround, borderRadius } from '../../styles/foundations';
+import { RailGutter } from './RailGutter';
+import { colors, spaceAround, borderRadius, LAYOUT } from '../../styles/foundations';
+import type { RailTier } from '../../styles/foundations';
 
-export const RAIL_WIDTH = 200;
+/** @deprecated Use LAYOUT.railWidth instead */
+export const RAIL_WIDTH = LAYOUT.railWidth;
 
 export interface ProcessingRailProps {
+  /** Rail display variant — defaults to 'full' */
+  variant?: RailTier;
   onAcceptDraft?: (draftId: string) => void;
   onEditDraft?: (draftId: string) => void;
   onDismissDraft?: (draftId: string) => void;
@@ -24,6 +32,7 @@ export interface ProcessingRailProps {
 }
 
 export function ProcessingRail({
+  variant = 'full',
   onAcceptDraft,
   onEditDraft,
   onDismissDraft,
@@ -35,8 +44,12 @@ export function ProcessingRail({
   const batches = useProcessingBatches();
   const hasAnyItems = batches.some(b => b.count > 0);
 
-  if (!hasAnyItems) {
+  if (!hasAnyItems || variant === 'hidden') {
     return null;
+  }
+
+  if (variant === 'gutter') {
+    return <RailGutter batches={batches} style={style} />;
   }
 
   return (
@@ -65,8 +78,8 @@ export function ProcessingRail({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    width: RAIL_WIDTH,
-    minWidth: RAIL_WIDTH,
+    width: LAYOUT.railWidth,
+    minWidth: LAYOUT.railWidth,
     backgroundColor: colors.bg.neutral.base,
     border: '1px solid rgba(0, 0, 0, 0.06)',
     borderRadius: borderRadius.sm,

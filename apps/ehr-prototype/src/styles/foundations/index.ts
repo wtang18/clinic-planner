@@ -32,5 +32,5 @@ export type { Typography } from './typography';
 export { glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from './glass';
 export type { GlassVariant } from './glass';
 
-export { LAYOUT } from './layout';
-export type { Layout } from './layout';
+export { LAYOUT, RAIL_BREAKPOINTS, getRailTier, getRailWidth } from './layout';
+export type { Layout, RailTier } from './layout';
