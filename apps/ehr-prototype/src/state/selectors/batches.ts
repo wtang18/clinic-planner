@@ -17,7 +17,6 @@ import type {
 } from '../../types/drafts';
 import { selectAllTasks } from './entities';
 import { selectActiveDrafts } from './drafts';
-import { selectMockEMLevel } from './process-view';
 
 // ============================================================================
 // Batch Selectors
@@ -70,8 +69,6 @@ export function selectProcessingBatches(state: EncounterState): BatchSummary[] {
     }
   }
 
-  const emLevel = selectMockEMLevel(state);
-
   return [
     buildDraftBatch(activeDrafts),
     buildTaskBatch('prescriptions', 'Rx', rxTasks),
@@ -79,7 +76,6 @@ export function selectProcessingBatches(state: EncounterState): BatchSummary[] {
     buildTaskBatch('imaging', 'Imaging', imagingTasks),
     buildTaskBatch('referrals', 'Referrals', referralTasks),
     buildVisitNoteBatch(activeDrafts),
-    buildChargeNavBatch(emLevel),
   ];
 }
 
@@ -230,29 +226,3 @@ function buildVisitNoteBatch(drafts: AIDraft[]): BatchSummary {
   };
 }
 
-/**
- * Build a Charge Nav batch from the computed E&M level.
- * Shows the auto-calculated E&M code as a single-item processing row.
- */
-function buildChargeNavBatch(
-  emLevel: import('./process-view').EMLevel
-): BatchSummary {
-  const hasItems = emLevel.elements.some(e => e.documented);
-  const items: BatchItem[] = hasItems
-    ? [{
-        kind: 'task' as const,
-        taskId: 'em-level',
-        label: `${emLevel.code} — ${emLevel.description.split(' — ')[1] || emLevel.description}`,
-        status: 'complete',
-      }]
-    : [];
-
-  return {
-    type: 'charge-nav',
-    label: 'Charge Nav',
-    items,
-    aggregateStatus: hasItems ? 'complete' : 'idle',
-    statusBreakdown: { inProgress: 0, needsAttention: 0, complete: hasItems ? 1 : 0 },
-    count: hasItems ? 1 : 0,
-  };
-}

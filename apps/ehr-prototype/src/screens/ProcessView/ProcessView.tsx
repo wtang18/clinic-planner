@@ -19,7 +19,6 @@ import type { BatchType } from '../../types/drafts';
 import { DetailsPane } from '../../components/details-pane/DetailsPane';
 import { BatchSection } from '../../components/process-view/BatchSection';
 import { DraftSection } from '../../components/process-view/DraftSection';
-import { EMLevel } from '../../components/process-view/EMLevel';
 import { EmptyState } from '../../components/primitives/EmptyState';
 import { useScrollToSection } from '../../hooks/useScrollToSection';
 
@@ -37,7 +36,7 @@ const BATCH_TO_CATEGORY: Partial<Record<BatchType, ItemCategory>> = {
   'labs': 'lab',
   'imaging': 'imaging',
   'referrals': 'referral',
-  // visit-note and charge-nav have dedicated sections, not BatchSection
+  // visit-note has a dedicated section, not BatchSection
 };
 
 // ============================================================================
@@ -51,7 +50,6 @@ export const ProcessCanvas: React.FC = () => {
   const {
     batches,
     drafts,
-    emLevel,
     selectedItemId,
     scopedAddCategory,
     handleItemSelect,
@@ -129,8 +127,7 @@ export const ProcessCanvas: React.FC = () => {
     );
   }
 
-  // Check if there's any content at all (charge-nav always has E&M, so count as content)
-  const hasContent = drafts.length > 0 || batches.some(b => b.totalCount > 0) || emLevel.elements.some(e => e.documented);
+  const hasContent = drafts.length > 0 || batches.some(b => b.totalCount > 0);
 
   return (
     <>
@@ -174,11 +171,6 @@ export const ProcessCanvas: React.FC = () => {
             />
           </div>
         ))}
-
-        {/* Charge Nav section */}
-        <div data-section-id="charge-nav">
-          <EMLevel emLevel={emLevel} style={{ marginBottom: 16 }} />
-        </div>
 
         {/* Empty state when no items at all */}
         {!hasContent && (

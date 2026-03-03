@@ -14,9 +14,8 @@ import { useNavigation } from '../navigation/NavigationContext';
 import {
   selectProcessViewBatches,
   selectProcessViewDrafts,
-  selectMockEMLevel,
 } from '../state/selectors/process-view';
-import type { ProcessBatch, EMLevel } from '../state/selectors/process-view';
+import type { ProcessBatch } from '../state/selectors/process-view';
 import {
   useEncounterState,
   useDispatch,
@@ -38,8 +37,6 @@ export interface UseProcessViewResult {
   batches: ProcessBatch[];
   /** Active AI drafts for the draft section */
   drafts: AIDraft[];
-  /** Mock E&M level for the Charge Nav section */
-  emLevel: EMLevel;
   /** Currently selected item ID (opens details pane) */
   selectedItemId: string | null;
   /** Category for scoped add (set by inline "+") */
@@ -79,7 +76,6 @@ export function useProcessView(): UseProcessViewResult {
   // Derived state from selectors
   const batches = selectProcessViewBatches(state);
   const drafts = selectProcessViewDrafts(state);
-  const emLevel = selectMockEMLevel(state);
 
   // ---- Actions ----
 
@@ -224,7 +220,6 @@ export function useProcessView(): UseProcessViewResult {
   return {
     batches,
     drafts,
-    emLevel,
     selectedItemId,
     scopedAddCategory,
     handleItemSelect,

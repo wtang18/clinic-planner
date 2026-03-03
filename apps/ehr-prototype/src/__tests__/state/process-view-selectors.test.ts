@@ -1118,10 +1118,10 @@ describe('selectUnifiedRailRows', () => {
       expect(rows.find(r => r.id === 'sign-off')!.deepLink).toEqual({ mode: 'review', sectionId: 'sign-off' });
     });
 
-    it('charge-nav deep-links to process', () => {
+    it('charge-nav deep-links to review', () => {
       const state = stateWith({});
       const rows = selectUnifiedRailRows(state);
-      expect(rows.find(r => r.id === 'charge-nav')!.deepLink).toEqual({ mode: 'process', sectionId: 'charge-nav' });
+      expect(rows.find(r => r.id === 'charge-nav')!.deepLink).toEqual({ mode: 'review', sectionId: 'charge-nav' });
     });
   });
 });

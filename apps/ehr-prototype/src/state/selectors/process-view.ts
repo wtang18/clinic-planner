@@ -293,7 +293,7 @@ const RAIL_ROW_DEFS: RailRowDef[] = [
   { id: 'instructions', label: 'Instructions', group: 'documentation', checklistId: 'instructions', batchType: null, categories: ['instruction'], deepLink: { mode: 'review', sectionId: 'plan' } },
   { id: 'visit-note', label: 'Visit Note', group: 'documentation', checklistId: null, batchType: 'visit-note', categories: ['note'], deepLink: { mode: 'process', sectionId: 'visit-note' } },
   // Closure
-  { id: 'charge-nav', label: 'Charge Nav', group: 'closure', checklistId: null, batchType: 'charge-nav', categories: [], deepLink: { mode: 'process', sectionId: 'charge-nav' } },
+  { id: 'charge-nav', label: 'Charge Nav', group: 'closure', checklistId: null, batchType: 'charge-nav', categories: [], deepLink: { mode: 'review', sectionId: 'charge-nav' } },
   { id: 'sign-off', label: 'Sign-off', group: 'closure', checklistId: 'sign-off', batchType: null, categories: [], deepLink: { mode: 'review', sectionId: 'sign-off' } },
 ];
 

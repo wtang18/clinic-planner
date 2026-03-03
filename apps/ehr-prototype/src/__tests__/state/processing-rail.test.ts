@@ -442,12 +442,12 @@ describe('Draft Selectors', () => {
 // ============================================================================
 
 describe('Batch Grouping Selectors', () => {
-  it('returns 7 batches even when empty', () => {
+  it('returns 6 batches even when empty', () => {
     const state = stateWith({});
     const batches = selectProcessingBatches(state);
-    expect(batches).toHaveLength(7);
+    expect(batches).toHaveLength(6);
     expect(batches.map(b => b.type)).toEqual([
-      'ai-drafts', 'prescriptions', 'labs', 'imaging', 'referrals', 'visit-note', 'charge-nav',
+      'ai-drafts', 'prescriptions', 'labs', 'imaging', 'referrals', 'visit-note',
     ]);
   });
 
