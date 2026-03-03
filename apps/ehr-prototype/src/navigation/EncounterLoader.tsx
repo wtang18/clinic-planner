@@ -10,9 +10,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Loader, AlertCircle } from 'lucide-react';
 import { useDispatch } from '../hooks';
 import { ENCOUNTER_TEMPLATES, generateSuggestionsForScenario } from '../mocks';
-import { buildMAItemsForPatient, MA_SOURCE } from '../data/mock-encounter';
 import { getVitalsForScenario } from '../data/mock-vitals';
 import { getTriageItemsForScenario } from '../data/mock-triage';
+
+const MA_SOURCE = { type: 'maHandoff' as const };
 import type { EncounterContext } from '../mocks/generators/encounters';
 import { TranscriptionProvider, useTranscription } from '../context/TranscriptionContext';
 import { useAIServices } from '../context/AIServicesContext';
@@ -53,46 +54,6 @@ function getMockDataForEncounter(encounterId: string): EncounterContext {
 
   // Default to UC Cough scenario
   return ENCOUNTER_TEMPLATES.ucCough();
-}
-
-/**
- * Get MA handoff items for a given scenario.
- * Each scenario has scenario-specific vitals and HPI text;
- * allergy confirmations and med reconciliation are derived from patient data.
- */
-function getMAItemsForScenario(encounterId: string, mockData: EncounterContext) {
-  if (encounterId === 'uc-cough' || encounterId === 'demo-uc') {
-    return buildMAItemsForPatient(
-      mockData.patient,
-      mockData.visit,
-      { bpSystolic: 128, bpDiastolic: 82, pulse: 78, temp: 99.1, tempFlag: 'high', spo2: 98 },
-      'Onset 5 days ago, productive yellow sputum, tried OTC Robitussin without relief. Worse at night, no hemoptysis. Low-grade fever at home. No SOB at rest.',
-    );
-  }
-
-  if (encounterId === 'pc-diabetes' || encounterId === 'demo-pc') {
-    return buildMAItemsForPatient(
-      mockData.patient,
-      mockData.visit,
-      { bpSystolic: 142, bpDiastolic: 88, pulse: 72, temp: 98.2, spo2: 97 },
-      'Here for quarterly DM/HTN follow-up. Reports morning fasting glucose running 140-160. Occasional headaches, attributes to stress. Adherent to medications, sometimes forgets evening metformin.',
-    );
-  }
-
-  if (encounterId === 'demo-healthy' || encounterId === 'healthy') {
-    return buildMAItemsForPatient(
-      mockData.patient,
-      mockData.visit,
-      { bpSystolic: 118, bpDiastolic: 72, pulse: 68, temp: 98.4, spo2: 99 },
-    );
-  }
-
-  // Default: UC Cough
-  return buildMAItemsForPatient(
-    mockData.patient,
-    mockData.visit,
-    { bpSystolic: 128, bpDiastolic: 82, pulse: 78, temp: 99.1, tempFlag: 'high', spo2: 98 },
-  );
 }
 
 // ============================================================================
@@ -271,9 +232,11 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
           },
         });
 
-        // Dispatch MA handoff items
-        const maItems = getMAItemsForScenario(encounterId, mockData);
-        for (const item of maItems) {
+        // Seed triage narrative items (CC, HPI, ROS, PE — scenario-dependent).
+        // Patient allergies/meds are visible in the overview sidebar via
+        // PatientContext.clinicalSummary; they don't need chart items.
+        const triageItems = getTriageItemsForScenario(mockData.encounter.id);
+        for (const item of triageItems) {
           dispatch({
             type: 'ITEM_ADDED',
             payload: { item, source: MA_SOURCE },
@@ -283,15 +246,6 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
         // Seed vitals ChartItems (keyed by encounter template ID)
         const vitalsItems = getVitalsForScenario(mockData.encounter.id);
         for (const item of vitalsItems) {
-          dispatch({
-            type: 'ITEM_ADDED',
-            payload: { item, source: MA_SOURCE },
-          });
-        }
-
-        // Seed triage narrative/PE ChartItems (CC, HPI, ROS, PE)
-        const triageItems = getTriageItemsForScenario(mockData.encounter.id);
-        for (const item of triageItems) {
           dispatch({
             type: 'ITEM_ADDED',
             payload: { item, source: MA_SOURCE },

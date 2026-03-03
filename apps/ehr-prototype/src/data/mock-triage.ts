@@ -61,18 +61,13 @@ function buildPE(
 // Scenarios
 // ============================================================================
 
-/** UC Cough: triage in progress — CC captured, HPI captured during MA intake */
+/** UC Cough: minimal start — only CC seeded. HPI arrives via ambient charting. */
 function buildUcCoughTriageItems(): ChartItem[] {
   return [
     buildNarrative(
       'chief-complaint',
       'Cough x 5 days',
       'Cough x 5 days, productive with yellow sputum. Tried OTC Robitussin without relief.',
-    ),
-    buildNarrative(
-      'hpi',
-      'Onset 5 days ago, productive yellow sputum, worse at night',
-      'Onset 5 days ago, productive yellow sputum, tried OTC Robitussin without relief. Worse at night, no hemoptysis. Low-grade fever at home. No SOB at rest.',
     ),
   ];
 }
