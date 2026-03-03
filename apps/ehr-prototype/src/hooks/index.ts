@@ -234,6 +234,9 @@ export type { EncounterPhase, UseEncounterLifecycleResult } from './useEncounter
 // Container Width Hook
 export { useContainerWidth } from './useContainerWidth';
 
+// Scroll-to-Section Hook (rail navigation hub deep-linking)
+export { useScrollToSection } from './useScrollToSection';
+
 // Encounter Layout Hook
 export { useEncounterLayout } from './useEncounterLayout';
 

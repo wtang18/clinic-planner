@@ -22,6 +22,8 @@ import {
   selectCompletenessChecklist,
   selectMockEMLevel,
   selectOutstandingItemCount,
+  selectUnifiedRailRows,
+  RAIL_GROUPS,
 } from '../../state/selectors/process-view';
 
 // ============================================================================
@@ -539,12 +541,12 @@ describe('Processing steps and next action', () => {
 // ============================================================================
 
 describe('selectCompletenessChecklist', () => {
-  it('returns 8 sections', () => {
+  it('returns 9 sections (including sign-off)', () => {
     const state = stateWith({});
     const checklist = selectCompletenessChecklist(state);
-    expect(checklist).toHaveLength(8);
+    expect(checklist).toHaveLength(9);
     expect(checklist.map(c => c.id)).toEqual([
-      'cc', 'hpi', 'ros', 'pe', 'assessment', 'plan', 'orders', 'instructions',
+      'cc', 'hpi', 'ros', 'pe', 'assessment', 'plan', 'orders', 'instructions', 'sign-off',
     ]);
   });
 
@@ -703,5 +705,423 @@ describe('selectProcessViewDrafts', () => {
     const active = selectProcessViewDrafts(state);
     expect(active).toHaveLength(2);
     expect(active.map(d => d.id).sort()).toEqual(['d1', 'd2']);
+  });
+});
+
+// ============================================================================
+// 8. Unified Rail Rows
+// ============================================================================
+
+describe('selectUnifiedRailRows', () => {
+  it('returns 14 rows in 5 groups', () => {
+    const state = stateWith({});
+    const rows = selectUnifiedRailRows(state);
+    expect(rows).toHaveLength(14);
+    expect(rows.map(r => r.id)).toEqual([
+      'cc', 'hpi', 'ros', 'pe',
+      'assessment', 'plan',
+      'prescriptions', 'labs', 'imaging', 'referrals',
+      'instructions', 'visit-note',
+      'charge-nav', 'sign-off',
+    ]);
+  });
+
+  it('groups rows correctly', () => {
+    const state = stateWith({});
+    const rows = selectUnifiedRailRows(state);
+    expect(rows.filter(r => r.group === 'history').map(r => r.id)).toEqual(['cc', 'hpi', 'ros', 'pe']);
+    expect(rows.filter(r => r.group === 'reasoning').map(r => r.id)).toEqual(['assessment', 'plan']);
+    expect(rows.filter(r => r.group === 'orders').map(r => r.id)).toEqual(['prescriptions', 'labs', 'imaging', 'referrals']);
+    expect(rows.filter(r => r.group === 'documentation').map(r => r.id)).toEqual(['instructions', 'visit-note']);
+    expect(rows.filter(r => r.group === 'closure').map(r => r.id)).toEqual(['charge-nav', 'sign-off']);
+  });
+
+  it('RAIL_GROUPS defines 5 groups in display order', () => {
+    expect(RAIL_GROUPS).toEqual(['history', 'reasoning', 'orders', 'documentation', 'closure']);
+  });
+
+  describe('empty state', () => {
+    it('history rows show not-present', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      for (const id of ['cc', 'hpi', 'ros', 'pe']) {
+        const row = rows.find(r => r.id === id)!;
+        expect(row.presence).toBe('not-present');
+        expect(row.itemCount).toBe(0);
+        expect(row.processing).toBeNull();
+      }
+    });
+
+    it('reasoning rows show not-present', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      for (const id of ['assessment', 'plan']) {
+        const row = rows.find(r => r.id === id)!;
+        expect(row.presence).toBe('not-present');
+      }
+    });
+
+    it('order rows show null presence', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      for (const id of ['prescriptions', 'labs', 'imaging', 'referrals']) {
+        const row = rows.find(r => r.id === id)!;
+        expect(row.presence).toBeNull();
+        expect(row.processing).toBeNull();
+      }
+    });
+
+    it('visit-note shows null presence', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      const vn = rows.find(r => r.id === 'visit-note')!;
+      expect(vn.presence).toBeNull();
+      expect(vn.processing).toBeNull();
+    });
+
+    it('charge-nav shows null presence', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      const cn = rows.find(r => r.id === 'charge-nav')!;
+      expect(cn.presence).toBeNull();
+      expect(cn.specialLabel).toBeUndefined();
+    });
+
+    it('sign-off shows not-present', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      const so = rows.find(r => r.id === 'sign-off')!;
+      expect(so.presence).toBe('not-present');
+    });
+  });
+
+  describe('documented items', () => {
+    it('CC shows present when chief-complaint items exist', () => {
+      const state = stateWith({
+        items: { 'cc-1': makeNarrative('chief-complaint') },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const cc = rows.find(r => r.id === 'cc')!;
+      expect(cc.presence).toBe('present');
+      expect(cc.itemCount).toBe(1);
+    });
+
+    it('HPI shows present with item count', () => {
+      const state = stateWith({
+        items: {
+          'hpi-1': makeNarrative('hpi'),
+          'hpi-2': makeNarrative('hpi', { id: 'hpi-2', displayText: 'Second HPI item' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.presence).toBe('present');
+      expect(hpi.itemCount).toBe(2);
+    });
+
+    it('pending-review items make row not-present', () => {
+      const state = stateWith({
+        items: {
+          'hpi-1': makeNarrative('hpi', { status: 'pending-review' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.presence).toBe('not-present');
+    });
+  });
+
+  describe('processing rows', () => {
+    it('Rx shows present when medication exists with no active tasks', () => {
+      const state = stateWith({
+        items: { 'med-1': makeMedication() },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const rx = rows.find(r => r.id === 'prescriptions')!;
+      expect(rx.presence).toBe('present');
+      expect(rx.itemCount).toBe(1);
+    });
+
+    it('Rx shows not-present when active tasks exist', () => {
+      const state = stateWith({
+        items: { 'med-1': makeMedication() },
+        tasks: {
+          't1': makeTask({ id: 't1', status: 'processing', trigger: { action: 'ITEM_ADDED', itemId: 'med-1' } }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const rx = rows.find(r => r.id === 'prescriptions')!;
+      expect(rx.presence).toBe('not-present');
+      expect(rx.processing).not.toBeNull();
+      expect(rx.processing!.chips.inProgress).toBe(1);
+    });
+
+    it('Labs shows processing chips for queued tasks', () => {
+      const state = stateWith({
+        items: { 'lab-1': makeLab() },
+        tasks: {
+          't1': makeTask({ id: 't1', type: 'dx-association', status: 'queued', trigger: { action: 'ITEM_ADDED', itemId: 'lab-1' } }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const labs = rows.find(r => r.id === 'labs')!;
+      expect(labs.processing!.items).toHaveLength(1);
+    });
+  });
+
+  describe('visit-note row', () => {
+    it('shows processing with active note-category drafts', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'note', label: 'Note Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const vn = rows.find(r => r.id === 'visit-note')!;
+      expect(vn.processing).not.toBeNull();
+      expect(vn.processing!.chips.inProgress).toBeGreaterThan(0);
+    });
+
+    it('does NOT show processing for non-note drafts', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'hpi', label: 'HPI Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const vn = rows.find(r => r.id === 'visit-note')!;
+      expect(vn.processing).toBeNull();
+    });
+  });
+
+  describe('documentation rows with active drafts', () => {
+    it('HPI row shows processing when HPI draft is generating', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'hpi', label: 'HPI Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.processing).not.toBeNull();
+      expect(hpi.processing!.chips.inProgress).toBe(1);
+      expect(hpi.processing!.items).toHaveLength(1);
+      expect(hpi.processing!.items[0].kind).toBe('draft');
+    });
+
+    it('HPI row shows not-present when draft active even if items exist', () => {
+      const state = stateWith({
+        items: {
+          'hpi-1': makeNarrative('hpi'),
+        },
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'hpi', label: 'HPI Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.presence).toBe('not-present');
+      expect(hpi.processing).not.toBeNull();
+    });
+
+    it('Assessment row shows processing when diagnosis draft is pending', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'pending', category: 'diagnosis', label: 'Dx Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const assessment = rows.find(r => r.id === 'assessment')!;
+      expect(assessment.processing).not.toBeNull();
+      expect(assessment.processing!.chips.needsAttention).toBe(1);
+    });
+
+    it('Instructions row shows processing when instruction draft exists', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'instruction', label: 'Instructions Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const instructions = rows.find(r => r.id === 'instructions')!;
+      expect(instructions.processing).not.toBeNull();
+      expect(instructions.processing!.chips.inProgress).toBe(1);
+    });
+
+    it('multiple drafts for same section aggregate correctly', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'hpi', label: 'HPI Draft 1' }),
+          'd2': makeDraft({ id: 'd2', status: 'pending', category: 'hpi', label: 'HPI Draft 2' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.processing).not.toBeNull();
+      expect(hpi.processing!.chips.inProgress).toBe(1);
+      expect(hpi.processing!.chips.needsAttention).toBe(1);
+      expect(hpi.processing!.items).toHaveLength(2);
+    });
+
+    it('documentation row without matching drafts remains processing: null', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'hpi', label: 'HPI Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const ros = rows.find(r => r.id === 'ros')!;
+      expect(ros.processing).toBeNull();
+    });
+  });
+
+  describe('child item deepLinks', () => {
+    it('documentation row draft children have deepLink to process/visit-note', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'pending', category: 'hpi', label: 'HPI Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.processing).not.toBeNull();
+      expect(hpi.processing!.items[0].deepLink).toEqual({ mode: 'process', sectionId: 'visit-note' });
+    });
+
+    it('order row task children inherit parent deepLink', () => {
+      const med = makeMedication();
+      const task = makeTask({
+        id: 't1',
+        status: 'processing',
+        trigger: { action: 'ITEM_ADDED', itemId: med.id },
+      });
+      const state = stateWith({
+        items: { [med.id]: med },
+        tasks: { [task.id]: task },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const rx = rows.find(r => r.id === 'prescriptions')!;
+      expect(rx.processing).not.toBeNull();
+      expect(rx.processing!.items[0].deepLink).toEqual({ mode: 'process', sectionId: 'prescriptions' });
+    });
+
+    it('visit-note row draft children have deepLink to process/visit-note', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'note', label: 'Note Draft' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const vn = rows.find(r => r.id === 'visit-note')!;
+      expect(vn.processing).not.toBeNull();
+      expect(vn.processing!.items[0].deepLink).toEqual({ mode: 'process', sectionId: 'visit-note' });
+    });
+
+    it('labs row task children inherit labs deepLink', () => {
+      const lab = makeLab();
+      const task = makeTask({
+        id: 't1',
+        status: 'queued',
+        trigger: { action: 'ITEM_ADDED', itemId: lab.id },
+      });
+      const state = stateWith({
+        items: { [lab.id]: lab },
+        tasks: { [task.id]: task },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const labs = rows.find(r => r.id === 'labs')!;
+      expect(labs.processing).not.toBeNull();
+      expect(labs.processing!.items[0].deepLink).toEqual({ mode: 'process', sectionId: 'labs' });
+    });
+
+    it('multiple draft children all have deepLink', () => {
+      const state = stateWith({
+        drafts: {
+          'd1': makeDraft({ id: 'd1', status: 'generating', content: '', category: 'hpi', label: 'HPI Draft 1' }),
+          'd2': makeDraft({ id: 'd2', status: 'pending', category: 'hpi', label: 'HPI Draft 2' }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const hpi = rows.find(r => r.id === 'hpi')!;
+      expect(hpi.processing!.items).toHaveLength(2);
+      for (const item of hpi.processing!.items) {
+        expect(item.deepLink).toEqual({ mode: 'process', sectionId: 'visit-note' });
+      }
+    });
+  });
+
+  describe('charge-nav row', () => {
+    it('shows present with E&M code when items documented', () => {
+      const state = stateWith({
+        items: {
+          'cc-1': makeNarrative('chief-complaint'),
+          'hpi-1': makeNarrative('hpi'),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const cn = rows.find(r => r.id === 'charge-nav')!;
+      expect(cn.presence).toBe('present');
+      expect(cn.specialLabel).toBeDefined();
+      expect(cn.specialLabel).toMatch(/^\d{5}$/); // E&M code format
+    });
+  });
+
+  describe('sign-off row', () => {
+    it('shows present when no blockers', () => {
+      const state = stateWith({
+        items: {
+          'dx-1': makeNarrative('diagnosis'),
+          'note-1': makeNarrative('note' as any),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const so = rows.find(r => r.id === 'sign-off')!;
+      expect(so.presence).toBe('present');
+      expect(so.blockerCount).toBe(0);
+    });
+
+    it('shows not-present with blocker count when unreviewed AI exists', () => {
+      const state = stateWith({
+        items: {
+          'dx-1': makeNarrative('diagnosis'),
+          'note-1': makeNarrative('note' as any),
+          'ai-item': makeNarrative('hpi', { id: 'ai-item', _meta: { syncStatus: 'synced', aiGenerated: true, requiresReview: true, reviewed: false } }),
+        },
+      });
+      const rows = selectUnifiedRailRows(state);
+      const so = rows.find(r => r.id === 'sign-off')!;
+      expect(so.presence).toBe('not-present');
+      expect(so.blockerCount).toBeGreaterThan(0);
+    });
+  });
+
+  describe('deep links', () => {
+    it('history rows deep-link to review', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      expect(rows.find(r => r.id === 'cc')!.deepLink).toEqual({ mode: 'review', sectionId: 'cc-hpi' });
+      expect(rows.find(r => r.id === 'hpi')!.deepLink).toEqual({ mode: 'review', sectionId: 'cc-hpi' });
+      expect(rows.find(r => r.id === 'ros')!.deepLink).toEqual({ mode: 'review', sectionId: 'ros' });
+      expect(rows.find(r => r.id === 'pe')!.deepLink).toEqual({ mode: 'review', sectionId: 'pe' });
+    });
+
+    it('order rows deep-link to process', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      expect(rows.find(r => r.id === 'prescriptions')!.deepLink).toEqual({ mode: 'process', sectionId: 'prescriptions' });
+      expect(rows.find(r => r.id === 'labs')!.deepLink).toEqual({ mode: 'process', sectionId: 'labs' });
+    });
+
+    it('sign-off deep-links to review', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      expect(rows.find(r => r.id === 'sign-off')!.deepLink).toEqual({ mode: 'review', sectionId: 'sign-off' });
+    });
+
+    it('charge-nav deep-links to process', () => {
+      const state = stateWith({});
+      const rows = selectUnifiedRailRows(state);
+      expect(rows.find(r => r.id === 'charge-nav')!.deepLink).toEqual({ mode: 'process', sectionId: 'charge-nav' });
+    });
   });
 });

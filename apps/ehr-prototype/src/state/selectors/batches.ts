@@ -13,9 +13,11 @@ import type {
   BatchAggregateStatus,
   BatchType,
   StatusBreakdown,
+  AIDraft,
 } from '../../types/drafts';
 import { selectAllTasks } from './entities';
 import { selectActiveDrafts } from './drafts';
+import { selectMockEMLevel } from './process-view';
 
 // ============================================================================
 // Batch Selectors
@@ -68,12 +70,16 @@ export function selectProcessingBatches(state: EncounterState): BatchSummary[] {
     }
   }
 
+  const emLevel = selectMockEMLevel(state);
+
   return [
     buildDraftBatch(activeDrafts),
     buildTaskBatch('prescriptions', 'Rx', rxTasks),
     buildTaskBatch('labs', 'Labs', labTasks),
     buildTaskBatch('imaging', 'Imaging', imagingTasks),
     buildTaskBatch('referrals', 'Referrals', referralTasks),
+    buildVisitNoteBatch(activeDrafts),
+    buildChargeNavBatch(emLevel),
   ];
 }
 
@@ -187,4 +193,66 @@ function computeTaskBreakdown(tasks: BackgroundTask[]): StatusBreakdown {
     else if (t.status === 'ready') complete++;
   }
   return { inProgress, needsAttention, complete };
+}
+
+/**
+ * Build a Visit Note batch from active drafts.
+ * Surfaces narrative drafts (HPI, Assessment, Plan, Note) as a first-class
+ * processing row alongside operational batches.
+ */
+function buildVisitNoteBatch(drafts: AIDraft[]): BatchSummary {
+  // Only include drafts with category 'note' — other categories route to
+  // their respective documentation rows via selectUnifiedRailRows.
+  const noteDrafts = drafts.filter(d => d.category === 'note');
+
+  const items: BatchItem[] = noteDrafts.map(d => ({
+    kind: 'draft' as const,
+    draftId: d.id,
+    label: d.label,
+    preview: d.content.substring(0, 60) + (d.content.length > 60 ? '...' : ''),
+    status: d.status,
+  }));
+
+  const hasPending = noteDrafts.some(d => d.status === 'pending');
+  const hasActive = noteDrafts.some(d => d.status === 'generating' || d.status === 'updating');
+
+  let aggregateStatus: BatchAggregateStatus = 'idle';
+  if (hasPending) aggregateStatus = 'needs-attention';
+  else if (hasActive) aggregateStatus = 'in-progress';
+
+  return {
+    type: 'visit-note',
+    label: 'Visit Note',
+    items,
+    aggregateStatus,
+    statusBreakdown: computeDraftBreakdown(noteDrafts),
+    count: items.length,
+  };
+}
+
+/**
+ * Build a Charge Nav batch from the computed E&M level.
+ * Shows the auto-calculated E&M code as a single-item processing row.
+ */
+function buildChargeNavBatch(
+  emLevel: import('./process-view').EMLevel
+): BatchSummary {
+  const hasItems = emLevel.elements.some(e => e.documented);
+  const items: BatchItem[] = hasItems
+    ? [{
+        kind: 'task' as const,
+        taskId: 'em-level',
+        label: `${emLevel.code} — ${emLevel.description.split(' — ')[1] || emLevel.description}`,
+        status: 'complete',
+      }]
+    : [];
+
+  return {
+    type: 'charge-nav',
+    label: 'Charge Nav',
+    items,
+    aggregateStatus: hasItems ? 'complete' : 'idle',
+    statusBreakdown: { inProgress: 0, needsAttention: 0, complete: hasItems ? 1 : 0 },
+    count: hasItems ? 1 : 0,
+  };
 }

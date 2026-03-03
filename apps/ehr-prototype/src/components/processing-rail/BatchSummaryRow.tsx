@@ -20,6 +20,8 @@ export interface BatchSummaryRowProps {
   batch: BatchSummary;
   /** Whether this is the last row (omits bottom border) */
   isLast?: boolean;
+  /** Called when the row header is tapped — navigates to the Process section */
+  onRowTap?: (batchType: import('../../types/drafts').BatchType) => void;
   onAcceptDraft?: (draftId: string) => void;
   onEditDraft?: (draftId: string) => void;
   onDismissDraft?: (draftId: string) => void;
@@ -80,6 +82,7 @@ const CHEVRON_SIZE = 14;
 export function BatchSummaryRow({
   batch,
   isLast = false,
+  onRowTap,
   onAcceptDraft,
   onEditDraft,
   onDismissDraft,
@@ -90,22 +93,44 @@ export function BatchSummaryRow({
   const [expanded, setExpanded] = React.useState(false);
   const isEmpty = batch.count === 0;
 
+  const handleHeaderClick = React.useCallback(() => {
+    if (onRowTap) {
+      onRowTap(batch.type);
+    }
+  }, [onRowTap, batch.type]);
+
+  const handleChevronClick = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isEmpty) {
+      setExpanded(prev => !prev);
+    }
+  }, [isEmpty]);
+
   return (
     <div style={isLast ? styles.containerLast : styles.container}>
-      <button
-        onClick={() => !isEmpty && setExpanded(e => !e)}
+      <div
         style={{
           ...styles.header,
-          cursor: isEmpty ? 'default' : 'pointer',
+          cursor: 'pointer',
           opacity: isEmpty ? 0.5 : 1,
         }}
-        disabled={isEmpty}
-        aria-expanded={expanded}
+        role="button"
+        tabIndex={0}
+        onClick={handleHeaderClick}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleHeaderClick(); }}
       >
         <span style={styles.headerLeft}>
-          {/* Leading chevron — invisible placeholder when empty for alignment */}
+          {/* Leading chevron — toggles expand/collapse. Invisible placeholder when empty. */}
           {!isEmpty ? (
-            <span style={styles.chevronIcon}>
+            <span
+              style={styles.chevronIcon}
+              onClick={handleChevronClick}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleChevronClick(e as unknown as React.MouseEvent); } }}
+              aria-expanded={expanded}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${batch.label}`}
+            >
               {expanded ? <ChevronDown size={CHEVRON_SIZE} /> : <ChevronRight size={CHEVRON_SIZE} />}
             </span>
           ) : (
@@ -120,7 +145,7 @@ export function BatchSummaryRow({
             <span style={styles.emptyDash}>—</span>
           )}
         </span>
-      </button>
+      </div>
 
       {expanded && batch.items.length > 0 && (
         <div style={styles.itemList}>

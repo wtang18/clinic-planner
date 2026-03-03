@@ -34,6 +34,12 @@ export interface NavigationState {
   params: Record<string, string>;
 }
 
+/** Target for scroll-to-section navigation */
+export interface ScrollTarget {
+  sectionId: string;
+  timestamp: number;
+}
+
 export interface NavigationContextValue {
   /** Current navigation state */
   state: NavigationState;
@@ -49,6 +55,12 @@ export interface NavigationContextValue {
   setMode: (mode: Mode) => void;
   /** Check if can go back */
   canGoBack: boolean;
+  /** Navigate to a specific section within a mode (switches mode + scrolls) */
+  navigateToSection: (mode: Mode, sectionId: string) => void;
+  /** Current scroll target (consumed by useScrollToSection) */
+  scrollTarget: ScrollTarget | null;
+  /** Clear scroll target after scrolling */
+  clearScrollTarget: () => void;
 }
 
 // ============================================================================
@@ -160,6 +172,19 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
     });
   }, []);
 
+  // Scroll target state for deep-linking from rail rows to sections
+  const [scrollTarget, setScrollTarget] = useState<ScrollTarget | null>(null);
+
+  const clearScrollTarget = useCallback(() => {
+    setScrollTarget(null);
+  }, []);
+
+  // Navigate to a specific section within a mode
+  const navigateToSection = useCallback((mode: Mode, sectionId: string) => {
+    setMode(mode);
+    setScrollTarget({ sectionId, timestamp: Date.now() });
+  }, [setMode]);
+
   const canGoBack = navigationStack.length > 1;
 
   const value = useMemo<NavigationContextValue>(
@@ -171,8 +196,11 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({
       goBack,
       setMode,
       canGoBack,
+      navigateToSection,
+      scrollTarget,
+      clearScrollTarget,
     }),
-    [currentState, navigate, navigateToEncounter, navigateToPatient, goBack, setMode, canGoBack]
+    [currentState, navigate, navigateToEncounter, navigateToPatient, goBack, setMode, canGoBack, navigateToSection, scrollTarget, clearScrollTarget]
   );
 
   return (

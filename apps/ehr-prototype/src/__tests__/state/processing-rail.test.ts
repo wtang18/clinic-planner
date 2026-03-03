@@ -442,12 +442,12 @@ describe('Draft Selectors', () => {
 // ============================================================================
 
 describe('Batch Grouping Selectors', () => {
-  it('returns 5 batches even when empty', () => {
+  it('returns 7 batches even when empty', () => {
     const state = stateWith({});
     const batches = selectProcessingBatches(state);
-    expect(batches).toHaveLength(5);
+    expect(batches).toHaveLength(7);
     expect(batches.map(b => b.type)).toEqual([
-      'ai-drafts', 'prescriptions', 'labs', 'imaging', 'referrals',
+      'ai-drafts', 'prescriptions', 'labs', 'imaging', 'referrals', 'visit-note', 'charge-nav',
     ]);
   });
 
@@ -534,6 +534,7 @@ describe('Batch Grouping Selectors', () => {
       },
     });
     const nonEmpty = selectNonEmptyBatches(state);
+    // ai-drafts only — visit-note now filters to category=note, and default draft is hpi
     expect(nonEmpty).toHaveLength(1);
     expect(nonEmpty[0].type).toBe('ai-drafts');
   });
@@ -609,7 +610,9 @@ describe('Aggregate Status', () => {
       drafts: { 'd1': makeDraft({ id: 'd1', status: 'pending' }) },
     });
     const count = selectTotalNeedsAttentionCount(state);
-    expect(count).toBe(2); // 1 draft (needs-attention) + 1 task (needs-attention)
+    // 1 ai-drafts (needs-attention) + 1 prescriptions (needs-attention)
+    // visit-note no longer includes hpi draft (only category=note)
+    expect(count).toBe(2);
   });
 });
 

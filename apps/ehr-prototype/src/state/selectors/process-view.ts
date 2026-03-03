@@ -17,9 +17,10 @@ import type {
   ReferralItem,
   AIDraft,
 } from '../../types';
-import type { BatchAggregateStatus, BatchType } from '../../types/drafts';
+import type { BatchAggregateStatus, BatchType, RailRow, RailGroup, StatusBreakdown, BatchItem } from '../../types/drafts';
 import { selectAllItems, selectAllTasks } from './entities';
 import { selectActiveDrafts } from './drafts';
+import { selectProcessingBatches } from './batches';
 
 // ============================================================================
 // Types
@@ -173,6 +174,7 @@ const CHECKLIST_SECTIONS: { id: string; label: string; categories: ItemCategory[
   { id: 'plan', label: 'Plan', categories: ['plan'] },
   { id: 'orders', label: 'Orders', categories: ['medication', 'lab', 'imaging', 'referral', 'procedure'] },
   { id: 'instructions', label: 'Instructions', categories: ['instruction'] },
+  { id: 'sign-off', label: 'Sign-off', categories: [] },  // special case — derived from blockers
 ];
 
 /**
@@ -182,6 +184,11 @@ export function selectCompletenessChecklist(state: EncounterState): ChecklistIte
   const allItems = selectAllItems(state);
 
   return CHECKLIST_SECTIONS.map(section => {
+    // Sign-off is a special case — derived from blocker conditions, not chart items
+    if (section.id === 'sign-off') {
+      return computeSignOffChecklistItem(allItems);
+    }
+
     const sectionItems = allItems.filter(item =>
       section.categories.includes(item.category)
     );
@@ -203,6 +210,250 @@ export function selectCompletenessChecklist(state: EncounterState): ChecklistIte
       itemCount: sectionItems.length,
     };
   });
+}
+
+/**
+ * Compute sign-off checklist status from blocker conditions.
+ * Mirrors the logic in useReviewView's signOffBlockers.
+ */
+function computeSignOffChecklistItem(allItems: ChartItem[]): ChecklistItem {
+  const hasUnreviewedAI = allItems.some(i => i._meta?.reviewed === false);
+  const hasPendingReview = allItems.some(i => i.status === 'pending-review');
+  const hasDiagnosis = allItems.some(i => i.category === 'diagnosis');
+  const hasNote = allItems.some(i => i.category === 'note');
+
+  // Error-level blockers prevent sign-off
+  const hasErrorBlockers = hasUnreviewedAI || hasPendingReview;
+  // Warning-level: missing dx or note
+  const hasWarnings = !hasDiagnosis || !hasNote;
+
+  let status: ChecklistItem['status'];
+  let blockerCount = 0;
+
+  if (hasErrorBlockers) {
+    status = 'not-documented';
+    if (hasUnreviewedAI) blockerCount++;
+    if (hasPendingReview) blockerCount++;
+  } else if (hasWarnings) {
+    status = 'pending';
+    if (!hasDiagnosis) blockerCount++;
+    if (!hasNote) blockerCount++;
+  } else {
+    status = 'documented';
+  }
+
+  return {
+    id: 'sign-off',
+    label: 'Sign-off',
+    categories: [],
+    status,
+    itemCount: blockerCount,
+  };
+}
+
+// ============================================================================
+// Unified Rail Rows
+// ============================================================================
+
+/**
+ * Row definition — static config for each of the 14 unified rail rows.
+ * `checklistId`: maps to a completeness checklist item (documentation rows)
+ * `batchType`: maps to a processing batch (order/processing rows)
+ * Exactly one of these should be non-null per row.
+ */
+interface RailRowDef {
+  id: string;
+  label: string;
+  group: RailGroup;
+  /** Completeness checklist id (for documentation rows) */
+  checklistId: string | null;
+  /** Processing batch type (for order/processing rows) */
+  batchType: BatchType | null;
+  /** Categories whose chart items contribute to this row's presence */
+  categories: ItemCategory[];
+  /** Navigation target on row tap */
+  deepLink: { mode: 'review' | 'process'; sectionId: string };
+}
+
+const RAIL_ROW_DEFS: RailRowDef[] = [
+  // History
+  { id: 'cc', label: 'Chief Complaint', group: 'history', checklistId: 'cc', batchType: null, categories: ['chief-complaint'], deepLink: { mode: 'review', sectionId: 'cc-hpi' } },
+  { id: 'hpi', label: 'HPI', group: 'history', checklistId: 'hpi', batchType: null, categories: ['hpi'], deepLink: { mode: 'review', sectionId: 'cc-hpi' } },
+  { id: 'ros', label: 'ROS', group: 'history', checklistId: 'ros', batchType: null, categories: ['ros'], deepLink: { mode: 'review', sectionId: 'ros' } },
+  { id: 'pe', label: 'Physical Exam', group: 'history', checklistId: 'pe', batchType: null, categories: ['physical-exam'], deepLink: { mode: 'review', sectionId: 'pe' } },
+  // Reasoning
+  { id: 'assessment', label: 'Assessment', group: 'reasoning', checklistId: 'assessment', batchType: null, categories: ['diagnosis'], deepLink: { mode: 'review', sectionId: 'assessment' } },
+  { id: 'plan', label: 'Plan', group: 'reasoning', checklistId: 'plan', batchType: null, categories: ['plan'], deepLink: { mode: 'review', sectionId: 'plan' } },
+  // Orders
+  { id: 'prescriptions', label: 'Rx', group: 'orders', checklistId: null, batchType: 'prescriptions', categories: ['medication'], deepLink: { mode: 'process', sectionId: 'prescriptions' } },
+  { id: 'labs', label: 'Labs', group: 'orders', checklistId: null, batchType: 'labs', categories: ['lab'], deepLink: { mode: 'process', sectionId: 'labs' } },
+  { id: 'imaging', label: 'Imaging', group: 'orders', checklistId: null, batchType: 'imaging', categories: ['imaging'], deepLink: { mode: 'process', sectionId: 'imaging' } },
+  { id: 'referrals', label: 'Referrals', group: 'orders', checklistId: null, batchType: 'referrals', categories: ['referral'], deepLink: { mode: 'process', sectionId: 'referrals' } },
+  // Documentation
+  { id: 'instructions', label: 'Instructions', group: 'documentation', checklistId: 'instructions', batchType: null, categories: ['instruction'], deepLink: { mode: 'review', sectionId: 'plan' } },
+  { id: 'visit-note', label: 'Visit Note', group: 'documentation', checklistId: null, batchType: 'visit-note', categories: ['note'], deepLink: { mode: 'process', sectionId: 'visit-note' } },
+  // Closure
+  { id: 'charge-nav', label: 'Charge Nav', group: 'closure', checklistId: null, batchType: 'charge-nav', categories: [], deepLink: { mode: 'process', sectionId: 'charge-nav' } },
+  { id: 'sign-off', label: 'Sign-off', group: 'closure', checklistId: 'sign-off', batchType: null, categories: [], deepLink: { mode: 'review', sectionId: 'sign-off' } },
+];
+
+/** Rows that always show a presence icon (expected documentation sections) */
+const ALWAYS_SHOW_PRESENCE = new Set(['cc', 'hpi', 'ros', 'pe', 'assessment', 'plan', 'sign-off']);
+
+/**
+ * Select the unified rail rows — 14 rows combining completeness and processing
+ * dimensions into a single scannable list grouped by clinical workflow phase.
+ *
+ * Each row has:
+ * - Left side: presence icon (✓ dark / ○ gray) for documentation rows,
+ *   or null for processing rows (component shows chevron when items exist)
+ * - Right side: item count, processing chips, special label, or "—"
+ */
+export function selectUnifiedRailRows(state: EncounterState): RailRow[] {
+  const allItems = selectAllItems(state);
+  const checklist = selectCompletenessChecklist(state);
+  const batches = selectProcessingBatches(state);
+  const emLevel = selectMockEMLevel(state);
+  const activeDrafts = selectActiveDrafts(state);
+
+  const checklistMap = new Map(checklist.map(c => [c.id, c]));
+  const batchMap = new Map(batches.map(b => [b.type, b]));
+
+  // Build category → active drafts map for routing drafts to documentation rows
+  const draftsByCategory = new Map<string, AIDraft[]>();
+  for (const draft of activeDrafts) {
+    const existing = draftsByCategory.get(draft.category) || [];
+    existing.push(draft);
+    draftsByCategory.set(draft.category, existing);
+  }
+
+  // Count chart items per category for presence checks on processing rows
+  const categoryItemCount: Record<string, number> = {};
+  for (const item of allItems) {
+    categoryItemCount[item.category] = (categoryItemCount[item.category] || 0) + 1;
+  }
+
+  return RAIL_ROW_DEFS.map(def => {
+    // Documentation row — presence from completeness checklist + draft routing
+    if (def.checklistId !== null) {
+      const cl = checklistMap.get(def.checklistId);
+      const alwaysShow = ALWAYS_SHOW_PRESENCE.has(def.id);
+
+      // Find active drafts matching this row's categories
+      const matchingDrafts: AIDraft[] = [];
+      for (const cat of def.categories) {
+        const catDrafts = draftsByCategory.get(cat);
+        if (catDrafts) matchingDrafts.push(...catDrafts);
+      }
+
+      // Build processing data from matching drafts
+      let processing: RailRow['processing'] = null;
+      if (matchingDrafts.length > 0) {
+        processing = {
+          chips: computeDraftBreakdownLocal(matchingDrafts),
+          items: matchingDrafts.map(d => ({
+            kind: 'draft' as const,
+            draftId: d.id,
+            label: d.label,
+            preview: d.content.substring(0, 60) + (d.content.length > 60 ? '...' : ''),
+            status: d.status,
+            deepLink: { mode: 'process' as const, sectionId: 'visit-note' },
+          })),
+        };
+      }
+
+      let presence: RailRow['presence'];
+      if (cl) {
+        const hasActiveDrafts = matchingDrafts.length > 0;
+        if (cl.status === 'documented' && !hasActiveDrafts) {
+          presence = 'present';
+        } else if (alwaysShow || cl.itemCount > 0 || hasActiveDrafts) {
+          presence = 'not-present';
+        } else {
+          presence = null;
+        }
+      } else {
+        presence = alwaysShow ? 'not-present' : null;
+      }
+
+      return {
+        id: def.id,
+        label: def.label,
+        group: def.group,
+        presence,
+        itemCount: cl?.itemCount ?? 0,
+        processing,
+        deepLink: def.deepLink,
+        blockerCount: def.id === 'sign-off' ? cl?.itemCount : undefined,
+      };
+    }
+
+    // Processing row — presence + processing from batch data
+    const batch = def.batchType ? batchMap.get(def.batchType) : undefined;
+    const chartItemsExist = def.categories.some(cat => (categoryItemCount[cat] || 0) > 0);
+
+    // Charge Nav special case — E&M code as label
+    if (def.id === 'charge-nav') {
+      const hasEM = emLevel.elements.some(e => e.documented);
+      return {
+        id: def.id,
+        label: def.label,
+        group: def.group,
+        presence: hasEM ? 'present' : null,
+        itemCount: 0,
+        processing: null,
+        deepLink: def.deepLink,
+        specialLabel: hasEM ? emLevel.code : undefined,
+      };
+    }
+
+    // Standard processing row
+    const hasActiveProcessing = batch
+      ? batch.statusBreakdown.inProgress > 0 || batch.statusBreakdown.needsAttention > 0
+      : false;
+    const hasItems = batch ? batch.count > 0 : false;
+
+    let presence: RailRow['presence'];
+    if (chartItemsExist && !hasActiveProcessing) {
+      presence = 'present';
+    } else if (chartItemsExist || hasItems) {
+      presence = 'not-present';
+    } else {
+      presence = null;
+    }
+
+    return {
+      id: def.id,
+      label: def.label,
+      group: def.group,
+      presence,
+      itemCount: def.categories.reduce((sum, cat) => sum + (categoryItemCount[cat] || 0), 0),
+      processing: batch && batch.count > 0
+        ? {
+            chips: batch.statusBreakdown,
+            items: batch.items.map(item => ({
+              ...item,
+              deepLink: def.deepLink,
+            })),
+          }
+        : null,
+      deepLink: def.deepLink,
+    };
+  });
+}
+
+/** The rail group display order */
+export const RAIL_GROUPS: RailGroup[] = ['history', 'reasoning', 'orders', 'documentation', 'closure'];
+
+/** Local draft breakdown to avoid circular import with batches.ts */
+function computeDraftBreakdownLocal(drafts: AIDraft[]): StatusBreakdown {
+  let inProgress = 0;
+  let needsAttention = 0;
+  for (const d of drafts) {
+    if (d.status === 'generating' || d.status === 'updating') inProgress++;
+    else if (d.status === 'pending') needsAttention++;
+  }
+  return { inProgress, needsAttention, complete: 0 };
 }
 
 // ============================================================================

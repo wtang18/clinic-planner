@@ -34,6 +34,7 @@ import { EncounterContextBar } from '../../components/layout/EncounterContextBar
 import { SignOffSection } from './SignOffSection';
 import { SectionHeader } from '../../components/primitives/SectionHeader';
 import { useReviewView, REVIEW_SECTIONS } from './useReviewView';
+import { useScrollToSection } from '../../hooks/useScrollToSection';
 import { EmptyState } from '../../components/primitives/EmptyState';
 import { SectionTitle } from '../../components/primitives/SectionTitle';
 import { colors, spaceAround, spaceBetween, borderRadius } from '../../styles/foundations';
@@ -121,6 +122,8 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
 // ============================================================================
 
 export const ReviewCanvas: React.FC = () => {
+  useScrollToSection();
+
   const state = useEncounterState();
   const { addItem } = useItemActions();
 
@@ -215,17 +218,18 @@ export const ReviewCanvas: React.FC = () => {
 
         {/* Review Sections */}
         {REVIEW_SECTIONS.map((section) => (
-          <ReviewSection
-            key={section.id}
-            sectionId={section.id}
-            title={section.title}
-            items={itemsBySection[section.id]}
-            status={sectionStatuses[section.id]}
-            safetyAlertsForItem={getAlertsForItem}
-            onItemEdit={handleItemEdit}
-            onAdd={() => handleSectionAdd(section.categories)}
-            onAcknowledgeAlert={acknowledgeAlert}
-          />
+          <div key={section.id} data-section-id={section.id}>
+            <ReviewSection
+              sectionId={section.id}
+              title={section.title}
+              items={itemsBySection[section.id]}
+              status={sectionStatuses[section.id]}
+              safetyAlertsForItem={getAlertsForItem}
+              onItemEdit={handleItemEdit}
+              onAdd={() => handleSectionAdd(section.categories)}
+              onAcknowledgeAlert={acknowledgeAlert}
+            />
+          </div>
         ))}
 
         {/* Scoped Add Bar */}
@@ -266,17 +270,19 @@ export const ReviewCanvas: React.FC = () => {
         )}
 
         {/* Sign-off Section */}
-        <SignOffSection
-          encounter={encounter}
-          onSignOff={handleSignOff}
-          blockers={signOffBlockers}
-          isSigningOff={isSigningOff}
-        >
-          <EMLevel
-            emLevel={emLevel}
-            style={{ marginBottom: 16 }}
-          />
-        </SignOffSection>
+        <div data-section-id="sign-off">
+          <SignOffSection
+            encounter={encounter}
+            onSignOff={handleSignOff}
+            blockers={signOffBlockers}
+            isSigningOff={isSigningOff}
+          >
+            <EMLevel
+              emLevel={emLevel}
+              style={{ marginBottom: 16 }}
+            />
+          </SignOffSection>
+        </div>
 
         {/* Bottom spacing */}
         <div style={{ height: spaceBetween.separated }} />

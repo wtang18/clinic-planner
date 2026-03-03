@@ -52,7 +52,7 @@ import {
 } from '../../scenarios/todoData';
 
 import { ClipboardList, Check } from 'lucide-react';
-import { useCurrentMode } from '../../navigation/NavigationContext';
+import { useCurrentMode, useNavigation } from '../../navigation/NavigationContext';
 import { ProcessCanvas } from '../ProcessView';
 import { ReviewCanvas } from '../ReviewView';
 import { WorkflowCanvas, useWorkflowState } from '../WorkflowView';
@@ -98,6 +98,7 @@ export const CaptureView: React.FC = () => {
   const workspace = useWorkspace();
   const todoNav = useToDoNavigation();
   const mode = useCurrentMode();
+  const { navigateToSection } = useNavigation();
 
   // Map context segments to drawer segment format
   const drawerSegments = useMemo<DrawerTranscriptSegment[]>(() =>
@@ -356,11 +357,6 @@ export const CaptureView: React.FC = () => {
     handleModeChange,
     viewContext,
     setViewContext,
-    handleAcceptDraft,
-    handleEditDraft,
-    handleDismissDraft,
-    handleRefreshDraft,
-    handleCancelRefresh,
   } = useCaptureView();
 
   // AI Conversation state (canned queries/responses for demo)
@@ -399,6 +395,12 @@ export const CaptureView: React.FC = () => {
     },
     [aiConversation.handleFollowUpAcceptWithChanges, handleSuggestionAcceptWithChanges],
   );
+
+  // Rail navigation hub — deep-linking from unified rail rows to Process/Review sections
+  const handleRailRowTap = useCallback((deepLink: { mode: 'review' | 'process'; sectionId: string }) => {
+    navigateToSection(deepLink.mode, deepLink.sectionId);
+    handleModeChange(deepLink.mode);
+  }, [navigateToSection, handleModeChange]);
 
   // Workflow state (phases, sections, accordion)
   const workflowState = useWorkflowState();
@@ -1270,11 +1272,7 @@ export const CaptureView: React.FC = () => {
                           display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                         }}>
                           <ProcessingRail
-                            onAcceptDraft={handleAcceptDraft}
-                            onEditDraft={handleEditDraft}
-                            onDismissDraft={handleDismissDraft}
-                            onRefreshDraft={handleRefreshDraft}
-                            onCancelRefresh={handleCancelRefresh}
+                            onRowTap={handleRailRowTap}
                           />
                         </div>
                       )}
@@ -1428,11 +1426,7 @@ export const CaptureView: React.FC = () => {
                         display: 'flex', flexDirection: 'column', gap: spaceBetween.repeating,
                       }}>
                         <ProcessingRail
-                          onAcceptDraft={handleAcceptDraft}
-                          onEditDraft={handleEditDraft}
-                          onDismissDraft={handleDismissDraft}
-                          onRefreshDraft={handleRefreshDraft}
-                          onCancelRefresh={handleCancelRefresh}
+                          onRowTap={handleRailRowTap}
                         />
                       </div>
                     )}

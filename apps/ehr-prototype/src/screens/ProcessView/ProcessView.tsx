@@ -19,7 +19,9 @@ import type { BatchType } from '../../types/drafts';
 import { DetailsPane } from '../../components/details-pane/DetailsPane';
 import { BatchSection } from '../../components/process-view/BatchSection';
 import { DraftSection } from '../../components/process-view/DraftSection';
+import { EMLevel } from '../../components/process-view/EMLevel';
 import { EmptyState } from '../../components/primitives/EmptyState';
+import { useScrollToSection } from '../../hooks/useScrollToSection';
 
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
 import { List } from 'lucide-react';
@@ -29,12 +31,13 @@ import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 // Batch → Category Mapping
 // ============================================================================
 
-const BATCH_TO_CATEGORY: Record<BatchType, ItemCategory> = {
-  'ai-drafts': 'note', // drafts are narrative; "+" doesn't apply to this section
+const BATCH_TO_CATEGORY: Partial<Record<BatchType, ItemCategory>> = {
+  'ai-drafts': 'note',
   'prescriptions': 'medication',
   'labs': 'lab',
   'imaging': 'imaging',
   'referrals': 'referral',
+  // visit-note and charge-nav have dedicated sections, not BatchSection
 };
 
 // ============================================================================
@@ -42,10 +45,13 @@ const BATCH_TO_CATEGORY: Record<BatchType, ItemCategory> = {
 // ============================================================================
 
 export const ProcessCanvas: React.FC = () => {
+  useScrollToSection();
+
   const state = useEncounterState();
   const {
     batches,
     drafts,
+    emLevel,
     selectedItemId,
     scopedAddCategory,
     handleItemSelect,
@@ -123,8 +129,8 @@ export const ProcessCanvas: React.FC = () => {
     );
   }
 
-  // Check if there's any content at all
-  const hasContent = drafts.length > 0 || batches.some(b => b.totalCount > 0);
+  // Check if there's any content at all (charge-nav always has E&M, so count as content)
+  const hasContent = drafts.length > 0 || batches.some(b => b.totalCount > 0) || emLevel.elements.some(e => e.documented);
 
   return (
     <>
@@ -144,27 +150,35 @@ export const ProcessCanvas: React.FC = () => {
           style={{ paddingLeft: 0, paddingRight: 0 }}
         />
 
-        {/* AI Drafts section */}
-        <DraftSection
-          drafts={drafts}
-          onAcceptDraft={handleAcceptDraft}
-          onEditDraft={handleEditDraft}
-          onDismissDraft={handleDismissDraft}
-          onRefreshDraft={handleRefreshDraft}
-          onCancelRefresh={handleCancelRefresh}
-        />
+        {/* Visit Note section (AI Drafts) */}
+        <div data-section-id="visit-note">
+          <DraftSection
+            drafts={drafts}
+            onAcceptDraft={handleAcceptDraft}
+            onEditDraft={handleEditDraft}
+            onDismissDraft={handleDismissDraft}
+            onRefreshDraft={handleRefreshDraft}
+            onCancelRefresh={handleCancelRefresh}
+          />
+        </div>
 
         {/* Operational batch sections */}
         {batches.map((batch) => (
-          <BatchSection
-            key={batch.type}
-            batch={batch}
-            onScopedAdd={handleBatchScopedAdd}
-            onItemSelect={handleItemSelect}
-            onItemAction={handleItemAction}
-            onBatchAction={handleBatchAction}
-          />
+          <div key={batch.type} data-section-id={batch.type}>
+            <BatchSection
+              batch={batch}
+              onScopedAdd={handleBatchScopedAdd}
+              onItemSelect={handleItemSelect}
+              onItemAction={handleItemAction}
+              onBatchAction={handleBatchAction}
+            />
+          </div>
         ))}
+
+        {/* Charge Nav section */}
+        <div data-section-id="charge-nav">
+          <EMLevel emLevel={emLevel} style={{ marginBottom: 16 }} />
+        </div>
 
         {/* Empty state when no items at all */}
         {!hasContent && (

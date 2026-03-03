@@ -21,6 +21,8 @@ import { colors, spaceAround, spaceBetween } from '../../styles/foundations';
 
 export interface CompletenessCompactProps {
   checklist: ChecklistItem[];
+  /** Called when a detail row is tapped — navigates to the Review section */
+  onSectionTap?: (checklistId: string) => void;
   style?: React.CSSProperties;
 }
 
@@ -45,6 +47,7 @@ const StatusIcon: React.FC<{ status: ChecklistItem['status'] }> = ({ status }) =
 
 export const CompletenessCompact: React.FC<CompletenessCompactProps> = ({
   checklist,
+  onSectionTap,
   style,
 }) => {
   const documented = checklist.filter(c => c.status === 'documented').length;
@@ -63,7 +66,14 @@ export const CompletenessCompact: React.FC<CompletenessCompactProps> = ({
         {checklist.map((item) => (
           <div
             key={item.id}
-            style={styles.detailRow}
+            style={{
+              ...styles.detailRow,
+              cursor: onSectionTap ? 'pointer' : undefined,
+            }}
+            role={onSectionTap ? 'button' : undefined}
+            tabIndex={onSectionTap ? 0 : undefined}
+            onClick={onSectionTap ? () => onSectionTap(item.id) : undefined}
+            onKeyDown={onSectionTap ? (e) => { if (e.key === 'Enter' || e.key === ' ') onSectionTap(item.id); } : undefined}
             data-testid={`completeness-detail-${item.id}`}
           >
             <span style={styles.detailLeft}>
