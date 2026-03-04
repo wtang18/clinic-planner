@@ -1,8 +1,8 @@
 # EHR Prototype: Navigation Patterns
 
 > **Status:** Active Design
-> **Last Updated:** 2025-01-31
-> **Related Docs:** [Information Architecture](./INFORMATION_ARCHITECTURE.md) | [To-Do Feature](./features/TO_DO.md)
+> **Last Updated:** 2026-03-03
+> **Related Docs:** [Information Architecture](./INFORMATION_ARCHITECTURE.md) | [To-Do Feature](./features/TO_DO.md) | [AppShell Scope System](./architecture/appshell-scope-system.md) | [Pop Health Design Spec](./features/population-health/DESIGN-SPEC.md)
 
 ---
 
@@ -71,6 +71,46 @@ The most common workflow: working through a list of tasks.
    - Child tab: "Today's Visit" created
 4. No context bar (didn't come from To-Do)
 ```
+
+### Cohort → Patient → Return (Drill-Through)
+
+The population health drill-through flow. Parallel pattern to To-Do → Patient → Return, but originating from cohort scope instead of To-Do.
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ 1. USER IN POPULATION HEALTH (COHORT SCOPE)                         │
+│    Menu: My Patients > Diabetes (selected)                          │
+│    Overview: Cohort dashboard + protocol layer tree                 │
+│    Canvas: Protocol flow view (Diabetes A1c Management)             │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ Tap node → Details → Patient → "Open Patient Workspace"
+┌─────────────────────────────────────────────────────────────────────┐
+│ 2. PATIENT WORKSPACE OPENS (PATIENT SCOPE — STACKED)                │
+│    Scope stack: [cohort:diabetes] → [patient:sarah-chen]            │
+│    Menu: Patient Workspaces > Sarah Chen (auto-opened)              │
+│    Overview: Patient context [Overview] [Activity]                  │
+│    Canvas: Encounter workspace                                      │
+│    Return affordance: [← Diabetes T2] in canvas top bar             │
+└─────────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ Click "← Diabetes T2" return affordance
+┌─────────────────────────────────────────────────────────────────────┐
+│ 3. RETURN TO COHORT (STATE RESTORED)                                │
+│    Scope stack: [cohort:diabetes]                                   │
+│    Menu: My Patients > Diabetes (selected)                          │
+│    Overview: Cohort dashboard (restored)                            │
+│    Canvas: Protocol flow (restored selection, scroll, filters)      │
+│    Return affordance: Hidden (stack depth = 1)                      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Key differences from To-Do → Patient:**
+- Uses scope stack (`push`/`pop`) instead of context bar. Return affordance is a back-arrow + origin label, not the full context bar with "Next →".
+- Cohort view state (selected protocol, node, scroll position, filters) is preserved on the scope stack and restored on return.
+- No "Next →" behavior — drill-through is point-to-point, not list-sequential.
+
+See [AppShell Scope System](./architecture/appshell-scope-system.md) for the full drill-through flow specification.
 
 ---
 
@@ -236,6 +276,8 @@ Combined with the context bar for To-Do flows, users always know:
 /patient/{id}                   → Patient workspace (Overview)
 /patient/{id}/visit/{visitId}   → Patient workspace > Visit tab
 /patient/{id}/task/{taskId}     → Patient workspace > Task tab
+/cohort/{id}                    → Cohort scope (dashboard + protocols)
+/cohort/{id}/pathway/{pathwayId} → Cohort scope with pathway selected
 ```
 
 ### Bookmarkable States
@@ -305,4 +347,5 @@ User completes last item in Chart Review:
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-03-03 | Added Cohort → Patient → Return drill-through flow, cohort deep-link URLs, cross-refs to AppShell/pop health docs | Claude + William |
 | 2025-01-31 | Initial navigation patterns documentation | Claude + William |

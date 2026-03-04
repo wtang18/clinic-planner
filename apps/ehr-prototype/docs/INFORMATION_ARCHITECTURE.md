@@ -1,8 +1,8 @@
 # EHR Prototype: Information Architecture
 
 > **Status:** Active Design
-> **Last Updated:** 2026-02-23
-> **Related Docs:** [Layout Refactor](./LAYOUT_REFACTOR_PLAN.md) | [Navigation Patterns](./NAVIGATION_PATTERNS.md) | [To-Do Feature](./features/TO_DO.md) | [Visit Workflow](./features/VISIT_WORKFLOW.md)
+> **Last Updated:** 2026-03-03
+> **Related Docs:** [Layout Refactor](./LAYOUT_REFACTOR_PLAN.md) | [Navigation Patterns](./NAVIGATION_PATTERNS.md) | [To-Do Feature](./features/TO_DO.md) | [Visit Workflow](./features/VISIT_WORKFLOW.md) | [AppShell Scope System](./architecture/appshell-scope-system.md) | [Pop Health Design Spec](./features/population-health/DESIGN-SPEC.md)
 
 ---
 
@@ -58,6 +58,9 @@ This document defines the information architecture (IA) for the EHR prototype, e
 | Visits | Disabled/hidden | Schedule view |
 | To-Do category | Optional (filter chips) or disabled | Filtered item list |
 | Patient Workspace | [Overview] [Activity] tabs | Active content |
+| Cohort (My Patients) | Dashboard + protocol layer tree | Protocol canvas (Flow View / Table View) |
+
+> **Scope system:** Each row above maps to a scope type (`hub`, `todo`, `patient`, `cohort`). The AppShell persists across scope switches; only pane content changes. See [AppShell Scope System](./architecture/appshell-scope-system.md) for the full architecture.
 
 ---
 
@@ -89,12 +92,29 @@ To Do                            ← Section header (not clickable)
    ├─ My Pending      (3)
    └─ All Care
 
+My Patients                      ← Section header (cohort scope)
+├─ Chronic Disease
+│  ├─ Diabetes          (412)
+│  ├─ Hypertension      (689)
+│  └─ COPD              (127)
+├─ Preventive Care
+│  ├─ Screening Gaps    (234)
+│  └─ Immunization Gaps (156)
+├─ Risk Tiers
+│  ├─ High Risk          (89)
+│  ├─ Rising Risk       (203)
+│  └─ Stable          (1,847)
+└─ Care Transitions
+   └─ Recent Discharges   (8)
+
 Patient Workspaces               ← Section header
 ├─ Maria Johnson                 ← Click = expand + land on Overview
 │  ├─ Today's Visit
 │  └─ [child tabs from To-Do]
 └─ John Smith
 ```
+
+> **My Patients vs. Patient Workspaces:** My Patients shows cohort-level views (population health scope). Patient Workspaces shows individual patient encounters (patient scope). Selecting a cohort item triggers a scope switch via `navigateToScope({ type: 'cohort', ... })`. See [Pop Health Design Spec §2](./features/population-health/DESIGN-SPEC.md) for cohort navigator details.
 
 ### Menu Item Behaviors
 
@@ -257,5 +277,6 @@ See [FUTURE_CONSIDERATIONS.md](./FUTURE_CONSIDERATIONS.md) for:
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2026-03-03 | Added cohort scope to pane behavior table, My Patients menu section, cross-refs to AppShell/pop health docs | Claude + William |
 | 2026-02-23 | Added Visit sub-items (Workflow/Chart) to Patient Workspace model | Claude + William |
 | 2025-01-31 | Initial IA documentation | Claude + William |
