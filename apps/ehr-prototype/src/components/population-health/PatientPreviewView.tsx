@@ -30,8 +30,8 @@ interface PatientPreviewViewProps {
 // ============================================================================
 
 export const PatientPreviewView: React.FC<PatientPreviewViewProps> = ({ patientId }) => {
-  const { state } = usePopHealth();
-  const { navigateToEncounter } = useNavigation();
+  const { dispatch } = usePopHealth();
+  const { navigateToScope } = useNavigation();
 
   const patient = useMemo(
     () => MOCK_POP_HEALTH_PATIENTS.find((p) => p.patientId === patientId),
@@ -42,9 +42,14 @@ export const PatientPreviewView: React.FC<PatientPreviewViewProps> = ({ patientI
 
   const handleOpenWorkspace = useCallback(() => {
     if (encounterId) {
-      navigateToEncounter(encounterId, 'capture');
+      // Close drawer before scope push so it doesn't persist in patient view
+      dispatch({ type: 'DRAWER_CLOSED' });
+      navigateToScope(
+        { type: 'patient', patientId, encounterId },
+        { mode: 'push' },
+      );
     }
-  }, [encounterId, navigateToEncounter]);
+  }, [encounterId, patientId, dispatch, navigateToScope]);
 
   if (!patient) {
     return (

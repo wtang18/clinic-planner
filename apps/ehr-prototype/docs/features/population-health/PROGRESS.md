@@ -1,6 +1,6 @@
 # Population Health Workspace — Progress Tracker
 
-> **Status:** Active Build — Phases 0–5 Complete
+> **Status:** Active Build — Phases 0–6 Complete
 > **Last Updated:** 2026-03-03
 > **Related Docs:** [Design Spec](./DESIGN-SPEC.md) | [Phased Plan](./PHASED-PLAN.md) | [AppShell Scope System](../../architecture/appshell-scope-system.md)
 
@@ -16,7 +16,7 @@
 | 3 | Center Pane — Cohort Context | **Complete** | CohortContextPane, CohortActivityFeed, props-based Dashboard, branch-indented LayerTree |
 | 4 | Flow View — React Flow Migration | **Complete** | ReactFlow canvas, lifecycle-aware NodeCard, ReactFlowNodeCard wrapper, ConnectionLines deprecated |
 | 5 | Cross-Pane Sync + Filters | **Complete** | Lifecycle toggles, search, stream highlighting, filter application, auto-expand |
-| 6 | Detail Drawer + Drill-Through | Not started | Scope push/pop, return affordance |
+| 6 | Detail Drawer + Drill-Through | **Complete** | Lifecycle badge, flow breakdown, scope-based drill-through, drawer stack wiring |
 | 7 | Table View + Polish | Not started | Wire existing table, AI bar, full journey |
 
 ### Previous Implementation (Rev 1)
