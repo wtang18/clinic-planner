@@ -101,13 +101,46 @@ export const TableView: React.FC = () => {
     return MOCK_POP_HEALTH_PATIENTS;
   }, [state.selectedPathwayIds]);
 
-  // Filter by selected node if applicable
+  // Filter by selected node, search query, and chip filters
   const filteredPatients = useMemo(() => {
-    if (!state.selectedNodeId) return patients;
-    return patients.filter((p) =>
-      p.pathways.some((a) => a.currentNodeId === state.selectedNodeId)
-    );
-  }, [patients, state.selectedNodeId]);
+    let result = patients;
+
+    // Filter by selected node
+    if (state.selectedNodeId) {
+      result = result.filter((p) =>
+        p.pathways.some((a) => a.currentNodeId === state.selectedNodeId)
+      );
+    }
+
+    // Search query: case-insensitive name match
+    if (state.searchQuery) {
+      const query = state.searchQuery.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(query));
+    }
+
+    // Chip filters
+    for (const filter of state.filters) {
+      if (filter.category === 'status' && filter.field === 'status' && filter.operator === 'eq') {
+        result = result.filter((p) =>
+          p.pathways.some((a) => a.status === filter.value)
+        );
+      } else if (filter.category === 'patient-attribute') {
+        result = result.filter((p) => {
+          const val = p.clinicalData[filter.field];
+          switch (filter.operator) {
+            case 'eq': return val === filter.value;
+            case 'gt': return typeof val === 'number' && val > (filter.value as number);
+            case 'lt': return typeof val === 'number' && val < (filter.value as number);
+            case 'in': return Array.isArray(filter.value) && (filter.value as unknown[]).includes(val);
+            default: return true;
+          }
+        });
+      }
+      // Other categories (lifecycle-state, pathway-specific) not applicable to table rows
+    }
+
+    return result;
+  }, [patients, state.selectedNodeId, state.searchQuery, state.filters]);
 
   // Get columns
   const pathwayId = state.selectedPathwayIds[0];

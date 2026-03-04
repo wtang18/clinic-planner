@@ -5,8 +5,8 @@
  * Converts PathwayNode[] and PathwayConnection[] into React Flow nodes/edges.
  * Supports multi-pathway rendering with vertical offset and dimming.
  *
- * Replaces the previous manual absolute positioning + SVG overlay approach.
- * React Flow provides built-in pan/zoom, MiniMap, and edge rendering.
+ * Applies lifecycle filters, search query, chip filters, and stream highlighting
+ * (connected-node tracing) to determine node/edge visibility.
  */
 
 import React, { useMemo, useCallback } from 'react';
@@ -23,7 +23,7 @@ import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health
 import { NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT, ReactFlowNodeCard } from './NodeCard';
 import type { ReactFlowNodeData } from './NodeCard';
 import { FilterBar } from './FilterBar';
-import type { Pathway } from '../../types/population-health';
+import type { Pathway, PathwayNode, PathwayConnection, PopHealthFilter } from '../../types/population-health';
 import { colors, typography } from '../../styles/foundations';
 
 // ============================================================================
@@ -39,6 +39,106 @@ const CANVAS_PADDING = 32;
 // ============================================================================
 
 const nodeTypes = { nodeCard: ReactFlowNodeCard };
+
+// ============================================================================
+// Stream Highlighting — Connected Node Tracing
+// ============================================================================
+
+/**
+ * BFS traversal to find all nodes connected to nodeId (upstream + downstream).
+ * Returns the set of node IDs reachable from nodeId in either direction.
+ */
+function getConnectedNodeIds(
+  nodeId: string,
+  connections: PathwayConnection[],
+): Set<string> {
+  const connected = new Set<string>([nodeId]);
+
+  // Build adjacency maps
+  const forwardMap = new Map<string, string[]>(); // source → targets
+  const backwardMap = new Map<string, string[]>(); // target → sources
+  for (const conn of connections) {
+    const fwd = forwardMap.get(conn.sourceNodeId) ?? [];
+    fwd.push(conn.targetNodeId);
+    forwardMap.set(conn.sourceNodeId, fwd);
+
+    const bwd = backwardMap.get(conn.targetNodeId) ?? [];
+    bwd.push(conn.sourceNodeId);
+    backwardMap.set(conn.targetNodeId, bwd);
+  }
+
+  // BFS forward (downstream)
+  const fwdQueue = [nodeId];
+  while (fwdQueue.length > 0) {
+    const current = fwdQueue.shift()!;
+    for (const next of forwardMap.get(current) ?? []) {
+      if (!connected.has(next)) {
+        connected.add(next);
+        fwdQueue.push(next);
+      }
+    }
+  }
+
+  // BFS backward (upstream)
+  const bwdQueue = [nodeId];
+  while (bwdQueue.length > 0) {
+    const current = bwdQueue.shift()!;
+    for (const prev of backwardMap.get(current) ?? []) {
+      if (!connected.has(prev)) {
+        connected.add(prev);
+        bwdQueue.push(prev);
+      }
+    }
+  }
+
+  return connected;
+}
+
+// ============================================================================
+// Node Visibility
+// ============================================================================
+
+type NodeVisibility = 'visible' | 'dimmed';
+
+function computeNodeVisibility(
+  node: PathwayNode,
+  lifecycleFilter: string[],
+  searchQuery: string,
+  chipFilters: PopHealthFilter[],
+  connectedSet: Set<string> | null,
+): NodeVisibility {
+  // Lifecycle filter: if filter active and node doesn't match → dimmed
+  if (lifecycleFilter.length > 0 && !lifecycleFilter.includes(node.lifecycleState)) {
+    return 'dimmed';
+  }
+
+  // Search query: case-insensitive includes on label
+  if (searchQuery && !node.label.toLowerCase().includes(searchQuery.toLowerCase())) {
+    return 'dimmed';
+  }
+
+  // Chip filters: check applicable filters
+  for (const filter of chipFilters) {
+    if (filter.category === 'lifecycle-state') {
+      // Already handled above via lifecycleFilter
+      continue;
+    }
+    if (filter.category === 'status') {
+      // Status filters apply to node lifecycle/disabled state
+      if (filter.field === 'status' && filter.operator === 'eq') {
+        if (node.lifecycleState !== filter.value) return 'dimmed';
+      }
+    }
+    // Other filter categories pass through (not applicable to nodes directly)
+  }
+
+  // Stream highlighting: if a node is selected and this node is not in connected set → dimmed
+  if (connectedSet && !connectedSet.has(node.id)) {
+    return 'dimmed';
+  }
+
+  return 'visible';
+}
 
 // ============================================================================
 // Component
@@ -82,16 +182,42 @@ export const FlowCanvas: React.FC = () => {
     dispatch({ type: 'DRAWER_OPENED', view: { type: 'node-detail', nodeId } });
   }, [dispatch]);
 
+  // Compute connected node set for stream highlighting
+  const connectedNodeSet = useMemo<Set<string> | null>(() => {
+    if (!state.selectedNodeId) return null;
+    // Find connections from all active pathways that contain the selected node
+    for (const pathway of activePathways) {
+      if (pathway.nodes.some((n) => n.id === state.selectedNodeId)) {
+        return getConnectedNodeIds(state.selectedNodeId, pathway.connections);
+      }
+    }
+    return null;
+  }, [state.selectedNodeId, activePathways]);
+
   // Convert pathway data → React Flow nodes and edges
   const { flowNodes, flowEdges } = useMemo(() => {
     const nodes: Node<ReactFlowNodeData>[] = [];
     const edges: Edge[] = [];
     let verticalOffset = 0;
 
-    const processPathway = (pathway: Pathway, dimmed: boolean) => {
+    const processPathway = (pathway: Pathway, pathwayDimmed: boolean) => {
       // Convert pathway nodes → React Flow nodes
       for (const pNode of pathway.nodes) {
+        const visibility = pathwayDimmed
+          ? 'dimmed'
+          : computeNodeVisibility(
+              pNode,
+              state.lifecycleFilter,
+              state.searchQuery,
+              state.filters,
+              connectedNodeSet,
+            );
+        const isDimmed = visibility === 'dimmed';
         const adjustedVerticalPos = pNode.verticalPosition + verticalOffset;
+
+        // Search match highlighting: accent border when search matches
+        const isSearchMatch = state.searchQuery.length > 0
+          && pNode.label.toLowerCase().includes(state.searchQuery.toLowerCase());
 
         nodes.push({
           id: pNode.id,
@@ -103,13 +229,30 @@ export const FlowCanvas: React.FC = () => {
           data: {
             node: pNode,
             selected: state.selectedNodeId === pNode.id,
-            focused: state.selectedNodeId === pNode.id,
-            dimmed,
+            focused: state.selectedNodeId === pNode.id || (isSearchMatch && !isDimmed),
+            dimmed: isDimmed,
             disabled: pNode.disabled ?? false,
             onClick: () => handleNodeClick(pNode.id),
             onDetailsClick: () => handleNodeDetails(pNode.id),
           },
         });
+      }
+
+      // Build set of dimmed node IDs for edge dimming
+      const dimmedNodeIds = new Set<string>();
+      for (const pNode of pathway.nodes) {
+        if (pathwayDimmed) {
+          dimmedNodeIds.add(pNode.id);
+        } else {
+          const vis = computeNodeVisibility(
+            pNode,
+            state.lifecycleFilter,
+            state.searchQuery,
+            state.filters,
+            connectedNodeSet,
+          );
+          if (vis === 'dimmed') dimmedNodeIds.add(pNode.id);
+        }
       }
 
       // Convert pathway connections → React Flow edges
@@ -122,15 +265,21 @@ export const FlowCanvas: React.FC = () => {
           edgeLabels.push(conn.label);
         }
 
+        const edgeDimmed = dimmedNodeIds.has(conn.sourceNodeId) || dimmedNodeIds.has(conn.targetNodeId);
+        // Stream highlighting: connected edges get accent color
+        const isConnectedEdge = connectedNodeSet
+          && connectedNodeSet.has(conn.sourceNodeId)
+          && connectedNodeSet.has(conn.targetNodeId);
+
         edges.push({
           id: conn.id,
           source: conn.sourceNodeId,
           target: conn.targetNodeId,
           type: 'default',
           style: {
-            stroke: colors.border.neutral.low,
-            strokeWidth: 1.5,
-            opacity: dimmed ? 0.4 : 1,
+            stroke: isConnectedEdge ? colors.fg.accent.primary : colors.border.neutral.low,
+            strokeWidth: isConnectedEdge ? 2 : 1.5,
+            opacity: edgeDimmed ? 0.25 : 1,
           },
           label: edgeLabels.length > 0 ? edgeLabels.join(' \u2014 ') : undefined,
           labelStyle: {
@@ -163,7 +312,7 @@ export const FlowCanvas: React.FC = () => {
     }
 
     return { flowNodes: nodes, flowEdges: edges };
-  }, [activePathways, dimmedPathways, state.selectedNodeId, handleNodeClick, handleNodeDetails]);
+  }, [activePathways, dimmedPathways, state.selectedNodeId, state.lifecycleFilter, state.searchQuery, state.filters, connectedNodeSet, handleNodeClick, handleNodeDetails]);
 
   return (
     <div style={canvasStyles.outerContainer} data-testid="flow-canvas">

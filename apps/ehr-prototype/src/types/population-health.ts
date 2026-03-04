@@ -237,4 +237,5 @@ export interface PopHealthState {
   drawerStack: DrawerView[];
   focusedColumnIndex: number | null;
   lifecycleFilter: NodeLifecycleState[];
+  searchQuery: string;
 }

@@ -10,7 +10,7 @@
  * Lifecycle state indicators: active (none), paused (Pause icon), draft (dashed border + label).
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   ChevronRight,
   Users,
@@ -292,13 +292,14 @@ interface NodeRowProps {
   node: PathwayNode;
   depth: number;
   isSelected: boolean;
+  isDimmed: boolean;
   onClick: () => void;
 }
 
 const NODE_INDENT_BASE = 16; // Base indent under pathway
 const NODE_INDENT_STEP = 14; // Additional indent per branch depth
 
-const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, onClick }) => {
+const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const isDraft = node.lifecycleState === 'draft';
 
@@ -318,8 +319,9 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, onClick }) =
             : 'transparent',
         borderRadius: borderRadius.xs,
         cursor: 'pointer',
-        transition: `background-color ${transitions.fast}`,
+        transition: `background-color ${transitions.fast}, opacity ${transitions.fast}`,
         userSelect: 'none',
+        opacity: isDimmed ? 0.4 : 1,
         // Draft nodes get a dashed left border
         ...(isDraft ? {
           borderLeft: `2px dashed ${colors.border.neutral.low}`,
@@ -421,6 +423,17 @@ export const LayerTree: React.FC = () => {
     });
   }, []);
 
+  // Auto-expand pathway when a node is selected in the canvas
+  useEffect(() => {
+    if (!state.selectedNodeId) return;
+    const pathway = pathways.find((p) =>
+      p.nodes.some((n) => n.id === state.selectedNodeId)
+    );
+    if (pathway && !expandedPathways.has(pathway.id)) {
+      setExpandedPathways((prev) => new Set(prev).add(pathway.id));
+    }
+  }, [state.selectedNodeId, pathways]);
+
   const handlePathwayClick = useCallback((pathwayId: string, e: React.MouseEvent) => {
     dispatch({
       type: 'PATHWAY_SELECTED',
@@ -455,15 +468,24 @@ export const LayerTree: React.FC = () => {
                 onToggle={() => toggleExpanded(pathway.id)}
                 onClick={(e) => handlePathwayClick(pathway.id, e)}
               />
-              {isExpanded && nodeEntries.map((entry) => (
-                <NodeRow
-                  key={entry.node.id}
-                  node={entry.node}
-                  depth={entry.depth}
-                  isSelected={state.selectedNodeId === entry.node.id}
-                  onClick={() => handleNodeClick(entry.node.id)}
-                />
-              ))}
+              {isExpanded && nodeEntries.map((entry) => {
+                const dimmedByLifecycle = state.lifecycleFilter.length > 0
+                  && !state.lifecycleFilter.includes(entry.node.lifecycleState);
+                const dimmedBySearch = state.searchQuery.length > 0
+                  && !entry.node.label.toLowerCase().includes(state.searchQuery.toLowerCase());
+                const isDimmed = dimmedByLifecycle || dimmedBySearch;
+
+                return (
+                  <NodeRow
+                    key={entry.node.id}
+                    node={entry.node}
+                    depth={entry.depth}
+                    isSelected={state.selectedNodeId === entry.node.id}
+                    isDimmed={isDimmed}
+                    onClick={() => handleNodeClick(entry.node.id)}
+                  />
+                );
+              })}
               {/* Divider between pathways */}
               <div style={treeStyles.divider} />
             </React.Fragment>

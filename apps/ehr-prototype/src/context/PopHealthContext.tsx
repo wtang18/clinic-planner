@@ -37,7 +37,8 @@ export type PopHealthAction =
   | { type: 'COLUMN_FOCUSED'; columnIndex: number }
   | { type: 'COLUMN_UNFOCUSED' }
   | { type: 'LIFECYCLE_FILTER_CHANGED'; states: NodeLifecycleState[] }
-  | { type: 'CATEGORY_OVERVIEW_SELECTED'; category: CohortCategory };
+  | { type: 'CATEGORY_OVERVIEW_SELECTED'; category: CohortCategory }
+  | { type: 'SEARCH_CHANGED'; query: string };
 
 // ============================================================================
 // Initial State
@@ -53,6 +54,7 @@ const INITIAL_STATE: PopHealthState = {
   drawerStack: [],
   focusedColumnIndex: null,
   lifecycleFilter: [],
+  searchQuery: '',
 };
 
 // ============================================================================
@@ -79,6 +81,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         filters: [],
         drawerStack: [],
         focusedColumnIndex: null,
+        searchQuery: '',
       };
 
     case 'PATHWAY_SELECTED': {
@@ -162,8 +165,12 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         filters: [],
         drawerStack: [],
         focusedColumnIndex: null,
+        searchQuery: '',
       };
     }
+
+    case 'SEARCH_CHANGED':
+      return { ...state, searchQuery: action.query };
 
     default:
       return state;
