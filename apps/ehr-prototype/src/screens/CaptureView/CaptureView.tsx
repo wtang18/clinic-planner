@@ -44,6 +44,7 @@ import { TriageModule } from '../../components/triage';
 import type { VitalsItem, NarrativeItem, PhysicalExamItem } from '../../types/chart-items';
 import { ToDoListView, TaskDetailView, FaxDetailView, MessageDetailView, CareDetailView } from '../../components/todo';
 import { ContextBar } from '../../components/navigation/ContextBar';
+import { ScopeReturnBar } from '../../components/navigation/ScopeReturnBar';
 import {
   getCategoryById,
   getItemsByCategory,
@@ -98,7 +99,7 @@ export const CaptureView: React.FC = () => {
   const workspace = useWorkspace();
   const todoNav = useToDoNavigation();
   const mode = useCurrentMode();
-  const { navigateToSection } = useNavigation();
+  const { navigateToSection, canPopScope, scopeOriginLabel, popScope } = useNavigation();
 
   // Map context segments to drawer segment format
   const drawerSegments = useMemo<DrawerTranscriptSegment[]>(() =>
@@ -790,15 +791,19 @@ export const CaptureView: React.FC = () => {
     />
   ) : null;
 
-  // Patient identity for floating nav row (shown when overview collapsed)
-  const selectedPatientIdentity = selectedPatientOverviewData && selectedPatient ? {
-    name: selectedPatientOverviewData.name,
-    mrn: selectedPatient.mrn,
-    dob: selectedPatientOverviewData.dob,
-    age: selectedPatient.demographics.age,
-    gender: selectedPatient.demographics.gender,
-    pronouns: selectedPatient.demographics.pronouns,
-  } : undefined;
+  // Patient identity content for floating nav row (shown when overview collapsed)
+  const collapsedIdentityContent = selectedPatientOverviewData && selectedPatient ? (
+    <PatientIdentityHeader
+      name={selectedPatientOverviewData.name}
+      mrn={selectedPatient.mrn}
+      dob={selectedPatientOverviewData.dob}
+      age={selectedPatient.demographics.age}
+      gender={selectedPatient.demographics.gender}
+      pronouns={selectedPatient.demographics.pronouns}
+      variant="stacked"
+      showMenuButton={false}
+    />
+  ) : undefined;
 
   // Canvas pane internal header
   const canvasPaneHeader = (
@@ -981,10 +986,10 @@ export const CaptureView: React.FC = () => {
         overviewHeaderContent={viewMode === 'patient' && selectedOverviewHeaderContent ? selectedOverviewHeaderContent : undefined}
         canvasHeaderContent={viewMode === 'patient' && isViewingEncounterPatient ? canvasHeaderContent : undefined}
         scrolledCanvasContent={viewMode === 'patient' && isViewingEncounterPatient ? scrolledCanvasContent : undefined}
-        patientIdentity={viewMode === 'patient' && selectedPatientIdentity ? selectedPatientIdentity : undefined}
-        isToDoView={viewMode !== 'patient'}
-        todoTitle={currentCategory?.label}
-        todoCount={filteredTodoCount}
+        collapsedIdentityContent={viewMode === 'patient' && collapsedIdentityContent ? collapsedIdentityContent : undefined}
+        canvasViewMode={viewMode !== 'patient' ? 'list' : 'standard'}
+        canvasViewTitle={currentCategory?.label}
+        canvasViewCount={filteredTodoCount}
         searchQuery={todoSearchQuery}
         onSearchChange={setTodoSearchQuery}
         onBack={handleNavBack}
@@ -1140,8 +1145,15 @@ export const CaptureView: React.FC = () => {
                 }
               };
 
-              // Render context bar if we navigated from To-Do
-              const contextBar = todoNav.shouldShowContextBar ? (
+              // Render scope return bar (drill-through from cohort) or context bar (To-Do navigation).
+              // ScopeReturnBar takes precedence over ContextBar when both apply.
+              const contextBar = canPopScope && scopeOriginLabel ? (
+                <ScopeReturnBar
+                  originLabel={scopeOriginLabel}
+                  onReturn={popScope}
+                  testID="scope-return-bar"
+                />
+              ) : todoNav.shouldShowContextBar ? (
                 <ContextBar
                   sourceFilter={contextBarFilterLabel}
                   sourceCategoryId={todoNav.state?.categoryId || ''}

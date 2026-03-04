@@ -14,7 +14,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Search } from 'lucide-react';
 import { colors, spaceBetween, transitions, zIndex as zIndexTokens, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS, LAYOUT, typography } from '../../styles/foundations';
-import { PatientIdentityHeader } from './PatientIdentityHeader';
 
 // ============================================================================
 // Types
@@ -37,21 +36,15 @@ export interface FloatingNavRowProps {
   overviewHeaderContent?: React.ReactNode;
   /** Content for the canvas header section (contextual controls like ModeSelector) */
   canvasHeaderContent?: React.ReactNode;
-  /** Patient identity (shown in nav row when overview collapsed) */
-  patientIdentity?: {
-    name: string;
-    mrn: string;
-    dob: string;
-    age: number;
-    gender: string;
-    pronouns?: string;
-  };
-  /** Whether we're in To-Do view mode (hides overview pane controls) */
-  isToDoView?: boolean;
-  /** Title for To-Do view (e.g., "Tasks", "Inbox", "Messages", "Care") */
-  todoTitle?: string;
-  /** Count for To-Do view (shown as subtext) */
-  todoCount?: number;
+  /** Content shown in canvas zone when overview pane is collapsed.
+   *  CaptureView passes patient identity JSX. PopHealthView passes cohort identity JSX. */
+  collapsedIdentityContent?: React.ReactNode;
+  /** Controls which NavRow layout pattern renders: 'standard' (patient/encounter) or 'list' (To-Do) */
+  canvasViewMode?: 'standard' | 'list';
+  /** Title for list-mode views (e.g., "Tasks", "Inbox", "Messages", "Care") */
+  canvasViewTitle?: string;
+  /** Count for list-mode views (shown as subtext) */
+  canvasViewCount?: number;
   /** Search query for To-Do view */
   searchQuery?: string;
   /** Called when search query changes */
@@ -91,10 +84,10 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   overviewWidth,
   overviewHeaderContent,
   canvasHeaderContent,
-  patientIdentity,
-  isToDoView = false,
-  todoTitle,
-  todoCount,
+  collapsedIdentityContent,
+  canvasViewMode = 'standard',
+  canvasViewTitle,
+  canvasViewCount,
   searchQuery = '',
   onSearchChange,
   onBack,
@@ -141,10 +134,12 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   // Zone Styles - Aligned with content panes below
   // ============================================================================
 
+  const isListMode = canvasViewMode === 'list';
+
   // Determine where the menu button should render
-  // For To-Do view, always put menu button in left zone (no overview zone)
-  const menuBtnInLeftZone = isToDoView ? menuCollapsed : (menuCollapsed && overviewCollapsed);
-  const menuBtnInOverviewZone = isToDoView ? false : (menuCollapsed && !overviewCollapsed);
+  // For list view, always put menu button in left zone (no overview zone)
+  const menuBtnInLeftZone = isListMode ? menuCollapsed : (menuCollapsed && overviewCollapsed);
+  const menuBtnInOverviewZone = isListMode ? false : (menuCollapsed && !overviewCollapsed);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -184,15 +179,15 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   // Overview zone: Patient identity (when overview OPEN), width matches overview pane
   // Hidden completely for To-Do view
   const overviewZoneStyle: React.CSSProperties = {
-    display: isToDoView ? 'none' : 'flex',
+    display: isListMode ? 'none' : 'flex',
     alignItems: 'center',
     gap: spaceBetween.relatedCompact,
-    width: (isToDoView || overviewCollapsed) ? 0 : overviewWidth,
-    minWidth: (isToDoView || overviewCollapsed) ? 0 : overviewWidth,
-    maxWidth: (isToDoView || overviewCollapsed) ? 0 : overviewWidth,
+    width: (isListMode || overviewCollapsed) ? 0 : overviewWidth,
+    minWidth: (isListMode || overviewCollapsed) ? 0 : overviewWidth,
+    maxWidth: (isListMode || overviewCollapsed) ? 0 : overviewWidth,
     // Left padding: floatingInset for menu button alignment when it's in this zone, otherwise content padding
-    paddingLeft: (isToDoView || overviewCollapsed) ? 0 : (menuBtnInOverviewZone ? LAYOUT.floatingInset : LAYOUT.overviewContentPadding),
-    paddingRight: (isToDoView || overviewCollapsed) ? 0 : LAYOUT.overviewContentPadding,
+    paddingLeft: (isListMode || overviewCollapsed) ? 0 : (menuBtnInOverviewZone ? LAYOUT.floatingInset : LAYOUT.overviewContentPadding),
+    paddingRight: (isListMode || overviewCollapsed) ? 0 : LAYOUT.overviewContentPadding,
     transition: `all 250ms cubic-bezier(0.4, 0, 0.2, 1)`,
     overflow: 'hidden',
     flexShrink: 0,
@@ -209,7 +204,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
     gap: spaceBetween.related,
     // For To-Do view: padding only when menu is open (no overview pane to consider)
     // For patient view: padding when any pane is open
-    paddingLeft: isToDoView
+    paddingLeft: isListMode
       ? (menuCollapsed ? 0 : LAYOUT.canvasContentPadding)
       : ((menuCollapsed && overviewCollapsed) ? 0 : LAYOUT.canvasContentPadding),
     paddingRight: 16, // 16px gap before AI button
@@ -332,7 +327,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
               </button>
 
               {/* Overview toggle - Only in patient view (right of back button) */}
-              {!isToDoView && (
+              {!isListMode && (
                 <button
                   type="button"
                   style={glassButtonStyle}
@@ -356,26 +351,18 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
                 </button>
               )}
 
-              {/* Patient identity - shown inline when overview is collapsed (patient view only) */}
-              {!isToDoView && overviewCollapsed && patientIdentity && (
-                <PatientIdentityHeader
-                  name={patientIdentity.name}
-                  mrn={patientIdentity.mrn}
-                  dob={patientIdentity.dob}
-                  age={patientIdentity.age}
-                  gender={patientIdentity.gender}
-                  pronouns={patientIdentity.pronouns}
-                  variant="stacked"
-                  showMenuButton={false}
-                  style={{ marginLeft: LAYOUT.buttonGap }} // 12px gap from buttons
-                />
+              {/* Identity content - shown inline when overview is collapsed (standard view only) */}
+              {!isListMode && overviewCollapsed && collapsedIdentityContent && (
+                <div style={{ marginLeft: LAYOUT.buttonGap }}>
+                  {collapsedIdentityContent}
+                </div>
               )}
 
               {/* Encounter context — appears when canvas content scrolls past the in-canvas context bar */}
-              {!isToDoView && scrolledCanvasContent && (
+              {!isListMode && scrolledCanvasContent && (
                 <>
                   {/* Vertical divider when patient identity is also showing */}
-                  {overviewCollapsed && patientIdentity && (
+                  {overviewCollapsed && collapsedIdentityContent && (
                     <div style={{
                       width: 1,
                       height: 28,
@@ -384,14 +371,14 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
                       marginLeft: spaceBetween.relatedCompact,
                     }} />
                   )}
-                  <div style={{ marginLeft: overviewCollapsed && patientIdentity ? spaceBetween.relatedCompact : LAYOUT.buttonGap }}>
+                  <div style={{ marginLeft: overviewCollapsed && collapsedIdentityContent ? spaceBetween.relatedCompact : LAYOUT.buttonGap }}>
                     {scrolledCanvasContent}
                   </div>
                 </>
               )}
 
               {/* To-Do view title and count */}
-              {isToDoView && todoTitle && (
+              {isListMode && canvasViewTitle && (
                 <div style={{ marginLeft: LAYOUT.buttonGap, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <span style={{
                     fontSize: 16,
@@ -400,16 +387,16 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
                     color: colors.fg.neutral.primary,
                     lineHeight: 1.2,
                   }}>
-                    {todoTitle}
+                    {canvasViewTitle}
                   </span>
-                  {todoCount !== undefined && (
+                  {canvasViewCount !== undefined && (
                     <span style={{
                       fontSize: 12,
                       fontFamily: typography.fontFamily.sans,
                       color: colors.fg.neutral.secondary,
                       lineHeight: 1.3,
                     }}>
-                      {todoCount} {todoCount === 1 ? 'item' : 'items'}
+                      {canvasViewCount} {canvasViewCount === 1 ? 'item' : 'items'}
                     </span>
                   )}
                 </div>
@@ -419,7 +406,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
             {/* Right side: Contextual controls - RIGHT ALIGNED */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: spaceBetween.related }}>
               {/* To-Do view: Glassmorphic search bar */}
-              {isToDoView && (
+              {isListMode && (
                 <div
                   style={{
                     display: 'flex',
@@ -457,7 +444,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
               )}
 
               {/* Patient view: ModeSelector or other canvas header content */}
-              {!isToDoView && canvasHeaderContent}
+              {!isListMode && canvasHeaderContent}
             </div>
           </>
         )}

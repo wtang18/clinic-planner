@@ -117,17 +117,19 @@ export function useEncounterLayout(
     });
   }, [state.session.mode, handleModeChange]);
 
-  // Patient identity for floating nav row
-  const patientIdentity = useMemo(() => {
+  // Patient identity content for floating nav row (shown when overview collapsed)
+  const collapsedIdentityContent = useMemo(() => {
     if (!patientOverviewData || !patient) return undefined;
-    return {
+    return React.createElement(PatientIdentityHeader, {
       name: patientOverviewData.name,
       mrn: patient.mrn,
       dob: patientOverviewData.dob,
       age: patient.demographics.age,
       gender: patient.demographics.gender,
       pronouns: patient.demographics.pronouns,
-    };
+      variant: 'stacked' as const,
+      showMenuButton: false,
+    });
   }, [patientOverviewData, patient]);
 
   // AI control surface (BottomBarContainer)
@@ -204,7 +206,7 @@ export function useEncounterLayout(
     overviewPane,
     overviewHeaderContent,
     canvasHeaderContent,
-    patientIdentity,
+    collapsedIdentityContent,
     aiControlSurface,
     patientName,
     patientOverviewData,

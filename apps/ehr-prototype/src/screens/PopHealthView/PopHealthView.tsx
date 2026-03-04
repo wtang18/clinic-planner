@@ -35,7 +35,7 @@ const VIEW_SEGMENTS: Segment<ActiveView>[] = [
 
 const PopHealthViewInner: React.FC = () => {
   const { state, dispatch } = usePopHealth();
-  const { goBack } = useNavigation();
+  const { goBack, canPopScope, popScope } = useNavigation();
 
   const handleViewChange = useCallback((view: ActiveView) => {
     dispatch({ type: 'VIEW_CHANGED', view });
@@ -95,7 +95,7 @@ const PopHealthViewInner: React.FC = () => {
       canvasPane={<PopHealthCanvas />}
       canvasHeaderContent={canvasHeaderContent}
       workspaceContent={workspaceContent}
-      onBack={goBack}
+      onBack={canPopScope ? popScope : goBack}
       testID="pop-health-view"
     />
   );

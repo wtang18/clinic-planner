@@ -32,110 +32,45 @@ Eight phases, ordered by dependency. Phase 0 is the architectural prerequisite. 
 
 ---
 
-## Phase 0: AppShell Scope Infrastructure
+## Phase 0: Scope Infrastructure (Pragmatic Approach) ✅
 
-**Goal:** Extract the encounter workspace from owning the layout. Establish the scope system so both encounter and cohort scopes plug into the same shell.
+**Status:** COMPLETE
+**Approach:** Pragmatic — each workspace continues to own its own AdaptiveLayout. The scope system is a layer on top of NavigationContext that manages a scope stack and translates scopes to screen navigation. CaptureView extraction deferred.
 
-This is the foundational architectural change. Everything else depends on it.
+### What was built:
 
-### 0a. Scope Type Definitions
+**0a. Scope Type Definitions** — `src/types/scope.ts` (NEW)
+- `Scope` discriminated union: `hub | todo | cohort | patient`
+- `ScopeStackEntry` with `scope`, `originLabel`, `preservedState`
+- `CohortViewState` and `EncounterViewState` for state preservation across drill-through
 
-**File:** `src/types/scope.ts` (NEW)
+**0b. Scope Stack in NavigationContext** — `src/navigation/NavigationContext.tsx` (MODIFIED)
+- `navigateToScope(scope, { mode, originLabel, preserveState })` — replace or push
+- `popScope()` — pop stack, navigate to previous scope, restore preserved state
+- `currentScope` — derived from current NavigationState
+- `canPopScope` — controls return affordance visibility
+- `scopeOriginLabel` — label for return bar display
+- `restoredState` / `clearRestoredState()` — explicit state restoration after pop
 
-```ts
-type Scope =
-  | { type: 'hub'; hubId: 'home' | 'visits' }
-  | { type: 'todo'; categoryId: string; filterId: string }
-  | { type: 'cohort'; cohortId: string; pathwayId?: string; preserved?: CohortViewState }
-  | { type: 'patient'; patientId: string; encounterId?: string; preserved?: EncounterViewState }
+**0c. NavRow Prop Generalization** — `FloatingNavRow.tsx` + `AdaptiveLayout.tsx` (MODIFIED)
+- `patientIdentity` → `collapsedIdentityContent: ReactNode` (caller builds JSX)
+- `isToDoView` → `canvasViewMode: 'standard' | 'list'`
+- `todoTitle` → `canvasViewTitle`
+- `todoCount` → `canvasViewCount`
 
-interface ScopeStackEntry {
-  scope: Scope;
-  origin?: { label: string; scopeIndex: number };
-}
-```
+**0d. ScopeReturnBar** — `src/components/navigation/ScopeReturnBar.tsx` (NEW)
+- Canvas top bar with `← originLabel`, shown when `canPopScope` is true
+- Takes precedence over ContextBar in CaptureView
 
-### 0b. ScopeManager
+**0e. Workspace Wiring**
+- CaptureView: renders ScopeReturnBar when `canPopScope`, builds `collapsedIdentityContent` as JSX
+- PopHealthView: `onBack` uses `popScope()` if `canPopScope`, else `goBack()`
+- DemoLauncher: "Dr. Chen's Panel" uses `navigateToScope({ type: 'cohort' })`
+- AppRouter: passes `cohortId` from params to PopHealthView
 
-**File:** `src/navigation/ScopeManager.tsx` (NEW) — or extend existing `NavigationContext.tsx`
-
-Core operations:
-- `navigateToScope(scope, { mode: 'replace' | 'push' })` — replace current scope or push onto stack
-- `popScope()` — return to previous scope, restoring preserved state
-- `currentScope` — the active scope at top of stack
-- `canPop` — whether the stack has depth > 1 (controls return affordance visibility)
-
-The scope stack enables drill-through: cohort → patient → back to cohort with state preserved.
-
-### 0c. CaptureView Extraction
-
-**Currently:** `CaptureView` (or equivalent encounter host) composes `AdaptiveLayout` with encounter-specific content in each pane slot. The FloatingNavRow receives patient-specific props.
-
-**After:** The AppShell owns `AdaptiveLayout`. Thin scope routers decide what content fills each slot based on `currentScope.type`:
-
-```tsx
-// AppShell (persistent)
-<AdaptiveLayout
-  menuPane={<MenuPane />}                    // Already shared
-  overviewPane={<ScopeOverview />}            // NEW: routes by scope
-  canvasPane={<ScopeCanvas />}                // NEW: routes by scope
-  canvasHeaderContent={<ScopeHeader />}       // NEW: routes by scope
-  aiControlSurface={<ScopeAIBar />}           // NEW: routes by scope
-/>
-```
-
-Each scope router is a thin switch:
-```tsx
-function ScopeCanvas() {
-  const { currentScope } = useScopeManager();
-  switch (currentScope.type) {
-    case 'patient': return <EncounterCanvas />;
-    case 'cohort': return <PopHealthCanvas />;
-    case 'hub': return <HubCanvas />;
-    case 'todo': return <TodoCanvas />;
-  }
-}
-```
-
-`EncounterCanvas` is what `CaptureView` currently renders in the canvas slot — extracted into a scope-specific component. The key change: CaptureView no longer owns AdaptiveLayout; it becomes the content that fills the layout's slots when `scope.type === 'patient'`.
-
-### 0d. FloatingNavRow Generalization
-
-**File:** `src/components/layout/FloatingNavRow.tsx` (MODIFY)
-
-Add `workspaceContent` slot prop that replaces patient-identity-specific rendering when provided. When `workspaceContent` is absent, existing encounter behavior is unchanged. Zero regression risk.
-
-```ts
-// NEW prop — full left+center zone override
-workspaceContent?: React.ReactNode;
-
-// NEW prop — mode selector in right zone
-canvasHeaderContent?: React.ReactNode;
-```
-
-Cohort scope provides `workspaceContent` with cohort label + collapsible identity. Patient scope continues using existing patient identity props.
-
-### 0e. Return Affordance
-
-When `canPop` is true (stack depth > 1), the canvas top bar shows a return affordance:
-
-```
-┌──────────────────────────────────────────────────────┐
-│  ← Diabetes T2                    [canvas controls]  │
-└──────────────────────────────────────────────────────┘
-```
-
-Tapping calls `popScope()`, which restores the previous scope from the stack (including preserved view state).
-
-### 0f. Verification
-
-- `npx tsc --noEmit` — 0 errors
-- `npm run test:run` — all tests pass
-- Encounter mode works identically (now rendered via scope router, but same components)
-- Scope stack operations work (push/pop/replace)
-- DemoLauncher still launches encounter scenarios correctly
-
-**Estimated effort:** 4-5 hours (largest prerequisite — CaptureView extraction is the bulk)
+### What's deferred:
+- **CaptureView extraction** — full extraction where AppShell owns AdaptiveLayout
+- **Scope routers** (ScopeCanvas, ScopeOverview) — not needed while each workspace owns its layout
 
 ---
 
@@ -488,7 +423,7 @@ Complete user journey test:
 
 | Phase | Focus | Key Change | Effort | Dependencies |
 |-------|-------|-----------|--------|-------------|
-| 0 | AppShell scope infrastructure | CaptureView extraction, ScopeManager, scope routers | 4-5 hrs | None |
+| 0 | Scope infrastructure (pragmatic) | Scope stack in NavigationContext, NavRow generalization, ScopeReturnBar | ✅ Done | None |
 | 1 | Types + data + React Flow setup | Lifecycle states, terminology, React Flow dependency | 2-3 hrs | Phase 0 |
 | 2 | Menu integration | "My Patients" section in MenuPane, scenario-aware | 2-3 hrs | Phase 0 |
 | 3 | Center pane | Identity parity, Overview/Activity, branch-only tree | 3-4 hrs | Phase 1 |

@@ -38,21 +38,14 @@ export interface AdaptiveLayoutProps {
   workspaceContent?: React.ReactNode;
   /** Custom content rendered in the menu pane header (left of close button) */
   menuPaneHeaderContent?: React.ReactNode;
-  /** Patient identity info (shown in nav row when overview collapsed) */
-  patientIdentity?: {
-    name: string;
-    mrn: string;
-    dob: string;
-    age: number;
-    gender: string;
-    pronouns?: string;
-  };
-  /** Whether we're in To-Do view mode (hides overview pane controls) */
-  isToDoView?: boolean;
-  /** Title for To-Do view (e.g., "Tasks", "Inbox", "Messages", "Care") */
-  todoTitle?: string;
-  /** Count for To-Do view (shown as subtext) */
-  todoCount?: number;
+  /** Content shown in nav row when overview collapsed (e.g., patient identity JSX) */
+  collapsedIdentityContent?: React.ReactNode;
+  /** Controls which NavRow layout pattern renders: 'standard' or 'list' */
+  canvasViewMode?: 'standard' | 'list';
+  /** Title for list-mode views (e.g., "Tasks", "Inbox", "Messages", "Care") */
+  canvasViewTitle?: string;
+  /** Count for list-mode views (shown as subtext) */
+  canvasViewCount?: number;
   /** Search query for To-Do view */
   searchQuery?: string;
   /** Called when search query changes */
@@ -93,10 +86,10 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   scrolledCanvasContent,
   workspaceContent,
   menuPaneHeaderContent,
-  patientIdentity,
-  isToDoView = false,
-  todoTitle,
-  todoCount,
+  collapsedIdentityContent,
+  canvasViewMode = 'standard',
+  canvasViewTitle,
+  canvasViewCount,
   searchQuery = '',
   onSearchChange,
   onBack,
@@ -257,10 +250,10 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
           canvasHeaderContent={canvasHeaderContent}
           scrolledCanvasContent={scrolledCanvasContent}
           workspaceContent={workspaceContent}
-          patientIdentity={patientIdentity}
-          isToDoView={isToDoView}
-          todoTitle={todoTitle}
-          todoCount={todoCount}
+          collapsedIdentityContent={collapsedIdentityContent}
+          canvasViewMode={canvasViewMode}
+          canvasViewTitle={canvasViewTitle}
+          canvasViewCount={canvasViewCount}
           searchQuery={searchQuery}
           onSearchChange={onSearchChange}
           onBack={onBack}

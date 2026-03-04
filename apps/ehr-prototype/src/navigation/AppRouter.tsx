@@ -61,6 +61,7 @@ const EncounterScreen: React.FC = () => <CaptureView />;
 
 const ScreenRouter: React.FC<{ screen: Screen }> = ({ screen }) => {
   const encounterId = useEncounterId();
+  const { state } = useNavigation();
 
   switch (screen) {
     case 'home':
@@ -81,7 +82,7 @@ const ScreenRouter: React.FC<{ screen: Screen }> = ({ screen }) => {
       return <PatientOverview />;
 
     case 'population-health':
-      return <PopHealthView />;
+      return <PopHealthView initialCohortId={state.params.cohortId || 'coh-diabetes'} />;
 
     case 'settings':
       return (

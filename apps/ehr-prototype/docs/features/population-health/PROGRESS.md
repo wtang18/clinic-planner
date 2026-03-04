@@ -1,6 +1,6 @@
 # Population Health Workspace — Progress Tracker
 
-> **Status:** Active Design — Architecture Phase (Rev 2)
+> **Status:** Active Build — Phase 0 Complete
 > **Last Updated:** 2026-03-03
 > **Related Docs:** [Design Spec](./DESIGN-SPEC.md) | [Phased Plan](./PHASED-PLAN.md) | [AppShell Scope System](../../architecture/appshell-scope-system.md)
 
@@ -10,7 +10,7 @@
 
 | Phase | Name | Status | Notes |
 |-------|------|--------|-------|
-| 0 | AppShell Scope Infrastructure | Not started | CaptureView extraction, ScopeManager, scope routers |
+| 0 | Scope Infrastructure (Pragmatic) | **Complete** | Scope stack in NavigationContext, NavRow generalization, ScopeReturnBar. CaptureView extraction deferred. |
 | 1 | Types + Mock Data + React Flow | Not started | Update existing types/data, add React Flow dependency |
 | 2 | Menu Integration ("My Patients") | Not started | Cohort tree into MenuPane, scenario-aware |
 | 3 | Center Pane — Cohort Context | Not started | Identity parity, Overview/Activity, branch-only tree |

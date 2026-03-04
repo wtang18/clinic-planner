@@ -8,7 +8,6 @@ import React from 'react';
 import { Play, User, Stethoscope, Users } from 'lucide-react';
 import { useNavigation } from './NavigationContext';
 import { DEMO_ENCOUNTERS, type DemoEncounterId } from './routes';
-import type { Screen } from './NavigationContext';
 import { Card } from '../components/primitives/Card';
 import { Button } from '../components/primitives/Button';
 import { CardIconContainer } from '../components/primitives/CardIconContainer';
@@ -163,14 +162,14 @@ const PopHealthCard: React.FC<{ onLaunch: () => void }> = ({ onLaunch }) => {
 // ============================================================================
 
 export const DemoLauncher: React.FC = () => {
-  const { navigateToEncounter, navigate } = useNavigation();
+  const { navigateToEncounter, navigateToScope } = useNavigation();
 
   const handleLaunch = (scenarioId: DemoEncounterId) => {
     navigateToEncounter(scenarioId, 'capture');
   };
 
   const handlePopHealthLaunch = () => {
-    navigate('population-health');
+    navigateToScope({ type: 'cohort', cohortId: 'coh-diabetes' }, { mode: 'replace' });
   };
 
   return (
