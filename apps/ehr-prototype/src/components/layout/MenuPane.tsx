@@ -9,7 +9,7 @@
  * link in UC scenarios. Selection dispatches navigateToScope for cohort navigation.
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   Calendar,
@@ -23,6 +23,7 @@ import {
   CheckCircle,
   ArrowRightLeft,
   History,
+  ChevronRight,
 } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions, LAYOUT } from '../../styles/foundations';
 import { MenuSection } from './MenuSection';
@@ -48,6 +49,13 @@ const COHORT_ICONS: Record<string, React.ReactNode> = {
   'coh-rising-risk': <TrendingUp size={16} />,
   'coh-stable': <CheckCircle size={16} />,
   'coh-recent-discharge': <ArrowRightLeft size={16} />,
+};
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  'grp-chronic': <Activity size={16} />,
+  'grp-preventive': <Shield size={16} />,
+  'grp-risk': <AlertTriangle size={16} />,
+  'grp-transitions': <ArrowRightLeft size={16} />,
 };
 
 // ============================================================================
@@ -136,6 +144,24 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
   testID,
 }) => {
   const [isSearchFocused, setIsSearchFocused] = React.useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [hoveredGroupId, setHoveredGroupId] = useState<string | null>(null);
+
+  // Auto-expand group when selectedCohortId matches a child
+  useEffect(() => {
+    if (!selectedCohortId) return;
+    for (const group of COHORT_GROUPS) {
+      if (group.cohortIds.includes(selectedCohortId)) {
+        setExpandedGroups((prev) => {
+          if (prev.has(group.id)) return prev;
+          const next = new Set(prev);
+          next.add(group.id);
+          return next;
+        });
+        break;
+      }
+    }
+  }, [selectedCohortId]);
 
   // Parse selected To-Do filter
   const [selectedCategoryId, selectedFilterId] = selectedToDoFilter?.split('/') ?? [null, null];
@@ -286,7 +312,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                 testID="my-patients-recent"
               />
 
-              {/* Category groups with cohort items */}
+              {/* Category groups with cohort items — expandable L1 items */}
               {COHORT_GROUPS.map((group) => {
                 const groupCohorts = COHORTS.filter(
                   (c) => group.cohortIds.includes(c.id)
@@ -294,28 +320,140 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                 const groupCount = groupCohorts.reduce(
                   (sum, c) => sum + c.patientCount, 0
                 );
+                const isGroupExpanded = expandedGroups.has(group.id);
+                const isGroupSelected = selectedCohortId === group.id;
+                const isGroupHovered = hoveredGroupId === group.id;
 
                 return (
-                  <MenuSection
-                    key={group.id}
-                    title={group.label}
-                    collapsible
-                    defaultCollapsed
-                    collapsedBadge={groupCount}
-                    testID={`cohort-group-${group.id}`}
-                  >
-                    {groupCohorts.map((cohort) => (
+                  <div key={group.id} data-testid={`cohort-group-${group.id}`}>
+                    {/* Category row — clickable to expand + navigate to overview */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: spaceBetween.relatedCompact,
+                        padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+                        borderRadius: borderRadius.sm,
+                        cursor: 'pointer',
+                        transition: `background-color ${transitions.fast}`,
+                        backgroundColor: isGroupSelected
+                          ? colors.bg.accent.low
+                          : isGroupHovered
+                          ? colors.bg.neutral.subtle
+                          : 'transparent',
+                        userSelect: 'none',
+                      }}
+                      onClick={() => {
+                        // Expand if collapsed, navigate to category overview
+                        setExpandedGroups((prev) => {
+                          const next = new Set(prev);
+                          next.add(group.id);
+                          return next;
+                        });
+                        onCohortSelect?.(group.id);
+                      }}
+                      onMouseEnter={() => setHoveredGroupId(group.id)}
+                      onMouseLeave={() => setHoveredGroupId(null)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setExpandedGroups((prev) => {
+                            const next = new Set(prev);
+                            next.add(group.id);
+                            return next;
+                          });
+                          onCohortSelect?.(group.id);
+                        }
+                      }}
+                    >
+                      <span style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 16,
+                        height: 16,
+                        color: isGroupSelected ? colors.fg.accent.primary : colors.fg.neutral.secondary,
+                        flexShrink: 0,
+                      }}>
+                        {CATEGORY_ICONS[group.id] || <Users size={16} />}
+                      </span>
+                      <span style={{
+                        flex: 1,
+                        fontSize: 14,
+                        fontFamily: typography.fontFamily.sans,
+                        fontWeight: typography.fontWeight.regular,
+                        color: isGroupSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>
+                        {group.label}
+                      </span>
+                      {groupCount > 0 && (
+                        <span style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: 20,
+                          height: 20,
+                          padding: `0 ${spaceAround.nudge6}px`,
+                          backgroundColor: colors.bg.attention.subtle,
+                          color: colors.fg.attention.primary,
+                          borderRadius: borderRadius.full,
+                          fontSize: 11,
+                          fontFamily: typography.fontFamily.sans,
+                          fontWeight: typography.fontWeight.semibold,
+                          flexShrink: 0,
+                        }}>
+                          {groupCount > 99 ? '99+' : groupCount}
+                        </span>
+                      )}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 16,
+                          height: 16,
+                          color: colors.fg.neutral.spotReadable,
+                          transform: isGroupExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                          transition: `transform ${transitions.fast}`,
+                          flexShrink: 0,
+                          marginLeft: 'auto',
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedGroups((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(group.id)) {
+                              next.delete(group.id);
+                            } else {
+                              next.add(group.id);
+                            }
+                            return next;
+                          });
+                        }}
+                      >
+                        <ChevronRight size={14} />
+                      </div>
+                    </div>
+
+                    {/* Children — indented cohort items */}
+                    {isGroupExpanded && groupCohorts.map((cohort) => (
                       <MenuNavItem
                         key={cohort.id}
                         icon={COHORT_ICONS[cohort.id] || <Users size={16} />}
                         label={cohort.name}
                         badge={cohort.patientCount}
                         isSelected={selectedCohortId === cohort.id}
+                        indented
                         onClick={() => onCohortSelect?.(cohort.id)}
                         testID={`cohort-${cohort.id}`}
                       />
                     ))}
-                  </MenuSection>
+                  </div>
                 );
               })}
             </>

@@ -113,11 +113,6 @@ function deriveScope(navState: NavigationState): Scope | null {
         patientId: navState.patientId || '',
         encounterId: navState.encounterId || undefined,
       };
-    case 'population-health':
-      return {
-        type: 'cohort',
-        cohortId: navState.params.cohortId || 'coh-diabetes',
-      };
     case 'demo':
     case 'home':
       return { type: 'hub', hubId: 'home' };
@@ -133,7 +128,7 @@ function scopeToNavigation(scope: Scope): { screen: Screen; params: Record<strin
       return { screen: 'demo', params: {} };
     case 'cohort':
       return {
-        screen: 'population-health',
+        screen: 'encounter',
         params: { cohortId: scope.cohortId, ...(scope.pathwayId ? { pathwayId: scope.pathwayId } : {}) },
       };
     case 'patient':

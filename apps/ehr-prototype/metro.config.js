@@ -25,7 +25,19 @@ config.resolver.extraNodeModules = {
   'react-native-web': path.resolve(projectRoot, 'node_modules/react-native-web'),
 };
 
-// 4. Ensure we don't have duplicate React instances by blocking other paths
+// 4. Add "react-native" condition for web platform resolution
+// Zustand's ESM build (esm/vanilla.mjs) uses import.meta.env which Hermes
+// doesn't support. The "react-native" export condition resolves to the CJS
+// build instead, avoiding the "Cannot use import.meta outside a module" error.
+config.resolver.unstable_conditionsByPlatform = {
+  ...config.resolver.unstable_conditionsByPlatform,
+  web: [
+    'react-native',
+    ...(config.resolver.unstable_conditionsByPlatform?.web ?? []),
+  ],
+};
+
+// 5. Ensure we don't have duplicate React instances by blocking other paths
 config.resolver.blockList = [
   // Block react from other workspaces
   /apps\/(?!ehr-prototype).*\/node_modules\/react\//,
