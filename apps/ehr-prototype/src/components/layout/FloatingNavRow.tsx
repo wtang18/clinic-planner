@@ -62,6 +62,8 @@ export interface FloatingNavRowProps {
   showBackButton?: boolean;
   /** Encounter context shown in canvas zone when user scrolls past context bar */
   scrolledCanvasContent?: React.ReactNode;
+  /** Full left+center zone override for non-encounter workspaces (replaces patient-specific content) */
+  workspaceContent?: React.ReactNode;
   /** Height of the header row */
   height?: number;
   /** Custom styles */
@@ -98,6 +100,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   onBack,
   showBackButton = false,
   scrolledCanvasContent,
+  workspaceContent,
   height = DEFAULT_HEIGHT,
   style,
   testID,
@@ -278,157 +281,186 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
 
       {/* ================================================================ */}
       {/* CANVAS ZONE: Controls depend on view mode                         */}
+      {/* Workspace override: workspaceContent replaces all patient-specific */}
       {/* Patient view: [<] [◧] + patient identity (collapsed) + ModeSelector */}
       {/* To-Do view: [<] + Search bar (right-aligned)                      */}
       {/* ================================================================ */}
       <div style={canvasZoneStyle}>
-        {/* Left side: Back button + Overview toggle (patient only) + Patient identity (when collapsed) */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: LAYOUT.buttonGap, // 12px between buttons
-        }}>
-          {/* Back chevron - ALWAYS in canvas zone */}
-          <button
-            type="button"
-            style={glassButtonStyle}
-            onClick={onBack || (() => {/* TODO: Canvas back navigation */})}
-            onMouseEnter={(e) => handleGlassButtonHover(e, true)}
-            onMouseLeave={(e) => handleGlassButtonHover(e, false)}
-            aria-label="Go back"
-            title="Go back"
-          >
-            <ChevronLeft size={20} />
-          </button>
+        {workspaceContent ? (
+          /* Workspace-driven content: full left+center zone override */
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: LAYOUT.buttonGap, flex: 1 }}>
+              {/* Back chevron */}
+              <button
+                type="button"
+                style={glassButtonStyle}
+                onClick={onBack || (() => {})}
+                onMouseEnter={(e) => handleGlassButtonHover(e, true)}
+                onMouseLeave={(e) => handleGlassButtonHover(e, false)}
+                aria-label="Go back"
+                title="Go back"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              {workspaceContent}
+            </div>
+            {/* Right side: canvas header content */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: spaceBetween.related }}>
+              {canvasHeaderContent}
+            </div>
+          </>
+        ) : (
+          /* Default encounter/todo content */
+          <>
+            {/* Left side: Back button + Overview toggle (patient only) + Patient identity (when collapsed) */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: LAYOUT.buttonGap, // 12px between buttons
+            }}>
+              {/* Back chevron - ALWAYS in canvas zone */}
+              <button
+                type="button"
+                style={glassButtonStyle}
+                onClick={onBack || (() => {/* TODO: Canvas back navigation */})}
+                onMouseEnter={(e) => handleGlassButtonHover(e, true)}
+                onMouseLeave={(e) => handleGlassButtonHover(e, false)}
+                aria-label="Go back"
+                title="Go back"
+              >
+                <ChevronLeft size={20} />
+              </button>
 
-          {/* Overview toggle - Only in patient view (right of back button) */}
-          {!isToDoView && (
-            <button
-              type="button"
-              style={glassButtonStyle}
-              onClick={onToggleOverview}
-              onMouseEnter={(e) => handleGlassButtonHover(e, true)}
-              onMouseLeave={(e) => handleGlassButtonHover(e, false)}
-              aria-label={overviewCollapsed ? 'Show patient overview' : 'Hide patient overview'}
-              title={overviewCollapsed ? 'Show patient overview' : 'Hide patient overview'}
-            >
-              {/* Sidebar icon with triangle - direction changes based on state */}
-              <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1.5" />
-                {/* Triangle: right (expand) when collapsed, left (collapse) when open */}
-                {overviewCollapsed ? (
-                  <path d="M11 8L8 5.5V10.5L11 8Z" fill="currentColor" />
-                ) : (
-                  <path d="M8 8L11 5.5V10.5L8 8Z" fill="currentColor" />
-                )}
-              </svg>
-            </button>
-          )}
-
-          {/* Patient identity - shown inline when overview is collapsed (patient view only) */}
-          {!isToDoView && overviewCollapsed && patientIdentity && (
-            <PatientIdentityHeader
-              name={patientIdentity.name}
-              mrn={patientIdentity.mrn}
-              dob={patientIdentity.dob}
-              age={patientIdentity.age}
-              gender={patientIdentity.gender}
-              pronouns={patientIdentity.pronouns}
-              variant="stacked"
-              showMenuButton={false}
-              style={{ marginLeft: LAYOUT.buttonGap }} // 12px gap from buttons
-            />
-          )}
-
-          {/* Encounter context — appears when canvas content scrolls past the in-canvas context bar */}
-          {!isToDoView && scrolledCanvasContent && (
-            <>
-              {/* Vertical divider when patient identity is also showing */}
-              {overviewCollapsed && patientIdentity && (
-                <div style={{
-                  width: 1,
-                  height: 28,
-                  backgroundColor: colors.border.neutral.low,
-                  flexShrink: 0,
-                  marginLeft: spaceBetween.relatedCompact,
-                }} />
+              {/* Overview toggle - Only in patient view (right of back button) */}
+              {!isToDoView && (
+                <button
+                  type="button"
+                  style={glassButtonStyle}
+                  onClick={onToggleOverview}
+                  onMouseEnter={(e) => handleGlassButtonHover(e, true)}
+                  onMouseLeave={(e) => handleGlassButtonHover(e, false)}
+                  aria-label={overviewCollapsed ? 'Show patient overview' : 'Hide patient overview'}
+                  title={overviewCollapsed ? 'Show patient overview' : 'Hide patient overview'}
+                >
+                  {/* Sidebar icon with triangle - direction changes based on state */}
+                  <svg width="20" height="20" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                    <line x1="5.5" y1="1" x2="5.5" y2="15" stroke="currentColor" strokeWidth="1.5" />
+                    {/* Triangle: right (expand) when collapsed, left (collapse) when open */}
+                    {overviewCollapsed ? (
+                      <path d="M11 8L8 5.5V10.5L11 8Z" fill="currentColor" />
+                    ) : (
+                      <path d="M8 8L11 5.5V10.5L8 8Z" fill="currentColor" />
+                    )}
+                  </svg>
+                </button>
               )}
-              <div style={{ marginLeft: overviewCollapsed && patientIdentity ? spaceBetween.relatedCompact : LAYOUT.buttonGap }}>
-                {scrolledCanvasContent}
-              </div>
-            </>
-          )}
 
-          {/* To-Do view title and count */}
-          {isToDoView && todoTitle && (
-            <div style={{ marginLeft: LAYOUT.buttonGap, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{
-                fontSize: 16,
-                fontWeight: 600,
-                fontFamily: typography.fontFamily.sans,
-                color: colors.fg.neutral.primary,
-                lineHeight: 1.2,
-              }}>
-                {todoTitle}
-              </span>
-              {todoCount !== undefined && (
-                <span style={{
-                  fontSize: 12,
-                  fontFamily: typography.fontFamily.sans,
-                  color: colors.fg.neutral.secondary,
-                  lineHeight: 1.3,
-                }}>
-                  {todoCount} {todoCount === 1 ? 'item' : 'items'}
-                </span>
+              {/* Patient identity - shown inline when overview is collapsed (patient view only) */}
+              {!isToDoView && overviewCollapsed && patientIdentity && (
+                <PatientIdentityHeader
+                  name={patientIdentity.name}
+                  mrn={patientIdentity.mrn}
+                  dob={patientIdentity.dob}
+                  age={patientIdentity.age}
+                  gender={patientIdentity.gender}
+                  pronouns={patientIdentity.pronouns}
+                  variant="stacked"
+                  showMenuButton={false}
+                  style={{ marginLeft: LAYOUT.buttonGap }} // 12px gap from buttons
+                />
+              )}
+
+              {/* Encounter context — appears when canvas content scrolls past the in-canvas context bar */}
+              {!isToDoView && scrolledCanvasContent && (
+                <>
+                  {/* Vertical divider when patient identity is also showing */}
+                  {overviewCollapsed && patientIdentity && (
+                    <div style={{
+                      width: 1,
+                      height: 28,
+                      backgroundColor: colors.border.neutral.low,
+                      flexShrink: 0,
+                      marginLeft: spaceBetween.relatedCompact,
+                    }} />
+                  )}
+                  <div style={{ marginLeft: overviewCollapsed && patientIdentity ? spaceBetween.relatedCompact : LAYOUT.buttonGap }}>
+                    {scrolledCanvasContent}
+                  </div>
+                </>
+              )}
+
+              {/* To-Do view title and count */}
+              {isToDoView && todoTitle && (
+                <div style={{ marginLeft: LAYOUT.buttonGap, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <span style={{
+                    fontSize: 16,
+                    fontWeight: 600,
+                    fontFamily: typography.fontFamily.sans,
+                    color: colors.fg.neutral.primary,
+                    lineHeight: 1.2,
+                  }}>
+                    {todoTitle}
+                  </span>
+                  {todoCount !== undefined && (
+                    <span style={{
+                      fontSize: 12,
+                      fontFamily: typography.fontFamily.sans,
+                      color: colors.fg.neutral.secondary,
+                      lineHeight: 1.3,
+                    }}>
+                      {todoCount} {todoCount === 1 ? 'item' : 'items'}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* Right side: Contextual controls - RIGHT ALIGNED */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: spaceBetween.related }}>
-          {/* To-Do view: Glassmorphic search bar */}
-          {isToDoView && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                height: GLASS_BUTTON_HEIGHT,
-                width: 280,
-                ...glass.button,
-                borderRadius: GLASS_BUTTON_RADIUS,
-                paddingLeft: 12,
-                paddingRight: 12,
-                gap: 8,
-                transition: `all ${transitions.fast}`,
-                border: isSearchFocused ? `1px solid ${colors.border.accent.medium}` : glass.button.border,
-              }}
-            >
-              <Search size={16} color={colors.fg.neutral.secondary} style={{ flexShrink: 0 }} />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  background: 'transparent',
-                  outline: 'none',
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.sans,
-                  color: colors.fg.neutral.primary,
-                }}
-              />
+            {/* Right side: Contextual controls - RIGHT ALIGNED */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: spaceBetween.related }}>
+              {/* To-Do view: Glassmorphic search bar */}
+              {isToDoView && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: GLASS_BUTTON_HEIGHT,
+                    width: 280,
+                    ...glass.button,
+                    borderRadius: GLASS_BUTTON_RADIUS,
+                    paddingLeft: 12,
+                    paddingRight: 12,
+                    gap: 8,
+                    transition: `all ${transitions.fast}`,
+                    border: isSearchFocused ? `1px solid ${colors.border.accent.medium}` : glass.button.border,
+                  }}
+                >
+                  <Search size={16} color={colors.fg.neutral.secondary} style={{ flexShrink: 0 }} />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    style={{
+                      flex: 1,
+                      border: 'none',
+                      background: 'transparent',
+                      outline: 'none',
+                      fontSize: 13,
+                      fontFamily: typography.fontFamily.sans,
+                      color: colors.fg.neutral.primary,
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Patient view: ModeSelector or other canvas header content */}
+              {!isToDoView && canvasHeaderContent}
             </div>
-          )}
-
-          {/* Patient view: ModeSelector or other canvas header content */}
-          {!isToDoView && canvasHeaderContent}
-        </div>
+          </>
+        )}
       </div>
 
     </header>

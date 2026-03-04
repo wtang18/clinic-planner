@@ -24,6 +24,7 @@ export type Screen =
   | 'demo'
   | 'encounter'
   | 'patient'
+  | 'population-health'
   | 'settings';
 
 export interface NavigationState {

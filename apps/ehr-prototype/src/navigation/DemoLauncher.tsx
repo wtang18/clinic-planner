@@ -5,9 +5,10 @@
  */
 
 import React from 'react';
-import { Play, User, Stethoscope } from 'lucide-react';
+import { Play, User, Stethoscope, Users } from 'lucide-react';
 import { useNavigation } from './NavigationContext';
 import { DEMO_ENCOUNTERS, type DemoEncounterId } from './routes';
+import type { Screen } from './NavigationContext';
 import { Card } from '../components/primitives/Card';
 import { Button } from '../components/primitives/Button';
 import { CardIconContainer } from '../components/primitives/CardIconContainer';
@@ -109,11 +110,67 @@ const ScenarioCard: React.FC<ScenarioCardProps> = ({ scenario, onLaunch }) => {
 // DemoLauncher Component
 // ============================================================================
 
+// ============================================================================
+// PopHealthCard Component
+// ============================================================================
+
+const PopHealthCard: React.FC<{ onLaunch: () => void }> = ({ onLaunch }) => {
+  return (
+    <Card variant="elevated" padding="lg" style={styles.scenarioCard} data-testid="scenario-card-pop-health">
+      <div style={styles.scenarioHeader}>
+        <CardIconContainer color="accent" size="lg">
+          <Users size={20} />
+        </CardIconContainer>
+        <div style={styles.scenarioMeta}>
+          <span style={styles.encounterType}>Population Health</span>
+        </div>
+      </div>
+
+      <h3 style={styles.scenarioTitle}>Dr. Chen's Panel</h3>
+      <p style={styles.scenarioDescription}>
+        Primary care panel management with protocol visualization.
+        Track cohorts, monitor quality measures, and manage care gaps.
+      </p>
+
+      <div style={styles.patientInfo}>
+        <span style={styles.patientIcon}>
+          <Users size={20} />
+        </span>
+        <span style={styles.patientName}>35 patients across 3 protocols</span>
+      </div>
+
+      <div style={styles.tags}>
+        {['Chronic Care', 'Screening', 'Transitions'].map((tag) => (
+          <span key={tag} style={styles.tag}>{tag}</span>
+        ))}
+      </div>
+
+      <Button
+        variant="primary"
+        size="lg"
+        onClick={onLaunch}
+        style={styles.launchButton}
+        leftIcon={<Play size={18} />}
+      >
+        Open Workspace
+      </Button>
+    </Card>
+  );
+};
+
+// ============================================================================
+// DemoLauncher Component
+// ============================================================================
+
 export const DemoLauncher: React.FC = () => {
-  const { navigateToEncounter } = useNavigation();
+  const { navigateToEncounter, navigate } = useNavigation();
 
   const handleLaunch = (scenarioId: DemoEncounterId) => {
     navigateToEncounter(scenarioId, 'capture');
+  };
+
+  const handlePopHealthLaunch = () => {
+    navigate('population-health');
   };
 
   return (
@@ -135,6 +192,7 @@ export const DemoLauncher: React.FC = () => {
             onLaunch={() => handleLaunch(scenario.id)}
           />
         ))}
+        <PopHealthCard onLaunch={handlePopHealthLaunch} />
       </div>
 
       {/* Footer */}

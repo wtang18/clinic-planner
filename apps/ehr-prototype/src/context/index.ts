@@ -9,6 +9,10 @@ export * from './EncounterContext';
 export * from './AIServicesContext';
 export * from './TranscriptionContext';
 
+// Population health context
+export { PopHealthProvider, usePopHealth } from './PopHealthContext';
+export type { PopHealthAction, PopHealthProviderProps } from './PopHealthContext';
+
 // Combined provider
 export { AppProviders } from './AppProviders';
 export type { AppProvidersProps } from './AppProviders';

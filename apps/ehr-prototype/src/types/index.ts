@@ -33,3 +33,6 @@ export * from './transcription';
 
 // Collaboration types
 export * from './collaboration';
+
+// Population health types
+export * from './population-health';

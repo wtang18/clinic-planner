@@ -12,6 +12,7 @@ import { EncounterLoader } from './EncounterLoader';
 // Screens
 import { CaptureView } from '../screens/CaptureView';
 import { PatientOverview } from '../screens/PatientOverview';
+import { PopHealthView } from '../screens/PopHealthView';
 import { DemoLauncher } from './DemoLauncher';
 
 import { Home } from 'lucide-react';
@@ -78,6 +79,9 @@ const ScreenRouter: React.FC<{ screen: Screen }> = ({ screen }) => {
 
     case 'patient':
       return <PatientOverview />;
+
+    case 'population-health':
+      return <PopHealthView />;
 
     case 'settings':
       return (

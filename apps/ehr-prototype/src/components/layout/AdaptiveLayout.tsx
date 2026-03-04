@@ -34,6 +34,8 @@ export interface AdaptiveLayoutProps {
   canvasHeaderContent?: React.ReactNode;
   /** Encounter context shown in nav row when canvas scrolls past the in-canvas context bar */
   scrolledCanvasContent?: React.ReactNode;
+  /** Full left+center zone override for non-encounter workspaces (replaces patient-specific content in nav row) */
+  workspaceContent?: React.ReactNode;
   /** Custom content rendered in the menu pane header (left of close button) */
   menuPaneHeaderContent?: React.ReactNode;
   /** Patient identity info (shown in nav row when overview collapsed) */
@@ -89,6 +91,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   overviewHeaderContent,
   canvasHeaderContent,
   scrolledCanvasContent,
+  workspaceContent,
   menuPaneHeaderContent,
   patientIdentity,
   isToDoView = false,
@@ -253,6 +256,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
           overviewHeaderContent={overviewHeaderContent}
           canvasHeaderContent={canvasHeaderContent}
           scrolledCanvasContent={scrolledCanvasContent}
+          workspaceContent={workspaceContent}
           patientIdentity={patientIdentity}
           isToDoView={isToDoView}
           todoTitle={todoTitle}
