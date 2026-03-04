@@ -260,7 +260,7 @@ const PathwayRow: React.FC<PathwayRowProps> = ({
       {/* Label */}
       <span style={{
         flex: 1,
-        fontSize: 13,
+        fontSize: 14,
         fontFamily: typography.fontFamily.sans,
         fontWeight: isSelected ? typography.fontWeight.medium : typography.fontWeight.regular,
         color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
@@ -346,7 +346,7 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, on
       {/* Label */}
       <span style={{
         flex: 1,
-        fontSize: 12,
+        fontSize: 13,
         fontFamily: typography.fontFamily.sans,
         color: isDraft
           ? colors.fg.neutral.spotReadable
@@ -393,7 +393,9 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, on
 
 export const LayerTree: React.FC = () => {
   const { state, dispatch } = usePopHealth();
-  const [expandedPathways, setExpandedPathways] = useState<Set<string>>(new Set());
+  const [expandedPathways, setExpandedPathways] = useState<Set<string>>(() =>
+    new Set(pathways.map(p => p.id))
+  );
 
   const pathways = useMemo(() => {
     if (state.selectedCohortId) {
@@ -422,6 +424,11 @@ export const LayerTree: React.FC = () => {
       return next;
     });
   }, []);
+
+  // Re-expand all pathways when cohort changes (new pathways list)
+  useEffect(() => {
+    setExpandedPathways(new Set(pathways.map(p => p.id)));
+  }, [pathways]);
 
   // Auto-expand pathway when a node is selected in the canvas
   useEffect(() => {

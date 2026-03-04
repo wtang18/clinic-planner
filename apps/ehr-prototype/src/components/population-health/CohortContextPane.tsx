@@ -33,7 +33,7 @@ import { colors, spaceAround, spaceBetween, typography, borderRadius, LAYOUT } f
 // Types
 // ============================================================================
 
-export type CohortTab = 'overview' | 'activity';
+export type CohortTab = 'overview' | 'activity' | 'alerts';
 
 export interface CohortContextPaneProps {
   /** ID of the cohort to display */
@@ -70,6 +70,7 @@ const CATEGORY_LABELS: Record<CohortCategory, string> = {
 const TAB_SEGMENTS = [
   { key: 'overview', label: 'Overview' },
   { key: 'activity', label: 'Activity' },
+  { key: 'alerts', label: 'Alerts' },
 ];
 
 // ============================================================================
@@ -81,6 +82,8 @@ interface CohortIdentityHeaderProps {
   patientCount: number;
   category: CohortCategory;
   variant?: 'stacked' | 'inline';
+  /** Whether to show the cohort icon (default true) */
+  showIcon?: boolean;
   style?: React.CSSProperties;
   testID?: string;
 }
@@ -90,6 +93,7 @@ const CohortIdentityHeader: React.FC<CohortIdentityHeaderProps> = ({
   patientCount,
   category,
   variant = 'stacked',
+  showIcon = true,
   style,
   testID,
 }) => {
@@ -107,19 +111,21 @@ const CohortIdentityHeader: React.FC<CohortIdentityHeaderProps> = ({
       data-testid={testID}
     >
       {/* Cohort icon */}
-      <span style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: isStacked ? 32 : 24,
-        height: isStacked ? 32 : 24,
-        borderRadius: borderRadius.sm,
-        backgroundColor: colors.bg.accent.subtle,
-        color: colors.fg.accent.primary,
-        flexShrink: 0,
-      }}>
-        <Users size={isStacked ? 16 : 14} />
-      </span>
+      {showIcon !== false && (
+        <span style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: isStacked ? 32 : 24,
+          height: isStacked ? 32 : 24,
+          borderRadius: borderRadius.sm,
+          backgroundColor: colors.bg.accent.subtle,
+          color: colors.fg.accent.primary,
+          flexShrink: 0,
+        }}>
+          <Users size={isStacked ? 16 : 14} />
+        </span>
+      )}
 
       {/* Info */}
       <div style={{
@@ -212,6 +218,12 @@ export const CohortContextPane: React.FC<CohortContextPaneProps> = ({
     return DASHBOARD_ALERTS.slice(0, 3);
   }, [state.selectedPathwayIds]);
 
+  // Critical-only alerts for overview tab banner
+  const criticalAlerts = useMemo(
+    () => dashboardAlerts.filter(a => a.severity === 'critical'),
+    [dashboardAlerts]
+  );
+
   const handleAlertClick = useCallback((alert: DashboardAlert) => {
     if (alert.pathwayId) {
       dispatch({ type: 'PATHWAY_SELECTED', pathwayId: alert.pathwayId });
@@ -288,23 +300,34 @@ export const CohortContextPane: React.FC<CohortContextPaneProps> = ({
       )}
 
       {/* Tab content */}
-      {currentTab === 'overview' ? (
+      {currentTab === 'overview' && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <div style={{ overflowY: 'auto', flexShrink: 0 }}>
             <Dashboard
               metrics={dashboardMetrics}
-              alerts={dashboardAlerts}
+              alerts={criticalAlerts}
               onAlertClick={handleAlertClick}
               testID="cohort-dashboard"
             />
           </div>
           <LayerTree />
         </div>
-      ) : (
+      )}
+      {currentTab === 'activity' && (
         <CohortActivityFeed
           cohortId={cohortId}
           testID="cohort-activity"
         />
+      )}
+      {currentTab === 'alerts' && (
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <Dashboard
+            metrics={[]}
+            alerts={dashboardAlerts}
+            onAlertClick={handleAlertClick}
+            testID="cohort-alerts"
+          />
+        </div>
       )}
     </div>
   );

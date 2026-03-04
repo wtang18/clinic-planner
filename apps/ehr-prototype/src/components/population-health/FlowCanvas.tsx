@@ -13,11 +13,8 @@ import React, { useMemo, useCallback } from 'react';
 import {
   ReactFlow,
   Background,
-  MiniMap,
 } from '@xyflow/react';
 import type { Node, Edge } from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-
 import { usePopHealth } from '../../context/PopHealthContext';
 import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health';
 import { NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT, ReactFlowNodeCard } from './NodeCard';
@@ -25,6 +22,10 @@ import type { ReactFlowNodeData } from './NodeCard';
 import { FilterBar } from './FilterBar';
 import type { Pathway, PathwayNode, PathwayConnection, PopHealthFilter } from '../../types/population-health';
 import { colors, typography } from '../../styles/foundations';
+import { injectReactFlowStyles } from './react-flow-styles';
+
+// Inject React Flow CSS once (avoids bare CSS import incompatible with Metro)
+injectReactFlowStyles();
 
 // ============================================================================
 // Layout Constants
@@ -327,20 +328,16 @@ export const FlowCanvas: React.FC = () => {
             edges={flowEdges}
             nodeTypes={nodeTypes}
             fitView
-            fitViewOptions={{ padding: 0.2 }}
+            fitViewOptions={{ padding: 0.1 }}
             minZoom={0.3}
             maxZoom={2}
             nodesDraggable={false}
             nodesConnectable={false}
-            elementsSelectable={false}
+            elementsSelectable={true}
+            onNodeClick={(_event, node) => handleNodeClick(node.id)}
             proOptions={{ hideAttribution: true }}
           >
             <Background color={colors.border.neutral.low} gap={20} size={1} />
-            <MiniMap
-              nodeColor={() => colors.bg.neutral.subtle}
-              maskColor="rgba(0, 0, 0, 0.08)"
-              style={{ bottom: 12, right: 12 }}
-            />
           </ReactFlow>
         ) : (
           <div style={canvasStyles.emptyState}>
