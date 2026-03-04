@@ -62,7 +62,7 @@ export const Default: Story = {
   args: {
     patientWorkspaces: mockPatientWorkspaces,
     onNavItemSelect: fn(),
-    onRegistryViewSelect: fn(),
+    onCohortSelect: fn(),
     onPatientSelect: fn(),
     onTaskSelect: fn(),
     onWorkspaceClose: fn(),
@@ -73,9 +73,9 @@ export const WithSelectedItem: Story = {
   name: 'With Selected Item',
   args: {
     patientWorkspaces: mockPatientWorkspaces,
-    selectedItemId: 'registry-all-patients',
+    selectedCohortId: 'coh-diabetes',
     onNavItemSelect: fn(),
-    onRegistryViewSelect: fn(),
+    onCohortSelect: fn(),
     onWorkspaceClose: fn(),
   },
 };
@@ -85,12 +85,12 @@ export const NoPatients: Story = {
   args: {
     patientWorkspaces: [],
     onNavItemSelect: fn(),
-    onRegistryViewSelect: fn(),
+    onCohortSelect: fn(),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Menu with no open patient workspaces. Registry views (All Patients, High Risk, etc.) remain visible under My Patients.',
+        story: 'Menu with no open patient workspaces. Cohort tree remains visible under My Patients.',
       },
     },
   },
@@ -101,7 +101,7 @@ export const ManyTasks: Story = {
   args: {
     patientWorkspaces: mockPatientWorkspaces,
     onNavItemSelect: fn(),
-    onRegistryViewSelect: fn(),
+    onCohortSelect: fn(),
     onWorkspaceClose: fn(),
   },
   parameters: {

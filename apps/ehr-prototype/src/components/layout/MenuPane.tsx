@@ -1,8 +1,12 @@
 /**
  * MenuPane Component
  *
- * Main navigation menu with hubs, To-Do categories, and patient workspaces.
- * Supports nested To-Do filters with expand/collapse behavior.
+ * Main navigation menu with hubs, To-Do categories, My Patients cohort tree,
+ * and patient workspaces. Supports nested To-Do filters with expand/collapse behavior.
+ *
+ * "My Patients" renders a dynamic cohort tree in PC scenarios (collapsible category
+ * groups with cohort items and patient counts) or a simplified "Recent Patients"
+ * link in UC scenarios. Selection dispatches navigateToScope for cohort navigation.
  */
 
 import React from 'react';
@@ -11,10 +15,13 @@ import {
   Calendar,
   Users,
   Search,
-  AlertTriangle,
   Activity,
-  Clock,
-  Brain,
+  Shield,
+  Syringe,
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle,
+  ArrowRightLeft,
   History,
 } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions, LAYOUT } from '../../styles/foundations';
@@ -25,10 +32,30 @@ import type { RecordingStatus as BottomBarRecordingStatus } from '../../state/bo
 import { ToDoCategoryItem, ToDoFilter } from './ToDoCategoryItem';
 import { TODO_CATEGORIES, getCategoryBadgeCount } from '../../scenarios/todoData';
 import type { WorkspaceTab } from '../../context/WorkspaceContext';
+import { COHORT_GROUPS, COHORTS } from '../../data/mock-population-health';
+
+// ============================================================================
+// Cohort Icon Map (absorbed from CohortNavigator)
+// ============================================================================
+
+const COHORT_ICONS: Record<string, React.ReactNode> = {
+  'coh-diabetes': <Activity size={16} />,
+  'coh-hypertension': <Activity size={16} />,
+  'coh-copd': <Activity size={16} />,
+  'coh-cancer-screening': <Shield size={16} />,
+  'coh-immunization': <Syringe size={16} />,
+  'coh-high-risk': <AlertTriangle size={16} />,
+  'coh-rising-risk': <TrendingUp size={16} />,
+  'coh-stable': <CheckCircle size={16} />,
+  'coh-recent-discharge': <ArrowRightLeft size={16} />,
+};
 
 // ============================================================================
 // Types
 // ============================================================================
+
+/** Scenario type controls which MenuPane sections appear */
+export type ScenarioType = 'pc' | 'uc';
 
 export interface PatientWorkspace {
   id: string;
@@ -58,11 +85,17 @@ export interface MenuPaneProps {
   selectedItemId?: string;
   /** Currently selected To-Do filter (format: "categoryId/filterId") */
   selectedToDoFilter?: string;
+  /** Currently selected cohort ID (highlights in My Patients tree) */
+  selectedCohortId?: string | null;
+  /** Scenario type: 'pc' shows full cohort tree, 'uc' shows only Recent Patients */
+  scenarioType?: ScenarioType;
   /** Called when a nav item is selected */
   onNavItemSelect?: (itemId: string) => void;
   /** Called when a To-Do filter is selected */
   onToDoFilterSelect?: (categoryId: string, filterId: string) => void;
-  /** Called when a registry view is selected (population health views under My Patients) */
+  /** Called when a cohort is selected in My Patients (dispatches scope navigation) */
+  onCohortSelect?: (cohortId: string) => void;
+  /** @deprecated Use onCohortSelect instead */
   onRegistryViewSelect?: (viewId: RegistryViewId) => void;
   /** Called when a patient workspace is selected */
   onPatientSelect?: (patientId: string) => void;
@@ -88,8 +121,11 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
   patientWorkspaces = [],
   selectedItemId,
   selectedToDoFilter,
+  selectedCohortId,
+  scenarioType = 'pc',
   onNavItemSelect,
   onToDoFilterSelect,
+  onCohortSelect,
   onRegistryViewSelect,
   onPatientSelect,
   onTaskSelect,
@@ -159,6 +195,11 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
     0
   );
 
+  // Total patient count across non-overview cohorts (for My Patients collapsed badge)
+  const totalPatientCount = COHORTS
+    .filter((c) => c.category !== 'overview')
+    .reduce((sum, c) => sum + c.patientCount, 0);
+
   return (
     <div style={containerStyle} data-testid={testID}>
       {/* Search (placeholder - deferred) */}
@@ -220,44 +261,74 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
 
         <div style={sectionGapStyle} />
 
-        {/* My Patients Section — registry / population health views */}
-        <MenuSection title="My Patients">
-          <MenuNavItem
-            icon={<Users size={16} />}
-            label="All Patients"
-            isSelected={selectedItemId === 'registry-all-patients'}
-            onClick={() => onRegistryViewSelect?.('all-patients')}
-          />
-          <MenuNavItem
-            icon={<AlertTriangle size={16} />}
-            label="High Risk"
-            isSelected={selectedItemId === 'registry-high-risk'}
-            onClick={() => onRegistryViewSelect?.('high-risk')}
-          />
-          <MenuNavItem
-            icon={<Activity size={16} />}
-            label="Chronic Care"
-            isSelected={selectedItemId === 'registry-chronic-care'}
-            onClick={() => onRegistryViewSelect?.('chronic-care')}
-          />
-          <MenuNavItem
-            icon={<Clock size={16} />}
-            label="Overdue Care"
-            isSelected={selectedItemId === 'registry-overdue-care'}
-            onClick={() => onRegistryViewSelect?.('overdue-care')}
-          />
-          <MenuNavItem
-            icon={<Brain size={16} />}
-            label="Mental Health"
-            isSelected={selectedItemId === 'registry-mental-health'}
-            onClick={() => onRegistryViewSelect?.('mental-health')}
-          />
-          <MenuNavItem
-            icon={<History size={16} />}
-            label="Recent"
-            isSelected={selectedItemId === 'registry-recent'}
-            onClick={() => onRegistryViewSelect?.('recent')}
-          />
+        {/* My Patients Section — cohort tree (PC) or recent-only (UC) */}
+        <MenuSection
+          title="My Patients"
+          collapsible
+          collapsedBadge={totalPatientCount}
+        >
+          {scenarioType === 'pc' ? (
+            <>
+              {/* All Patients (root) */}
+              <MenuNavItem
+                icon={<Users size={16} />}
+                label="All Patients"
+                badge={totalPatientCount}
+                isSelected={selectedCohortId === ''}
+                onClick={() => onCohortSelect?.('')}
+                testID="my-patients-all"
+              />
+              <MenuNavItem
+                icon={<History size={16} />}
+                label="Recent Patients"
+                isSelected={selectedItemId === 'recent-patients'}
+                onClick={() => onCohortSelect?.('recent')}
+                testID="my-patients-recent"
+              />
+
+              {/* Category groups with cohort items */}
+              {COHORT_GROUPS.map((group) => {
+                const groupCohorts = COHORTS.filter(
+                  (c) => group.cohortIds.includes(c.id)
+                );
+                const groupCount = groupCohorts.reduce(
+                  (sum, c) => sum + c.patientCount, 0
+                );
+
+                return (
+                  <MenuSection
+                    key={group.id}
+                    title={group.label}
+                    collapsible
+                    defaultCollapsed
+                    collapsedBadge={groupCount}
+                    testID={`cohort-group-${group.id}`}
+                  >
+                    {groupCohorts.map((cohort) => (
+                      <MenuNavItem
+                        key={cohort.id}
+                        icon={COHORT_ICONS[cohort.id] || <Users size={16} />}
+                        label={cohort.name}
+                        badge={cohort.patientCount}
+                        isSelected={selectedCohortId === cohort.id}
+                        onClick={() => onCohortSelect?.(cohort.id)}
+                        testID={`cohort-${cohort.id}`}
+                      />
+                    ))}
+                  </MenuSection>
+                );
+              })}
+            </>
+          ) : (
+            /* UC scenario: simplified — only Recent Patients */
+            <MenuNavItem
+              icon={<History size={16} />}
+              label="Recent Patients"
+              isSelected={selectedItemId === 'recent-patients'}
+              onClick={() => onCohortSelect?.('recent')}
+              testID="my-patients-recent"
+            />
+          )}
         </MenuSection>
 
         {/* Patient Workspaces — open patient charts (source-agnostic) */}

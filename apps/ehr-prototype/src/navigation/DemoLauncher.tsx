@@ -127,7 +127,7 @@ const PopHealthCard: React.FC<{ onLaunch: () => void }> = ({ onLaunch }) => {
 
       <h3 style={styles.scenarioTitle}>Dr. Chen's Panel</h3>
       <p style={styles.scenarioDescription}>
-        Primary care panel management with protocol visualization.
+        Primary care panel management with pathway visualization.
         Track cohorts, monitor quality measures, and manage care gaps.
       </p>
 
@@ -135,7 +135,7 @@ const PopHealthCard: React.FC<{ onLaunch: () => void }> = ({ onLaunch }) => {
         <span style={styles.patientIcon}>
           <Users size={20} />
         </span>
-        <span style={styles.patientName}>35 patients across 3 protocols</span>
+        <span style={styles.patientName}>35 patients across 3 pathways</span>
       </div>
 
       <div style={styles.tags}>

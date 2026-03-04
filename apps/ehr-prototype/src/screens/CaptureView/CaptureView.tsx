@@ -25,7 +25,7 @@ import {
 } from '../../state/selectors/views';
 
 import { AdaptiveLayout } from '../../components/layout/AdaptiveLayout';
-import { MenuPane, type RegistryViewId } from '../../components/layout/MenuPane';
+import { MenuPane } from '../../components/layout/MenuPane';
 import { LeftPaneContainer, ViewIconsRow, AIDrawerFooter, type TranscriptSegment as DrawerTranscriptSegment } from '../../components/LeftPane';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
 import { CanvasPane } from '../../components/layout/CanvasPane';
@@ -99,7 +99,7 @@ export const CaptureView: React.FC = () => {
   const workspace = useWorkspace();
   const todoNav = useToDoNavigation();
   const mode = useCurrentMode();
-  const { navigateToSection, canPopScope, scopeOriginLabel, popScope } = useNavigation();
+  const { navigateToSection, navigateToScope, canPopScope, scopeOriginLabel, popScope } = useNavigation();
 
   // Map context segments to drawer segment format
   const drawerSegments = useMemo<DrawerTranscriptSegment[]>(() =>
@@ -252,12 +252,21 @@ export const CaptureView: React.FC = () => {
     }
   };
 
-  // Handle registry view selection (population health views under My Patients)
-  const handleRegistryViewSelect = (viewId: RegistryViewId) => {
-    setSelectedNavItem(`registry-${viewId}`);
-    setViewMode('patient');
-    setTodoViewState(null);
-    todoNav.clearNavigation();
+  // Handle cohort selection from My Patients (dispatches scope navigation)
+  const handleCohortSelect = (cohortId: string) => {
+    if (cohortId === 'recent') {
+      // "Recent Patients" — local state for now (no cohort scope)
+      setSelectedNavItem('recent-patients');
+      setViewMode('patient');
+      setTodoViewState(null);
+      todoNav.clearNavigation();
+      return;
+    }
+    // Navigate to cohort scope (replaces current scope)
+    navigateToScope(
+      { type: 'cohort', cohortId: cohortId || 'coh-diabetes' },
+      { mode: 'replace' }
+    );
   };
 
   // Handle patient/workspace selection
@@ -919,7 +928,7 @@ export const CaptureView: React.FC = () => {
                 : undefined,
               onNavItemSelect: handleNavItemSelect,
               onToDoFilterSelect: handleToDoFilterSelect,
-              onRegistryViewSelect: handleRegistryViewSelect,
+              onCohortSelect: handleCohortSelect,
               onPatientSelect: handlePatientSelect,
               onTabClick: handleTabClick,
               onTabClose: handleTabClose,
