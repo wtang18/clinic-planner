@@ -2,13 +2,13 @@
  * FilterBar Component
  *
  * Renders filter chips below the canvas top bar.
- * Chip dismiss removes filter; pre-populated filters per protocol.
+ * Chip dismiss removes filter; pre-populated filters per pathway.
  */
 
 import React, { useMemo, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
-import { DEFAULT_PROTOCOL_FILTERS } from '../../data/mock-population-health';
+import { DEFAULT_PATHWAY_FILTERS } from '../../data/mock-population-health';
 import type { PopHealthFilter } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
@@ -66,16 +66,16 @@ const FilterChip: React.FC<{ filter: PopHealthFilter; onRemove: () => void }> = 
 export const FilterBar: React.FC = () => {
   const { state, dispatch } = usePopHealth();
 
-  // Auto-populate default filters when protocol changes
-  const selectedProtocolId = state.selectedProtocolIds[0];
+  // Auto-populate default filters when pathway changes
+  const selectedPathwayId = state.selectedPathwayIds[0];
   useEffect(() => {
-    if (selectedProtocolId && state.filters.length === 0) {
-      const defaults = DEFAULT_PROTOCOL_FILTERS[selectedProtocolId];
+    if (selectedPathwayId && state.filters.length === 0) {
+      const defaults = DEFAULT_PATHWAY_FILTERS[selectedPathwayId];
       if (defaults) {
         defaults.forEach((f) => dispatch({ type: 'FILTER_ADDED', filter: f }));
       }
     }
-  }, [selectedProtocolId]); // Only on protocol change
+  }, [selectedPathwayId]); // Only on pathway change
 
   const handleRemove = (filterId: string) => {
     dispatch({ type: 'FILTER_REMOVED', filterId });

@@ -1,18 +1,18 @@
 /**
  * FlowCanvas Component
  *
- * Column-grid layout engine for protocol node visualization.
+ * Column-grid layout engine for pathway node visualization.
  * Nodes positioned via columnIndex/verticalPosition data.
- * Supports multi-protocol rendering with dimming.
+ * Supports multi-pathway rendering with dimming.
  */
 
 import React, { useMemo, useCallback, useRef } from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
-import { getProtocolsByCohort, PROTOCOLS } from '../../data/mock-population-health';
+import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health';
 import { NodeCard, NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT } from './NodeCard';
 import { ConnectionLines } from './ConnectionLines';
 import { FilterBar } from './FilterBar';
-import type { Protocol, ProtocolNode } from '../../types/population-health';
+import type { Pathway, PathwayNode } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, LAYOUT } from '../../styles/foundations';
 
 // ============================================================================
@@ -31,28 +31,28 @@ export const FlowCanvas: React.FC = () => {
   const { state, dispatch } = usePopHealth();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Get protocols to render
-  const allProtocols = useMemo(() => {
+  // Get pathways to render
+  const allPathways = useMemo(() => {
     if (state.selectedCohortId) {
-      return getProtocolsByCohort(state.selectedCohortId);
+      return getPathwaysByCohort(state.selectedCohortId);
     }
-    return PROTOCOLS;
+    return PATHWAYS;
   }, [state.selectedCohortId]);
 
-  // If specific protocols selected, show those; otherwise show all
-  const activeProtocols = useMemo(() => {
-    if (state.selectedProtocolIds.length > 0) {
-      return allProtocols.filter((p) => state.selectedProtocolIds.includes(p.id));
+  // If specific pathways selected, show those; otherwise show all
+  const activePathways = useMemo(() => {
+    if (state.selectedPathwayIds.length > 0) {
+      return allPathways.filter((p) => state.selectedPathwayIds.includes(p.id));
     }
-    return allProtocols.slice(0, 1); // Default: show first protocol
-  }, [allProtocols, state.selectedProtocolIds]);
+    return allPathways.slice(0, 1); // Default: show first pathway
+  }, [allPathways, state.selectedPathwayIds]);
 
-  const dimmedProtocols = useMemo(() => {
-    if (state.selectedProtocolIds.length > 0) {
-      return allProtocols.filter((p) => !state.selectedProtocolIds.includes(p.id));
+  const dimmedPathways = useMemo(() => {
+    if (state.selectedPathwayIds.length > 0) {
+      return allPathways.filter((p) => !state.selectedPathwayIds.includes(p.id));
     }
-    return allProtocols.slice(1);
-  }, [allProtocols, state.selectedProtocolIds]);
+    return allPathways.slice(1);
+  }, [allPathways, state.selectedPathwayIds]);
 
   // Compute layout dimensions
   const layout = useMemo(() => {
@@ -60,41 +60,41 @@ export const FlowCanvas: React.FC = () => {
     let maxRow = 0;
     let verticalOffset = 0;
 
-    const protocolLayouts: Array<{
-      protocol: Protocol;
+    const pathwayLayouts: Array<{
+      pathway: Pathway;
       verticalOffset: number;
       dimmed: boolean;
     }> = [];
 
-    // Active protocols first
-    for (const protocol of activeProtocols) {
-      protocolLayouts.push({ protocol, verticalOffset, dimmed: false });
-      for (const node of protocol.nodes) {
+    // Active pathways first
+    for (const pathway of activePathways) {
+      pathwayLayouts.push({ pathway, verticalOffset, dimmed: false });
+      for (const node of pathway.nodes) {
         maxCol = Math.max(maxCol, node.columnIndex);
         maxRow = Math.max(maxRow, node.verticalPosition + verticalOffset);
       }
-      // Find max vertical position in this protocol
-      const maxV = protocol.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
-      verticalOffset += maxV + 2; // Gap between protocols
+      // Find max vertical position in this pathway
+      const maxV = pathway.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
+      verticalOffset += maxV + 2; // Gap between pathways
     }
 
-    // Dimmed protocols below
-    for (const protocol of dimmedProtocols) {
-      protocolLayouts.push({ protocol, verticalOffset, dimmed: true });
-      for (const node of protocol.nodes) {
+    // Dimmed pathways below
+    for (const pathway of dimmedPathways) {
+      pathwayLayouts.push({ pathway, verticalOffset, dimmed: true });
+      for (const node of pathway.nodes) {
         maxCol = Math.max(maxCol, node.columnIndex);
         maxRow = Math.max(maxRow, node.verticalPosition + verticalOffset);
       }
-      const maxV = protocol.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
+      const maxV = pathway.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
       verticalOffset += maxV + 2;
     }
 
     return {
-      protocolLayouts,
+      pathwayLayouts,
       width: (maxCol + 1) * COLUMN_WIDTH + CANVAS_PADDING * 2,
       height: (maxRow + 1) * ROW_HEIGHT + CANVAS_PADDING * 2,
     };
-  }, [activeProtocols, dimmedProtocols]);
+  }, [activePathways, dimmedPathways]);
 
   const handleNodeClick = useCallback((nodeId: string) => {
     dispatch({
@@ -122,13 +122,13 @@ export const FlowCanvas: React.FC = () => {
             padding: CANVAS_PADDING,
           }}
         >
-          {/* Render each protocol */}
-          {layout.protocolLayouts.map(({ protocol, verticalOffset, dimmed }) => (
-            <React.Fragment key={protocol.id}>
+          {/* Render each pathway */}
+          {layout.pathwayLayouts.map(({ pathway, verticalOffset, dimmed }) => (
+            <React.Fragment key={pathway.id}>
               {/* Connection lines (behind nodes) */}
               <ConnectionLines
-                connections={protocol.connections}
-                nodes={protocol.nodes.map((n) => ({
+                connections={pathway.connections}
+                nodes={pathway.nodes.map((n) => ({
                   ...n,
                   verticalPosition: n.verticalPosition + verticalOffset,
                 }))}
@@ -137,8 +137,8 @@ export const FlowCanvas: React.FC = () => {
               />
 
               {/* Nodes */}
-              {protocol.nodes.map((node) => {
-                const adjustedNode: ProtocolNode = {
+              {pathway.nodes.map((node) => {
+                const adjustedNode: PathwayNode = {
                   ...node,
                   verticalPosition: node.verticalPosition + verticalOffset,
                 };
@@ -169,9 +169,9 @@ export const FlowCanvas: React.FC = () => {
           ))}
 
           {/* Empty state */}
-          {layout.protocolLayouts.length === 0 && (
+          {layout.pathwayLayouts.length === 0 && (
             <div style={canvasStyles.emptyState}>
-              <span style={canvasStyles.emptyText}>No protocols available</span>
+              <span style={canvasStyles.emptyText}>No pathways available</span>
             </div>
           )}
         </div>

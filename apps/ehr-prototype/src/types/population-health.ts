@@ -2,7 +2,10 @@
  * Population Health Types
  *
  * Data model for the population health workspace: cohort management,
- * protocol visualization, patient tracking, and dashboard metrics.
+ * pathway visualization, patient tracking, and dashboard metrics.
+ *
+ * Terminology: "Pathway" = population health flows (multi-patient journeys).
+ * "Protocol" = encounter-level care guidelines (see chart-items.ts).
  */
 
 // ============================================================================
@@ -14,7 +17,8 @@ export type CohortCategory =
   | 'preventive-care'
   | 'risk-tiers'
   | 'care-transitions'
-  | 'custom';
+  | 'custom'
+  | 'overview';
 
 export interface Cohort {
   id: string;
@@ -41,10 +45,10 @@ export interface CohortGroup {
 }
 
 // ============================================================================
-// Protocol Definitions
+// Pathway Definitions
 // ============================================================================
 
-export type ProtocolStatus = 'active' | 'paused' | 'completed';
+export type PathwayStatus = 'active' | 'paused' | 'draft' | 'archived';
 
 export type NodeType =
   | 'cohort-source'
@@ -56,17 +60,54 @@ export type NodeType =
   | 'metric'
   | 'loop-reference';
 
-export interface Protocol {
+/** Node lifecycle state — 7 states, prototype renders Active + Paused + Draft */
+export type NodeLifecycleState =
+  | 'active'
+  | 'paused'
+  | 'draft'
+  | 'needs-review'
+  | 'test'
+  | 'archived'
+  | 'error';
+
+/** Node ownership (future — typed now, not rendered in v1) */
+export interface NodeOwnership {
+  ownerId: string;
+  ownerType: 'provider' | 'ai-agent' | 'integration';
+}
+
+/** Flow state for a pathway node — static mock data, structured for future real-time engine */
+export interface NodeFlowState {
+  inbound: {
+    natural: number;
+    error: number;
+  };
+  atStage: {
+    inProgress: number;
+    waiting: number;
+    error: number;
+  };
+  outbound: {
+    completed: number;
+    byPath?: Record<string, number>;
+  };
+  throughput?: {
+    avgDaysInStage: number;
+    patientsPerDay?: number;
+  };
+}
+
+export interface Pathway {
   id: string;
   name: string;
   cohortId: string;
-  status: ProtocolStatus;
-  nodes: ProtocolNode[];
-  connections: ProtocolConnection[];
+  status: PathwayStatus;
+  nodes: PathwayNode[];
+  connections: PathwayConnection[];
   description?: string;
 }
 
-export interface ProtocolNode {
+export interface PathwayNode {
   id: string;
   type: NodeType;
   label: string;
@@ -79,6 +120,9 @@ export interface ProtocolNode {
   patientCount?: number;
   gapCount?: number;
   disabled?: boolean;
+  lifecycleState: NodeLifecycleState;
+  ownership?: NodeOwnership;
+  flowState?: NodeFlowState;
 }
 
 export interface NodePill {
@@ -86,7 +130,7 @@ export interface NodePill {
   variant?: 'default' | 'info' | 'warning';
 }
 
-export interface ProtocolConnection {
+export interface PathwayConnection {
   id: string;
   sourceNodeId: string;
   targetNodeId: string;
@@ -95,30 +139,30 @@ export interface ProtocolConnection {
 }
 
 // ============================================================================
-// Patient in Protocol Context
+// Patient in Pathway Context
 // ============================================================================
 
-export type ProtocolPatientStatus = 'active' | 'escalated' | 'stalled' | 'completed';
+export type PathwayPatientStatus = 'active' | 'escalated' | 'stalled' | 'completed';
 
-export interface ProtocolPatient {
+export interface PathwayPatient {
   patientId: string;
   name: string;
   age: number;
   gender: string;
   riskTier: 'high' | 'rising' | 'stable';
-  protocols: PatientProtocolAssignment[];
+  pathways: PatientPathwayAssignment[];
   clinicalData: Record<string, unknown>;
 }
 
-export interface PatientProtocolAssignment {
-  protocolId: string;
+export interface PatientPathwayAssignment {
+  pathwayId: string;
   currentNodeId: string;
   stageEntryDate: Date;
-  status: ProtocolPatientStatus;
-  history: PatientProtocolEvent[];
+  status: PathwayPatientStatus;
+  history: PatientPathwayEvent[];
 }
 
-export interface PatientProtocolEvent {
+export interface PatientPathwayEvent {
   nodeId: string;
   action: string;
   date: Date;
@@ -126,10 +170,22 @@ export interface PatientProtocolEvent {
 }
 
 // ============================================================================
+// Recent Patients
+// ============================================================================
+
+export interface RecentPatient {
+  patientId: string;
+  name: string;
+  lastSeen: Date;
+  reason: string;
+  riskTier: 'high' | 'rising' | 'stable';
+}
+
+// ============================================================================
 // Filters
 // ============================================================================
 
-export type FilterCategory = 'status' | 'patient-attribute' | 'protocol-specific';
+export type FilterCategory = 'status' | 'lifecycle-state' | 'patient-attribute' | 'pathway-specific';
 
 export interface PopHealthFilter {
   id: string;
@@ -157,7 +213,7 @@ export interface DashboardAlert {
   id: string;
   severity: 'info' | 'warning' | 'critical';
   message: string;
-  protocolId?: string;
+  pathwayId?: string;
   nodeId?: string;
 }
 
@@ -173,11 +229,12 @@ export type DrawerView =
 
 export interface PopHealthState {
   selectedCohortId: string | null;
-  selectedProtocolIds: string[];
+  selectedPathwayIds: string[];
   selectedNodeId: string | null;
   selectedPatientId: string | null;
   activeView: ActiveView;
   filters: PopHealthFilter[];
   drawerStack: DrawerView[];
   focusedColumnIndex: number | null;
+  lifecycleFilter: NodeLifecycleState[];
 }

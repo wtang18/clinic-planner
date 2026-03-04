@@ -1,12 +1,12 @@
 /**
  * ConnectionLines Component
  *
- * SVG overlay rendering bezier curves between protocol nodes.
+ * SVG overlay rendering bezier curves between pathway nodes.
  * Computes paths from node positions + connection data.
  */
 
 import React, { useMemo } from 'react';
-import type { ProtocolNode, ProtocolConnection } from '../../types/population-health';
+import type { PathwayNode, PathwayConnection } from '../../types/population-health';
 import { NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT } from './NodeCard';
 import { COLUMN_WIDTH, ROW_HEIGHT } from './FlowCanvas';
 import { colors, typography } from '../../styles/foundations';
@@ -16,8 +16,8 @@ import { colors, typography } from '../../styles/foundations';
 // ============================================================================
 
 export interface ConnectionLinesProps {
-  connections: ProtocolConnection[];
-  nodes: ProtocolNode[];
+  connections: PathwayConnection[];
+  nodes: PathwayNode[];
   containerWidth: number;
   containerHeight: number;
 }
@@ -26,21 +26,21 @@ export interface ConnectionLinesProps {
 // Helpers
 // ============================================================================
 
-function getNodeCenter(node: ProtocolNode): { x: number; y: number } {
+function getNodeCenter(node: PathwayNode): { x: number; y: number } {
   return {
     x: node.columnIndex * COLUMN_WIDTH + NODE_CARD_WIDTH / 2,
     y: node.verticalPosition * ROW_HEIGHT + NODE_CARD_MIN_HEIGHT / 2,
   };
 }
 
-function getNodeRight(node: ProtocolNode): { x: number; y: number } {
+function getNodeRight(node: PathwayNode): { x: number; y: number } {
   return {
     x: node.columnIndex * COLUMN_WIDTH + NODE_CARD_WIDTH,
     y: node.verticalPosition * ROW_HEIGHT + NODE_CARD_MIN_HEIGHT / 2,
   };
 }
 
-function getNodeLeft(node: ProtocolNode): { x: number; y: number } {
+function getNodeLeft(node: PathwayNode): { x: number; y: number } {
   return {
     x: node.columnIndex * COLUMN_WIDTH,
     y: node.verticalPosition * ROW_HEIGHT + NODE_CARD_MIN_HEIGHT / 2,
@@ -58,7 +58,7 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   containerHeight,
 }) => {
   const nodeMap = useMemo(() => {
-    const map = new Map<string, ProtocolNode>();
+    const map = new Map<string, PathwayNode>();
     nodes.forEach((n) => map.set(n.id, n));
     return map;
   }, [nodes]);
@@ -82,7 +82,7 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
       const midY = (start.y + end.y) / 2;
 
       return { conn, d, midX, midY };
-    }).filter(Boolean) as Array<{ conn: ProtocolConnection; d: string; midX: number; midY: number }>;
+    }).filter(Boolean) as Array<{ conn: PathwayConnection; d: string; midX: number; midY: number }>;
   }, [connections, nodeMap]);
 
   return (

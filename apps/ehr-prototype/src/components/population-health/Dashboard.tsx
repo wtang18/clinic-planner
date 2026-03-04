@@ -1,19 +1,19 @@
 /**
  * Dashboard Component
  *
- * Displays aggregate metrics and alerts for the selected cohort/protocol.
+ * Displays aggregate metrics and alerts for the selected cohort/pathway.
  * Adapts scope based on PopHealthContext selection:
- * - Cohort selected (no protocol) → cohort-level metrics
- * - Protocol selected → protocol-level metrics
+ * - Cohort selected (no pathway) → cohort-level metrics
+ * - Pathway selected → pathway-level metrics
  */
 
 import React, { useMemo } from 'react';
 import { TrendingUp, TrendingDown, Minus, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import {
-  getMetricsForProtocol,
+  getMetricsForPathway,
   getMetricsForCohort,
-  getAlertsForProtocol,
+  getAlertsForPathway,
   DASHBOARD_ALERTS,
 } from '../../data/mock-population-health';
 import type { DashboardMetric, DashboardAlert } from '../../types/population-health';
@@ -90,25 +90,25 @@ export const Dashboard: React.FC = () => {
   const { state, dispatch } = usePopHealth();
 
   const metrics = useMemo(() => {
-    if (state.selectedProtocolIds.length === 1) {
-      return getMetricsForProtocol(state.selectedProtocolIds[0]);
+    if (state.selectedPathwayIds.length === 1) {
+      return getMetricsForPathway(state.selectedPathwayIds[0]);
     }
     if (state.selectedCohortId) {
       return getMetricsForCohort(state.selectedCohortId);
     }
     return [];
-  }, [state.selectedProtocolIds, state.selectedCohortId]);
+  }, [state.selectedPathwayIds, state.selectedCohortId]);
 
   const alerts = useMemo(() => {
-    if (state.selectedProtocolIds.length === 1) {
-      return getAlertsForProtocol(state.selectedProtocolIds[0]);
+    if (state.selectedPathwayIds.length === 1) {
+      return getAlertsForPathway(state.selectedPathwayIds[0]);
     }
     return DASHBOARD_ALERTS.slice(0, 3);
-  }, [state.selectedProtocolIds]);
+  }, [state.selectedPathwayIds]);
 
   const handleAlertClick = (alert: DashboardAlert) => {
-    if (alert.protocolId) {
-      dispatch({ type: 'PROTOCOL_SELECTED', protocolId: alert.protocolId });
+    if (alert.pathwayId) {
+      dispatch({ type: 'PATHWAY_SELECTED', pathwayId: alert.pathwayId });
       if (alert.nodeId) {
         dispatch({ type: 'NODE_SELECTED', nodeId: alert.nodeId });
       }

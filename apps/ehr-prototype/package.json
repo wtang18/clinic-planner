@@ -23,6 +23,7 @@
   "dependencies": {
     "@carbon-health/design-icons": "*",
     "@carbon-health/design-tokens": "*",
+    "@xyflow/react": "^12.10.1",
     "expo": "~54.0.13",
     "expo-status-bar": "~3.0.8",
     "framer-motion": "^12.29.2",

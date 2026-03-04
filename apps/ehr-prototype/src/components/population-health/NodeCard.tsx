@@ -1,7 +1,7 @@
 /**
  * NodeCard Component
  *
- * Uniform card for all protocol node types on the flow canvas.
+ * Uniform card for all pathway node types on the flow canvas.
  * Differentiates via icon + label + pills (not color).
  */
 
@@ -16,7 +16,7 @@ import {
   BarChart2,
   CornerDownLeft,
 } from 'lucide-react';
-import type { ProtocolNode, NodeType } from '../../types/population-health';
+import type { PathwayNode, NodeType } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
@@ -42,7 +42,7 @@ const NODE_TYPE_ICONS: Record<NodeType, React.FC<{ size: number }>> = {
 // ============================================================================
 
 export interface NodeCardProps {
-  node: ProtocolNode;
+  node: PathwayNode;
   selected?: boolean;
   focused?: boolean;
   dimmed?: boolean;

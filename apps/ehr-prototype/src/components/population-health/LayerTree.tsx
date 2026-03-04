@@ -1,8 +1,8 @@
 /**
  * LayerTree Component
  *
- * Figma-style nested hierarchy of protocol → nodes.
- * Single-click selects a layer; shift-click multi-selects protocols.
+ * Figma-style nested hierarchy of pathway → nodes.
+ * Single-click selects a layer; shift-click multi-selects pathways.
  * Inline stats per row: patient count, gap count (right-aligned).
  */
 
@@ -22,8 +22,8 @@ import {
   Pause,
 } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
-import { getProtocolsByCohort, PROTOCOLS } from '../../data/mock-population-health';
-import type { ProtocolNode, NodeType, Protocol } from '../../types/population-health';
+import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health';
+import type { PathwayNode, NodeType, Pathway } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
@@ -42,36 +42,36 @@ const NODE_TYPE_ICONS: Record<NodeType, React.ReactNode> = {
 };
 
 // ============================================================================
-// Protocol Row
+// Pathway Row
 // ============================================================================
 
-interface ProtocolRowProps {
-  protocol: Protocol;
+interface PathwayRowProps {
+  pathway: Pathway;
   isSelected: boolean;
   isExpanded: boolean;
   onToggle: () => void;
   onClick: (e: React.MouseEvent) => void;
 }
 
-const ProtocolRow: React.FC<ProtocolRowProps> = ({
-  protocol,
+const PathwayRow: React.FC<PathwayRowProps> = ({
+  pathway,
   isSelected,
   isExpanded,
   onToggle,
   onClick,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const totalPatients = protocol.nodes[0]?.patientCount ?? 0;
+  const totalPatients = pathway.nodes[0]?.patientCount ?? 0;
 
-  const statusIcon = protocol.status === 'active'
+  const statusIcon = pathway.status === 'active'
     ? <Play size={10} />
-    : protocol.status === 'paused'
+    : pathway.status === 'paused'
       ? <Pause size={10} />
       : <Circle size={10} />;
 
-  const statusColor = protocol.status === 'active'
+  const statusColor = pathway.status === 'active'
     ? colors.fg.positive.primary
-    : protocol.status === 'paused'
+    : pathway.status === 'paused'
       ? colors.fg.attention.primary
       : colors.fg.neutral.secondary;
 
@@ -98,7 +98,7 @@ const ProtocolRow: React.FC<ProtocolRowProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={0}
-      data-testid={`layer-protocol-${protocol.id}`}
+      data-testid={`layer-pathway-${pathway.id}`}
     >
       {/* Chevron */}
       <span
@@ -130,7 +130,7 @@ const ProtocolRow: React.FC<ProtocolRowProps> = ({
         overflow: 'hidden',
         textOverflow: 'ellipsis',
       }}>
-        {protocol.name}
+        {pathway.name}
       </span>
 
       {/* Patient count */}
@@ -151,7 +151,7 @@ const ProtocolRow: React.FC<ProtocolRowProps> = ({
 // ============================================================================
 
 interface NodeRowProps {
-  node: ProtocolNode;
+  node: PathwayNode;
   isSelected: boolean;
   onClick: () => void;
 }
@@ -167,7 +167,7 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, isSelected, onClick }) => {
         gap: spaceBetween.coupled,
         height: 28,
         padding: `0 ${spaceAround.compact}px`,
-        paddingLeft: spaceAround.compact + 16, // Indented under protocol
+        paddingLeft: spaceAround.compact + 16, // Indented under pathway
         backgroundColor: isSelected
           ? colors.bg.accent.low
           : isHovered
@@ -239,35 +239,35 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, isSelected, onClick }) => {
 
 export const LayerTree: React.FC = () => {
   const { state, dispatch } = usePopHealth();
-  const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(new Set());
+  const [expandedPathways, setExpandedPathways] = useState<Set<string>>(new Set());
 
-  const protocols = useMemo(() => {
+  const pathways = useMemo(() => {
     if (state.selectedCohortId) {
-      return getProtocolsByCohort(state.selectedCohortId);
+      return getPathwaysByCohort(state.selectedCohortId);
     }
-    return PROTOCOLS;
+    return PATHWAYS;
   }, [state.selectedCohortId]);
 
-  const toggleExpanded = useCallback((protocolId: string) => {
-    setExpandedProtocols((prev) => {
+  const toggleExpanded = useCallback((pathwayId: string) => {
+    setExpandedPathways((prev) => {
       const next = new Set(prev);
-      if (next.has(protocolId)) {
-        next.delete(protocolId);
+      if (next.has(pathwayId)) {
+        next.delete(pathwayId);
       } else {
-        next.add(protocolId);
+        next.add(pathwayId);
       }
       return next;
     });
   }, []);
 
-  const handleProtocolClick = useCallback((protocolId: string, e: React.MouseEvent) => {
+  const handlePathwayClick = useCallback((pathwayId: string, e: React.MouseEvent) => {
     dispatch({
-      type: 'PROTOCOL_SELECTED',
-      protocolId,
+      type: 'PATHWAY_SELECTED',
+      pathwayId,
       multi: e.shiftKey,
     });
     // Auto-expand on select
-    setExpandedProtocols((prev) => new Set(prev).add(protocolId));
+    setExpandedPathways((prev) => new Set(prev).add(pathwayId));
   }, [dispatch]);
 
   const handleNodeClick = useCallback((nodeId: string) => {
@@ -277,23 +277,23 @@ export const LayerTree: React.FC = () => {
   return (
     <div style={treeStyles.container} data-testid="layer-tree">
       <div style={treeStyles.header}>
-        <span style={treeStyles.headerLabel}>Protocols</span>
+        <span style={treeStyles.headerLabel}>Pathways</span>
       </div>
       <div style={treeStyles.scrollArea}>
-        {protocols.map((protocol) => {
-          const isSelected = state.selectedProtocolIds.includes(protocol.id);
-          const isExpanded = expandedProtocols.has(protocol.id);
+        {pathways.map((pathway) => {
+          const isSelected = state.selectedPathwayIds.includes(pathway.id);
+          const isExpanded = expandedPathways.has(pathway.id);
 
           return (
-            <React.Fragment key={protocol.id}>
-              <ProtocolRow
-                protocol={protocol}
+            <React.Fragment key={pathway.id}>
+              <PathwayRow
+                pathway={pathway}
                 isSelected={isSelected}
                 isExpanded={isExpanded}
-                onToggle={() => toggleExpanded(protocol.id)}
-                onClick={(e) => handleProtocolClick(protocol.id, e)}
+                onToggle={() => toggleExpanded(pathway.id)}
+                onClick={(e) => handlePathwayClick(pathway.id, e)}
               />
-              {isExpanded && protocol.nodes.map((node) => (
+              {isExpanded && pathway.nodes.map((node) => (
                 <NodeRow
                   key={node.id}
                   node={node}
@@ -301,15 +301,15 @@ export const LayerTree: React.FC = () => {
                   onClick={() => handleNodeClick(node.id)}
                 />
               ))}
-              {/* Divider between protocols */}
+              {/* Divider between pathways */}
               <div style={treeStyles.divider} />
             </React.Fragment>
           );
         })}
 
-        {protocols.length === 0 && (
+        {pathways.length === 0 && (
           <div style={treeStyles.emptyState}>
-            <span style={treeStyles.emptyText}>No protocols for this cohort</span>
+            <span style={treeStyles.emptyText}>No pathways for this cohort</span>
           </div>
         )}
       </div>

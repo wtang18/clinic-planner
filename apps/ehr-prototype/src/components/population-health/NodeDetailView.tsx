@@ -1,7 +1,7 @@
 /**
  * NodeDetailView Component
  *
- * Detail drawer content for a protocol node.
+ * Detail drawer content for a pathway node.
  * Shows configuration, patient list at this stage, and stage metrics.
  */
 
@@ -9,10 +9,10 @@ import React, { useMemo } from 'react';
 import { Users, Clock, AlertTriangle, BarChart2 } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import {
-  PROTOCOLS,
+  PATHWAYS,
   getPatientsByNode,
 } from '../../data/mock-population-health';
-import type { ProtocolNode, ProtocolPatient } from '../../types/population-health';
+import type { PathwayNode, PathwayPatient } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
 
 // ============================================================================
@@ -30,21 +30,21 @@ interface NodeDetailViewProps {
 export const NodeDetailView: React.FC<NodeDetailViewProps> = ({ nodeId }) => {
   const { state, dispatch } = usePopHealth();
 
-  // Find node across all protocols
-  const { node, protocol } = useMemo(() => {
-    for (const p of PROTOCOLS) {
+  // Find node across all pathways
+  const { node, pathway } = useMemo(() => {
+    for (const p of PATHWAYS) {
       const n = p.nodes.find((n) => n.id === nodeId);
-      if (n) return { node: n, protocol: p };
+      if (n) return { node: n, pathway: p };
     }
-    return { node: null, protocol: null };
+    return { node: null, pathway: null };
   }, [nodeId]);
 
   const patients = useMemo(() => {
-    if (!protocol) return [];
-    return getPatientsByNode(protocol.id, nodeId);
-  }, [protocol, nodeId]);
+    if (!pathway) return [];
+    return getPatientsByNode(pathway.id, nodeId);
+  }, [pathway, nodeId]);
 
-  if (!node || !protocol) {
+  if (!node || !pathway) {
     return (
       <div style={detailStyles.emptyState} data-testid="node-detail-view">
         <span style={detailStyles.emptyText}>Node not found</span>
@@ -63,8 +63,8 @@ export const NodeDetailView: React.FC<NodeDetailViewProps> = ({ nodeId }) => {
             <span style={detailStyles.fieldValue}>{node.type}</span>
           </div>
           <div style={detailStyles.field}>
-            <span style={detailStyles.fieldLabel}>Protocol</span>
-            <span style={detailStyles.fieldValue}>{protocol.name}</span>
+            <span style={detailStyles.fieldLabel}>Pathway</span>
+            <span style={detailStyles.fieldValue}>{pathway.name}</span>
           </div>
           {node.description && (
             <div style={detailStyles.field}>
@@ -107,7 +107,7 @@ export const NodeDetailView: React.FC<NodeDetailViewProps> = ({ nodeId }) => {
         </h4>
         <div style={detailStyles.patientList}>
           {patients.map((patient) => {
-            const assignment = patient.protocols.find((a) => a.protocolId === protocol.id);
+            const assignment = patient.pathways.find((a) => a.pathwayId === pathway.id);
             const daysInStage = assignment
               ? Math.floor((Date.now() - assignment.stageEntryDate.getTime()) / 86400000)
               : 0;

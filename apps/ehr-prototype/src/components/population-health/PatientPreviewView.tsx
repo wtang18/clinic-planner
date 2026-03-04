@@ -2,7 +2,7 @@
  * PatientPreviewView Component
  *
  * Drawer content for patient preview in population health context.
- * Shows patient header, protocol assignments, clinical summary, and drill-through button.
+ * Shows patient header, pathway assignments, clinical summary, and drill-through button.
  */
 
 import React, { useMemo, useCallback } from 'react';
@@ -11,7 +11,7 @@ import { usePopHealth } from '../../context/PopHealthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import {
   MOCK_POP_HEALTH_PATIENTS,
-  PROTOCOLS,
+  PATHWAYS,
   ENCOUNTER_PATIENT_MAP,
 } from '../../data/mock-population-health';
 import { Button } from '../primitives/Button';
@@ -78,12 +78,12 @@ export const PatientPreviewView: React.FC<PatientPreviewViewProps> = ({ patientI
         </div>
       </div>
 
-      {/* Protocol assignments */}
+      {/* Pathway assignments */}
       <div style={pvStyles.section}>
-        <h4 style={pvStyles.sectionTitle}>Protocol Status</h4>
-        {patient.protocols.map((assignment) => {
-          const protocol = PROTOCOLS.find((p) => p.id === assignment.protocolId);
-          const currentNode = protocol?.nodes.find((n) => n.id === assignment.currentNodeId);
+        <h4 style={pvStyles.sectionTitle}>Pathway Status</h4>
+        {patient.pathways.map((assignment) => {
+          const pathway = PATHWAYS.find((p) => p.id === assignment.pathwayId);
+          const currentNode = pathway?.nodes.find((n) => n.id === assignment.currentNodeId);
           const daysInStage = Math.floor(
             (Date.now() - assignment.stageEntryDate.getTime()) / 86400000
           );
@@ -95,14 +95,14 @@ export const PatientPreviewView: React.FC<PatientPreviewViewProps> = ({ patientI
               : colors.fg.neutral.primary;
 
           return (
-            <div key={assignment.protocolId} style={pvStyles.protocolCard}>
-              <div style={pvStyles.protocolHeader}>
-                <span style={pvStyles.protocolName}>{protocol?.name ?? 'Unknown'}</span>
+            <div key={assignment.pathwayId} style={pvStyles.pathwayCard}>
+              <div style={pvStyles.pathwayHeader}>
+                <span style={pvStyles.pathwayName}>{pathway?.name ?? 'Unknown'}</span>
                 <span style={{ ...pvStyles.statusBadge, color: statusColor }}>
                   {assignment.status}
                 </span>
               </div>
-              <div style={pvStyles.protocolMeta}>
+              <div style={pvStyles.pathwayMeta}>
                 <span style={pvStyles.metaItem}>
                   Stage: {currentNode?.label ?? 'Unknown'}
                 </span>
@@ -141,12 +141,12 @@ export const PatientPreviewView: React.FC<PatientPreviewViewProps> = ({ patientI
         </div>
       </div>
 
-      {/* Recent protocol actions */}
-      {patient.protocols[0]?.history.length > 0 && (
+      {/* Recent pathway actions */}
+      {patient.pathways[0]?.history.length > 0 && (
         <div style={pvStyles.section}>
           <h4 style={pvStyles.sectionTitle}>Recent Actions</h4>
           <div style={pvStyles.timeline}>
-            {patient.protocols[0].history.slice(-4).reverse().map((event, i) => (
+            {patient.pathways[0].history.slice(-4).reverse().map((event, i) => (
               <div key={i} style={pvStyles.timelineItem}>
                 <div style={pvStyles.timelineDot} />
                 <div style={pvStyles.timelineContent}>
@@ -246,7 +246,7 @@ const pvStyles: Record<string, React.CSSProperties> = {
     letterSpacing: 0.5,
     margin: 0,
   },
-  protocolCard: {
+  pathwayCard: {
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.coupled,
@@ -254,12 +254,12 @@ const pvStyles: Record<string, React.CSSProperties> = {
     backgroundColor: colors.bg.neutral.subtle,
     borderRadius: borderRadius.sm,
   },
-  protocolHeader: {
+  pathwayHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  protocolName: {
+  pathwayName: {
     fontSize: 13,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
@@ -271,7 +271,7 @@ const pvStyles: Record<string, React.CSSProperties> = {
     fontWeight: typography.fontWeight.medium,
     textTransform: 'capitalize' as const,
   },
-  protocolMeta: {
+  pathwayMeta: {
     display: 'flex',
     gap: spaceBetween.related,
   },

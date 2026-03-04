@@ -2,7 +2,7 @@
  * PopHealthContext
  *
  * React context + reducer for population health workspace state.
- * Manages cohort/protocol/node selection, view mode, filters, and drawer stack.
+ * Manages cohort/pathway/node selection, view mode, filters, and drawer stack.
  */
 
 import React, { createContext, useContext, useReducer, useMemo, useCallback } from 'react';
@@ -11,6 +11,8 @@ import type {
   PopHealthFilter,
   ActiveView,
   DrawerView,
+  NodeLifecycleState,
+  CohortCategory,
 } from '../types/population-health';
 
 // ============================================================================
@@ -19,8 +21,8 @@ import type {
 
 export type PopHealthAction =
   | { type: 'COHORT_SELECTED'; cohortId: string }
-  | { type: 'PROTOCOL_SELECTED'; protocolId: string; multi?: boolean }
-  | { type: 'PROTOCOL_DESELECTED'; protocolId: string }
+  | { type: 'PATHWAY_SELECTED'; pathwayId: string; multi?: boolean }
+  | { type: 'PATHWAY_DESELECTED'; pathwayId: string }
   | { type: 'NODE_SELECTED'; nodeId: string }
   | { type: 'NODE_DESELECTED' }
   | { type: 'PATIENT_SELECTED'; patientId: string }
@@ -33,7 +35,9 @@ export type PopHealthAction =
   | { type: 'DRAWER_BACK' }
   | { type: 'DRAWER_CLOSED' }
   | { type: 'COLUMN_FOCUSED'; columnIndex: number }
-  | { type: 'COLUMN_UNFOCUSED' };
+  | { type: 'COLUMN_UNFOCUSED' }
+  | { type: 'LIFECYCLE_FILTER_CHANGED'; states: NodeLifecycleState[] }
+  | { type: 'CATEGORY_OVERVIEW_SELECTED'; category: CohortCategory };
 
 // ============================================================================
 // Initial State
@@ -41,18 +45,27 @@ export type PopHealthAction =
 
 const INITIAL_STATE: PopHealthState = {
   selectedCohortId: null,
-  selectedProtocolIds: [],
+  selectedPathwayIds: [],
   selectedNodeId: null,
   selectedPatientId: null,
   activeView: 'flow',
   filters: [],
   drawerStack: [],
   focusedColumnIndex: null,
+  lifecycleFilter: [],
 };
 
 // ============================================================================
 // Reducer
 // ============================================================================
+
+/** Map category to overview cohort ID */
+const CATEGORY_OVERVIEW_MAP: Record<string, string> = {
+  'chronic-disease': 'coh-chronic-overview',
+  'preventive-care': 'coh-preventive-overview',
+  'risk-tiers': 'coh-risk-overview',
+  'care-transitions': 'coh-transitions-overview',
+};
 
 function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHealthState {
   switch (action.type) {
@@ -60,7 +73,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
       return {
         ...state,
         selectedCohortId: action.cohortId,
-        selectedProtocolIds: [],
+        selectedPathwayIds: [],
         selectedNodeId: null,
         selectedPatientId: null,
         filters: [],
@@ -68,30 +81,30 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         focusedColumnIndex: null,
       };
 
-    case 'PROTOCOL_SELECTED': {
+    case 'PATHWAY_SELECTED': {
       if (action.multi) {
         // Shift-click: toggle in multi-select
-        const exists = state.selectedProtocolIds.includes(action.protocolId);
+        const exists = state.selectedPathwayIds.includes(action.pathwayId);
         return {
           ...state,
-          selectedProtocolIds: exists
-            ? state.selectedProtocolIds.filter((id) => id !== action.protocolId)
-            : [...state.selectedProtocolIds, action.protocolId],
+          selectedPathwayIds: exists
+            ? state.selectedPathwayIds.filter((id) => id !== action.pathwayId)
+            : [...state.selectedPathwayIds, action.pathwayId],
           selectedNodeId: null,
         };
       }
       // Single select
       return {
         ...state,
-        selectedProtocolIds: [action.protocolId],
+        selectedPathwayIds: [action.pathwayId],
         selectedNodeId: null,
       };
     }
 
-    case 'PROTOCOL_DESELECTED':
+    case 'PATHWAY_DESELECTED':
       return {
         ...state,
-        selectedProtocolIds: state.selectedProtocolIds.filter((id) => id !== action.protocolId),
+        selectedPathwayIds: state.selectedPathwayIds.filter((id) => id !== action.pathwayId),
         selectedNodeId: null,
       };
 
@@ -133,6 +146,24 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
 
     case 'COLUMN_UNFOCUSED':
       return { ...state, focusedColumnIndex: null };
+
+    case 'LIFECYCLE_FILTER_CHANGED':
+      return { ...state, lifecycleFilter: action.states };
+
+    case 'CATEGORY_OVERVIEW_SELECTED': {
+      const overviewCohortId = CATEGORY_OVERVIEW_MAP[action.category];
+      if (!overviewCohortId) return state;
+      return {
+        ...state,
+        selectedCohortId: overviewCohortId,
+        selectedPathwayIds: [],
+        selectedNodeId: null,
+        selectedPatientId: null,
+        filters: [],
+        drawerStack: [],
+        focusedColumnIndex: null,
+      };
+    }
 
     default:
       return state;

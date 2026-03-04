@@ -2,18 +2,18 @@
  * TableView Component
  *
  * Sortable data grid for population health patients.
- * Columns adapt based on active protocol.
+ * Columns adapt based on active pathway.
  */
 
 import React, { useMemo, useState, useCallback } from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import {
-  getPatientsByProtocol,
+  getPatientsByPathway,
   MOCK_POP_HEALTH_PATIENTS,
-  PROTOCOLS,
+  PATHWAYS,
 } from '../../data/mock-population-health';
-import type { ProtocolPatient } from '../../types/population-health';
+import type { PathwayPatient } from '../../types/population-health';
 import { FilterBar } from './FilterBar';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
 
@@ -25,7 +25,7 @@ interface Column {
   key: string;
   label: string;
   width?: number;
-  getValue: (patient: ProtocolPatient) => string | number;
+  getValue: (patient: PathwayPatient) => string | number;
 }
 
 const BASE_COLUMNS: Column[] = [
@@ -35,29 +35,29 @@ const BASE_COLUMNS: Column[] = [
   {
     key: 'currentStage', label: 'Current Stage', width: 160,
     getValue: (p) => {
-      const assignment = p.protocols[0];
+      const assignment = p.pathways[0];
       if (!assignment) return '—';
-      const protocol = PROTOCOLS.find((pr) => pr.id === assignment.protocolId);
-      const node = protocol?.nodes.find((n) => n.id === assignment.currentNodeId);
+      const pathway = PATHWAYS.find((pr) => pr.id === assignment.pathwayId);
+      const node = pathway?.nodes.find((n) => n.id === assignment.currentNodeId);
       return node?.label ?? '—';
     },
   },
   {
     key: 'daysInStage', label: 'Days', width: 50,
     getValue: (p) => {
-      const assignment = p.protocols[0];
+      const assignment = p.pathways[0];
       if (!assignment) return 0;
       return Math.floor((Date.now() - assignment.stageEntryDate.getTime()) / 86400000);
     },
   },
   {
     key: 'status', label: 'Status', width: 80,
-    getValue: (p) => p.protocols[0]?.status ?? '—',
+    getValue: (p) => p.pathways[0]?.status ?? '—',
   },
 ];
 
-const PROTOCOL_COLUMNS: Record<string, Column[]> = {
-  'proto-diabetes-a1c': [
+const PATHWAY_COLUMNS: Record<string, Column[]> = {
+  'pw-diabetes-a1c': [
     { key: 'lastA1c', label: 'Last A1c', width: 70, getValue: (p) => String(p.clinicalData.lastA1c ?? '—') },
     { key: 'currentMeds', label: 'Meds', width: 180, getValue: (p) => {
       const meds = p.clinicalData.currentMeds;
@@ -65,12 +65,12 @@ const PROTOCOL_COLUMNS: Record<string, Column[]> = {
     }},
     { key: 'insulinStatus', label: 'Insulin', width: 100, getValue: (p) => String(p.clinicalData.insulinStatus ?? '—') },
   ],
-  'proto-colon-screening': [
+  'pw-colon-screening': [
     { key: 'screeningType', label: 'Type', width: 100, getValue: (p) => String(p.clinicalData.screeningType ?? '—') },
     { key: 'eligibility', label: 'Eligibility', width: 100, getValue: (p) => String(p.clinicalData.eligibility ?? '—') },
     { key: 'declineCount', label: 'Declines', width: 70, getValue: (p) => String(p.clinicalData.declineCount ?? 0) },
   ],
-  'proto-post-discharge': [
+  'pw-post-discharge': [
     { key: 'daysSinceDischarge', label: 'Days Since', width: 80, getValue: (p) => String(p.clinicalData.daysSinceDischarge ?? '—') },
     { key: 'readmissionRisk', label: 'Readmit Risk', width: 90, getValue: (p) => String(p.clinicalData.readmissionRisk ?? '—') },
     { key: 'followUpStatus', label: 'Follow-up', width: 160, getValue: (p) => String(p.clinicalData.followUpStatus ?? '—') },
@@ -94,24 +94,24 @@ export const TableView: React.FC = () => {
 
   // Get patients
   const patients = useMemo(() => {
-    const protocolId = state.selectedProtocolIds[0];
-    if (protocolId) {
-      return getPatientsByProtocol(protocolId);
+    const pathwayId = state.selectedPathwayIds[0];
+    if (pathwayId) {
+      return getPatientsByPathway(pathwayId);
     }
     return MOCK_POP_HEALTH_PATIENTS;
-  }, [state.selectedProtocolIds]);
+  }, [state.selectedPathwayIds]);
 
   // Filter by selected node if applicable
   const filteredPatients = useMemo(() => {
     if (!state.selectedNodeId) return patients;
     return patients.filter((p) =>
-      p.protocols.some((a) => a.currentNodeId === state.selectedNodeId)
+      p.pathways.some((a) => a.currentNodeId === state.selectedNodeId)
     );
   }, [patients, state.selectedNodeId]);
 
   // Get columns
-  const protocolId = state.selectedProtocolIds[0];
-  const extraColumns = protocolId ? (PROTOCOL_COLUMNS[protocolId] ?? []) : [];
+  const pathwayId = state.selectedPathwayIds[0];
+  const extraColumns = pathwayId ? (PATHWAY_COLUMNS[pathwayId] ?? []) : [];
   const columns = [...BASE_COLUMNS, ...extraColumns];
 
   // Sort
