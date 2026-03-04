@@ -3,6 +3,15 @@
  *
  * Uniform card for all pathway node types on the flow canvas.
  * Differentiates via icon + label + pills (not color).
+ *
+ * Also exports ReactFlowNodeCard — a wrapper for use as a React Flow
+ * custom node type. It extracts React Flow's `data` prop and forwards
+ * the fields to NodeCard.
+ *
+ * Lifecycle state visual treatments (Decision #28, #29):
+ * - Active: normal appearance
+ * - Paused: orange left border + slight opacity reduction
+ * - Draft: dashed border + reduced opacity + "(draft)" label
  */
 
 import React, { useState } from 'react';
@@ -15,7 +24,10 @@ import {
   AlertTriangle,
   BarChart2,
   CornerDownLeft,
+  ChevronRight,
 } from 'lucide-react';
+import { Handle, Position } from '@xyflow/react';
+import type { NodeProps, Node } from '@xyflow/react';
 import type { PathwayNode, NodeType } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
@@ -51,6 +63,29 @@ export interface NodeCardProps {
   onDetailsClick?: () => void;
 }
 
+/** Data shape passed through React Flow's node.data */
+export interface ReactFlowNodeData {
+  node: PathwayNode;
+  selected: boolean;
+  focused: boolean;
+  dimmed: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  onDetailsClick: () => void;
+  [key: string]: unknown;
+}
+
+// ============================================================================
+// Handle Styles
+// ============================================================================
+
+const handleStyle: React.CSSProperties = {
+  width: 8,
+  height: 8,
+  backgroundColor: colors.bg.neutral.base,
+  border: `1.5px solid ${colors.border.neutral.low}`,
+};
+
 // ============================================================================
 // Component
 // ============================================================================
@@ -67,16 +102,21 @@ export const NodeCard: React.FC<NodeCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
 
   const Icon = NODE_TYPE_ICONS[node.type];
+  const isPaused = node.lifecycleState === 'paused';
+  const isDraft = node.lifecycleState === 'draft';
+
+  // Lifecycle-dependent opacity
+  const computedOpacity = dimmed ? 0.4 : isDraft ? 0.7 : isPaused ? 0.85 : disabled ? 0.5 : 1;
 
   const containerStyle: React.CSSProperties = {
     width: NODE_CARD_WIDTH,
     minHeight: NODE_CARD_MIN_HEIGHT,
     padding: spaceAround.compact,
     backgroundColor: colors.bg.neutral.base,
-    border: `1px solid ${selected || focused ? colors.border.accent.low : colors.border.neutral.low}`,
+    border: `1px ${isDraft ? 'dashed' : 'solid'} ${selected || focused ? colors.border.accent.low : colors.border.neutral.low}`,
     borderRadius: borderRadius.sm,
     cursor: disabled ? 'default' : 'pointer',
-    opacity: dimmed ? 0.4 : disabled ? 0.5 : 1,
+    opacity: computedOpacity,
     transition: `all ${transitions.fast}`,
     display: 'flex',
     flexDirection: 'column',
@@ -85,6 +125,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
     boxShadow: selected
       ? `0 0 0 1.5px ${colors.border.accent.low}`
       : '0 1px 3px rgba(0, 0, 0, 0.04)',
+    // Paused: orange left border
+    ...(isPaused ? { borderLeft: `3px solid ${colors.fg.attention.primary}` } : {}),
   };
 
   const headerStyle: React.CSSProperties = {
@@ -127,22 +169,6 @@ export const NodeCard: React.FC<NodeCardProps> = ({
     gap: 4,
   };
 
-  // Anchor point (connection handle) styles
-  const anchorStyle = (side: 'left' | 'right'): React.CSSProperties => ({
-    position: 'absolute',
-    top: '50%',
-    [side]: -4,
-    transform: 'translateY(-50%)',
-    width: 8,
-    height: 8,
-    borderRadius: '50%',
-    backgroundColor: colors.bg.neutral.base,
-    border: `1.5px solid ${colors.border.neutral.low}`,
-    opacity: isHovered ? 1 : 0,
-    transition: `opacity ${transitions.fast}`,
-    pointerEvents: 'none',
-  });
-
   return (
     <div
       style={containerStyle}
@@ -153,16 +179,68 @@ export const NodeCard: React.FC<NodeCardProps> = ({
       role="button"
       tabIndex={disabled ? undefined : 0}
     >
-      {/* Anchor points */}
-      <div style={anchorStyle('left')} />
-      <div style={anchorStyle('right')} />
+      {/* React Flow handles — replace manual anchor point divs */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{
+          ...handleStyle,
+          opacity: isHovered ? 1 : 0,
+          transition: `opacity ${transitions.fast}`,
+        }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{
+          ...handleStyle,
+          opacity: isHovered ? 1 : 0,
+          transition: `opacity ${transitions.fast}`,
+        }}
+      />
 
-      {/* Header: icon + label */}
+      {/* Header: icon + label + details chevron */}
       <div style={headerStyle}>
         <span style={iconStyle}>
           <Icon size={16} />
         </span>
-        <span style={labelStyle}>{node.label}</span>
+        <span style={labelStyle}>
+          {node.label}
+          {isDraft && (
+            <span style={{
+              fontSize: 11,
+              fontWeight: typography.fontWeight.regular,
+              color: colors.fg.neutral.secondary,
+              marginLeft: 4,
+            }}>
+              (draft)
+            </span>
+          )}
+        </span>
+        {/* Always-visible chevron for details (Decision #34) */}
+        {onDetailsClick && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onDetailsClick(); }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 20,
+              height: 20,
+              border: 'none',
+              backgroundColor: 'transparent',
+              cursor: 'pointer',
+              color: colors.fg.neutral.spotReadable,
+              padding: 0,
+              flexShrink: 0,
+              borderRadius: borderRadius.xs,
+            }}
+            aria-label={`View details for ${node.label}`}
+          >
+            <ChevronRight size={14} />
+          </button>
+        )}
       </div>
 
       {/* Description */}
@@ -200,39 +278,35 @@ export const NodeCard: React.FC<NodeCardProps> = ({
           ))}
         </div>
       )}
-
-      {/* Inline action bar (on focus) */}
-      {focused && onDetailsClick && (
-        <div style={{
-          position: 'absolute',
-          bottom: -32,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1,
-        }}>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onDetailsClick(); }}
-            style={{
-              fontSize: 12,
-              fontFamily: typography.fontFamily.sans,
-              fontWeight: typography.fontWeight.medium,
-              color: colors.fg.accent.primary,
-              backgroundColor: colors.bg.neutral.base,
-              border: `1px solid ${colors.border.neutral.low}`,
-              borderRadius: borderRadius.sm,
-              padding: '4px 12px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Details
-          </button>
-        </div>
-      )}
     </div>
   );
 };
 
 NodeCard.displayName = 'NodeCard';
+
+// ============================================================================
+// React Flow Custom Node Wrapper
+// ============================================================================
+
+/**
+ * ReactFlowNodeCard wraps NodeCard for use as a React Flow custom node type.
+ * React Flow passes all custom data via the `data` prop, which this wrapper
+ * destructures and forwards to NodeCard.
+ */
+type NodeCardNode = Node<ReactFlowNodeData, 'nodeCard'>;
+
+export const ReactFlowNodeCard: React.FC<NodeProps<NodeCardNode>> = ({ data }) => {
+  return (
+    <NodeCard
+      node={data.node}
+      selected={data.selected}
+      focused={data.focused}
+      dimmed={data.dimmed}
+      disabled={data.disabled}
+      onClick={data.onClick}
+      onDetailsClick={data.onDetailsClick}
+    />
+  );
+};
+
+ReactFlowNodeCard.displayName = 'ReactFlowNodeCard';

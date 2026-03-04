@@ -1,22 +1,33 @@
 /**
  * FlowCanvas Component
  *
- * Column-grid layout engine for pathway node visualization.
- * Nodes positioned via columnIndex/verticalPosition data.
- * Supports multi-pathway rendering with dimming.
+ * React Flow-based pathway visualization canvas.
+ * Converts PathwayNode[] and PathwayConnection[] into React Flow nodes/edges.
+ * Supports multi-pathway rendering with vertical offset and dimming.
+ *
+ * Replaces the previous manual absolute positioning + SVG overlay approach.
+ * React Flow provides built-in pan/zoom, MiniMap, and edge rendering.
  */
 
-import React, { useMemo, useCallback, useRef } from 'react';
+import React, { useMemo, useCallback } from 'react';
+import {
+  ReactFlow,
+  Background,
+  MiniMap,
+} from '@xyflow/react';
+import type { Node, Edge } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+
 import { usePopHealth } from '../../context/PopHealthContext';
 import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health';
-import { NodeCard, NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT } from './NodeCard';
-import { ConnectionLines } from './ConnectionLines';
+import { NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT, ReactFlowNodeCard } from './NodeCard';
+import type { ReactFlowNodeData } from './NodeCard';
 import { FilterBar } from './FilterBar';
-import type { Pathway, PathwayNode } from '../../types/population-health';
-import { colors, spaceAround, spaceBetween, typography, LAYOUT } from '../../styles/foundations';
+import type { Pathway } from '../../types/population-health';
+import { colors, typography } from '../../styles/foundations';
 
 // ============================================================================
-// Layout Constants (exported for ConnectionLines)
+// Layout Constants
 // ============================================================================
 
 export const COLUMN_WIDTH = NODE_CARD_WIDTH + 60; // Card width + gap
@@ -24,12 +35,17 @@ export const ROW_HEIGHT = NODE_CARD_MIN_HEIGHT + 32; // Card height + vertical g
 const CANVAS_PADDING = 32;
 
 // ============================================================================
+// Custom Node Types (module-level — avoids re-registration on every render)
+// ============================================================================
+
+const nodeTypes = { nodeCard: ReactFlowNodeCard };
+
+// ============================================================================
 // Component
 // ============================================================================
 
 export const FlowCanvas: React.FC = () => {
   const { state, dispatch } = usePopHealth();
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Get pathways to render
   const allPathways = useMemo(() => {
@@ -39,12 +55,12 @@ export const FlowCanvas: React.FC = () => {
     return PATHWAYS;
   }, [state.selectedCohortId]);
 
-  // If specific pathways selected, show those; otherwise show all
+  // If specific pathways selected, show those; otherwise show first
   const activePathways = useMemo(() => {
     if (state.selectedPathwayIds.length > 0) {
       return allPathways.filter((p) => state.selectedPathwayIds.includes(p.id));
     }
-    return allPathways.slice(0, 1); // Default: show first pathway
+    return allPathways.slice(0, 1);
   }, [allPathways, state.selectedPathwayIds]);
 
   const dimmedPathways = useMemo(() => {
@@ -54,48 +70,7 @@ export const FlowCanvas: React.FC = () => {
     return allPathways.slice(1);
   }, [allPathways, state.selectedPathwayIds]);
 
-  // Compute layout dimensions
-  const layout = useMemo(() => {
-    let maxCol = 0;
-    let maxRow = 0;
-    let verticalOffset = 0;
-
-    const pathwayLayouts: Array<{
-      pathway: Pathway;
-      verticalOffset: number;
-      dimmed: boolean;
-    }> = [];
-
-    // Active pathways first
-    for (const pathway of activePathways) {
-      pathwayLayouts.push({ pathway, verticalOffset, dimmed: false });
-      for (const node of pathway.nodes) {
-        maxCol = Math.max(maxCol, node.columnIndex);
-        maxRow = Math.max(maxRow, node.verticalPosition + verticalOffset);
-      }
-      // Find max vertical position in this pathway
-      const maxV = pathway.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
-      verticalOffset += maxV + 2; // Gap between pathways
-    }
-
-    // Dimmed pathways below
-    for (const pathway of dimmedPathways) {
-      pathwayLayouts.push({ pathway, verticalOffset, dimmed: true });
-      for (const node of pathway.nodes) {
-        maxCol = Math.max(maxCol, node.columnIndex);
-        maxRow = Math.max(maxRow, node.verticalPosition + verticalOffset);
-      }
-      const maxV = pathway.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
-      verticalOffset += maxV + 2;
-    }
-
-    return {
-      pathwayLayouts,
-      width: (maxCol + 1) * COLUMN_WIDTH + CANVAS_PADDING * 2,
-      height: (maxRow + 1) * ROW_HEIGHT + CANVAS_PADDING * 2,
-    };
-  }, [activePathways, dimmedPathways]);
-
+  // Node click handlers
   const handleNodeClick = useCallback((nodeId: string) => {
     dispatch({
       type: state.selectedNodeId === nodeId ? 'NODE_DESELECTED' : 'NODE_SELECTED',
@@ -107,74 +82,122 @@ export const FlowCanvas: React.FC = () => {
     dispatch({ type: 'DRAWER_OPENED', view: { type: 'node-detail', nodeId } });
   }, [dispatch]);
 
+  // Convert pathway data → React Flow nodes and edges
+  const { flowNodes, flowEdges } = useMemo(() => {
+    const nodes: Node<ReactFlowNodeData>[] = [];
+    const edges: Edge[] = [];
+    let verticalOffset = 0;
+
+    const processPathway = (pathway: Pathway, dimmed: boolean) => {
+      // Convert pathway nodes → React Flow nodes
+      for (const pNode of pathway.nodes) {
+        const adjustedVerticalPos = pNode.verticalPosition + verticalOffset;
+
+        nodes.push({
+          id: pNode.id,
+          type: 'nodeCard',
+          position: {
+            x: CANVAS_PADDING + pNode.columnIndex * COLUMN_WIDTH,
+            y: CANVAS_PADDING + adjustedVerticalPos * ROW_HEIGHT,
+          },
+          data: {
+            node: pNode,
+            selected: state.selectedNodeId === pNode.id,
+            focused: state.selectedNodeId === pNode.id,
+            dimmed,
+            disabled: pNode.disabled ?? false,
+            onClick: () => handleNodeClick(pNode.id),
+            onDetailsClick: () => handleNodeDetails(pNode.id),
+          },
+        });
+      }
+
+      // Convert pathway connections → React Flow edges
+      for (const conn of pathway.connections) {
+        const edgeLabels: string[] = [];
+        if (conn.patientCount !== undefined) {
+          edgeLabels.push(String(conn.patientCount));
+        }
+        if (conn.label) {
+          edgeLabels.push(conn.label);
+        }
+
+        edges.push({
+          id: conn.id,
+          source: conn.sourceNodeId,
+          target: conn.targetNodeId,
+          type: 'default',
+          style: {
+            stroke: colors.border.neutral.low,
+            strokeWidth: 1.5,
+            opacity: dimmed ? 0.4 : 1,
+          },
+          label: edgeLabels.length > 0 ? edgeLabels.join(' \u2014 ') : undefined,
+          labelStyle: {
+            fontSize: 10,
+            fill: colors.fg.neutral.secondary,
+            fontFamily: typography.fontFamily.sans,
+          },
+          labelBgStyle: {
+            fill: colors.bg.neutral.base,
+            fillOpacity: 0.8,
+          },
+          labelBgPadding: [4, 2] as [number, number],
+          labelBgBorderRadius: 3,
+        });
+      }
+
+      // Track max vertical position for offset
+      const maxV = pathway.nodes.reduce((m, n) => Math.max(m, n.verticalPosition), 0);
+      verticalOffset += maxV + 2; // Gap between pathways
+    };
+
+    // Active pathways first
+    for (const pathway of activePathways) {
+      processPathway(pathway, false);
+    }
+
+    // Dimmed pathways below
+    for (const pathway of dimmedPathways) {
+      processPathway(pathway, true);
+    }
+
+    return { flowNodes: nodes, flowEdges: edges };
+  }, [activePathways, dimmedPathways, state.selectedNodeId, handleNodeClick, handleNodeDetails]);
+
   return (
     <div style={canvasStyles.outerContainer} data-testid="flow-canvas">
       {/* Filter bar */}
       <FilterBar />
 
-      {/* Scrollable canvas */}
-      <div style={canvasStyles.scrollContainer} ref={scrollRef}>
-        <div
-          style={{
-            position: 'relative',
-            width: layout.width,
-            minHeight: layout.height,
-            padding: CANVAS_PADDING,
-          }}
-        >
-          {/* Render each pathway */}
-          {layout.pathwayLayouts.map(({ pathway, verticalOffset, dimmed }) => (
-            <React.Fragment key={pathway.id}>
-              {/* Connection lines (behind nodes) */}
-              <ConnectionLines
-                connections={pathway.connections}
-                nodes={pathway.nodes.map((n) => ({
-                  ...n,
-                  verticalPosition: n.verticalPosition + verticalOffset,
-                }))}
-                containerWidth={layout.width}
-                containerHeight={layout.height}
-              />
-
-              {/* Nodes */}
-              {pathway.nodes.map((node) => {
-                const adjustedNode: PathwayNode = {
-                  ...node,
-                  verticalPosition: node.verticalPosition + verticalOffset,
-                };
-
-                return (
-                  <div
-                    key={node.id}
-                    style={{
-                      position: 'absolute',
-                      left: CANVAS_PADDING + adjustedNode.columnIndex * COLUMN_WIDTH,
-                      top: CANVAS_PADDING + adjustedNode.verticalPosition * ROW_HEIGHT,
-                      transition: `left ${transitions.base}, top ${transitions.base}`,
-                    }}
-                  >
-                    <NodeCard
-                      node={node}
-                      selected={state.selectedNodeId === node.id}
-                      focused={state.selectedNodeId === node.id}
-                      dimmed={dimmed}
-                      disabled={node.disabled}
-                      onClick={() => handleNodeClick(node.id)}
-                      onDetailsClick={() => handleNodeDetails(node.id)}
-                    />
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-
-          {/* Empty state */}
-          {layout.pathwayLayouts.length === 0 && (
-            <div style={canvasStyles.emptyState}>
-              <span style={canvasStyles.emptyText}>No pathways available</span>
-            </div>
-          )}
-        </div>
+      {/* React Flow canvas */}
+      <div style={canvasStyles.flowContainer}>
+        {flowNodes.length > 0 ? (
+          <ReactFlow
+            nodes={flowNodes}
+            edges={flowEdges}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.2 }}
+            minZoom={0.3}
+            maxZoom={2}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            proOptions={{ hideAttribution: true }}
+          >
+            <Background color={colors.border.neutral.low} gap={20} size={1} />
+            <MiniMap
+              nodeColor={() => colors.bg.neutral.subtle}
+              maskColor="rgba(0, 0, 0, 0.08)"
+              style={{ bottom: 12, right: 12 }}
+            />
+          </ReactFlow>
+        ) : (
+          <div style={canvasStyles.emptyState}>
+            <span style={canvasStyles.emptyText}>No pathways available</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -186,8 +209,6 @@ FlowCanvas.displayName = 'FlowCanvas';
 // Styles
 // ============================================================================
 
-import { transitions } from '../../styles/foundations';
-
 const canvasStyles: Record<string, React.CSSProperties> = {
   outerContainer: {
     display: 'flex',
@@ -195,10 +216,9 @@ const canvasStyles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflow: 'hidden',
   },
-  scrollContainer: {
+  flowContainer: {
     flex: 1,
-    overflow: 'auto',
-    paddingTop: LAYOUT.headerHeight,
+    height: '100%',
   },
   emptyState: {
     display: 'flex',

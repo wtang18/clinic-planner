@@ -1,4 +1,9 @@
 /**
+ * @deprecated ConnectionLines is no longer used. React Flow renders edges natively.
+ * This file will be removed in a future cleanup pass.
+ */
+
+/**
  * ConnectionLines Component
  *
  * SVG overlay rendering bezier curves between pathway nodes.

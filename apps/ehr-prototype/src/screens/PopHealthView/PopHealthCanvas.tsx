@@ -5,13 +5,14 @@
  * based on the active view selection in PopHealthContext.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { FlowCanvas } from '../../components/population-health/FlowCanvas';
 import { TableView } from '../../components/population-health/TableView';
 import { SlideDrawer } from '../../components/shared/SlideDrawer';
 import { NodeDetailView } from '../../components/population-health/NodeDetailView';
 import { PatientPreviewView } from '../../components/population-health/PatientPreviewView';
+import { getPathwayById } from '../../data/mock-population-health';
 import { colors, typography, spaceAround } from '../../styles/foundations';
 
 // ============================================================================
@@ -20,6 +21,18 @@ import { colors, typography, spaceAround } from '../../styles/foundations';
 
 export const PopHealthCanvas: React.FC = () => {
   const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
+
+  // Resolve selected pathway name for the label
+  const selectedPathwayName = useMemo(() => {
+    if (state.selectedPathwayIds.length === 1) {
+      const pathway = getPathwayById(state.selectedPathwayIds[0]);
+      return pathway?.name ?? null;
+    }
+    if (state.selectedPathwayIds.length > 1) {
+      return `${state.selectedPathwayIds.length} pathways selected`;
+    }
+    return null;
+  }, [state.selectedPathwayIds]);
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
@@ -31,6 +44,13 @@ export const PopHealthCanvas: React.FC = () => {
 
   return (
     <div style={containerStyle} data-testid="pop-health-canvas">
+      {/* Pathway name label */}
+      {state.activeView === 'flow' && selectedPathwayName && (
+        <div style={labelStyles.container}>
+          <span style={labelStyles.text}>{selectedPathwayName}</span>
+        </div>
+      )}
+
       {/* Main canvas area */}
       {state.activeView === 'flow' ? <FlowCanvas /> : <TableView />}
 
@@ -66,3 +86,21 @@ export const PopHealthCanvas: React.FC = () => {
 };
 
 PopHealthCanvas.displayName = 'PopHealthCanvas';
+
+// ============================================================================
+// Styles
+// ============================================================================
+
+const labelStyles: Record<string, React.CSSProperties> = {
+  container: {
+    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
+    flexShrink: 0,
+  },
+  text: {
+    fontSize: 13,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.fg.neutral.primary,
+  },
+};
