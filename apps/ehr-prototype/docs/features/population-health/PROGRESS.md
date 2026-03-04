@@ -1,6 +1,6 @@
 # Population Health Workspace — Progress Tracker
 
-> **Status:** Active Build — Phase 0 Complete
+> **Status:** Active Build — Phases 0–4 Complete
 > **Last Updated:** 2026-03-03
 > **Related Docs:** [Design Spec](./DESIGN-SPEC.md) | [Phased Plan](./PHASED-PLAN.md) | [AppShell Scope System](../../architecture/appshell-scope-system.md)
 
@@ -11,10 +11,10 @@
 | Phase | Name | Status | Notes |
 |-------|------|--------|-------|
 | 0 | Scope Infrastructure (Pragmatic) | **Complete** | Scope stack in NavigationContext, NavRow generalization, ScopeReturnBar. CaptureView extraction deferred. |
-| 1 | Types + Mock Data + React Flow | Not started | Update existing types/data, add React Flow dependency |
-| 2 | Menu Integration ("My Patients") | Not started | Cohort tree into MenuPane, scenario-aware |
-| 3 | Center Pane — Cohort Context | Not started | Identity parity, Overview/Activity, branch-only tree |
-| 4 | Flow View — React Flow Migration | Not started | Replace FlowCanvas + ConnectionLines |
+| 1 | Types + Mock Data + React Flow | **Complete** | Pathway rename, lifecycle/flow types, mock data, @xyflow/react installed |
+| 2 | Menu Integration ("My Patients") | **Complete** | CohortTree in MenuPane, category groups, overview entries, recent patients |
+| 3 | Center Pane — Cohort Context | **Complete** | CohortContextPane, CohortActivityFeed, props-based Dashboard, branch-indented LayerTree |
+| 4 | Flow View — React Flow Migration | **Complete** | ReactFlow canvas, lifecycle-aware NodeCard, ReactFlowNodeCard wrapper, ConnectionLines deprecated |
 | 5 | Cross-Pane Sync + Filters | Not started | Requires 3 + 4 |
 | 6 | Detail Drawer + Drill-Through | Not started | Scope push/pop, return affordance |
 | 7 | Table View + Polish | Not started | Wire existing table, AI bar, full journey |
