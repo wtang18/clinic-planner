@@ -1,23 +1,15 @@
 /**
  * Dashboard Component
  *
- * Displays aggregate metrics and alerts for the selected cohort/pathway.
- * Adapts scope based on PopHealthContext selection:
- * - Cohort selected (no pathway) → cohort-level metrics
- * - Pathway selected → pathway-level metrics
+ * Pure presentational component that displays aggregate metrics and alerts.
+ * Receives all data via props — the parent is responsible for computing
+ * metrics/alerts from PopHealthContext or any other source.
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { TrendingUp, TrendingDown, Minus, AlertCircle, AlertTriangle, Info } from 'lucide-react';
-import { usePopHealth } from '../../context/PopHealthContext';
-import {
-  getMetricsForPathway,
-  getMetricsForCohort,
-  getAlertsForPathway,
-  DASHBOARD_ALERTS,
-} from '../../data/mock-population-health';
 import type { DashboardMetric, DashboardAlert } from '../../types/population-health';
-import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
 // Metric Card
@@ -86,37 +78,25 @@ const AlertRow: React.FC<{ alert: DashboardAlert; onClick?: () => void }> = ({ a
 // Dashboard Component
 // ============================================================================
 
-export const Dashboard: React.FC = () => {
-  const { state, dispatch } = usePopHealth();
+export interface DashboardProps {
+  /** Metric cards to display in the top grid */
+  metrics: DashboardMetric[];
+  /** Alert rows to display below metrics */
+  alerts: DashboardAlert[];
+  /** Called when an alert row is clicked */
+  onAlertClick?: (alert: DashboardAlert) => void;
+  /** Test ID for e2e queries */
+  testID?: string;
+}
 
-  const metrics = useMemo(() => {
-    if (state.selectedPathwayIds.length === 1) {
-      return getMetricsForPathway(state.selectedPathwayIds[0]);
-    }
-    if (state.selectedCohortId) {
-      return getMetricsForCohort(state.selectedCohortId);
-    }
-    return [];
-  }, [state.selectedPathwayIds, state.selectedCohortId]);
-
-  const alerts = useMemo(() => {
-    if (state.selectedPathwayIds.length === 1) {
-      return getAlertsForPathway(state.selectedPathwayIds[0]);
-    }
-    return DASHBOARD_ALERTS.slice(0, 3);
-  }, [state.selectedPathwayIds]);
-
-  const handleAlertClick = (alert: DashboardAlert) => {
-    if (alert.pathwayId) {
-      dispatch({ type: 'PATHWAY_SELECTED', pathwayId: alert.pathwayId });
-      if (alert.nodeId) {
-        dispatch({ type: 'NODE_SELECTED', nodeId: alert.nodeId });
-      }
-    }
-  };
-
+export const Dashboard: React.FC<DashboardProps> = ({
+  metrics,
+  alerts,
+  onAlertClick,
+  testID = 'pop-health-dashboard',
+}) => {
   return (
-    <div style={dashboardStyles.container} data-testid="pop-health-dashboard">
+    <div style={dashboardStyles.container} data-testid={testID}>
       {/* Metrics grid */}
       {metrics.length > 0 && (
         <div style={dashboardStyles.metricsGrid}>
@@ -134,7 +114,7 @@ export const Dashboard: React.FC = () => {
             <AlertRow
               key={a.id}
               alert={a}
-              onClick={() => handleAlertClick(a)}
+              onClick={onAlertClick ? () => onAlertClick(a) : undefined}
             />
           ))}
         </div>
@@ -161,7 +141,7 @@ const dashboardStyles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.related,
-    padding: `${LAYOUT.headerHeight + spaceAround.compact}px ${spaceAround.default}px ${spaceAround.compact}px`,
+    padding: `${spaceAround.compact}px ${spaceAround.default}px ${spaceAround.compact}px`,
     flexShrink: 0,
   },
   metricsGrid: {

@@ -16,8 +16,14 @@ import { LayerTree } from '../../components/population-health/LayerTree';
 import { PopHealthCanvas } from './PopHealthCanvas';
 import { SegmentedControl, type Segment } from '../../components/primitives/SegmentedControl';
 import { Layers, Table2 } from 'lucide-react';
-import type { ActiveView } from '../../types/population-health';
-import { COHORTS } from '../../data/mock-population-health';
+import type { ActiveView, DashboardAlert } from '../../types/population-health';
+import {
+  COHORTS,
+  getMetricsForPathway,
+  getMetricsForCohort,
+  getAlertsForPathway,
+  DASHBOARD_ALERTS,
+} from '../../data/mock-population-health';
 import { colors, typography } from '../../styles/foundations';
 
 // ============================================================================
@@ -80,13 +86,44 @@ const PopHealthViewInner: React.FC = () => {
     />
   ), [state.activeView, handleViewChange]);
 
+  // Compute dashboard data from context selection
+  const dashboardMetrics = useMemo(() => {
+    if (state.selectedPathwayIds.length === 1) {
+      return getMetricsForPathway(state.selectedPathwayIds[0]);
+    }
+    if (state.selectedCohortId) {
+      return getMetricsForCohort(state.selectedCohortId);
+    }
+    return [];
+  }, [state.selectedPathwayIds, state.selectedCohortId]);
+
+  const dashboardAlerts = useMemo(() => {
+    if (state.selectedPathwayIds.length === 1) {
+      return getAlertsForPathway(state.selectedPathwayIds[0]);
+    }
+    return DASHBOARD_ALERTS.slice(0, 3);
+  }, [state.selectedPathwayIds]);
+
+  const handleAlertClick = useCallback((alert: DashboardAlert) => {
+    if (alert.pathwayId) {
+      dispatch({ type: 'PATHWAY_SELECTED', pathwayId: alert.pathwayId });
+      if (alert.nodeId) {
+        dispatch({ type: 'NODE_SELECTED', nodeId: alert.nodeId });
+      }
+    }
+  }, [dispatch]);
+
   // Center pane: Dashboard + Layer Tree
   const overviewPane = useMemo(() => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <Dashboard />
+      <Dashboard
+        metrics={dashboardMetrics}
+        alerts={dashboardAlerts}
+        onAlertClick={handleAlertClick}
+      />
       <LayerTree />
     </div>
-  ), []);
+  ), [dashboardMetrics, dashboardAlerts, handleAlertClick]);
 
   return (
     <AdaptiveLayout
