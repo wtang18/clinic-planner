@@ -393,9 +393,7 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, on
 
 export const LayerTree: React.FC = () => {
   const { state, dispatch } = usePopHealth();
-  const [expandedPathways, setExpandedPathways] = useState<Set<string>>(() =>
-    new Set(pathways.map(p => p.id))
-  );
+  const [expandedPathways, setExpandedPathways] = useState<Set<string>>(new Set());
 
   const pathways = useMemo(() => {
     if (state.selectedCohortId) {
