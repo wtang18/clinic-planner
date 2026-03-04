@@ -206,14 +206,14 @@ class AIManagerImpl implements AIManager {
 
   enableService(serviceId: string): void {
     if (!this.registry) {
-      throw new Error('AI Manager not initialized');
+      return; // No-op after shutdown (e.g., React effect cleanup during scope transitions)
     }
     this.registry.enable(serviceId);
   }
 
   disableService(serviceId: string): void {
     if (!this.registry) {
-      throw new Error('AI Manager not initialized');
+      return; // No-op after shutdown
     }
     this.registry.disable(serviceId);
   }
