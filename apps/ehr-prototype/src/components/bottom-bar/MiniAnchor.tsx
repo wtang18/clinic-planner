@@ -130,8 +130,10 @@ const BadgeDisplay: React.FC<BadgeDisplayProps> = ({ type, count, color, variant
           ...positionStyle,
           width: BADGE_SIZE,
           height: BADGE_SIZE,
-          border: `2px solid transparent`,
-          borderTopColor: colors.fg.accent.primary,
+          borderTop: `2px solid ${colors.fg.accent.primary}`,
+          borderRight: '2px solid transparent',
+          borderBottom: '2px solid transparent',
+          borderLeft: '2px solid transparent',
           borderRadius: borderRadius.full,
         }}
         animate={{ rotate: 360 }}
