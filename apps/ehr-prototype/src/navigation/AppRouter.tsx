@@ -10,9 +10,9 @@ import { useNavigation, useCurrentScreen, useEncounterId, Screen } from './Navig
 import { EncounterLoader } from './EncounterLoader';
 
 // Screens
-import { CaptureView } from '../screens/CaptureView';
+import { EncounterProvider } from '../screens/EncounterWorkspace';
+import { AppShell } from '../screens/AppShell';
 import { PatientOverview } from '../screens/PatientOverview';
-import { PopHealthView } from '../screens/PopHealthView';
 import { DemoLauncher } from './DemoLauncher';
 
 import { Home } from 'lucide-react';
@@ -48,12 +48,17 @@ const NotFoundScreen: React.FC = () => {
 // ============================================================================
 
 /**
- * EncounterScreen renders CaptureView as the single layout host.
- * CaptureView owns the AdaptiveLayout (menu, overview, bottom bar) and
- * switches its canvas area between capture, process, and review content
- * based on the current mode. This ensures layout panes never unmount.
+ * EncounterScreen renders AppShell wrapped in EncounterProvider.
+ * EncounterProvider encapsulates all encounter-level hooks (transcription,
+ * AI, coordination, etc.) and exposes them via context.
+ * AppShell owns the AdaptiveLayout and delegates canvas rendering to
+ * scope-specific routers (EncounterWorkspace, CohortWorkspace).
  */
-const EncounterScreen: React.FC = () => <CaptureView />;
+const EncounterScreen: React.FC = () => (
+  <EncounterProvider>
+    <AppShell />
+  </EncounterProvider>
+);
 
 // ============================================================================
 // Screen Router
@@ -82,7 +87,8 @@ const ScreenRouter: React.FC<{ screen: Screen }> = ({ screen }) => {
       return <PatientOverview />;
 
     case 'population-health':
-      return <PopHealthView initialCohortId={state.params.cohortId || 'coh-diabetes'} />;
+      // Population health is now rendered inline in CaptureView; fallback to DemoLauncher
+      return <DemoLauncher />;
 
     case 'settings':
       return (

@@ -16,13 +16,10 @@ import {
   selectProcessViewDrafts,
 } from '../state/selectors/process-view';
 import type { ProcessBatch } from '../state/selectors/process-view';
-import {
-  useEncounterState,
-  useDispatch,
-  useItemActions,
-  useTaskActions,
-  useDraftActions,
-} from '../hooks';
+import { useEncounterState, useDispatch } from './useEncounterState';
+import { useItemActions } from './useChartItems';
+import { useTaskActions } from './useTasks';
+import { useDraftActions } from './useDrafts';
 import { useStore } from './useEncounterState';
 import { selectDraft } from '../state/selectors/drafts';
 import { materializeChartItem } from '../utils/chart-item-factory';

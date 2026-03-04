@@ -13,7 +13,7 @@ import {
   UC_COUGH_SEGMENTS,
   PC_DIABETES_SEGMENTS,
 } from '../services/transcription/mock-transcription';
-import { useDispatch } from '../hooks';
+import { useDispatch } from '../hooks/useEncounterState';
 
 // ============================================================================
 // Types
