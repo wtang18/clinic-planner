@@ -12,8 +12,8 @@ import { colors, borderRadius, spaceAround, spaceBetween, typography, transition
 // ============================================================================
 
 export interface MenuNavItemProps {
-  /** Icon to display */
-  icon: React.ReactNode;
+  /** Icon to display (null to hide icon slot) */
+  icon?: React.ReactNode;
   /** Label text */
   label: string;
   /** Whether this item is currently selected */
@@ -133,7 +133,7 @@ export const MenuNavItem: React.FC<MenuNavItemProps> = ({
       data-selected={isSelected}
     >
       <div style={leftContentStyle}>
-        <span style={iconStyle}>{icon}</span>
+        {icon != null && <span style={iconStyle}>{icon}</span>}
         <span style={labelStyle}>{label}</span>
       </div>
       {badge !== undefined && badge > 0 && (

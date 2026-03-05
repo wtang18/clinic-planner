@@ -191,7 +191,7 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
 
   // Effective tiers: modules at drawer are hidden (not rendered), so only bar/anchor/palette matter
   const aiVisible = bottomBarVisibility.ai.visible;
-  const tmVisible = bottomBarVisibility.transcription.visible;
+  const tmVisible = transcriptionEnabled !== false && bottomBarVisibility.transcription.visible;
   const effectiveAITier = aiVisible ? bottomBarVisibility.ai.tier! : 'bar';
   const effectiveTranscriptionTier = tmVisible ? bottomBarVisibility.transcription.tier! : 'bar';
 
@@ -235,9 +235,16 @@ export const BottomBarContainer: React.FC<BottomBarContainerProps> = ({
 
   // CSS Grid with coordination-driven template.
   // Gap is encoded as a column in the grid template (not CSS `gap`).
+  // When TM is suppressed (transcriptionEnabled=false), override to single-column
+  // palette width so the AI module gets full width instead of being squished
+  // into the TM column slot.
+  const effectiveGridTemplate = !tmVisible && aiVisible
+    ? 'var(--bottom-bar-palette-width)'
+    : coordGridTemplate;
+
   const gridStyle: React.CSSProperties = {
     display: 'grid',
-    gridTemplateColumns: coordGridTemplate,
+    gridTemplateColumns: effectiveGridTemplate,
     alignItems: 'flex-end',
     pointerEvents: 'auto',
     transition: 'grid-template-columns 200ms cubic-bezier(0.4, 0, 0.2, 1)',

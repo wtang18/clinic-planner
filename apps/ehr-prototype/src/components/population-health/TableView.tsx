@@ -14,7 +14,6 @@ import {
   PATHWAYS,
 } from '../../data/mock-population-health';
 import type { PathwayPatient } from '../../types/population-health';
-import { FilterBar } from './FilterBar';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
 
 // ============================================================================
@@ -190,8 +189,6 @@ export const TableView: React.FC = () => {
 
   return (
     <div style={tableStyles.outerContainer} data-testid="table-view">
-      <FilterBar />
-
       <div style={tableStyles.scrollContainer}>
         <table style={tableStyles.table}>
           <thead>

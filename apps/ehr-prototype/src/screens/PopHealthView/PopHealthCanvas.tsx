@@ -3,17 +3,20 @@
  *
  * Canvas container that routes between Flow View and Table View
  * based on the active view selection in PopHealthContext.
+ *
+ * Renders the FilterBar as a sticky row below the floating nav,
+ * and a SlideDrawer for node detail, patient preview, or filter views.
  */
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { FlowCanvas } from '../../components/population-health/FlowCanvas';
 import { TableView } from '../../components/population-health/TableView';
+import { FilterBar } from '../../components/population-health/FilterBar';
 import { SlideDrawer } from '../../components/shared/SlideDrawer';
 import { NodeDetailView } from '../../components/population-health/NodeDetailView';
 import { PatientPreviewView } from '../../components/population-health/PatientPreviewView';
-import { getPathwayById } from '../../data/mock-population-health';
-import { colors, typography, spaceAround } from '../../styles/foundations';
+import { colors, typography } from '../../styles/foundations';
 
 // ============================================================================
 // Component
@@ -21,18 +24,6 @@ import { colors, typography, spaceAround } from '../../styles/foundations';
 
 export const PopHealthCanvas: React.FC = () => {
   const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
-
-  // Resolve selected pathway name for the label
-  const selectedPathwayName = useMemo(() => {
-    if (state.selectedPathwayIds.length === 1) {
-      const pathway = getPathwayById(state.selectedPathwayIds[0]);
-      return pathway?.name ?? null;
-    }
-    if (state.selectedPathwayIds.length > 1) {
-      return `${state.selectedPathwayIds.length} pathways selected`;
-    }
-    return null;
-  }, [state.selectedPathwayIds]);
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
@@ -44,17 +35,13 @@ export const PopHealthCanvas: React.FC = () => {
 
   return (
     <div style={containerStyle} data-testid="pop-health-canvas">
-      {/* Pathway name label */}
-      {state.activeView === 'flow' && selectedPathwayName && (
-        <div style={labelStyles.container}>
-          <span style={labelStyles.text}>{selectedPathwayName}</span>
-        </div>
-      )}
+      {/* Sticky filter row — lifecycle toggles + chips, clears floating nav */}
+      <FilterBar />
 
       {/* Main canvas area */}
       {state.activeView === 'flow' ? <FlowCanvas /> : <TableView />}
 
-      {/* Detail drawer */}
+      {/* Detail drawer — node detail, patient preview, or filter controls */}
       <SlideDrawer
         open={isDrawerOpen}
         onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
@@ -68,7 +55,11 @@ export const PopHealthCanvas: React.FC = () => {
               fontFamily: typography.fontFamily.sans,
               color: colors.fg.neutral.primary,
             }}>
-              {currentDrawerView.type === 'node-detail' ? 'Node Details' : 'Patient Preview'}
+              {currentDrawerView.type === 'node-detail'
+                ? 'Node Details'
+                : currentDrawerView.type === 'patient-preview'
+                  ? 'Patient Preview'
+                  : 'Filters'}
             </span>
           ) : undefined
         }
@@ -80,6 +71,9 @@ export const PopHealthCanvas: React.FC = () => {
         {currentDrawerView?.type === 'patient-preview' && (
           <PatientPreviewView patientId={currentDrawerView.patientId} />
         )}
+        {currentDrawerView?.type === 'filter' && (
+          <FilterDrawerPlaceholder />
+        )}
       </SlideDrawer>
     </div>
   );
@@ -88,19 +82,35 @@ export const PopHealthCanvas: React.FC = () => {
 PopHealthCanvas.displayName = 'PopHealthCanvas';
 
 // ============================================================================
-// Styles
+// Filter Drawer Placeholder
 // ============================================================================
 
-const labelStyles: Record<string, React.CSSProperties> = {
-  container: {
-    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
-    flexShrink: 0,
-  },
-  text: {
-    fontSize: 13,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.fg.neutral.primary,
-  },
-};
+const FilterDrawerPlaceholder: React.FC = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 200,
+    gap: 8,
+    padding: 20,
+  }}>
+    <span style={{
+      fontSize: 14,
+      fontFamily: typography.fontFamily.sans,
+      color: colors.fg.neutral.secondary,
+    }}>
+      Advanced filter controls
+    </span>
+    <span style={{
+      fontSize: 12,
+      fontFamily: typography.fontFamily.sans,
+      color: colors.fg.neutral.spotReadable,
+      textAlign: 'center',
+    }}>
+      Configure lifecycle state, node type, patient count, and date range filters.
+    </span>
+  </div>
+);
+
+FilterDrawerPlaceholder.displayName = 'FilterDrawerPlaceholder';

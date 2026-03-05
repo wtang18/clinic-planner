@@ -242,6 +242,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
         <FloatingNavRow
           menuCollapsed={menuCollapsed}
           overviewCollapsed={overviewCollapsed}
+          hasOverviewPane={!!overviewPane}
           onToggleMenu={toggleMenu}
           onToggleOverview={toggleOverview}
           menuWidth={menuWidth}

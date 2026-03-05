@@ -82,10 +82,18 @@ export const AppShell: React.FC = () => {
   const [canvasScrolled, setCanvasScrolled] = useState(false);
   const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
 
-  // Derived cohort data
+  // Derive the effective cohort ID for data lookups (strip :overview and special IDs)
+  const effectiveCohortId = useMemo(() => {
+    if (!selectedCohortId) return null;
+    if (selectedCohortId.endsWith(':overview')) return null;
+    if (selectedCohortId === 'all-patients') return null;
+    return selectedCohortId;
+  }, [selectedCohortId]);
+
+  // Derived cohort data (only for actual cohorts, not overview)
   const selectedCohort = useMemo(
-    () => selectedCohortId ? getCohortById(selectedCohortId) ?? null : null,
-    [selectedCohortId]
+    () => effectiveCohortId ? getCohortById(effectiveCohortId) ?? null : null,
+    [effectiveCohortId]
   );
 
   // ---- AI context effects ----
@@ -138,7 +146,7 @@ export const AppShell: React.FC = () => {
   const handleNavItemSelect = (id: string) => {
     setSelectedNavItem(id);
     if (id === 'home' || id === 'visits' || id === 'agent') {
-      setViewMode('patient');
+      setViewMode(id === 'visits' ? 'visits' : id === 'home' ? 'home' : 'home');
       setTodoViewState(null);
       setSelectedCohortId(null);
       todoNav.clearNavigation();
@@ -155,8 +163,8 @@ export const AppShell: React.FC = () => {
       return;
     }
     setViewMode('cohort');
-    setSelectedCohortId(cohortId || 'coh-diabetes');
-    setSelectedNavItem('');
+    setSelectedCohortId(cohortId);
+    setSelectedNavItem('cohort');
     setTodoViewState(null);
     todoNav.clearNavigation();
   };
@@ -312,11 +320,13 @@ export const AppShell: React.FC = () => {
     }
   }, [patient?.mrn, patientOverviewName, workspace, encounter]);
 
+  // Set default patient nav item only on initial mount (when nothing is selected yet)
   useEffect(() => {
-    if (patient && !selectedNavItem) {
+    if (patient && selectedNavItem === '') {
       setSelectedNavItem(`patient-${patient.mrn}`);
     }
-  }, [patient?.mrn, selectedNavItem]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
+  }, [patient?.mrn]);
 
   // ---- Patient workspaces for menu ----
   const patientWorkspaces = useMemo(() => {
@@ -409,7 +419,7 @@ export const AppShell: React.FC = () => {
           <LeftPaneContainer
             menuPaneProps={{
               patientWorkspaces,
-              selectedItemId: selectedNavItem,
+              selectedItemId: viewMode === 'cohort' ? undefined : selectedNavItem,
               selectedToDoFilter: todoViewState && !selectedNavItem.startsWith('patient-')
                 ? `${todoViewState.categoryId}/${todoViewState.filterId}`
                 : undefined,
@@ -422,7 +432,7 @@ export const AppShell: React.FC = () => {
               onTabClose: handleTabClose,
               onWorkspaceClose: handleWorkspaceClose,
             }}
-            hasTranscriptionSession={!!activeSession}
+            hasTranscriptionSession={viewMode === 'patient' && !!activeSession}
             onViewChange={actions.switchView}
             onCollapse={actions.collapse}
             transcriptionDrawerProps={{
@@ -469,29 +479,36 @@ export const AppShell: React.FC = () => {
           <ViewIconsRow
             activeView={paneState.activeView}
             onViewChange={actions.switchView}
-            showTranscript={!!activeSession}
+            showTranscript={viewMode === 'patient' && !!activeSession}
           />
         }
         overviewPane={
-          <ScopeOverview
-            viewMode={viewMode}
-            selectedCohortId={selectedCohortId}
-            selectedPatient={selectedPatient}
-            selectedPatientOverviewData={selectedPatientOverviewData}
-          />
+          // Render overview pane for patient + all cohort views (including category overviews)
+          (viewMode === 'patient' || viewMode === 'cohort')
+            ? <ScopeOverview
+                viewMode={viewMode}
+                selectedCohortId={selectedCohortId}
+                selectedPatient={selectedPatient}
+                selectedPatientOverviewData={selectedPatientOverviewData}
+              />
+            : undefined
         }
         overviewHeaderContent={
-          <ScopeOverviewHeader
-            viewMode={viewMode}
-            selectedCohort={selectedCohort}
-            selectedPatient={selectedPatient}
-            selectedPatientOverviewData={selectedPatientOverviewData}
-          />
+          (viewMode === 'patient' || viewMode === 'cohort')
+            ? <ScopeOverviewHeader
+                viewMode={viewMode}
+                selectedCohort={selectedCohort}
+                selectedCohortId={selectedCohortId}
+                selectedPatient={selectedPatient}
+                selectedPatientOverviewData={selectedPatientOverviewData}
+              />
+            : undefined
         }
         canvasHeaderContent={
           <ScopeCanvasHeader
             viewMode={viewMode}
             isViewingEncounterPatient={!!isViewingEncounterPatient}
+            selectedCohortId={selectedCohortId}
           />
         }
         scrolledCanvasContent={
@@ -503,6 +520,7 @@ export const AppShell: React.FC = () => {
           <ScopeCollapsedIdentity
             viewMode={viewMode}
             selectedCohort={selectedCohort}
+            selectedCohortId={selectedCohortId}
             selectedPatient={selectedPatient}
           />
         }
@@ -527,19 +545,20 @@ export const AppShell: React.FC = () => {
           />
         }
         aiControlSurface={
-          <ScopeAIBar viewMode={viewMode} />
+          <ScopeAIBar viewMode={viewMode} selectedCohortId={selectedCohortId} />
         }
       />
     </>
   );
 
-  // Wrap in PopHealthProvider when in cohort mode so that CohortCanvasHeader,
-  // CohortContextPane, and other slot components can access usePopHealth().
-  return viewMode === 'cohort' && selectedCohortId ? (
-    <PopHealthProvider key={selectedCohortId} initialCohortId={selectedCohortId}>
+  // Always render PopHealthProvider so the menu tree never remounts when switching
+  // between cohort/overview/patient modes. The provider holds pop health state and
+  // resets via COHORT_SELECTED dispatch when initialCohortId changes.
+  return (
+    <PopHealthProvider initialCohortId={effectiveCohortId ?? undefined}>
       {mainContent}
     </PopHealthProvider>
-  ) : mainContent;
+  );
 };
 
 AppShell.displayName = 'AppShell';

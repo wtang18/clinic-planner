@@ -225,7 +225,8 @@ export type ActiveView = 'flow' | 'table';
 
 export type DrawerView =
   | { type: 'node-detail'; nodeId: string }
-  | { type: 'patient-preview'; patientId: string };
+  | { type: 'patient-preview'; patientId: string }
+  | { type: 'filter' };
 
 export interface PopHealthState {
   selectedCohortId: string | null;

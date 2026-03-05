@@ -5,7 +5,7 @@
  * Manages cohort/pathway/node selection, view mode, filters, and drawer stack.
  */
 
-import React, { createContext, useContext, useReducer, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useMemo, useCallback, useEffect, useRef } from 'react';
 import type {
   PopHealthState,
   PopHealthFilter,
@@ -211,6 +211,18 @@ export const PopHealthProvider: React.FC<PopHealthProviderProps> = ({
     ...INITIAL_STATE,
     selectedCohortId: initialCohortId ?? null,
   });
+
+  // When initialCohortId changes after mount, dispatch COHORT_SELECTED to reset
+  // pop health state without remounting the entire tree (preserves menu state).
+  const initialCohortRef = useRef(initialCohortId);
+  useEffect(() => {
+    if (initialCohortId !== initialCohortRef.current) {
+      initialCohortRef.current = initialCohortId;
+      if (initialCohortId) {
+        dispatch({ type: 'COHORT_SELECTED', cohortId: initialCohortId });
+      }
+    }
+  }, [initialCohortId]);
 
   const value = useMemo<PopHealthContextValue>(() => ({
     state,

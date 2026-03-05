@@ -53,6 +53,8 @@ export interface FloatingNavRowProps {
   onBack?: () => void;
   /** Whether back button should be shown */
   showBackButton?: boolean;
+  /** Whether an overview pane exists (hides toggle and overview zone when false) */
+  hasOverviewPane?: boolean;
   /** Encounter context shown in canvas zone when user scrolls past context bar */
   scrolledCanvasContent?: React.ReactNode;
   /** Full left+center zone override for non-encounter workspaces (replaces patient-specific content) */
@@ -92,6 +94,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   onSearchChange,
   onBack,
   showBackButton = false,
+  hasOverviewPane = true,
   scrolledCanvasContent,
   workspaceContent,
   height = DEFAULT_HEIGHT,
@@ -135,11 +138,13 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   // ============================================================================
 
   const isListMode = canvasViewMode === 'list';
+  // No overview zone when there's no overview pane or in list mode
+  const noOverviewZone = isListMode || !hasOverviewPane;
 
   // Determine where the menu button should render
-  // For list view, always put menu button in left zone (no overview zone)
-  const menuBtnInLeftZone = isListMode ? menuCollapsed : (menuCollapsed && overviewCollapsed);
-  const menuBtnInOverviewZone = isListMode ? false : (menuCollapsed && !overviewCollapsed);
+  // For list view or no overview, always put menu button in left zone (no overview zone)
+  const menuBtnInLeftZone = noOverviewZone ? menuCollapsed : (menuCollapsed && overviewCollapsed);
+  const menuBtnInOverviewZone = noOverviewZone ? false : (menuCollapsed && !overviewCollapsed);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -177,17 +182,17 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
   };
 
   // Overview zone: Patient identity (when overview OPEN), width matches overview pane
-  // Hidden completely for To-Do view
+  // Hidden completely for To-Do view and views without an overview pane
   const overviewZoneStyle: React.CSSProperties = {
-    display: isListMode ? 'none' : 'flex',
+    display: noOverviewZone ? 'none' : 'flex',
     alignItems: 'center',
     gap: spaceBetween.relatedCompact,
-    width: (isListMode || overviewCollapsed) ? 0 : overviewWidth,
-    minWidth: (isListMode || overviewCollapsed) ? 0 : overviewWidth,
-    maxWidth: (isListMode || overviewCollapsed) ? 0 : overviewWidth,
+    width: (noOverviewZone || overviewCollapsed) ? 0 : overviewWidth,
+    minWidth: (noOverviewZone || overviewCollapsed) ? 0 : overviewWidth,
+    maxWidth: (noOverviewZone || overviewCollapsed) ? 0 : overviewWidth,
     // Left padding: floatingInset for menu button alignment when it's in this zone, otherwise content padding
-    paddingLeft: (isListMode || overviewCollapsed) ? 0 : (menuBtnInOverviewZone ? LAYOUT.floatingInset : LAYOUT.overviewContentPadding),
-    paddingRight: (isListMode || overviewCollapsed) ? 0 : LAYOUT.overviewContentPadding,
+    paddingLeft: (noOverviewZone || overviewCollapsed) ? 0 : (menuBtnInOverviewZone ? LAYOUT.floatingInset : LAYOUT.overviewContentPadding),
+    paddingRight: (noOverviewZone || overviewCollapsed) ? 0 : LAYOUT.overviewContentPadding,
     transition: `all 250ms cubic-bezier(0.4, 0, 0.2, 1)`,
     overflow: 'hidden',
     flexShrink: 0,
@@ -326,8 +331,8 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
                 <ChevronLeft size={20} />
               </button>
 
-              {/* Overview toggle - Only in patient view (right of back button) */}
-              {!isListMode && (
+              {/* Overview toggle - Only when overview pane exists and not in list mode */}
+              {!noOverviewZone && (
                 <button
                   type="button"
                   style={glassButtonStyle}
@@ -351,8 +356,8 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
                 </button>
               )}
 
-              {/* Identity content - shown inline when overview is collapsed (standard view only) */}
-              {!isListMode && overviewCollapsed && collapsedIdentityContent && (
+              {/* Identity content - shown inline when overview is collapsed (standard view with pane only) */}
+              {!noOverviewZone && overviewCollapsed && collapsedIdentityContent && (
                 <div style={{ marginLeft: LAYOUT.buttonGap }}>
                   {collapsedIdentityContent}
                 </div>

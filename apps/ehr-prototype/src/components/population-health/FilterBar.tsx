@@ -1,16 +1,19 @@
 /**
  * FilterBar Component
  *
- * Always-visible bar with lifecycle toggle buttons, filter chips, and inline search.
- * Layout: [Lifecycle toggles] [Filter chips] [Clear all] [--- spacer ---] [Search input]
+ * Sticky filter row with lifecycle toggle buttons and filter chips.
+ * Renders within the canvas pane, below the floating nav row.
+ * Search has been moved to FloatingNavRow for consistency with other views.
+ *
+ * Layout: [Lifecycle toggles] [| separator] [Filter chips] [Clear all]
  */
 
 import React, { useCallback, useEffect } from 'react';
-import { X, Search } from 'lucide-react';
+import { X } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { DEFAULT_PATHWAY_FILTERS } from '../../data/mock-population-health';
 import type { PopHealthFilter, NodeLifecycleState } from '../../types/population-health';
-import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
 
 // ============================================================================
 // Lifecycle Toggle
@@ -131,14 +134,9 @@ export const FilterBar: React.FC = () => {
     dispatch({ type: 'LIFECYCLE_FILTER_CHANGED', states: next });
   }, [state.lifecycleFilter, dispatch]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: 'SEARCH_CHANGED', query: e.target.value });
-  }, [dispatch]);
+  const hasActiveFilters = state.lifecycleFilter.length > 0 || state.filters.length > 0;
 
-  const handleClearSearch = useCallback(() => {
-    dispatch({ type: 'SEARCH_CHANGED', query: '' });
-  }, [dispatch]);
-
+  // Don't render if there are no toggles active and no chips — always show toggles though
   return (
     <div style={barStyles.container} data-testid="filter-bar">
       {/* Lifecycle toggles */}
@@ -174,32 +172,6 @@ export const FilterBar: React.FC = () => {
           </div>
         </>
       )}
-
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
-
-      {/* Search input */}
-      <div style={barStyles.searchContainer}>
-        <Search size={12} style={{ color: colors.fg.neutral.secondary, flexShrink: 0 }} />
-        <input
-          type="text"
-          value={state.searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Search nodes..."
-          style={barStyles.searchInput}
-          data-testid="filter-bar-search"
-        />
-        {state.searchQuery && (
-          <button
-            type="button"
-            onClick={handleClearSearch}
-            style={barStyles.searchClear}
-            aria-label="Clear search"
-          >
-            <X size={10} />
-          </button>
-        )}
-      </div>
     </div>
   );
 };
@@ -216,9 +188,10 @@ const barStyles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: spaceBetween.relatedCompact,
     padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
     flexShrink: 0,
     flexWrap: 'wrap',
+    // Positioned as sticky row within canvas pane, clearing the floating nav
+    paddingTop: LAYOUT.headerHeight + spaceAround.tight,
   },
   toggleGroup: {
     display: 'flex',
@@ -246,40 +219,5 @@ const barStyles: Record<string, React.CSSProperties> = {
     border: 'none',
     cursor: 'pointer',
     padding: '2px 4px',
-  },
-  searchContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
-    padding: '2px 8px',
-    backgroundColor: colors.bg.neutral.subtle,
-    borderRadius: borderRadius.sm,
-    border: `1px solid ${colors.border.neutral.low}`,
-    flexShrink: 0,
-    minWidth: 140,
-  },
-  searchInput: {
-    flex: 1,
-    border: 'none',
-    outline: 'none',
-    backgroundColor: 'transparent',
-    fontSize: 11,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.primary,
-    padding: 0,
-    minWidth: 80,
-  },
-  searchClear: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 14,
-    height: 14,
-    border: 'none',
-    backgroundColor: 'transparent',
-    cursor: 'pointer',
-    color: colors.fg.neutral.secondary,
-    padding: 0,
-    flexShrink: 0,
   },
 };

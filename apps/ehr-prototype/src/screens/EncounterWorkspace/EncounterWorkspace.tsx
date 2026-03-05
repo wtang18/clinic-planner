@@ -53,7 +53,7 @@ import { colors, spaceAround, spaceBetween, typography, LAYOUT } from '../../sty
 // Types
 // ============================================================================
 
-export type ViewMode = 'patient' | 'todo-list' | 'todo-detail' | 'cohort';
+export type ViewMode = 'patient' | 'todo-list' | 'todo-detail' | 'cohort' | 'home' | 'visits';
 
 export interface ToDoViewState {
   categoryId: string;
@@ -814,7 +814,7 @@ export const EncounterOverview: React.FC<{
 EncounterOverview.displayName = 'EncounterOverview';
 
 /** Encounter AI bar — BottomBarContainer with encounter-specific props */
-export const EncounterAIBar: React.FC = () => {
+export const EncounterAIBar: React.FC<{ transcriptionEnabled?: boolean }> = ({ transcriptionEnabled = true }) => {
   const ctx = useEncounterContext();
   const patient = ctx.state.context.patient;
   const encounter = ctx.state.context.encounter;
@@ -862,7 +862,7 @@ export const EncounterAIBar: React.FC = () => {
       onNonChartAction={ctx.aiConversation.handleNonChartAction}
       onClearResponse={ctx.aiConversation.clearPaletteResponse}
       cannedQueries={ctx.aiConversation.cannedQueries.map(q => q.text)}
-      transcriptionEnabled={true}
+      transcriptionEnabled={transcriptionEnabled}
     />
   );
 };

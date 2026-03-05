@@ -17,15 +17,13 @@ import {
   Search,
   Activity,
   Shield,
-  Syringe,
   AlertTriangle,
-  TrendingUp,
-  CheckCircle,
   ArrowRightLeft,
   History,
   ChevronRight,
 } from 'lucide-react';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions, LAYOUT } from '../../styles/foundations';
+import { Badge } from '../primitives/Badge';
 import { MenuSection } from './MenuSection';
 import { MenuNavItem } from './MenuNavItem';
 import { PatientWorkspaceItem, PatientTask, type VisitSubItemConfig } from './PatientWorkspaceItem';
@@ -36,20 +34,8 @@ import type { WorkspaceTab } from '../../context/WorkspaceContext';
 import { COHORT_GROUPS, COHORTS } from '../../data/mock-population-health';
 
 // ============================================================================
-// Cohort Icon Map (absorbed from CohortNavigator)
+// Category Icon Map (for cohort group headers)
 // ============================================================================
-
-const COHORT_ICONS: Record<string, React.ReactNode> = {
-  'coh-diabetes': <Activity size={16} />,
-  'coh-hypertension': <Activity size={16} />,
-  'coh-copd': <Activity size={16} />,
-  'coh-cancer-screening': <Shield size={16} />,
-  'coh-immunization': <Syringe size={16} />,
-  'coh-high-risk': <AlertTriangle size={16} />,
-  'coh-rising-risk': <TrendingUp size={16} />,
-  'coh-stable': <CheckCircle size={16} />,
-  'coh-recent-discharge': <ArrowRightLeft size={16} />,
-};
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'grp-chronic': <Activity size={16} />,
@@ -147,11 +133,12 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [hoveredGroupId, setHoveredGroupId] = useState<string | null>(null);
 
-  // Auto-expand group when selectedCohortId matches a child
+  // Auto-expand group when selectedCohortId matches a child or overview
   useEffect(() => {
     if (!selectedCohortId) return;
     for (const group of COHORT_GROUPS) {
-      if (group.cohortIds.includes(selectedCohortId)) {
+      const isOverview = selectedCohortId === `${group.id}:overview`;
+      if (isOverview || group.cohortIds.includes(selectedCohortId)) {
         setExpandedGroups((prev) => {
           if (prev.has(group.id)) return prev;
           const next = new Set(prev);
@@ -300,8 +287,8 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                 icon={<Users size={16} />}
                 label="All Patients"
                 badge={totalPatientCount}
-                isSelected={selectedCohortId === ''}
-                onClick={() => onCohortSelect?.('')}
+                isSelected={selectedCohortId === 'all-patients'}
+                onClick={() => onCohortSelect?.('all-patients')}
                 testID="my-patients-all"
               />
               <MenuNavItem
@@ -312,7 +299,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                 testID="my-patients-recent"
               />
 
-              {/* Category groups with cohort items — expandable L1 items */}
+              {/* Category groups with cohort items — expandable L1 items (matching ToDoCategoryItem pattern) */}
               {COHORT_GROUPS.map((group) => {
                 const groupCohorts = COHORTS.filter(
                   (c) => group.cohortIds.includes(c.id)
@@ -321,12 +308,21 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                   (sum, c) => sum + c.patientCount, 0
                 );
                 const isGroupExpanded = expandedGroups.has(group.id);
-                const isGroupSelected = selectedCohortId === group.id;
                 const isGroupHovered = hoveredGroupId === group.id;
+                // Overview is selected when selectedCohortId matches the overview convention
+                const overviewId = `${group.id}:overview`;
+                const isChildSelected = selectedCohortId === overviewId
+                  || groupCohorts.some((c) => c.id === selectedCohortId);
+
+                // All children including Overview
+                const childItems = [
+                  { id: overviewId, label: 'Overview', count: groupCount },
+                  ...groupCohorts.map((c) => ({ id: c.id, label: c.name, count: c.patientCount })),
+                ];
 
                 return (
                   <div key={group.id} data-testid={`cohort-group-${group.id}`}>
-                    {/* Category row — clickable to expand + navigate to overview */}
+                    {/* Category row — click to expand + auto-select Overview */}
                     <div
                       style={{
                         display: 'flex',
@@ -336,21 +332,19 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                         borderRadius: borderRadius.sm,
                         cursor: 'pointer',
                         transition: `background-color ${transitions.fast}`,
-                        backgroundColor: isGroupSelected
-                          ? colors.bg.accent.low
-                          : isGroupHovered
+                        backgroundColor: isGroupHovered
                           ? colors.bg.neutral.subtle
                           : 'transparent',
                         userSelect: 'none',
                       }}
                       onClick={() => {
-                        // Expand if collapsed, navigate to category overview
+                        // Always expand; auto-select Overview child
                         setExpandedGroups((prev) => {
                           const next = new Set(prev);
                           next.add(group.id);
                           return next;
                         });
-                        onCohortSelect?.(group.id);
+                        onCohortSelect?.(overviewId);
                       }}
                       onMouseEnter={() => setHoveredGroupId(group.id)}
                       onMouseLeave={() => setHoveredGroupId(null)}
@@ -364,7 +358,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                             next.add(group.id);
                             return next;
                           });
-                          onCohortSelect?.(group.id);
+                          onCohortSelect?.(overviewId);
                         }
                       }}
                     >
@@ -374,7 +368,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                         justifyContent: 'center',
                         width: 16,
                         height: 16,
-                        color: isGroupSelected ? colors.fg.accent.primary : colors.fg.neutral.secondary,
+                        color: colors.fg.neutral.secondary,
                         flexShrink: 0,
                       }}>
                         {CATEGORY_ICONS[group.id] || <Users size={16} />}
@@ -384,7 +378,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                         fontSize: 14,
                         fontFamily: typography.fontFamily.sans,
                         fontWeight: typography.fontWeight.regular,
-                        color: isGroupSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
+                        color: colors.fg.neutral.primary,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -392,23 +386,7 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                         {group.label}
                       </span>
                       {groupCount > 0 && (
-                        <span style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          minWidth: 20,
-                          height: 20,
-                          padding: `0 ${spaceAround.nudge6}px`,
-                          backgroundColor: colors.bg.attention.subtle,
-                          color: colors.fg.attention.primary,
-                          borderRadius: borderRadius.full,
-                          fontSize: 11,
-                          fontFamily: typography.fontFamily.sans,
-                          fontWeight: typography.fontWeight.semibold,
-                          flexShrink: 0,
-                        }}>
-                          {groupCount > 99 ? '99+' : groupCount}
-                        </span>
+                        <Badge count={groupCount} size="sm" variant="info" style={{ backgroundColor: colors.bg.transparent.subtle }} />
                       )}
                       <div
                         style={{
@@ -440,19 +418,60 @@ export const MenuPane: React.FC<MenuPaneProps> = ({
                       </div>
                     </div>
 
-                    {/* Children — indented cohort items */}
-                    {isGroupExpanded && groupCohorts.map((cohort) => (
-                      <MenuNavItem
-                        key={cohort.id}
-                        icon={COHORT_ICONS[cohort.id] || <Users size={16} />}
-                        label={cohort.name}
-                        badge={cohort.patientCount}
-                        isSelected={selectedCohortId === cohort.id}
-                        indented
-                        onClick={() => onCohortSelect?.(cohort.id)}
-                        testID={`cohort-${cohort.id}`}
-                      />
-                    ))}
+                    {/* Children — animated expand/collapse matching ToDoCategoryItem */}
+                    <div style={{
+                      overflow: 'hidden',
+                      maxHeight: isGroupExpanded ? childItems.length * 32 + 8 : 0,
+                      opacity: isGroupExpanded ? 1 : 0,
+                      transition: `max-height ${transitions.base}, opacity ${transitions.fast}`,
+                    }}>
+                      {childItems.map((child) => {
+                        const isSelected = selectedCohortId === child.id;
+                        const isItemHovered = hoveredGroupId === child.id;
+                        return (
+                          <div
+                            key={child.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+                              paddingLeft: 28 + spaceAround.compact,
+                              borderRadius: borderRadius.sm,
+                              cursor: 'pointer',
+                              backgroundColor: isSelected
+                                ? colors.bg.accent.low
+                                : isItemHovered
+                                ? colors.bg.neutral.subtle
+                                : 'transparent',
+                              transition: `background-color ${transitions.fast}`,
+                            }}
+                            onClick={() => onCohortSelect?.(child.id)}
+                            onMouseEnter={() => setHoveredGroupId(child.id)}
+                            onMouseLeave={() => setHoveredGroupId(null)}
+                            data-testid={`cohort-${child.id}`}
+                          >
+                            <span style={{
+                              fontSize: 14,
+                              fontFamily: typography.fontFamily.sans,
+                              fontWeight: typography.fontWeight.regular,
+                              color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.secondary,
+                            }}>
+                              {child.label}
+                            </span>
+                            {child.count > 0 && (
+                              <span style={{
+                                fontSize: 11,
+                                fontFamily: typography.fontFamily.sans,
+                                color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.spotReadable,
+                              }}>
+                                {child.count}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 );
               })}

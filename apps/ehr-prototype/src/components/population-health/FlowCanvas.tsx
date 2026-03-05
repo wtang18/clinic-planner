@@ -7,19 +7,27 @@
  *
  * Applies lifecycle filters, search query, chip filters, and stream highlighting
  * (connected-node tracing) to determine node/edge visibility.
+ *
+ * UX enhancements:
+ * - Conditional vertical scroll (horizontal-only when content fits vertically)
+ * - Horizontal column snapping (debounced snap to column boundary on scroll end)
+ * - Column hover highlight (translucent vertical band + column number tooltip)
+ * - Tree-to-canvas auto-scroll (smooth pan to selected node's column)
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
   Background,
+  PanOnScrollMode,
 } from '@xyflow/react';
-import type { Node, Edge } from '@xyflow/react';
+import type { Node, Edge, Viewport } from '@xyflow/react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health';
 import { NODE_CARD_WIDTH, NODE_CARD_MIN_HEIGHT, ReactFlowNodeCard } from './NodeCard';
 import type { ReactFlowNodeData } from './NodeCard';
-import { FilterBar } from './FilterBar';
 import type { Pathway, PathwayNode, PathwayConnection, PopHealthFilter } from '../../types/population-health';
 import { colors, typography } from '../../styles/foundations';
 import { injectReactFlowStyles } from './react-flow-styles';
@@ -33,7 +41,9 @@ injectReactFlowStyles();
 
 export const COLUMN_WIDTH = NODE_CARD_WIDTH + 60; // Card width + gap
 export const ROW_HEIGHT = NODE_CARD_MIN_HEIGHT + 32; // Card height + vertical gap
-const CANVAS_PADDING = 32;
+export const CANVAS_PADDING = 32;
+const NODE_CENTER_OFFSET = (COLUMN_WIDTH - NODE_CARD_WIDTH) / 2; // 30px — centers node within column
+const COLUMN_HEADER_HEIGHT = 24; // Reserved strip for column number labels
 
 // ============================================================================
 // Custom Node Types (module-level — avoids re-registration on every render)
@@ -142,11 +152,66 @@ function computeNodeVisibility(
 }
 
 // ============================================================================
-// Component
+// FlowCanvas — outer shell with ReactFlowProvider
 // ============================================================================
 
 export const FlowCanvas: React.FC = () => {
+  return (
+    <ReactFlowProvider>
+      <FlowCanvasInner />
+    </ReactFlowProvider>
+  );
+};
+
+FlowCanvas.displayName = 'FlowCanvas';
+
+// ============================================================================
+// FlowCanvasInner — all logic, rendered inside ReactFlowProvider
+// ============================================================================
+
+const FlowCanvasInner: React.FC = () => {
   const { state, dispatch } = usePopHealth();
+  const rf = useReactFlow();
+
+  // ---- Viewport & snap state ----
+  const [currentViewport, setCurrentViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
+  const [hoveredColumn, setHoveredColumn] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const canvasClickRef = useRef<string | null>(null);
+  const observerRef = useRef<ResizeObserver | null>(null);
+
+  // Clean up snap timer on unmount
+  useEffect(() => {
+    return () => {
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+    };
+  }, []);
+
+  // ---- Container height measurement ----
+  const containerRef = useCallback((node: HTMLElement | null) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+      observerRef.current = null;
+    }
+    if (node) {
+      setContainerHeight(node.clientHeight);
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setContainerHeight(entry.contentRect.height);
+        }
+      });
+      observer.observe(node);
+      observerRef.current = observer;
+    }
+  }, []);
+
+  // Clean up observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, []);
 
   // Get pathways to render
   const allPathways = useMemo(() => {
@@ -173,6 +238,7 @@ export const FlowCanvas: React.FC = () => {
 
   // Node click handlers
   const handleNodeClick = useCallback((nodeId: string) => {
+    canvasClickRef.current = nodeId;
     dispatch({
       type: state.selectedNodeId === nodeId ? 'NODE_DESELECTED' : 'NODE_SELECTED',
       ...(state.selectedNodeId === nodeId ? {} : { nodeId }),
@@ -195,11 +261,13 @@ export const FlowCanvas: React.FC = () => {
     return null;
   }, [state.selectedNodeId, activePathways]);
 
-  // Convert pathway data → React Flow nodes and edges
-  const { flowNodes, flowEdges } = useMemo(() => {
+  // Convert pathway data → React Flow nodes and edges, plus layout metrics
+  const { flowNodes, flowEdges, maxColumnIndex, maxVerticalPosition } = useMemo(() => {
     const nodes: Node<ReactFlowNodeData>[] = [];
     const edges: Edge[] = [];
     let verticalOffset = 0;
+    let maxCol = 0;
+    let maxVert = 0;
 
     const processPathway = (pathway: Pathway, pathwayDimmed: boolean) => {
       // Convert pathway nodes → React Flow nodes
@@ -216,6 +284,10 @@ export const FlowCanvas: React.FC = () => {
         const isDimmed = visibility === 'dimmed';
         const adjustedVerticalPos = pNode.verticalPosition + verticalOffset;
 
+        // Track layout extents
+        if (pNode.columnIndex > maxCol) maxCol = pNode.columnIndex;
+        if (adjustedVerticalPos > maxVert) maxVert = adjustedVerticalPos;
+
         // Search match highlighting: accent border when search matches
         const isSearchMatch = state.searchQuery.length > 0
           && pNode.label.toLowerCase().includes(state.searchQuery.toLowerCase());
@@ -224,9 +296,11 @@ export const FlowCanvas: React.FC = () => {
           id: pNode.id,
           type: 'nodeCard',
           position: {
-            x: CANVAS_PADDING + pNode.columnIndex * COLUMN_WIDTH,
-            y: CANVAS_PADDING + adjustedVerticalPos * ROW_HEIGHT,
+            x: CANVAS_PADDING + pNode.columnIndex * COLUMN_WIDTH + NODE_CENTER_OFFSET,
+            y: CANVAS_PADDING + COLUMN_HEADER_HEIGHT + adjustedVerticalPos * ROW_HEIGHT,
           },
+          // Selected node floats above all siblings (RF applies zIndex to its wrapper div)
+          zIndex: state.selectedNodeId === pNode.id ? 1000 : undefined,
           data: {
             node: pNode,
             selected: state.selectedNodeId === pNode.id,
@@ -312,33 +386,135 @@ export const FlowCanvas: React.FC = () => {
       processPathway(pathway, true);
     }
 
-    return { flowNodes: nodes, flowEdges: edges };
+    return { flowNodes: nodes, flowEdges: edges, maxColumnIndex: maxCol, maxVerticalPosition: maxVert };
   }, [activePathways, dimmedPathways, state.selectedNodeId, state.lifecycleFilter, state.searchQuery, state.filters, connectedNodeSet, handleNodeClick, handleNodeDetails]);
+
+  // ---- Enhancement 2: Conditional vertical scroll ----
+  const contentHeight = (maxVerticalPosition + 1) * ROW_HEIGHT + 2 * CANVAS_PADDING + COLUMN_HEADER_HEIGHT;
+  const panScrollMode = contentHeight > containerHeight
+    ? PanOnScrollMode.Free
+    : PanOnScrollMode.Horizontal;
+
+  // ---- Enhancement 3: Horizontal column snapping ----
+  const snapToColumn = useCallback((viewport: Viewport) => {
+    const rawColumn = -(viewport.x - CANVAS_PADDING) / COLUMN_WIDTH;
+    const snappedColumn = Math.max(0, Math.round(rawColumn));
+    const targetX = -(snappedColumn * COLUMN_WIDTH) + CANVAS_PADDING;
+    const clampedX = Math.min(CANVAS_PADDING, targetX);
+    if (Math.abs(clampedX - viewport.x) < 2) return; // avoid jitter
+    rf.setViewport({ x: clampedX, y: viewport.y, zoom: 1 }, { duration: 200 });
+  }, [rf]);
+
+  const handleMove = useCallback((_event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
+    setCurrentViewport(viewport);
+    if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+  }, []);
+
+  const handleMoveEnd = useCallback((event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
+    if (!event) return; // programmatic move (snap or auto-scroll) — don't re-snap
+    if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+    snapTimerRef.current = setTimeout(() => snapToColumn(viewport), 150);
+  }, [snapToColumn]);
+
+  // ---- Enhancement 4: Column hover highlight ----
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const flowX = e.clientX - rect.left - currentViewport.x;
+    const col = Math.floor((flowX - CANVAS_PADDING) / COLUMN_WIDTH);
+    setHoveredColumn(col >= 0 && col <= maxColumnIndex ? col : null);
+  }, [currentViewport.x, maxColumnIndex]);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredColumn(null);
+  }, []);
+
+  // ---- Enhancement 5: Tree-to-canvas auto-scroll ----
+  useEffect(() => {
+    if (!state.selectedNodeId) return;
+    // Skip canvas-initiated selections
+    if (canvasClickRef.current === state.selectedNodeId) {
+      canvasClickRef.current = null;
+      return;
+    }
+    canvasClickRef.current = null;
+
+    // Find selected node's flow position
+    const node = flowNodes.find(n => n.id === state.selectedNodeId);
+    if (!node) return;
+
+    // Target: node in 2nd column slot (1 column offset from left + padding)
+    const targetX = -(node.position.x - COLUMN_WIDTH - CANVAS_PADDING);
+    const clampedX = Math.min(CANVAS_PADDING, targetX);
+
+    // Vertical: center node in viewport
+    const targetY = -(node.position.y - containerHeight / 2 + NODE_CARD_MIN_HEIGHT / 2);
+    const clampedY = Math.min(0, targetY);
+
+    rf.setViewport({ x: clampedX, y: clampedY, zoom: 1 }, { duration: 250 });
+  }, [state.selectedNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={canvasStyles.outerContainer} data-testid="flow-canvas">
-      {/* Filter bar */}
-      <FilterBar />
-
       {/* React Flow canvas */}
-      <div style={canvasStyles.flowContainer}>
+      <div
+        ref={containerRef}
+        style={canvasStyles.flowContainer}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        {/* Column hover highlight overlay — z-index 0 so nodes/edges render on top */}
+        {hoveredColumn !== null && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: CANVAS_PADDING + hoveredColumn * COLUMN_WIDTH + currentViewport.x,
+            width: COLUMN_WIDTH,
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+            pointerEvents: 'none',
+            zIndex: 0,
+            transition: 'opacity 150ms ease',
+          }}>
+            <span style={{
+              position: 'absolute',
+              top: 8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              fontSize: 10,
+              opacity: 0.6,
+              color: colors.fg.neutral.spotReadable,
+              fontFamily: typography.fontFamily.sans,
+            }}>
+              {hoveredColumn + 1}
+            </span>
+          </div>
+        )}
+
         {flowNodes.length > 0 ? (
+          <div style={canvasStyles.rfWrapper}>
           <ReactFlow
             nodes={flowNodes}
             edges={flowEdges}
             nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.1 }}
-            minZoom={0.3}
-            maxZoom={2}
+            minZoom={1}
+            maxZoom={1}
+            panOnDrag={false}
+            panOnScroll={true}
+            panOnScrollMode={panScrollMode}
+            zoomOnScroll={false}
+            zoomOnPinch={false}
+            zoomOnDoubleClick={false}
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable={true}
             onNodeClick={(_event, node) => handleNodeClick(node.id)}
+            onMove={handleMove}
+            onMoveEnd={handleMoveEnd}
             proOptions={{ hideAttribution: true }}
           >
             <Background color={colors.border.neutral.low} gap={20} size={1} />
           </ReactFlow>
+          </div>
         ) : (
           <div style={canvasStyles.emptyState}>
             <span style={canvasStyles.emptyText}>No pathways available</span>
@@ -349,7 +525,7 @@ export const FlowCanvas: React.FC = () => {
   );
 };
 
-FlowCanvas.displayName = 'FlowCanvas';
+FlowCanvasInner.displayName = 'FlowCanvasInner';
 
 // ============================================================================
 // Styles
@@ -365,6 +541,13 @@ const canvasStyles: Record<string, React.CSSProperties> = {
   flowContainer: {
     flex: 1,
     height: '100%',
+    position: 'relative',
+  },
+  rfWrapper: {
+    width: '100%',
+    height: '100%',
+    position: 'relative',
+    zIndex: 1, // Above column overlay (z-index 0) so nodes/edges render on top
   },
   emptyState: {
     display: 'flex',

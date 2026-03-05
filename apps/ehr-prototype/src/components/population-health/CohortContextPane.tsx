@@ -105,7 +105,7 @@ const CohortIdentityHeader: React.FC<CohortIdentityHeaderProps> = ({
         display: 'flex',
         alignItems: isStacked ? 'flex-start' : 'center',
         gap: spaceBetween.relatedCompact,
-        padding: `${spaceAround.compact}px ${LAYOUT.overviewContentPadding}px`,
+        padding: `${spaceAround.compact}px 0`,
         ...style,
       }}
       data-testid={testID}
@@ -281,6 +281,7 @@ export const CohortContextPane: React.FC<CohortContextPaneProps> = ({
           name={cohort.name}
           patientCount={cohort.patientCount}
           category={cohort.category}
+          style={{ padding: `${spaceAround.compact}px ${LAYOUT.overviewContentPadding}px` }}
           testID="cohort-identity-header"
         />
       )}

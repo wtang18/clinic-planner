@@ -21,8 +21,6 @@ import {
   AlertTriangle,
   BarChart2,
   CornerDownLeft,
-  Circle,
-  Play,
   Pause,
 } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
@@ -185,33 +183,17 @@ const LifecycleIndicator: React.FC<{ state: NodeLifecycleState }> = ({ state: li
 
 interface PathwayRowProps {
   pathway: Pathway;
-  isSelected: boolean;
   isExpanded: boolean;
   onToggle: () => void;
-  onClick: (e: React.MouseEvent) => void;
 }
 
 const PathwayRow: React.FC<PathwayRowProps> = ({
   pathway,
-  isSelected,
   isExpanded,
   onToggle,
-  onClick,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const totalPatients = pathway.nodes[0]?.patientCount ?? 0;
-
-  const statusIcon = pathway.status === 'active'
-    ? <Play size={10} />
-    : pathway.status === 'paused'
-      ? <Pause size={10} />
-      : <Circle size={10} />;
-
-  const statusColor = pathway.status === 'active'
-    ? colors.fg.positive.primary
-    : pathway.status === 'paused'
-      ? colors.fg.attention.primary
-      : colors.fg.neutral.secondary;
 
   return (
     <div
@@ -221,21 +203,15 @@ const PathwayRow: React.FC<PathwayRowProps> = ({
         gap: spaceBetween.coupled,
         height: 28,
         padding: `0 ${spaceAround.compact}px`,
-        backgroundColor: isSelected
-          ? colors.bg.accent.low
-          : isHovered
-            ? colors.bg.neutral.subtle
-            : 'transparent',
+        backgroundColor: isHovered ? colors.bg.neutral.subtle : 'transparent',
         borderRadius: borderRadius.xs,
         cursor: 'pointer',
         transition: `background-color ${transitions.fast}`,
         userSelect: 'none',
       }}
-      onClick={onClick}
+      onClick={onToggle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      role="button"
-      tabIndex={0}
       data-testid={`layer-pathway-${pathway.id}`}
     >
       {/* Chevron */}
@@ -247,23 +223,17 @@ const PathwayRow: React.FC<PathwayRowProps> = ({
           transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
           flexShrink: 0,
         }}
-        onClick={(e) => { e.stopPropagation(); onToggle(); }}
       >
         <ChevronRight size={12} />
       </span>
 
-      {/* Status dot */}
-      <span style={{ color: statusColor, display: 'flex', flexShrink: 0 }}>
-        {statusIcon}
-      </span>
-
-      {/* Label */}
+      {/* Label — medium weight, no icon, visually distinct from node rows */}
       <span style={{
         flex: 1,
-        fontSize: 14,
+        fontSize: 13,
         fontFamily: typography.fontFamily.sans,
-        fontWeight: isSelected ? typography.fontWeight.medium : typography.fontWeight.regular,
-        color: isSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.fg.neutral.primary,
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -439,16 +409,6 @@ export const LayerTree: React.FC = () => {
     }
   }, [state.selectedNodeId, pathways]);
 
-  const handlePathwayClick = useCallback((pathwayId: string, e: React.MouseEvent) => {
-    dispatch({
-      type: 'PATHWAY_SELECTED',
-      pathwayId,
-      multi: e.shiftKey,
-    });
-    // Auto-expand on select
-    setExpandedPathways((prev) => new Set(prev).add(pathwayId));
-  }, [dispatch]);
-
   const handleNodeClick = useCallback((nodeId: string) => {
     dispatch({ type: 'NODE_SELECTED', nodeId });
   }, [dispatch]);
@@ -460,7 +420,6 @@ export const LayerTree: React.FC = () => {
       </div>
       <div style={treeStyles.scrollArea}>
         {pathways.map((pathway) => {
-          const isSelected = state.selectedPathwayIds.includes(pathway.id);
           const isExpanded = expandedPathways.has(pathway.id);
           const nodeEntries = pathwayNodeEntries.get(pathway.id) ?? [];
 
@@ -468,10 +427,8 @@ export const LayerTree: React.FC = () => {
             <React.Fragment key={pathway.id}>
               <PathwayRow
                 pathway={pathway}
-                isSelected={isSelected}
                 isExpanded={isExpanded}
                 onToggle={() => toggleExpanded(pathway.id)}
-                onClick={(e) => handlePathwayClick(pathway.id, e)}
               />
               {isExpanded && nodeEntries.map((entry) => {
                 const dimmedByLifecycle = state.lifecycleFilter.length > 0

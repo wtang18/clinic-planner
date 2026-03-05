@@ -7,12 +7,13 @@
  * - CohortAIBar — BottomBarContainer with cohort context defaults
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { PopHealthCanvas } from '../PopHealthView/PopHealthCanvas';
 import { SegmentedControl } from '../../components/primitives/SegmentedControl';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
-import { Layers, Table2 } from 'lucide-react';
+import { Layers, Table2, Search, SlidersHorizontal } from 'lucide-react';
+import { colors, typography, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
 
 // ============================================================================
 // CohortWorkspace
@@ -53,21 +54,93 @@ const CohortWorkspaceInner: React.FC = () => {
 CohortWorkspaceInner.displayName = 'CohortWorkspaceInner';
 
 // ============================================================================
-// CohortCanvasHeader — Flow/Table segmented control (must be inside PopHealthProvider)
+// CohortCanvasHeader — Search + Flow/Table segmented control + Filter button
+// (must be inside PopHealthProvider)
 // ============================================================================
 
 export const CohortCanvasHeader: React.FC = () => {
   const { state, dispatch } = usePopHealth();
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({ type: 'SEARCH_CHANGED', query: e.target.value });
+  };
+
+  const handleFilterClick = () => {
+    dispatch({ type: 'DRAWER_OPENED', view: { type: 'filter' } });
+  };
+
   return (
-    <SegmentedControl
-      segments={[
-        { key: 'flow' as const, label: 'Flow', icon: <Layers size={14} /> },
-        { key: 'table' as const, label: 'Table', icon: <Table2 size={14} /> },
-      ]}
-      value={state.activeView}
-      onChange={(view) => dispatch({ type: 'VIEW_CHANGED', view })}
-      variant="topBar"
-    />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Glassmorphic search input */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: GLASS_BUTTON_HEIGHT,
+          width: 200,
+          ...glass.button,
+          borderRadius: GLASS_BUTTON_RADIUS,
+          paddingLeft: 12,
+          paddingRight: 12,
+          gap: 8,
+          transition: `all ${transitions.fast}`,
+          border: isSearchFocused ? `1px solid ${colors.border.accent.medium}` : glass.button.border,
+        }}
+      >
+        <Search size={14} color={colors.fg.neutral.secondary} style={{ flexShrink: 0 }} />
+        <input
+          type="text"
+          placeholder="Search nodes..."
+          value={state.searchQuery}
+          onChange={handleSearchChange}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
+          style={{
+            flex: 1,
+            border: 'none',
+            background: 'transparent',
+            outline: 'none',
+            fontSize: 13,
+            fontFamily: typography.fontFamily.sans,
+            color: colors.fg.neutral.primary,
+          }}
+        />
+      </div>
+
+      {/* Flow/Table segmented control */}
+      <SegmentedControl
+        segments={[
+          { key: 'flow' as const, label: 'Flow', icon: <Layers size={14} /> },
+          { key: 'table' as const, label: 'Table', icon: <Table2 size={14} /> },
+        ]}
+        value={state.activeView}
+        onChange={(view) => dispatch({ type: 'VIEW_CHANGED', view })}
+        variant="topBar"
+      />
+
+      {/* Filter icon button */}
+      <button
+        type="button"
+        onClick={handleFilterClick}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: GLASS_BUTTON_HEIGHT,
+          height: GLASS_BUTTON_HEIGHT,
+          ...glass.button,
+          borderRadius: GLASS_BUTTON_RADIUS,
+          cursor: 'pointer',
+          color: colors.fg.neutral.primary,
+          transition: `all ${transitions.fast}`,
+        }}
+        aria-label="Open filter controls"
+        title="Filters"
+      >
+        <SlidersHorizontal size={16} />
+      </button>
+    </div>
   );
 };
 
