@@ -13,6 +13,9 @@ import type {
   DrawerView,
   NodeLifecycleState,
   CohortCategory,
+  DimensionSelection,
+  AxisVisibility,
+  AllPatientsView,
 } from '../types/population-health';
 
 // ============================================================================
@@ -38,11 +41,31 @@ export type PopHealthAction =
   | { type: 'COLUMN_UNFOCUSED' }
   | { type: 'LIFECYCLE_FILTER_CHANGED'; states: NodeLifecycleState[] }
   | { type: 'CATEGORY_OVERVIEW_SELECTED'; category: CohortCategory }
-  | { type: 'SEARCH_CHANGED'; query: string };
+  | { type: 'SEARCH_CHANGED'; query: string }
+  // All-patients actions
+  | { type: 'DIMENSION_TOGGLED'; axis: keyof DimensionSelection; id: string }
+  | { type: 'DIMENSIONS_CLEARED' }
+  | { type: 'AXIS_VISIBILITY_CHANGED'; axis: keyof AxisVisibility; visible: boolean }
+  | { type: 'ALL_PATIENTS_VIEW_CHANGED'; view: AllPatientsView }
+  | { type: 'BAND_HOVERED'; bandId: string | null };
 
 // ============================================================================
 // Initial State
 // ============================================================================
+
+const INITIAL_DIMENSION_SELECTION: DimensionSelection = {
+  conditions: [],
+  preventive: [],
+  riskTiers: [],
+  actionStatuses: [],
+};
+
+const INITIAL_AXIS_VISIBILITY: AxisVisibility = {
+  conditions: true,
+  preventive: true,
+  riskLevel: true,
+  actionStatus: true,
+};
 
 const INITIAL_STATE: PopHealthState = {
   selectedCohortId: null,
@@ -55,6 +78,10 @@ const INITIAL_STATE: PopHealthState = {
   focusedColumnIndex: null,
   lifecycleFilter: [],
   searchQuery: '',
+  dimensionSelection: INITIAL_DIMENSION_SELECTION,
+  axisVisibility: INITIAL_AXIS_VISIBILITY,
+  allPatientsView: 'map',
+  hoveredBandId: null,
 };
 
 // ============================================================================
@@ -82,6 +109,10 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         drawerStack: [],
         focusedColumnIndex: null,
         searchQuery: '',
+        dimensionSelection: INITIAL_DIMENSION_SELECTION,
+        axisVisibility: INITIAL_AXIS_VISIBILITY,
+        hoveredBandId: null,
+        // allPatientsView persists across scope switches (intentional)
       };
 
     case 'PATHWAY_SELECTED': {
@@ -166,11 +197,44 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         drawerStack: [],
         focusedColumnIndex: null,
         searchQuery: '',
+        dimensionSelection: INITIAL_DIMENSION_SELECTION,
+        axisVisibility: INITIAL_AXIS_VISIBILITY,
+        hoveredBandId: null,
       };
     }
 
     case 'SEARCH_CHANGED':
       return { ...state, searchQuery: action.query };
+
+    // All-patients actions
+    case 'DIMENSION_TOGGLED': {
+      const arr = state.dimensionSelection[action.axis] as string[];
+      const exists = arr.includes(action.id);
+      return {
+        ...state,
+        dimensionSelection: {
+          ...state.dimensionSelection,
+          [action.axis]: exists
+            ? arr.filter((v) => v !== action.id)
+            : [...arr, action.id],
+        },
+      };
+    }
+
+    case 'DIMENSIONS_CLEARED':
+      return { ...state, dimensionSelection: INITIAL_DIMENSION_SELECTION };
+
+    case 'AXIS_VISIBILITY_CHANGED':
+      return {
+        ...state,
+        axisVisibility: { ...state.axisVisibility, [action.axis]: action.visible },
+      };
+
+    case 'ALL_PATIENTS_VIEW_CHANGED':
+      return { ...state, allPatientsView: action.view };
+
+    case 'BAND_HOVERED':
+      return { ...state, hoveredBandId: action.bandId };
 
     default:
       return state;

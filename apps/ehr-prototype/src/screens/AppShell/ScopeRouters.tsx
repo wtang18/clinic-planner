@@ -8,6 +8,7 @@
 import React, { useMemo } from 'react';
 import { Home, Calendar, LayoutGrid, Users } from 'lucide-react';
 import { CohortContextPane, CohortIdentityHeader } from '../../components/population-health/CohortContextPane';
+import { AllPatientsContextPane } from '../../components/population-health/AllPatientsContextPane';
 import { Dashboard } from '../../components/population-health/Dashboard';
 import type { Cohort, DashboardMetric } from '../../types/population-health';
 import { COHORT_GROUPS, COHORTS, getPathwaysByCohort } from '../../data/mock-population-health';
@@ -22,6 +23,7 @@ import {
 } from '../EncounterWorkspace/EncounterWorkspace';
 import type { ViewMode, ToDoViewState } from '../EncounterWorkspace/EncounterWorkspace';
 import { CohortWorkspace, CohortCanvasHeader, CohortAIBar } from '../CohortWorkspace/CohortWorkspace';
+import { AllPatientsCanvas, AllPatientsCanvasHeader } from '../AllPatientsWorkspace';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
 import type { ToDoItem } from '../../scenarios/todoData';
 
@@ -36,7 +38,7 @@ export const ScopeOverview: React.FC<{
   selectedPatientOverviewData: any;
 }> = ({ viewMode, selectedCohortId, selectedPatient, selectedPatientOverviewData }) => {
   if (viewMode === 'cohort' && selectedCohortId === 'all-patients') {
-    return <AllPatientsOverviewPane />;
+    return <AllPatientsContextPane />;
   }
   if (viewMode === 'cohort' && selectedCohortId?.endsWith(':overview')) {
     return <CohortGroupOverviewPane groupId={selectedCohortId.split(':')[0]} />;
@@ -126,6 +128,10 @@ export const ScopeCanvasHeader: React.FC<{
   isViewingEncounterPatient: boolean;
   selectedCohortId?: string | null;
 }> = ({ viewMode, isViewingEncounterPatient, selectedCohortId }) => {
+  // AllPatientsCanvasHeader for all-patients scope
+  if (viewMode === 'cohort' && selectedCohortId === 'all-patients') {
+    return <AllPatientsCanvasHeader />;
+  }
   // CohortCanvasHeader for actual cohorts (not overviews or all-patients)
   if (viewMode === 'cohort' && selectedCohortId && !selectedCohortId.endsWith(':overview') && selectedCohortId !== 'all-patients') {
     return <CohortCanvasHeader />;
@@ -156,7 +162,7 @@ export const ScopeCanvasPane: React.FC<{
   onCanvasScrolledChange: (scrolled: boolean) => void;
 }> = (props) => {
   if (props.viewMode === 'cohort' && props.selectedCohortId === 'all-patients') {
-    return <AllPatientsPlaceholder />;
+    return <AllPatientsCanvas />;
   }
   if (props.viewMode === 'cohort' && props.selectedCohortId?.endsWith(':overview')) {
     return <CohortOverviewPlaceholder groupId={props.selectedCohortId.split(':')[0]} />;
@@ -397,118 +403,6 @@ const CohortOverviewPlaceholder: React.FC<{ groupId: string }> = ({ groupId }) =
 
 CohortOverviewPlaceholder.displayName = 'CohortOverviewPlaceholder';
 
-// ============================================================================
-// AllPatientsPlaceholder — placeholder canvas for All Patients root view
-// ============================================================================
-
-const AllPatientsPlaceholder: React.FC = () => {
-  const totalPatients = COHORTS.filter(c => c.category !== 'overview').reduce((sum, c) => sum + c.patientCount, 0);
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      gap: 12,
-      color: colors.fg.neutral.spotReadable,
-      padding: spaceAround.spacious,
-    }}>
-      <span style={{ opacity: 0.4 }}><Users size={32} /></span>
-      <span style={{
-        fontSize: 18,
-        fontFamily: typography.fontFamily.sans,
-        fontWeight: typography.fontWeight.semibold,
-        color: colors.fg.neutral.secondary,
-      }}>
-        All Patients
-      </span>
-      <span style={{
-        fontSize: 14,
-        fontFamily: typography.fontFamily.sans,
-        color: colors.fg.neutral.spotReadable,
-      }}>
-        {totalPatients} patients across all cohorts
-      </span>
-    </div>
-  );
-};
-
-AllPatientsPlaceholder.displayName = 'AllPatientsPlaceholder';
-
-// ============================================================================
-// AllPatientsOverviewPane — context pane for All Patients view
-// ============================================================================
-
-const AllPatientsOverviewPane: React.FC = () => {
-  const cohortsByCategory = useMemo(() => {
-    return COHORT_GROUPS.map(group => ({
-      group,
-      cohorts: group.cohortIds
-        .map(id => COHORTS.find(c => c.id === id))
-        .filter((c): c is Cohort => !!c),
-    }));
-  }, []);
-
-  const totalPatients = COHORTS.filter(c => c.category !== 'overview').reduce((sum, c) => sum + c.patientCount, 0);
-
-  const stats: DashboardMetric[] = useMemo(() => [
-    { id: 'all-total', label: 'Total Patients', value: totalPatients },
-    { id: 'all-cohorts', label: 'Cohorts', value: COHORTS.filter(c => c.category !== 'overview').length },
-    { id: 'all-groups', label: 'Categories', value: COHORT_GROUPS.length },
-  ], [totalPatients]);
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      backgroundColor: colors.bg.neutral.min,
-      overflow: 'hidden',
-      paddingTop: LAYOUT.headerHeight,
-    }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
-        <Dashboard metrics={stats} alerts={[]} testID="all-patients-stats" />
-
-        {cohortsByCategory.map(({ group, cohorts }) => (
-          <div key={group.id} style={{
-            padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: spaceBetween.coupled,
-          }}>
-            <span style={SECTION_LABEL_STYLE}>{group.label}</span>
-            {cohorts.map(c => (
-              <div key={c.id} style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: `${spaceAround.tight}px 0`,
-              }}>
-                <span style={{
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.sans,
-                  color: colors.fg.neutral.primary,
-                }}>
-                  {c.name}
-                </span>
-                <span style={{
-                  fontSize: 12,
-                  fontFamily: typography.fontFamily.sans,
-                  color: colors.fg.neutral.spotReadable,
-                }}>
-                  {c.patientCount}
-                </span>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-AllPatientsOverviewPane.displayName = 'AllPatientsOverviewPane';
 
 // ============================================================================
 // CohortGroupOverviewPane — center context pane for category overview pages

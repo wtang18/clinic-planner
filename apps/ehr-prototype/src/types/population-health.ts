@@ -218,6 +218,160 @@ export interface DashboardAlert {
 }
 
 // ============================================================================
+// All-Patients Sankey Types
+// ============================================================================
+
+/** 5-tier risk assessment for panel-level view */
+export type RiskTier = 'critical' | 'high' | 'moderate' | 'low' | 'unassessed';
+
+/** Action status across a patient's care programs */
+export type ActionStatus = 'urgent' | 'action-needed' | 'monitoring' | 'all-current' | 'not-enrolled';
+
+export interface ConditionAssignment {
+  patientId: string;
+  conditionCohortId: string;
+  diagnosisDate?: Date;
+  currentNodeLabel?: string;
+}
+
+export interface PreventiveAssignment {
+  patientId: string;
+  preventiveCohortId: string;
+  eligibilityBasis: string;
+  lastScreeningDate?: Date;
+  nextDueDate?: Date;
+  currentNodeLabel?: string;
+}
+
+/** A patient in the all-patients panel view with enriched assignments */
+export interface AllPatientsPatient {
+  patientId: string;
+  name: string;
+  age: number;
+  gender: string;
+  riskTier: RiskTier;
+  actionStatus: ActionStatus;
+  conditionAssignments: ConditionAssignment[];
+  preventiveAssignments: PreventiveAssignment[];
+  clinicalData: Record<string, unknown>;
+  daysWaiting?: number;
+}
+
+/** Condition or preventive cohort definition for Sankey axis */
+export interface SankeyCohortDef {
+  id: string;
+  label: string;
+  zone: 'conditions' | 'preventive';
+}
+
+/** A single band (row) on a Sankey axis */
+export interface SankeyBand {
+  id: string;
+  label: string;
+  count: number;
+  zone?: 'conditions' | 'preventive';
+  attention?: boolean;
+}
+
+/** A group of bands on one side of the Sankey (grouped by zone) */
+export interface SankeyAxisGroup {
+  zone: 'conditions' | 'preventive';
+  bands: SankeyBand[];
+}
+
+/** A flow between two bands (rendered as a filled ribbon) */
+export interface SankeyFlow {
+  sourceId: string;
+  targetId: string;
+  patientCount: number;
+  patientIds: string[];
+  attention?: boolean;
+}
+
+/** Complete Sankey data model */
+export interface SankeyData {
+  leftAxis: SankeyAxisGroup[];
+  centerAxis: SankeyBand[];
+  rightAxis: SankeyBand[];
+  leftToCenterFlows: SankeyFlow[];
+  centerToRightFlows: SankeyFlow[];
+  totalPatients: number;
+  totalEnrollments: number;
+}
+
+/** Dimension selection state for filtering */
+export interface DimensionSelection {
+  conditions: string[];
+  preventive: string[];
+  riskTiers: RiskTier[];
+  actionStatuses: ActionStatus[];
+}
+
+/** Which axes are visible in the Sankey */
+export interface AxisVisibility {
+  conditions: boolean;
+  preventive: boolean;
+  riskLevel: boolean;
+  actionStatus: boolean;
+}
+
+/** All-patients canvas view mode */
+export type AllPatientsView = 'map' | 'routing' | 'table';
+
+/** Selection stats for the context pane */
+export interface SelectionStats {
+  totalPatients: number;
+  needsAttention: number;
+  notEnrolled: number;
+  enrollmentRate: string;
+  contextLabel: string;
+}
+
+// ============================================================================
+// Routing View Types
+// ============================================================================
+
+/** Full routing data for the Routing view */
+export interface RoutingData {
+  categories: RoutingCategory[];
+  unenrolled: UnenrolledGroup;
+}
+
+/** A category grouping of cohort cards (e.g. "Chronic Disease", "Preventive Care") */
+export interface RoutingCategory {
+  key: string;
+  label: string;
+  cards: RoutingCohortCard[];
+}
+
+/** A single cohort card in the Routing view */
+export interface RoutingCohortCard {
+  cohortId: string;
+  cohortName: string;
+  totalPatients: number;
+  filteredPatients: number;
+  urgentCount: number;
+  actionNeededCount: number;
+  avgDaysWaiting: number;
+  riskBreakdown: Record<RiskTier, number>;
+  nodeConcentration: NodeConcentrationItem[];
+}
+
+/** A node label + patient count within a cohort */
+export interface NodeConcentrationItem {
+  nodeLabel: string;
+  patientCount: number;
+}
+
+/** Patients not enrolled in any condition or preventive flow */
+export interface UnenrolledGroup {
+  totalCount: number;
+  filteredCount: number;
+  riskBreakdown: Record<RiskTier, number>;
+  conditionLabels: string[];
+}
+
+// ============================================================================
 // Selection / View State
 // ============================================================================
 
@@ -226,7 +380,8 @@ export type ActiveView = 'flow' | 'table';
 export type DrawerView =
   | { type: 'node-detail'; nodeId: string }
   | { type: 'patient-preview'; patientId: string }
-  | { type: 'filter' };
+  | { type: 'filter' }
+  | { type: 'dimension-detail'; dimensionId: string; axis: string };
 
 export interface PopHealthState {
   selectedCohortId: string | null;
@@ -239,4 +394,9 @@ export interface PopHealthState {
   focusedColumnIndex: number | null;
   lifecycleFilter: NodeLifecycleState[];
   searchQuery: string;
+  // All-patients state
+  dimensionSelection: DimensionSelection;
+  axisVisibility: AxisVisibility;
+  allPatientsView: AllPatientsView;
+  hoveredBandId: string | null;
 }

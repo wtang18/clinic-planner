@@ -1,0 +1,411 @@
+/**
+ * AllPatientsCanvas
+ *
+ * Canvas for the all-patients scope. Routes between Map (Sankey), Routing,
+ * and Table views. Renders filter chips and the slide drawer.
+ */
+
+import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import { usePopHealth } from '../../context/PopHealthContext';
+import { SankeyChart } from '../../components/population-health/SankeyChart';
+import { RoutingView } from '../../components/population-health/RoutingView';
+import { SlideDrawer } from '../../components/shared/SlideDrawer';
+import {
+  computeSankeyData,
+  filterSankeyData,
+  filterPatients,
+  RISK_TIER_LABELS,
+  ACTION_STATUS_LABELS,
+} from '../../utils/sankey-computation';
+import { computeSankeyLayout } from '../../utils/sankey-layout';
+import { ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS, getConditionLabel, getPreventiveLabel } from '../../data/mock-all-patients';
+import { colors, typography, spaceAround, spaceBetween, borderRadius, LAYOUT, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
+import type { DimensionSelection, RiskTier, ActionStatus } from '../../types/population-health';
+
+// ============================================================================
+// SankeyMapView — main Sankey visualization
+// ============================================================================
+
+const SankeyMapView: React.FC = () => {
+  const { state, dispatch } = usePopHealth();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 800, height: 500 });
+
+  // ResizeObserver for container size
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setContainerSize({ width, height });
+        }
+      }
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Compute Sankey data (filtered if selection active)
+  const sankeyData = useMemo(() => {
+    const hasSelection =
+      state.dimensionSelection.conditions.length > 0 ||
+      state.dimensionSelection.preventive.length > 0 ||
+      state.dimensionSelection.riskTiers.length > 0 ||
+      state.dimensionSelection.actionStatuses.length > 0;
+
+    if (hasSelection) {
+      return filterSankeyData(
+        ALL_PATIENTS,
+        state.dimensionSelection,
+        CONDITION_COHORTS,
+        PREVENTIVE_COHORTS,
+      );
+    }
+    return computeSankeyData(ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS);
+  }, [state.dimensionSelection]);
+
+  // Band click → toggle dimension
+  const handleBandClick = useCallback(
+    (bandId: string, axis: 'left' | 'center' | 'right') => {
+      if (axis === 'left') {
+        // Determine if condition or preventive
+        const isCondition = CONDITION_COHORTS.some((c) => c.id === bandId);
+        dispatch({
+          type: 'DIMENSION_TOGGLED',
+          axis: isCondition ? 'conditions' : 'preventive',
+          id: bandId,
+        });
+      } else if (axis === 'center') {
+        const tier = bandId.replace('risk-', '') as RiskTier;
+        dispatch({ type: 'DIMENSION_TOGGLED', axis: 'riskTiers', id: tier });
+      } else {
+        const status = bandId.replace('action-', '') as ActionStatus;
+        dispatch({ type: 'DIMENSION_TOGGLED', axis: 'actionStatuses', id: status });
+      }
+    },
+    [dispatch],
+  );
+
+  const handleBandHover = useCallback(
+    (bandId: string | null) => {
+      dispatch({ type: 'BAND_HOVERED', bandId });
+    },
+    [dispatch],
+  );
+
+  // All axes hidden?
+  const allHidden = !state.axisVisibility.conditions &&
+    !state.axisVisibility.preventive &&
+    !state.axisVisibility.riskLevel &&
+    !state.axisVisibility.actionStatus;
+
+  // No matching patients?
+  const filteredPatients = useMemo(
+    () => filterPatients(ALL_PATIENTS, state.dimensionSelection),
+    [state.dimensionSelection],
+  );
+
+  // SVG height accounts for header padding clearance, with a 400px minimum
+  const svgHeight = Math.max(containerSize.height - LAYOUT.headerHeight, 400);
+
+  // Recompute layout using adjusted height
+  const adjustedLayout = useMemo(
+    () =>
+      computeSankeyLayout(
+        sankeyData,
+        containerSize.width,
+        svgHeight,
+        state.axisVisibility,
+      ),
+    [sankeyData, containerSize.width, svgHeight, state.axisVisibility],
+  );
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        flex: 1,
+        position: 'relative',
+        overflow: 'auto',
+        paddingTop: LAYOUT.headerHeight,
+      }}
+    >
+      {allHidden ? (
+        <EmptyMessage
+          title="No axes visible"
+          description="Enable at least one dimension axis to view the Sankey diagram."
+        />
+      ) : filteredPatients.length === 0 ? (
+        <EmptyMessage
+          title="No matching patients"
+          description="No patients match the current filter selection."
+          action={
+            <button
+              type="button"
+              onClick={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
+              style={{
+                ...glass.button,
+                borderRadius: GLASS_BUTTON_RADIUS,
+                height: 32,
+                padding: '0 16px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontFamily: typography.fontFamily.sans,
+                color: colors.fg.accent.primary,
+              }}
+            >
+              Clear filters
+            </button>
+          }
+        />
+      ) : (
+        <div style={{ minHeight: 400 }}>
+          <SankeyChart
+            layout={adjustedLayout}
+            dimensionSelection={state.dimensionSelection}
+            hoveredBandId={state.hoveredBandId}
+            onBandClick={handleBandClick}
+            onBandHover={handleBandHover}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+SankeyMapView.displayName = 'SankeyMapView';
+
+// ============================================================================
+// Empty message
+// ============================================================================
+
+const EmptyMessage: React.FC<{
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}> = ({ title, description, action }) => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    gap: 12,
+    padding: spaceAround.spacious,
+  }}>
+    <span style={{
+      fontSize: 15,
+      fontFamily: typography.fontFamily.sans,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.fg.neutral.secondary,
+    }}>
+      {title}
+    </span>
+    <span style={{
+      fontSize: 13,
+      fontFamily: typography.fontFamily.sans,
+      color: colors.fg.neutral.spotReadable,
+      textAlign: 'center',
+      maxWidth: 300,
+    }}>
+      {description}
+    </span>
+    {action}
+  </div>
+);
+
+EmptyMessage.displayName = 'EmptyMessage';
+
+// ============================================================================
+// Placeholder views
+// ============================================================================
+
+const TablePlaceholder: React.FC = () => (
+  <EmptyMessage
+    title="Table View"
+    description="Sortable, filterable patient table with condition, risk, and action columns. Coming soon."
+  />
+);
+
+TablePlaceholder.displayName = 'TablePlaceholder';
+
+// ============================================================================
+// DimensionFilterChips
+// ============================================================================
+
+const DimensionFilterChips: React.FC = () => {
+  const { state, dispatch } = usePopHealth();
+  const sel = state.dimensionSelection;
+
+  const chips = useMemo(() => {
+    const items: { key: string; label: string; axis: keyof DimensionSelection; id: string }[] = [];
+
+    for (const id of sel.conditions) {
+      items.push({ key: `cond-${id}`, label: getConditionLabel(id), axis: 'conditions', id });
+    }
+    for (const id of sel.preventive) {
+      items.push({ key: `prev-${id}`, label: getPreventiveLabel(id), axis: 'preventive', id });
+    }
+    for (const tier of sel.riskTiers) {
+      items.push({ key: `risk-${tier}`, label: RISK_TIER_LABELS[tier], axis: 'riskTiers', id: tier });
+    }
+    for (const status of sel.actionStatuses) {
+      items.push({ key: `action-${status}`, label: ACTION_STATUS_LABELS[status], axis: 'actionStatuses', id: status });
+    }
+
+    return items;
+  }, [sel]);
+
+  if (chips.length === 0) return null;
+
+  return (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: spaceBetween.relatedCompact,
+      padding: `${spaceAround.tight}px ${spaceAround.default}px`,
+      paddingTop: 8,
+      flexWrap: 'wrap',
+      position: 'sticky',
+      top: 0,
+      left: 0,
+      right: 0,
+      zIndex: 5,
+    }}>
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          onClick={() => dispatch({ type: 'DIMENSION_TOGGLED', axis: chip.axis, id: chip.id })}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            height: 26,
+            padding: '0 8px 0 10px',
+            fontSize: 12,
+            fontFamily: typography.fontFamily.sans,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.fg.accent.primary,
+            backgroundColor: 'transparent',
+            border: `1px solid ${colors.border.accent.medium}`,
+            borderRadius: borderRadius.full,
+            cursor: 'pointer',
+            transition: `all ${transitions.fast}`,
+          }}
+        >
+          {chip.label}
+          <X size={12} />
+        </button>
+      ))}
+      {chips.length > 1 && (
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
+          style={{
+            height: 26,
+            padding: '0 10px',
+            fontSize: 12,
+            fontFamily: typography.fontFamily.sans,
+            color: colors.fg.neutral.spotReadable,
+            backgroundColor: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Clear all
+        </button>
+      )}
+    </div>
+  );
+};
+
+DimensionFilterChips.displayName = 'DimensionFilterChips';
+
+// ============================================================================
+// AllPatientsCanvas (main export)
+// ============================================================================
+
+export const AllPatientsCanvas: React.FC = () => {
+  const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
+
+  // Keyboard shortcuts 1/2/3 for Map/Routing/Table
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (e: Event) => {
+      const { index } = (e as CustomEvent).detail;
+      if (index === 1) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'map' });
+      if (index === 2) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'routing' });
+      if (index === 3) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'table' });
+    };
+    window.addEventListener('ehr:context-segment', handler);
+    return () => window.removeEventListener('ehr:context-segment', handler);
+  }, [dispatch]);
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'hidden',
+      }}
+      data-testid="all-patients-canvas"
+    >
+      {/* Filter chips overlay */}
+      <DimensionFilterChips />
+
+      {/* Main view */}
+      {state.allPatientsView === 'map' && <SankeyMapView />}
+      {state.allPatientsView === 'routing' && <RoutingView />}
+      {state.allPatientsView === 'table' && <TablePlaceholder />}
+
+      {/* Drawer */}
+      <SlideDrawer
+        open={isDrawerOpen}
+        onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
+        showBack={canDrawerGoBack}
+        onBack={() => dispatch({ type: 'DRAWER_BACK' })}
+        header={
+          currentDrawerView?.type === 'dimension-detail' ? (
+            <span style={{
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.primary,
+            }}>
+              Dimension Details
+            </span>
+          ) : currentDrawerView?.type === 'filter' ? (
+            <span style={{
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.primary,
+            }}>
+              Filters
+            </span>
+          ) : undefined
+        }
+        testID="all-patients-drawer"
+      >
+        {currentDrawerView?.type === 'filter' && (
+          <div style={{ padding: 20, color: colors.fg.neutral.secondary, fontSize: 13, fontFamily: typography.fontFamily.sans }}>
+            Advanced filter controls for all-patients view.
+          </div>
+        )}
+        {currentDrawerView?.type === 'dimension-detail' && (
+          <div style={{ padding: 20, color: colors.fg.neutral.secondary, fontSize: 13, fontFamily: typography.fontFamily.sans }}>
+            Details for dimension: {currentDrawerView.dimensionId}
+          </div>
+        )}
+      </SlideDrawer>
+    </div>
+  );
+};
+
+AllPatientsCanvas.displayName = 'AllPatientsCanvas';

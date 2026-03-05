@@ -1,7 +1,7 @@
 # Population Health Workspace — Progress Tracker
 
-> **Status:** Active Build — Phases 0–6 Complete
-> **Last Updated:** 2026-03-03
+> **Status:** Active Build — Phases 0–6 Complete, All-Patients A1–A3 Complete
+> **Last Updated:** 2026-03-05
 > **Related Docs:** [Design Spec](./DESIGN-SPEC.md) | [Phased Plan](./PHASED-PLAN.md) | [AppShell Scope System](../../architecture/appshell-scope-system.md)
 
 ---
@@ -18,6 +18,14 @@
 | 5 | Cross-Pane Sync + Filters | **Complete** | Lifecycle toggles, search, stream highlighting, filter application, auto-expand |
 | 6 | Detail Drawer + Drill-Through | **Complete** | Lifecycle badge, flow breakdown, scope-based drill-through, drawer stack wiring |
 | 7 | Table View + Polish | Not started | Wire existing table, AI bar, full journey |
+
+### All-Patients Scope (Custom SVG Sankey + Center Pane)
+
+| Phase | Name | Status | Notes |
+|-------|------|--------|-------|
+| A1 | Types + Mock Data + Sankey Computation | **Complete** | New types (RiskTier, ActionStatus, SankeyData, etc.), ~45 mock patients, computation + layout engines, 33 new tests |
+| A2 | Canvas + Center Pane + Wiring | **Complete** | SankeyChart SVG, AllPatientsCanvas (map/pipeline/table routing), AllPatientsContextPane (stats + 4 dimension sections), AllPatientsCanvasHeader, ScopeRouters wiring, keyboard shortcuts |
+| A3 | Polish + Documentation | **Complete** | Attention band styling, empty states, filter chips, docs moved to docs/features/, directive archived |
 
 ### Previous Implementation (Rev 1)
 
@@ -39,7 +47,7 @@ First pass built ~17 pop health files on a separate-screen architecture (PopHeal
 | 4 | Visual density at 7+ columns | React Flow pan/zoom + minimap may suffice. | Assess in practice |
 | 5 | Detail drawer width | 40-50% starting point. Adjust based on content density. | Assess in practice |
 | 6 | Filter panel layout | Filter drawer panel, pathway-specific filter appearance. | Defer to implementation |
-| 7 | "All Patients" canvas view | Stats-only view? System-map of all pathways as collapsed blocks? | Design decision needed |
+| 7 | ~~"All Patients" canvas view~~ | ~~Stats-only view? System-map of all pathways as collapsed blocks?~~ | **Resolved** → Custom SVG Sankey (conditions/preventive × risk × action) |
 | 8 | Custom cohort creation flow | Currently pre-defined cohorts only. Future: filter-builder. | Future scope |
 | 9 | Pathway creation flow | Currently view/edit only. Future: template-based, AI-assisted. | Future scope |
 | 10 | Downstream role views | RN, MA, coordinator perspectives. Data model supports, UI not built. | Future scope |

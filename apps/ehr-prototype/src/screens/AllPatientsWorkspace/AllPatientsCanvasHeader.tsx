@@ -1,7 +1,7 @@
 /**
  * AllPatientsCanvasHeader
  *
- * Nav row header for the all-patients scope: Map/Pipeline/Table segmented
+ * Nav row header for the all-patients scope: Map/Routing/Table segmented
  * control + filter button + search input. Follows CohortCanvasHeader pattern.
  */
 
@@ -30,11 +30,11 @@ export const AllPatientsCanvasHeader: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      {/* Map/Pipeline/Table segmented control */}
+      {/* Map/Routing/Table segmented control */}
       <SegmentedControl
         segments={[
           { key: 'map' as const, label: 'Map' },
-          { key: 'pipeline' as const, label: 'Pipeline' },
+          { key: 'routing' as const, label: 'Routing' },
           { key: 'table' as const, label: 'Table' },
         ]}
         value={state.allPatientsView}
