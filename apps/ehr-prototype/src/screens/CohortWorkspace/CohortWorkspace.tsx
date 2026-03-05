@@ -12,7 +12,7 @@ import { usePopHealth } from '../../context/PopHealthContext';
 import { PopHealthCanvas } from '../PopHealthView/PopHealthCanvas';
 import { SegmentedControl } from '../../components/primitives/SegmentedControl';
 import { BottomBarContainer } from '../../components/bottom-bar/BottomBarContainer';
-import { Layers, Table2, Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 import { colors, typography, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
 
 // ============================================================================
@@ -75,8 +75,8 @@ export const CohortCanvasHeader: React.FC = () => {
       {/* Flow/Table segmented control */}
       <SegmentedControl
         segments={[
-          { key: 'flow' as const, label: 'Flow', icon: <Layers size={14} /> },
-          { key: 'table' as const, label: 'Table', icon: <Table2 size={14} /> },
+          { key: 'flow' as const, label: 'Flow' },
+          { key: 'table' as const, label: 'Table' },
         ]}
         value={state.activeView}
         onChange={(view) => dispatch({ type: 'VIEW_CHANGED', view })}
@@ -111,7 +111,7 @@ export const CohortCanvasHeader: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           height: GLASS_BUTTON_HEIGHT,
-          width: 200,
+          width: isSearchFocused ? 240 : 160,
           ...glass.button,
           borderRadius: GLASS_BUTTON_RADIUS,
           paddingLeft: 12,

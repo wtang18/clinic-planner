@@ -417,7 +417,7 @@ export const FloatingNavRow: React.FC<FloatingNavRowProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     height: GLASS_BUTTON_HEIGHT,
-                    width: 280,
+                    width: isSearchFocused ? 240 : 160,
                     ...glass.button,
                     borderRadius: GLASS_BUTTON_RADIUS,
                     paddingLeft: 12,
