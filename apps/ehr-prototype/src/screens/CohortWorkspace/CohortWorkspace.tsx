@@ -72,6 +72,39 @@ export const CohortCanvasHeader: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {/* Flow/Table segmented control */}
+      <SegmentedControl
+        segments={[
+          { key: 'flow' as const, label: 'Flow', icon: <Layers size={14} /> },
+          { key: 'table' as const, label: 'Table', icon: <Table2 size={14} /> },
+        ]}
+        value={state.activeView}
+        onChange={(view) => dispatch({ type: 'VIEW_CHANGED', view })}
+        variant="topBar"
+      />
+
+      {/* Filter icon button */}
+      <button
+        type="button"
+        onClick={handleFilterClick}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: GLASS_BUTTON_HEIGHT,
+          height: GLASS_BUTTON_HEIGHT,
+          ...glass.button,
+          borderRadius: GLASS_BUTTON_RADIUS,
+          cursor: 'pointer',
+          color: colors.fg.neutral.primary,
+          transition: `all ${transitions.fast}`,
+        }}
+        aria-label="Open filter controls"
+        title="Filters"
+      >
+        <SlidersHorizontal size={16} />
+      </button>
+
       {/* Glassmorphic search input */}
       <div
         style={{
@@ -107,39 +140,6 @@ export const CohortCanvasHeader: React.FC = () => {
           }}
         />
       </div>
-
-      {/* Flow/Table segmented control */}
-      <SegmentedControl
-        segments={[
-          { key: 'flow' as const, label: 'Flow', icon: <Layers size={14} /> },
-          { key: 'table' as const, label: 'Table', icon: <Table2 size={14} /> },
-        ]}
-        value={state.activeView}
-        onChange={(view) => dispatch({ type: 'VIEW_CHANGED', view })}
-        variant="topBar"
-      />
-
-      {/* Filter icon button */}
-      <button
-        type="button"
-        onClick={handleFilterClick}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: GLASS_BUTTON_HEIGHT,
-          height: GLASS_BUTTON_HEIGHT,
-          ...glass.button,
-          borderRadius: GLASS_BUTTON_RADIUS,
-          cursor: 'pointer',
-          color: colors.fg.neutral.primary,
-          transition: `all ${transitions.fast}`,
-        }}
-        aria-label="Open filter controls"
-        title="Filters"
-      >
-        <SlidersHorizontal size={16} />
-      </button>
     </div>
   );
 };

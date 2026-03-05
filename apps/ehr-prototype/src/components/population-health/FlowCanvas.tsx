@@ -44,6 +44,7 @@ export const ROW_HEIGHT = NODE_CARD_MIN_HEIGHT + 32; // Card height + vertical g
 export const CANVAS_PADDING = 32;
 const NODE_CENTER_OFFSET = (COLUMN_WIDTH - NODE_CARD_WIDTH) / 2; // 30px — centers node within column
 const COLUMN_HEADER_HEIGHT = 24; // Reserved strip for column number labels
+const SNAP_EDGE_PADDING = 24; // Screen-space left padding for snap-aligned node edges
 
 // ============================================================================
 // Custom Node Types (module-level — avoids re-registration on every render)
@@ -396,11 +397,17 @@ const FlowCanvasInner: React.FC = () => {
     : PanOnScrollMode.Horizontal;
 
   // ---- Enhancement 3: Horizontal column snapping ----
+  // Snap so the left edge of the nearest column's node aligns to SNAP_EDGE_PADDING
   const snapToColumn = useCallback((viewport: Viewport) => {
-    const rawColumn = -(viewport.x - CANVAS_PADDING) / COLUMN_WIDTH;
+    // Node left edge for column n in flow space: CANVAS_PADDING + n * COLUMN_WIDTH + NODE_CENTER_OFFSET
+    // Screen position: flowX + viewport.x
+    // Find which column's node left edge is closest to SNAP_EDGE_PADDING
+    const rawColumn = (SNAP_EDGE_PADDING - viewport.x - CANVAS_PADDING - NODE_CENTER_OFFSET) / COLUMN_WIDTH;
     const snappedColumn = Math.max(0, Math.round(rawColumn));
-    const targetX = -(snappedColumn * COLUMN_WIDTH) + CANVAS_PADDING;
-    const clampedX = Math.min(CANVAS_PADDING, targetX);
+    const targetX = SNAP_EDGE_PADDING - CANVAS_PADDING - NODE_CENTER_OFFSET - snappedColumn * COLUMN_WIDTH;
+    // Don't scroll past column 0's snap position
+    const maxX = SNAP_EDGE_PADDING - CANVAS_PADDING - NODE_CENTER_OFFSET;
+    const clampedX = Math.min(maxX, targetX);
     if (Math.abs(clampedX - viewport.x) < 2) return; // avoid jitter
     rf.setViewport({ x: clampedX, y: viewport.y, zoom: 1 }, { duration: 200 });
   }, [rf]);
@@ -429,22 +436,34 @@ const FlowCanvasInner: React.FC = () => {
   }, []);
 
   // ---- Enhancement 5: Tree-to-canvas auto-scroll ----
+  // Track previous selectedNodeId to skip auto-scroll on mount with pre-existing selection
+  // (e.g. switching from table view back to flow with a node already selected).
+  const prevSelectedNodeRef = useRef(state.selectedNodeId);
+
   useEffect(() => {
+    const prev = prevSelectedNodeRef.current;
+    prevSelectedNodeRef.current = state.selectedNodeId;
+
     if (!state.selectedNodeId) return;
+    // Same selection as mount or last processed — no scroll needed
+    if (prev === state.selectedNodeId) return;
     // Skip canvas-initiated selections
     if (canvasClickRef.current === state.selectedNodeId) {
       canvasClickRef.current = null;
       return;
     }
     canvasClickRef.current = null;
+    // Skip if container hasn't been measured yet
+    if (containerHeight === 0) return;
 
     // Find selected node's flow position
     const node = flowNodes.find(n => n.id === state.selectedNodeId);
     if (!node) return;
 
-    // Target: node in 2nd column slot (1 column offset from left + padding)
-    const targetX = -(node.position.x - COLUMN_WIDTH - CANVAS_PADDING);
-    const clampedX = Math.min(CANVAS_PADDING, targetX);
+    // Target: node's left edge at 2nd column slot (SNAP_EDGE_PADDING + 1 column width)
+    const targetX = SNAP_EDGE_PADDING + COLUMN_WIDTH - node.position.x;
+    const maxX = SNAP_EDGE_PADDING - CANVAS_PADDING - NODE_CENTER_OFFSET;
+    const clampedX = Math.min(maxX, targetX);
 
     // Vertical: center node in viewport
     const targetY = -(node.position.y - containerHeight / 2 + NODE_CARD_MIN_HEIGHT / 2);
