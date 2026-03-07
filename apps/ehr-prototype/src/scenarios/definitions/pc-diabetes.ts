@@ -458,5 +458,218 @@ export const PC_DIABETES_SCENARIO: Scenario = {
       },
       description: 'Transcription stopped',
     },
+
+    // =================================================================
+    // Post-encounter processing: labs & rx in various work states
+    // =================================================================
+
+    // --- BMP Lab: ordered, lab-send ready ---
+    {
+      delayMs: 1000,
+      action: {
+        type: 'ITEM_ADDED',
+        payload: {
+          item: {
+            id: 'lab-bmp-001',
+            category: 'lab',
+            status: 'ordered',
+            intent: 'order',
+            displayText: 'Basic Metabolic Panel (80048)',
+            displaySubtext: 'Kidney function monitoring',
+            createdAt: new Date(),
+            createdBy: { id: 'provider-001', name: 'Dr. Johnson', role: 'provider' },
+            data: {
+              testName: 'Basic Metabolic Panel',
+              cptCode: '80048',
+              priority: 'routine',
+              indication: 'Diabetes — renal function monitoring',
+              orderStatus: 'ordered',
+            },
+          },
+          source: { type: 'manual' },
+        },
+      } as unknown as EncounterAction,
+      description: 'BMP lab order added',
+    },
+    {
+      delayMs: 200,
+      action: {
+        type: 'TASK_CREATED',
+        payload: {
+          task: {
+            id: generateId('task'),
+            type: 'lab-send',
+            status: 'ready',
+            priority: 'normal',
+            trigger: { action: 'ITEM_ADDED', itemId: 'lab-bmp-001' },
+            createdAt: new Date(),
+            startedAt: new Date(),
+            completedAt: new Date(),
+            displayTitle: 'Send BMP order',
+            displayStatus: 'Ready to send',
+          },
+          relatedItemId: 'lab-bmp-001',
+        },
+      } as unknown as EncounterAction,
+      description: 'BMP lab-send task (ready)',
+    },
+
+    // --- Lipid Panel: confirmed, lab-send processing ---
+    {
+      delayMs: 200,
+      action: {
+        type: 'ITEM_ADDED',
+        payload: {
+          item: {
+            id: 'lab-lipid-001',
+            category: 'lab',
+            status: 'confirmed',
+            intent: 'order',
+            displayText: 'Lipid Panel (80061)',
+            displaySubtext: 'Hyperlipidemia monitoring',
+            createdAt: new Date(),
+            createdBy: { id: 'provider-001', name: 'Dr. Johnson', role: 'provider' },
+            data: {
+              testName: 'Lipid Panel',
+              cptCode: '80061',
+              priority: 'routine',
+              indication: 'Hyperlipidemia monitoring',
+              fastingRequired: true,
+              orderStatus: 'draft',
+            },
+          },
+          source: { type: 'manual' },
+        },
+      } as unknown as EncounterAction,
+      description: 'Lipid Panel lab order added',
+    },
+    {
+      delayMs: 200,
+      action: {
+        type: 'TASK_CREATED',
+        payload: {
+          task: {
+            id: generateId('task'),
+            type: 'lab-send',
+            status: 'processing',
+            priority: 'normal',
+            trigger: { action: 'ITEM_ADDED', itemId: 'lab-lipid-001' },
+            progress: 45,
+            progressMessage: 'Sending lab order...',
+            createdAt: new Date(),
+            startedAt: new Date(),
+            displayTitle: 'Send Lipid Panel order',
+            displayStatus: 'Sending...',
+          },
+          relatedItemId: 'lab-lipid-001',
+        },
+      } as unknown as EncounterAction,
+      description: 'Lipid Panel lab-send task (processing)',
+    },
+
+    // --- Atorvastatin refill: confirmed, formulary check failed ---
+    {
+      delayMs: 200,
+      action: {
+        type: 'ITEM_ADDED',
+        payload: {
+          item: {
+            id: 'rx-atorvastatin-001',
+            category: 'medication',
+            status: 'confirmed',
+            intent: 'prescribe',
+            displayText: 'Atorvastatin 40mg daily (refill)',
+            displaySubtext: 'Hyperlipidemia',
+            createdAt: new Date(),
+            createdBy: { id: 'provider-001', name: 'Dr. Johnson', role: 'provider' },
+            data: {
+              drugName: 'Atorvastatin',
+              dosage: '40mg',
+              route: 'oral',
+              frequency: 'daily',
+              quantity: 90,
+              refills: 3,
+              prescriptionType: 'refill',
+            },
+          },
+          source: { type: 'manual' },
+        },
+      } as unknown as EncounterAction,
+      description: 'Atorvastatin refill added',
+    },
+    {
+      delayMs: 200,
+      action: {
+        type: 'TASK_CREATED',
+        payload: {
+          task: {
+            id: generateId('task'),
+            type: 'formulary-check',
+            status: 'failed',
+            priority: 'normal',
+            trigger: { action: 'ITEM_ADDED', itemId: 'rx-atorvastatin-001' },
+            error: 'Not on formulary — Rosuvastatin 20mg is preferred',
+            createdAt: new Date(),
+            startedAt: new Date(),
+            completedAt: new Date(),
+            displayTitle: 'Formulary check: Atorvastatin',
+            displayStatus: 'Not covered',
+          },
+          relatedItemId: 'rx-atorvastatin-001',
+        },
+      } as unknown as EncounterAction,
+      description: 'Atorvastatin formulary check (failed)',
+    },
+
+    // --- Metformin dose change: confirmed, dx-association pending review ---
+    {
+      delayMs: 200,
+      action: {
+        type: 'ITEM_ADDED',
+        payload: {
+          item: {
+            id: 'rx-metformin-001',
+            category: 'medication',
+            status: 'confirmed',
+            intent: 'prescribe',
+            displayText: 'Metformin 1000mg BID (continue)',
+            displaySubtext: 'Type 2 diabetes',
+            createdAt: new Date(),
+            createdBy: { id: 'provider-001', name: 'Dr. Johnson', role: 'provider' },
+            data: {
+              drugName: 'Metformin',
+              dosage: '1000mg',
+              route: 'oral',
+              frequency: 'BID',
+              quantity: 180,
+              refills: 3,
+              prescriptionType: 'refill',
+            },
+          },
+          source: { type: 'manual' },
+        },
+      } as unknown as EncounterAction,
+      description: 'Metformin continuation added',
+    },
+    {
+      delayMs: 200,
+      action: {
+        type: 'TASK_CREATED',
+        payload: {
+          task: {
+            id: generateId('task'),
+            type: 'dx-association',
+            status: 'queued',
+            priority: 'normal',
+            trigger: { action: 'ITEM_ADDED', itemId: 'rx-metformin-001' },
+            createdAt: new Date(),
+            displayTitle: 'Link diagnosis: Metformin',
+            displayStatus: 'Queued',
+          },
+          relatedItemId: 'rx-metformin-001',
+        },
+      } as unknown as EncounterAction,
+      description: 'Metformin dx-association task (queued — will auto-progress)',
+    },
   ],
 };
