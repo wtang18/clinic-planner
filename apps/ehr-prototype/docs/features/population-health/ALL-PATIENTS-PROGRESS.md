@@ -1,7 +1,7 @@
 # All-Patients View — Progress Tracker
 
-**Status:** A1–A3.1 complete, R1–R2 (Routing View) complete
-**Last updated:** 2026-03-05
+**Status:** A1–A3.1 complete, R1–R3 complete, LT1–LT2 complete
+**Last updated:** 2026-03-07
 
 ---
 
@@ -15,6 +15,9 @@
 | A3.1 | Sankey Refinements | Complete | Label padding, top bar clearance, scroll, investigate button |
 | R1 | Routing View Core + Card Layout | Complete | Pipeline→routing rename, routing types, mock data enrichment, routing-computation.ts, RoutingView component, 20 new tests. See ROUTING-PROGRESS.md |
 | R2 | Routing Navigation + Context Transfer | **Complete** | Chevron/node-label→cohort drill-through, unenrolled→table+filter, internal nav state, back button delegation via navRef |
+| R3 | Chips Fix, Expanded Cards, Nav ID Mapping | **Complete** | Filter chips fix, BreakdownBar, expanded card state, ROUTING_TO_COHORT_MAP, actionStatusBreakdown |
+| LT1 | Layer Tree Multi-Select + Markers | **Complete** | Shift+click multi-select, ★ assignment markers, 🔺 escalation markers, union highlight/filter |
+| LT2 | "Show Mine" Preset + Tree Filter + Sync | **Complete** | Auto-select assigned+escalated, modification delta badge, [All]/[★ Mine] tree filter, bidirectional canvas sync |
 | A4 | Table View + Integration Polish | Not started | Requires A2 + A3 |
 
 ---
@@ -46,16 +49,33 @@
 | 8 | Click behavior | Scope-filter, not navigate; explicit drill-down affordances | Consistent with selection-not-navigation principle | 2026-03-05 |
 | 9 | Multi-select logic | Within axis: OR, cross axis: AND | Matches natural intent | 2026-03-05 |
 | 10 | Preset views | Deferred | Core interaction sufficient; presets additive | 2026-03-05 |
-| 11 | Canvas views | Map + Routing + Table | Establishes three-view structure; Pipeline renamed to Routing in R1 | 2026-03-05 |
+| 11 | Canvas views | Map + Routing + Table (built); evolving to Map + Table with inline Sankey navigator (SN1–SN2) | Three-view structure built in R1–R3; design evolved to absorb Routing into Sankey interaction | 2026-03-05, **updated 2026-03-07** |
 | 12 | Investigation modal | Absorbed into Routing view + Table view | No modal needed; three surfaces cover all depths | 2026-03-05 |
 | 13 | Technical approach | ECharts primary, custom SVG fallback | ECharts handles multi-level Sankey natively; spike validates | 2026-03-05 |
 | 14 | Risk Tiers scope | Not a left pane category; lives on Sankey center axis + dimension list + cohort-level filter | Risk is a patient attribute (cross-cutting lens), not a care-flow-organized grouping | 2026-03-05 |
 
 ---
 
+## Enhancement Packages
+
+| Package | Phases | Status | Notes |
+|---------|--------|--------|-------|
+| **Priorities View** | PV1–PV4 | Not started | Cohort-scope priority card list, quick actions, side drawer, ambient strip. See [`priorities-view/`](./priorities-view/) |
+| **Sankey Navigator** | SN1–SN2 | Not started | Inline priority column on Sankey bar tap — replaces separate Routing tab. Requires PV1. See [`sankey-navigator/`](./sankey-navigator/) |
+
+### Design evolution: Canvas views
+
+The all-patients canvas view structure has evolved:
+
+- **Built (R1–R3):** Map | Routing | Table — three-tab structure with Routing as separate card-based view
+- **Target (SN1–SN2):** Map (+ Sankey navigator) | Table — Routing tab removed, its drill-down function absorbed into inline Sankey navigator interaction
+
+The built Routing code (R1–R3) serves as prototype reference. See [`sankey-navigator/DESIGN-SPEC.md`](./sankey-navigator/DESIGN-SPEC.md) for the evolution rationale.
+
+---
+
 ## Future Capabilities (Noted, Not Scoped)
 
-- Routing view Phase R2: navigation, context transfer, deep links (see ROUTING-PHASED-PLAN.md)
 - Table view at All-Patients scope (full build — separate spec)
 - Category overview views (separate spec per category type)
 - Saved/preset view configurations

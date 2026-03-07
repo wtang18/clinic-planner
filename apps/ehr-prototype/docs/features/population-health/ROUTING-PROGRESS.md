@@ -1,7 +1,9 @@
 # Routing View — Progress Tracker
 
-**Status:** Phase R3 complete
-**Last updated:** 2026-03-05
+**Status:** Phase R3 complete (design-superseded by Sankey Navigator)
+**Last updated:** 2026-03-07
+
+> **Design note (2026-03-07):** The Routing view (R1–R3) is built and functional. However, the design has evolved: a future Sankey Navigator (SN1–SN2) will replace the separate Routing tab with inline priority drill-down on the Sankey Map. The built Routing code serves as prototype reference. See [`sankey-navigator/DESIGN-SPEC.md`](./sankey-navigator/DESIGN-SPEC.md).
 
 ---
 

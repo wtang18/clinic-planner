@@ -1,7 +1,7 @@
 # Population Health Workspace — Progress Tracker
 
-> **Status:** Active Build — Phases 0–6 Complete, All-Patients A1–A3 Complete
-> **Last Updated:** 2026-03-05
+> **Status:** Active Build — Phases 0–6 Complete, All-Patients A1–A3 + R1–R3 Complete, LT1–LT2 Complete
+> **Last Updated:** 2026-03-07
 > **Related Docs:** [Design Spec](./DESIGN-SPEC.md) | [Phased Plan](./PHASED-PLAN.md) | [AppShell Scope System](../../architecture/appshell-scope-system.md)
 
 ---
@@ -110,6 +110,20 @@ First pass built ~17 pop health files on a separate-screen architecture (PopHeal
 | 46 | Anchor enrichment on focus | Focused node anchors show inbound/outbound summary counts | At-a-glance flow story without opening drawer | 2026-03-03 |
 | 47 | Flow breakdown in drawer | Node Detail View includes Flow section: inbound (with attribution), at-stage, outbound (with branch distribution), throughput | Deep engagement; full patient flow story with attribution and metrics | 2026-03-03 |
 | 48 | NodeFlowState data model | Explicit interface for flow state; static mock data, structured for future real-time engine | Upgrade boundary: replace data source without touching rendering | 2026-03-03 |
+
+---
+
+## Enhancement Packages
+
+| Package | Phases | Status | Notes |
+|---------|--------|--------|-------|
+| **Layer Tree Enhancements** | LT1–LT2 | **Complete** | Multi-select, ★ assignment markers, 🔺 escalation markers, "Show Mine" preset, tree filter, bidirectional canvas sync |
+| **Priorities View** | PV1–PV4 | Not started | Priority card list, quick actions, side drawer + REVIEW flow, ambient strip + batch. Prerequisites met (LT2 complete). See [`priorities-view/`](./priorities-view/) |
+| **Sankey Navigator** | SN1–SN2 | Not started | Inline priority column on Sankey bar tap. Replaces separate Routing view tab at all-patients scope. Requires PV1. See [`sankey-navigator/`](./sankey-navigator/) |
+
+### Design evolution: Routing → Sankey Navigator
+
+The Routing view (R1–R3) is built and functional as a separate canvas tab at all-patients scope. However, the design has evolved: a future Sankey Navigator (SN1–SN2) will replace the separate Routing tab with inline priority drill-down directly on the Sankey Map. The built Routing code serves as prototype reference — its navigation patterns (context transfer, drill-through, floating anchor) carry forward into the Sankey Navigator design.
 
 ---
 
