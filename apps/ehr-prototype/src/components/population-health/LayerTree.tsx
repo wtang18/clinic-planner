@@ -10,7 +10,7 @@
  * Lifecycle state indicators: active (none), paused (Pause icon), draft (dashed border + label).
  */
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   ChevronRight,
   Users,
@@ -28,6 +28,7 @@ import {
 import { usePopHealth } from '../../context/PopHealthContext';
 import { getPathwaysByCohort, PATHWAYS, MOCK_ESCALATION_FLAGS } from '../../data/mock-population-health';
 import type { PathwayNode, NodeType, Pathway, NodeLifecycleState } from '../../types/population-health';
+import { SegmentedControl } from '../primitives/SegmentedControl';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
@@ -377,6 +378,12 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, is
 // LayerTree Component
 // ============================================================================
 
+/** Tree filter segments for the All/Mine toggle */
+const TREE_FILTER_SEGMENTS = [
+  { key: 'all', label: 'All' },
+  { key: 'mine', label: '★ Mine' },
+];
+
 export const LayerTree: React.FC = () => {
   const { state, dispatch } = usePopHealth();
   const [expandedPathways, setExpandedPathways] = useState<Set<string>>(new Set());
@@ -423,6 +430,52 @@ export const LayerTree: React.FC = () => {
     return ids;
   }, []);
 
+  // Compute "mine" node IDs: assigned to current provider OR has escalation flag
+  const mineNodeIds = useMemo(() => {
+    const ids: string[] = [];
+    for (const pathway of pathways) {
+      for (const node of pathway.nodes) {
+        if (node.assignedProviderId === 'prov-current' || escalatedNodeIds.has(node.id)) {
+          ids.push(node.id);
+        }
+      }
+    }
+    return ids;
+  }, [pathways, escalatedNodeIds]);
+
+  // Auto-apply "Show Mine" on cohort entry (when showMineActive is true and selection is empty)
+  const hasAppliedShowMineRef = useRef(false);
+  useEffect(() => {
+    if (state.showMineActive && state.selectedNodeIds.length === 0 && mineNodeIds.length > 0) {
+      // Only auto-apply once per cohort — avoid infinite loops
+      if (!hasAppliedShowMineRef.current) {
+        hasAppliedShowMineRef.current = true;
+        dispatch({ type: 'SHOW_MINE_APPLIED', nodeIds: mineNodeIds });
+      }
+    }
+  }, [state.showMineActive, state.selectedNodeIds.length, mineNodeIds, dispatch]);
+
+  // Reset the auto-apply guard when cohort changes
+  useEffect(() => {
+    hasAppliedShowMineRef.current = false;
+  }, [state.selectedCohortId]);
+
+  // Compute "Show Mine" modification delta for badge
+  const showMineDelta = useMemo(() => {
+    if (!state.showMineActive) return 0;
+    const mineSet = new Set(mineNodeIds);
+    const selectedSet = new Set(state.selectedNodeIds);
+    let added = 0;
+    let removed = 0;
+    for (const id of selectedSet) {
+      if (!mineSet.has(id)) added++;
+    }
+    for (const id of mineSet) {
+      if (!selectedSet.has(id)) removed++;
+    }
+    return added - removed;
+  }, [state.showMineActive, mineNodeIds, state.selectedNodeIds]);
+
   // Auto-expand pathways when nodes are selected in the canvas
   useEffect(() => {
     if (state.selectedNodeIds.length === 0) return;
@@ -444,20 +497,91 @@ export const LayerTree: React.FC = () => {
     dispatch({ type: 'NODE_SELECTED', nodeId, multi: e.shiftKey });
   }, [dispatch]);
 
+  const handleShowMineClick = useCallback(() => {
+    dispatch({ type: 'SHOW_MINE_APPLIED', nodeIds: mineNodeIds });
+  }, [dispatch, mineNodeIds]);
+
+  const handleClearClick = useCallback(() => {
+    dispatch({ type: 'SHOW_MINE_CLEARED' });
+  }, [dispatch]);
+
+  const handleTreeFilterChange = useCallback((key: string) => {
+    dispatch({ type: 'TREE_FILTER_CHANGED', filter: key as 'all' | 'mine' });
+  }, [dispatch]);
+
+  // Pathways visible under "★ Mine" filter — only those with at least one mine node
+  const mineNodeSet = useMemo(() => new Set(mineNodeIds), [mineNodeIds]);
+  const visiblePathwayIds = useMemo(() => {
+    if (state.treeFilter === 'all') return null; // null = show all
+    const ids = new Set<string>();
+    for (const pathway of pathways) {
+      if (pathway.nodes.some((n) => mineNodeSet.has(n.id))) {
+        ids.add(pathway.id);
+      }
+    }
+    return ids;
+  }, [state.treeFilter, pathways, mineNodeSet]);
+
   const selectionCount = state.selectedNodeIds.length;
+
+  // Build "Show Mine" button label with modification delta
+  const showMineLabel = useMemo(() => {
+    if (!state.showMineActive) return '★ Show Mine';
+    if (showMineDelta > 0) return `★ Show Mine + ${showMineDelta}`;
+    if (showMineDelta < 0) return `★ Show Mine − ${Math.abs(showMineDelta)}`;
+    return '★ Show Mine';
+  }, [state.showMineActive, showMineDelta]);
 
   return (
     <div style={treeStyles.container} data-testid="layer-tree">
+      {/* Header row: label + tree filter */}
       <div style={treeStyles.header}>
         <span style={treeStyles.headerLabel}>Pathways</span>
+        <SegmentedControl
+          segments={TREE_FILTER_SEGMENTS}
+          value={state.treeFilter}
+          onChange={handleTreeFilterChange}
+          variant="inline"
+          size="sm"
+          testID="tree-filter"
+        />
+      </div>
+
+      {/* Action row: Show Mine toggle + Clear + selection badge */}
+      <div style={treeStyles.actionRow}>
+        <button
+          style={{
+            ...treeStyles.showMineButton,
+            backgroundColor: state.showMineActive ? colors.bg.accent.low : 'transparent',
+            color: state.showMineActive ? colors.fg.accent.primary : colors.fg.neutral.secondary,
+            borderColor: state.showMineActive ? colors.border.accent.medium : colors.border.neutral.low,
+          }}
+          onClick={handleShowMineClick}
+          data-testid="show-mine-button"
+        >
+          {showMineLabel}
+        </button>
+        {selectionCount > 0 && (
+          <button
+            style={treeStyles.clearButton}
+            onClick={handleClearClick}
+            data-testid="clear-selection-button"
+          >
+            Clear
+          </button>
+        )}
         {selectionCount > 1 && (
           <span style={treeStyles.selectionBadge} data-testid="layer-tree-selection-badge">
-            {selectionCount} nodes selected
+            {selectionCount} selected
           </span>
         )}
       </div>
+
       <div style={treeStyles.scrollArea}>
         {pathways.map((pathway) => {
+          // "★ Mine" filter: hide pathways with no mine nodes
+          if (visiblePathwayIds !== null && !visiblePathwayIds.has(pathway.id)) return null;
+
           const isExpanded = expandedPathways.has(pathway.id);
           const nodeEntries = pathwayNodeEntries.get(pathway.id) ?? [];
 
@@ -469,6 +593,9 @@ export const LayerTree: React.FC = () => {
                 onToggle={() => toggleExpanded(pathway.id)}
               />
               {isExpanded && nodeEntries.map((entry) => {
+                // "★ Mine" filter: hide non-mine nodes
+                if (visiblePathwayIds !== null && !mineNodeSet.has(entry.node.id)) return null;
+
                 const dimmedByLifecycle = state.lifecycleFilter.length > 0
                   && !state.lifecycleFilter.includes(entry.node.lifecycleState);
                 const dimmedBySearch = state.searchQuery.length > 0
@@ -525,6 +652,39 @@ const treeStyles: Record<string, React.CSSProperties> = {
     padding: `${spaceAround.tight}px ${spaceAround.default}px`,
     flexShrink: 0,
   },
+  actionRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spaceBetween.coupled,
+    padding: `0 ${spaceAround.default}px ${spaceAround.tight}px`,
+    flexShrink: 0,
+  },
+  showMineButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    fontSize: 11,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.medium,
+    border: '1px solid',
+    borderRadius: borderRadius.sm,
+    padding: '2px 8px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+    transition: `all ${transitions.fast}`,
+    outline: 'none',
+  },
+  clearButton: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    fontSize: 11,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
+    backgroundColor: 'transparent',
+    border: 'none',
+    padding: '2px 4px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+  },
   selectionBadge: {
     fontSize: 10,
     fontFamily: typography.fontFamily.sans,
@@ -533,6 +693,7 @@ const treeStyles: Record<string, React.CSSProperties> = {
     borderRadius: borderRadius.full,
     padding: '1px 8px',
     whiteSpace: 'nowrap' as const,
+    marginLeft: 'auto',
   },
   headerLabel: {
     fontSize: 11,

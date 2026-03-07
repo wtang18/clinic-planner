@@ -16,6 +16,7 @@ import type {
   DimensionSelection,
   AxisVisibility,
   AllPatientsView,
+  TreeFilter,
 } from '../types/population-health';
 
 // ============================================================================
@@ -50,7 +51,11 @@ export type PopHealthAction =
   | { type: 'BAND_HOVERED'; bandId: string | null }
   // Routing navigation actions
   | { type: 'ROUTING_NAVIGATED'; cohortId: string }
-  | { type: 'ROUTING_RETURNED' };
+  | { type: 'ROUTING_RETURNED' }
+  // Layer tree "Show Mine" actions
+  | { type: 'SHOW_MINE_APPLIED'; nodeIds: string[] }
+  | { type: 'SHOW_MINE_CLEARED' }
+  | { type: 'TREE_FILTER_CHANGED'; filter: TreeFilter };
 
 // ============================================================================
 // Initial State
@@ -86,6 +91,8 @@ const INITIAL_STATE: PopHealthState = {
   allPatientsView: 'map',
   hoveredBandId: null,
   routingTargetCohortId: null,
+  showMineActive: true,
+  treeFilter: 'all',
 };
 
 // ============================================================================
@@ -117,6 +124,8 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
         routingTargetCohortId: null,
+        showMineActive: true,
+        treeFilter: 'all',
         // allPatientsView persists across scope switches (intentional)
       };
 
@@ -149,7 +158,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
 
     case 'NODE_SELECTED': {
       if (action.multi) {
-        // Shift-click: toggle node in/out of multi-select
+        // Shift-click: toggle node in/out of multi-select (showMine stays active)
         const exists = state.selectedNodeIds.includes(action.nodeId);
         return {
           ...state,
@@ -158,12 +167,12 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
             : [...state.selectedNodeIds, action.nodeId],
         };
       }
-      // Single click: replace selection
-      return { ...state, selectedNodeIds: [action.nodeId] };
+      // Single click: replace selection, deactivate "Show Mine"
+      return { ...state, selectedNodeIds: [action.nodeId], showMineActive: false };
     }
 
     case 'NODE_DESELECTED':
-      return { ...state, selectedNodeIds: [] };
+      return { ...state, selectedNodeIds: [], showMineActive: false };
 
     case 'PATIENT_SELECTED':
       return { ...state, selectedPatientId: action.patientId };
@@ -217,6 +226,8 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         dimensionSelection: INITIAL_DIMENSION_SELECTION,
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
+        showMineActive: true,
+        treeFilter: 'all',
       };
     }
 
@@ -285,6 +296,24 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         focusedColumnIndex: null,
         searchQuery: '',
       };
+
+    // Layer tree "Show Mine" actions
+    case 'SHOW_MINE_APPLIED':
+      return {
+        ...state,
+        showMineActive: true,
+        selectedNodeIds: action.nodeIds,
+      };
+
+    case 'SHOW_MINE_CLEARED':
+      return {
+        ...state,
+        showMineActive: false,
+        selectedNodeIds: [],
+      };
+
+    case 'TREE_FILTER_CHANGED':
+      return { ...state, treeFilter: action.filter };
 
     default:
       return state;
