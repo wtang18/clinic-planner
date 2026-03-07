@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
+import { PrioritiesView } from '../../components/population-health/PrioritiesView';
 import { FlowCanvas } from '../../components/population-health/FlowCanvas';
 import { TableView } from '../../components/population-health/TableView';
 import { FilterBar } from '../../components/population-health/FilterBar';
@@ -39,7 +40,9 @@ export const PopHealthCanvas: React.FC = () => {
       <FilterBar />
 
       {/* Main canvas area */}
-      {state.activeView === 'flow' ? <FlowCanvas /> : <TableView />}
+      {state.activeView === 'priorities' && <PrioritiesView />}
+      {state.activeView === 'flow' && <FlowCanvas />}
+      {state.activeView === 'table' && <TableView />}
 
       {/* Detail drawer — node detail, patient preview, or filter controls */}
       <SlideDrawer

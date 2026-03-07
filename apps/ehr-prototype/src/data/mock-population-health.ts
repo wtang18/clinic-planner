@@ -15,7 +15,9 @@ import type {
   PopHealthFilter,
   RecentPatient,
   EscalationFlag,
+  PriorityItem,
 } from '../types/population-health';
+import { derivePriorityItems } from '../utils/priority-computation';
 
 // ============================================================================
 // Cohort Groups & Cohorts
@@ -620,3 +622,14 @@ export function getMetricsForCohort(cohortId: string): DashboardMetric[] {
 export function getAlertsForPathway(pathwayId: string): DashboardAlert[] {
   return DASHBOARD_ALERTS.filter((a) => a.pathwayId === pathwayId);
 }
+
+// ============================================================================
+// Derived Priority Items
+// ============================================================================
+
+/** Pre-computed priority items from existing pathway/patient/escalation data */
+export const MOCK_PRIORITY_ITEMS: PriorityItem[] = derivePriorityItems(
+  PATHWAYS,
+  MOCK_POP_HEALTH_PATIENTS,
+  MOCK_ESCALATION_FLAGS,
+);

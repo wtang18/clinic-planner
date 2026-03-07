@@ -400,7 +400,35 @@ export interface UnenrolledGroup {
 // Selection / View State
 // ============================================================================
 
-export type ActiveView = 'flow' | 'table';
+export type ActiveView = 'priorities' | 'flow' | 'table';
+
+// ============================================================================
+// Priority View Types
+// ============================================================================
+
+export type PriorityBadge = 'URGENT' | 'REVIEW' | 'ACTION' | 'MONITOR';
+
+export type PrioritySortMode = 'urgency' | 'by-node' | 'by-date';
+
+export interface PriorityItem {
+  /** Composite key: `${patientId}::${nodeId}` */
+  id: string;
+  patientName: string;
+  patientId: string;
+  badge: PriorityBadge;
+  nodeId: string;
+  nodeLabel: string;
+  pathwayId: string;
+  pathwayName: string;
+  daysAtStage: number;
+  contextLine: string;
+  isEscalated: boolean;
+  escalationReason?: string;
+  riskTier: 'high' | 'rising' | 'stable';
+  patientStatus: PathwayPatientStatus;
+  isAssigned: boolean;
+  isStale: boolean;
+}
 
 export type DrawerView =
   | { type: 'node-detail'; nodeId: string }

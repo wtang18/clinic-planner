@@ -40,9 +40,9 @@ const CohortWorkspaceInner: React.FC = () => {
     if (typeof window === 'undefined') return;
     const handler = (e: Event) => {
       const { index } = (e as CustomEvent).detail;
-      if (index === 1) dispatch({ type: 'VIEW_CHANGED', view: 'flow' });
-      if (index === 2) dispatch({ type: 'VIEW_CHANGED', view: 'table' });
-      // index 3+: no-op in cohort mode
+      if (index === 1) dispatch({ type: 'VIEW_CHANGED', view: 'priorities' });
+      if (index === 2) dispatch({ type: 'VIEW_CHANGED', view: 'flow' });
+      if (index === 3) dispatch({ type: 'VIEW_CHANGED', view: 'table' });
     };
     window.addEventListener('ehr:context-segment', handler);
     return () => window.removeEventListener('ehr:context-segment', handler);
@@ -75,6 +75,7 @@ export const CohortCanvasHeader: React.FC = () => {
       {/* Flow/Table segmented control */}
       <SegmentedControl
         segments={[
+          { key: 'priorities' as const, label: 'Priorities' },
           { key: 'flow' as const, label: 'Flow' },
           { key: 'table' as const, label: 'Table' },
         ]}

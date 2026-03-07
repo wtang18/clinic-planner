@@ -78,7 +78,7 @@ const INITIAL_STATE: PopHealthState = {
   selectedPathwayIds: [],
   selectedNodeIds: [],
   selectedPatientId: null,
-  activeView: 'flow',
+  activeView: 'priorities',
   filters: [],
   drawerStack: [],
   focusedColumnIndex: null,
