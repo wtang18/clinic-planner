@@ -10,6 +10,7 @@ import { X } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { SankeyChart } from '../../components/population-health/SankeyChart';
 import { RoutingView } from '../../components/population-health/RoutingView';
+import { PopHealthCanvas } from '../PopHealthView/PopHealthCanvas';
 import { SlideDrawer } from '../../components/shared/SlideDrawer';
 import {
   computeSankeyData,
@@ -267,13 +268,16 @@ const DimensionFilterChips: React.FC = () => {
       alignItems: 'center',
       gap: spaceBetween.relatedCompact,
       padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-      paddingTop: 8,
+      paddingTop: LAYOUT.headerHeight + spaceAround.tight,
       flexWrap: 'wrap',
       position: 'sticky',
       top: 0,
       left: 0,
       right: 0,
       zIndex: 5,
+      backgroundColor: 'transparent',
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
     }}>
       {chips.map((chip) => (
         <button
@@ -332,9 +336,10 @@ DimensionFilterChips.displayName = 'DimensionFilterChips';
 export const AllPatientsCanvas: React.FC = () => {
   const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
 
-  // Keyboard shortcuts 1/2/3 for Map/Routing/Table
+  // Keyboard shortcuts 1/2/3 for Map/Routing/Table (all-patients mode only)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (state.routingTargetCohortId) return; // Don't register all-patients shortcuts when viewing cohort
     const handler = (e: Event) => {
       const { index } = (e as CustomEvent).detail;
       if (index === 1) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'map' });
@@ -343,7 +348,38 @@ export const AllPatientsCanvas: React.FC = () => {
     };
     window.addEventListener('ehr:context-segment', handler);
     return () => window.removeEventListener('ehr:context-segment', handler);
-  }, [dispatch]);
+  }, [dispatch, state.routingTargetCohortId]);
+
+  // Keyboard shortcuts 1/2 for Flow/Table (cohort mode — when routing-navigated)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!state.routingTargetCohortId) return;
+    const handler = (e: Event) => {
+      const { index } = (e as CustomEvent).detail;
+      if (index === 1) dispatch({ type: 'VIEW_CHANGED', view: 'flow' });
+      if (index === 2) dispatch({ type: 'VIEW_CHANGED', view: 'table' });
+    };
+    window.addEventListener('ehr:context-segment', handler);
+    return () => window.removeEventListener('ehr:context-segment', handler);
+  }, [dispatch, state.routingTargetCohortId]);
+
+  // When routing-navigated, delegate to cohort canvas
+  if (state.routingTargetCohortId) {
+    return (
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          overflow: 'hidden',
+        }}
+        data-testid="all-patients-canvas"
+      >
+        <PopHealthCanvas />
+      </div>
+    );
+  }
 
   return (
     <div

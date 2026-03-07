@@ -1,6 +1,6 @@
 # All-Patients View — Progress Tracker
 
-**Status:** A1–A3.1 complete, R1 (Routing View) complete
+**Status:** A1–A3.1 complete, R1–R2 (Routing View) complete
 **Last updated:** 2026-03-05
 
 ---
@@ -14,7 +14,7 @@
 | A3 | Center Pane — Dynamic Stats + Dimension List | Complete | Stats module, 4 dimension sections, eye toggle |
 | A3.1 | Sankey Refinements | Complete | Label padding, top bar clearance, scroll, investigate button |
 | R1 | Routing View Core + Card Layout | Complete | Pipeline→routing rename, routing types, mock data enrichment, routing-computation.ts, RoutingView component, 20 new tests. See ROUTING-PROGRESS.md |
-| R2 | Routing Navigation + Context Transfer | Not started | Deep links, scope navigation, floating anchor |
+| R2 | Routing Navigation + Context Transfer | **Complete** | Chevron/node-label→cohort drill-through, unenrolled→table+filter, internal nav state, back button delegation via navRef |
 | A4 | Table View + Integration Polish | Not started | Requires A2 + A3 |
 
 ---

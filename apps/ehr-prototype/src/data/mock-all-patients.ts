@@ -512,3 +512,22 @@ export function getPreventiveLabel(preventiveId: string): string {
 export function getPatientById(patientId: string): AllPatientsPatient | undefined {
   return ALL_PATIENTS.find((p) => p.patientId === patientId);
 }
+
+// ============================================================================
+// Routing → Cohort ID Mapping
+// ============================================================================
+
+/**
+ * Maps routing cohort IDs (cond-xx / prev-xx) to pathway-system cohort IDs (coh-xx).
+ * Only cohorts with matching pathway data will show flow content; others show empty canvas.
+ */
+export const ROUTING_TO_COHORT_MAP: Record<string, string> = {
+  'cond-diabetes': 'coh-diabetes',
+  'cond-hypertension': 'coh-hypertension',
+  'cond-copd': 'coh-copd',
+  'cond-chf': 'coh-chf',
+  'cond-ckd': 'coh-ckd',
+  'prev-colon-screen': 'coh-cancer-screening',
+  'prev-breast-screen': 'coh-breast-screening',
+  'prev-immunizations': 'coh-immunization',
+};

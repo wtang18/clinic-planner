@@ -1,6 +1,6 @@
 # Routing View — Progress Tracker
 
-**Status:** Phase R1 complete
+**Status:** Phase R3 complete
 **Last updated:** 2026-03-05
 
 ---
@@ -10,7 +10,8 @@
 | Phase | Name | Status | Notes |
 |-------|------|--------|-------|
 | R1 | Routing View Core + Card Layout | **Complete** | pipeline→routing rename, routing types, mock data enrichment (currentNodeLabel + daysWaiting), routing-computation.ts (3 pure functions), RoutingView component, 15 new tests |
-| R2 | Navigation, Context Transfer, Polish | Not started | Requires R1, benefits from Main Phase 2 + All-Patients A3 |
+| R2 | Navigation, Context Transfer, Polish | **Complete** | `routingTargetCohortId` internal nav state, ROUTING_NAVIGATED/RETURNED actions, chevron→cohort drill-through, unenrolled→table+filter, node label deep links, AllPatientsCanvas/ContextPane/Header delegation, AppShell navRef back button |
+| R3 | Chips Fix, Expanded Cards, Nav ID Mapping | **Complete** | Filter chips paddingTop fix (LAYOUT.headerHeight + spaceAround.tight), BreakdownBar component (risk + action status stacked bars with legend), expanded card state (full node list + breakdowns on selection), `ROUTING_TO_COHORT_MAP` for cond-/prev- → coh- ID translation, `actionStatusBreakdown` on RoutingCohortCard, 1 new test |
 
 ---
 

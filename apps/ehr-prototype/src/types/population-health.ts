@@ -354,6 +354,7 @@ export interface RoutingCohortCard {
   actionNeededCount: number;
   avgDaysWaiting: number;
   riskBreakdown: Record<RiskTier, number>;
+  actionStatusBreakdown: Record<ActionStatus, number>;
   nodeConcentration: NodeConcentrationItem[];
 }
 
@@ -399,4 +400,6 @@ export interface PopHealthState {
   axisVisibility: AxisVisibility;
   allPatientsView: AllPatientsView;
   hoveredBandId: string | null;
+  // Routing navigation: set when user navigates from all-patients routing into a cohort
+  routingTargetCohortId: string | null;
 }

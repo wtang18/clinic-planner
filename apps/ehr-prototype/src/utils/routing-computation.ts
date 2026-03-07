@@ -12,6 +12,7 @@ import type {
   SankeyCohortDef,
   DimensionSelection,
   RiskTier,
+  ActionStatus,
   RoutingData,
   RoutingCategory,
   RoutingCohortCard,
@@ -30,6 +31,14 @@ const EMPTY_RISK_BREAKDOWN: Record<RiskTier, number> = {
   moderate: 0,
   low: 0,
   unassessed: 0,
+};
+
+const EMPTY_ACTION_STATUS_BREAKDOWN: Record<ActionStatus, number> = {
+  urgent: 0,
+  'action-needed': 0,
+  monitoring: 0,
+  'all-current': 0,
+  'not-enrolled': 0,
 };
 
 // ============================================================================
@@ -186,6 +195,11 @@ function buildCard(
     riskBreakdown[p.riskTier]++;
   }
 
+  const actionStatusBreakdown = { ...EMPTY_ACTION_STATUS_BREAKDOWN };
+  for (const p of source) {
+    actionStatusBreakdown[p.actionStatus]++;
+  }
+
   const nodeConcentration = computeNodeConcentration(source, cohortId, isCondition);
 
   return {
@@ -197,6 +211,7 @@ function buildCard(
     actionNeededCount,
     avgDaysWaiting,
     riskBreakdown,
+    actionStatusBreakdown,
     nodeConcentration,
   };
 }

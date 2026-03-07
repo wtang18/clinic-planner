@@ -9,7 +9,7 @@
  * Encounter state: from useEncounterContext().
  */
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useEncounterContext } from '../EncounterWorkspace/EncounterProvider';
 import { getPatientByMrn } from '../../scenarios/patientData';
 import { getCohortById } from '../../data/mock-population-health';
@@ -24,7 +24,7 @@ import { LeftPaneContainer, ViewIconsRow, AIDrawerFooter } from '../../component
 import { WORKFLOW_PHASES } from '../IntakeView/intakeChecklist';
 import type { VisitSubItemConfig } from '../../components/layout/PatientWorkspaceItem';
 
-import { PopHealthProvider } from '../../context/PopHealthContext';
+import { PopHealthProvider, type PopHealthNavRef } from '../../context/PopHealthContext';
 import { colors } from '../../styles/foundations';
 import { captureViewAnimations } from '../CaptureView/CaptureView.styles';
 
@@ -81,6 +81,7 @@ export const AppShell: React.FC = () => {
   const [todoSearchQuery, setTodoSearchQuery] = useState<string>('');
   const [canvasScrolled, setCanvasScrolled] = useState(false);
   const [selectedCohortId, setSelectedCohortId] = useState<string | null>(null);
+  const popHealthNavRef = useRef<PopHealthNavRef>({ canGoBack: false, goBack: () => {} });
 
   // Derive the effective cohort ID for data lookups (strip :overview and special IDs)
   const effectiveCohortId = useMemo(() => {
@@ -211,6 +212,12 @@ export const AppShell: React.FC = () => {
   }, [workspace, selectedNavItem, patient]);
 
   const handleNavBack = () => {
+    // Check workspace internal navigation first (routing drill-through)
+    if (popHealthNavRef.current.canGoBack) {
+      popHealthNavRef.current.goBack();
+      return;
+    }
+
     if (viewMode === 'todo-detail') {
       if (todoViewState) {
         setViewMode('todo-list');
@@ -555,7 +562,7 @@ export const AppShell: React.FC = () => {
   // between cohort/overview/patient modes. The provider holds pop health state and
   // resets via COHORT_SELECTED dispatch when initialCohortId changes.
   return (
-    <PopHealthProvider initialCohortId={effectiveCohortId ?? undefined}>
+    <PopHealthProvider initialCohortId={effectiveCohortId ?? undefined} navRef={popHealthNavRef}>
       {mainContent}
     </PopHealthProvider>
   );

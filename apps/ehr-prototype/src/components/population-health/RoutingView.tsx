@@ -16,15 +16,116 @@ import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { ChevronRight, AlertTriangle } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { computeRoutingData, hasActiveSelection } from '../../utils/routing-computation';
-import { ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS } from '../../data/mock-all-patients';
+import { RISK_TIER_LABELS, ACTION_STATUS_LABELS } from '../../utils/sankey-computation';
+import { ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS, ROUTING_TO_COHORT_MAP } from '../../data/mock-all-patients';
 import { colors, typography, spaceAround, spaceBetween, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
-import type { RoutingCohortCard, RoutingCategory, UnenrolledGroup, DimensionSelection } from '../../types/population-health';
+import type { RoutingCohortCard, RoutingCategory, UnenrolledGroup, DimensionSelection, RiskTier, ActionStatus } from '../../types/population-health';
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 const MAX_VISIBLE_NODES = 4;
+
+// Color + opacity: top two tiers use vibrant bg.* colors at full opacity,
+// lower tiers use neutral with descending opacity for progressive fade.
+// Color + opacity: top two tiers use semantic bg colors at full opacity,
+// lower tiers use neutral with descending opacity for progressive fade.
+const RISK_TIER_STYLE: Record<RiskTier, { color: string; opacity: number }> = {
+  critical:   { color: colors.bg.alert.high,      opacity: 1.0 },
+  high:       { color: colors.bg.attention.medium, opacity: 1.0 },
+  moderate:   { color: colors.fg.neutral.primary,  opacity: 0.40 },
+  low:        { color: colors.fg.neutral.primary,  opacity: 0.22 },
+  unassessed: { color: colors.fg.neutral.primary,  opacity: 0.10 },
+};
+
+const ACTION_STATUS_STYLE: Record<ActionStatus, { color: string; opacity: number }> = {
+  urgent:          { color: colors.bg.alert.high,      opacity: 1.0 },
+  'action-needed': { color: colors.bg.attention.medium, opacity: 1.0 },
+  monitoring:      { color: colors.fg.neutral.primary,  opacity: 0.40 },
+  'all-current':   { color: colors.fg.neutral.primary,  opacity: 0.22 },
+  'not-enrolled':  { color: colors.fg.neutral.primary,  opacity: 0.10 },
+};
+
+// ============================================================================
+// BreakdownBar — horizontal stacked bar with legend
+// ============================================================================
+
+const BreakdownBar: React.FC<{
+  segments: { key: string; label: string; count: number; color: string; opacity: number }[];
+  total: number;
+  title: string;
+}> = ({ segments, total, title }) => {
+  const nonZero = segments.filter((s) => s.count > 0);
+  if (nonZero.length === 0 || total === 0) return null;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <span style={{
+        fontSize: 11,
+        fontFamily: typography.fontFamily.sans,
+        fontWeight: typography.fontWeight.semibold,
+        color: colors.fg.neutral.spotReadable,
+        textTransform: 'uppercase' as const,
+        letterSpacing: 0.5,
+      }}>
+        {title}
+      </span>
+
+      {/* Separated mini-bars */}
+      <div style={{
+        display: 'flex',
+        gap: 4,
+      }}>
+        {nonZero.map((seg) => (
+          <div
+            key={seg.key}
+            style={{
+              flex: seg.count,
+              height: 6,
+              borderRadius: borderRadius.full,
+              backgroundColor: seg.color,
+              opacity: seg.opacity,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '2px 8px',
+      }}>
+        {nonZero.map((seg) => (
+          <span
+            key={seg.key}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: 11,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.secondary,
+            }}
+          >
+            <span style={{
+              width: 8,
+              height: 8,
+              borderRadius: borderRadius.full,
+              backgroundColor: seg.color,
+              opacity: seg.opacity,
+              flexShrink: 0,
+            }} />
+            {seg.label} {seg.count}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+BreakdownBar.displayName = 'BreakdownBar';
 
 // ============================================================================
 // CategoryHeader
@@ -47,6 +148,35 @@ const CategoryHeader: React.FC<{ label: string }> = ({ label }) => (
 CategoryHeader.displayName = 'CategoryHeader';
 
 // ============================================================================
+// NodeLabel — interactive node name that navigates to cohort on click
+// ============================================================================
+
+const NodeLabel: React.FC<{
+  nodeLabel: string;
+  patientCount: number;
+  onClick: (e: React.MouseEvent) => void;
+}> = ({ nodeLabel, patientCount, onClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <span
+      style={{
+        cursor: 'pointer',
+        textDecoration: isHovered ? 'underline' : 'none',
+        transition: `text-decoration ${transitions.fast}`,
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      {nodeLabel} ({patientCount})
+    </span>
+  );
+};
+
+NodeLabel.displayName = 'NodeLabel';
+
+// ============================================================================
 // CohortCard
 // ============================================================================
 
@@ -55,7 +185,8 @@ const CohortCard: React.FC<{
   isSelected: boolean;
   showFilteredCount: boolean;
   onToggle: () => void;
-}> = ({ card, isSelected, showFilteredCount, onToggle }) => {
+  onNavigate: (cohortId: string) => void;
+}> = ({ card, isSelected, showFilteredCount, onToggle, onNavigate }) => {
   const [isHovered, setIsHovered] = useState(false);
   const hasAttention = card.urgentCount > 0 || card.actionNeededCount > 0;
 
@@ -117,7 +248,8 @@ const CohortCard: React.FC<{
         <ChevronRight
           size={16}
           color={colors.fg.neutral.spotReadable}
-          style={{ flexShrink: 0 }}
+          style={{ flexShrink: 0, cursor: 'pointer' }}
+          onClick={(e) => { e.stopPropagation(); onNavigate(card.cohortId); }}
         />
       </div>
 
@@ -139,7 +271,7 @@ const CohortCard: React.FC<{
         </div>
       )}
 
-      {/* Node concentration */}
+      {/* Node concentration — labels are clickable deep links */}
       {card.nodeConcentration.length > 0 && (
         <div style={{
           marginTop: 4,
@@ -148,17 +280,59 @@ const CohortCard: React.FC<{
           color: colors.fg.neutral.secondary,
           lineHeight: 1.4,
         }}>
-          {card.nodeConcentration.slice(0, MAX_VISIBLE_NODES).map((node, i) => (
+          {(isSelected ? card.nodeConcentration : card.nodeConcentration.slice(0, MAX_VISIBLE_NODES)).map((node, i) => (
             <span key={node.nodeLabel}>
               {i > 0 && ' · '}
-              <span>{node.nodeLabel} ({node.patientCount})</span>
+              <NodeLabel
+                nodeLabel={node.nodeLabel}
+                patientCount={node.patientCount}
+                onClick={(e) => { e.stopPropagation(); onNavigate(card.cohortId); }}
+              />
             </span>
           ))}
-          {card.nodeConcentration.length > MAX_VISIBLE_NODES && (
+          {!isSelected && card.nodeConcentration.length > MAX_VISIBLE_NODES && (
             <span style={{ color: colors.fg.neutral.spotReadable }}>
               {' '}+{card.nodeConcentration.length - MAX_VISIBLE_NODES} more
             </span>
           )}
+        </div>
+      )}
+
+      {/* Expanded sections — visible when card is selected */}
+      {isSelected && (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 8,
+          marginTop: 8,
+          paddingTop: 8,
+          borderTop: `1px solid ${colors.border.neutral.low}`,
+        }}>
+          <BreakdownBar
+            title="Risk Level"
+            total={card.filteredPatients}
+            segments={(['critical', 'high', 'moderate', 'low', 'unassessed'] as RiskTier[]).map((tier) => ({
+              key: tier,
+              label: RISK_TIER_LABELS[tier],
+              count: card.riskBreakdown[tier],
+              color: RISK_TIER_STYLE[tier].color,
+              opacity: RISK_TIER_STYLE[tier].opacity,
+            }))}
+          />
+
+          <div style={{ borderTop: `1px solid ${colors.border.neutral.low}`, paddingTop: 8 }}>
+            <BreakdownBar
+              title="Action Status"
+              total={card.filteredPatients}
+              segments={(['urgent', 'action-needed', 'monitoring', 'all-current', 'not-enrolled'] as ActionStatus[]).map((status) => ({
+                key: status,
+                label: ACTION_STATUS_LABELS[status],
+                count: card.actionStatusBreakdown[status],
+                color: ACTION_STATUS_STYLE[status].color,
+                opacity: ACTION_STATUS_STYLE[status].opacity,
+              }))}
+            />
+          </div>
         </div>
       )}
     </div>
@@ -174,7 +348,8 @@ CohortCard.displayName = 'CohortCard';
 const UnenrolledCard: React.FC<{
   group: UnenrolledGroup;
   showFilteredCount: boolean;
-}> = ({ group, showFilteredCount }) => {
+  onNavigate: () => void;
+}> = ({ group, showFilteredCount, onNavigate }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   if (group.totalCount === 0) return null;
@@ -214,7 +389,8 @@ const UnenrolledCard: React.FC<{
         <ChevronRight
           size={16}
           color={colors.fg.neutral.spotReadable}
-          style={{ flexShrink: 0 }}
+          style={{ flexShrink: 0, cursor: 'pointer' }}
+          onClick={onNavigate}
         />
       </div>
 
@@ -281,6 +457,18 @@ export const RoutingView: React.FC = () => {
   const handleCardToggle = (cohortId: string, categoryKey: string) => {
     const axis: keyof DimensionSelection = categoryKey === 'chronic-disease' ? 'conditions' : 'preventive';
     dispatch({ type: 'DIMENSION_TOGGLED', axis, id: cohortId });
+  };
+
+  // Card chevron / node label: navigate into cohort (map routing ID → pathway ID)
+  const handleNavigate = (routingCohortId: string) => {
+    const cohortId = ROUTING_TO_COHORT_MAP[routingCohortId] ?? routingCohortId;
+    dispatch({ type: 'ROUTING_NAVIGATED', cohortId });
+  };
+
+  // Unenrolled chevron: switch to Table view with "Not Enrolled" filter
+  const handleUnenrolledNavigate = () => {
+    dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'table' });
+    dispatch({ type: 'DIMENSION_TOGGLED', axis: 'actionStatuses', id: 'not-enrolled' });
   };
 
   // Empty state
@@ -360,7 +548,7 @@ export const RoutingView: React.FC = () => {
           <div style={{
             display: 'flex',
             flexDirection: 'column',
-            gap: spaceBetween.related,
+            gap: spaceBetween.repeating,
             marginTop: spaceBetween.related,
           }}>
             {category.cards.map((card) => (
@@ -370,6 +558,7 @@ export const RoutingView: React.FC = () => {
                 isSelected={selectedCohortIds.has(card.cohortId)}
                 showFilteredCount={isFiltered}
                 onToggle={() => handleCardToggle(card.cohortId, category.key)}
+                onNavigate={handleNavigate}
               />
             ))}
           </div>
@@ -384,6 +573,7 @@ export const RoutingView: React.FC = () => {
             <UnenrolledCard
               group={routingData.unenrolled}
               showFilteredCount={isFiltered}
+              onNavigate={handleUnenrolledNavigate}
             />
           </div>
         </div>

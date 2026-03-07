@@ -47,7 +47,10 @@ export type PopHealthAction =
   | { type: 'DIMENSIONS_CLEARED' }
   | { type: 'AXIS_VISIBILITY_CHANGED'; axis: keyof AxisVisibility; visible: boolean }
   | { type: 'ALL_PATIENTS_VIEW_CHANGED'; view: AllPatientsView }
-  | { type: 'BAND_HOVERED'; bandId: string | null };
+  | { type: 'BAND_HOVERED'; bandId: string | null }
+  // Routing navigation actions
+  | { type: 'ROUTING_NAVIGATED'; cohortId: string }
+  | { type: 'ROUTING_RETURNED' };
 
 // ============================================================================
 // Initial State
@@ -82,6 +85,7 @@ const INITIAL_STATE: PopHealthState = {
   axisVisibility: INITIAL_AXIS_VISIBILITY,
   allPatientsView: 'map',
   hoveredBandId: null,
+  routingTargetCohortId: null,
 };
 
 // ============================================================================
@@ -112,6 +116,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         dimensionSelection: INITIAL_DIMENSION_SELECTION,
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
+        routingTargetCohortId: null,
         // allPatientsView persists across scope switches (intentional)
       };
 
@@ -236,6 +241,39 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
     case 'BAND_HOVERED':
       return { ...state, hoveredBandId: action.bandId };
 
+    // Routing navigation: drill from all-patients routing into a specific cohort
+    case 'ROUTING_NAVIGATED':
+      return {
+        ...state,
+        selectedCohortId: action.cohortId,
+        routingTargetCohortId: action.cohortId,
+        // Reset cohort-level state
+        selectedPathwayIds: [],
+        selectedNodeId: null,
+        selectedPatientId: null,
+        filters: [],
+        drawerStack: [],
+        focusedColumnIndex: null,
+        searchQuery: '',
+        // Preserve all-patients state (dimensionSelection, axisVisibility, allPatientsView)
+      };
+
+    // Return from routing-navigated cohort back to all-patients
+    case 'ROUTING_RETURNED':
+      return {
+        ...state,
+        selectedCohortId: null,
+        routingTargetCohortId: null,
+        // Reset cohort-level state
+        selectedPathwayIds: [],
+        selectedNodeId: null,
+        selectedPatientId: null,
+        filters: [],
+        drawerStack: [],
+        focusedColumnIndex: null,
+        searchQuery: '',
+      };
+
     default:
       return state;
   }
@@ -254,6 +292,10 @@ interface PopHealthContextValue {
   currentDrawerView: DrawerView | null;
   /** Whether the drawer has a back stack */
   canDrawerGoBack: boolean;
+  /** Whether we can go back from routing-navigated cohort to all-patients */
+  canGoBack: boolean;
+  /** Go back from routing-navigated cohort to all-patients */
+  goBack: () => void;
 }
 
 const PopHealthContext = createContext<PopHealthContextValue | null>(null);
@@ -262,14 +304,23 @@ const PopHealthContext = createContext<PopHealthContextValue | null>(null);
 // Provider
 // ============================================================================
 
+/** Ref interface for external navigation delegation (e.g. AppShell back button) */
+export interface PopHealthNavRef {
+  canGoBack: boolean;
+  goBack: () => void;
+}
+
 export interface PopHealthProviderProps {
   children: React.ReactNode;
   initialCohortId?: string;
+  /** Ref for external navigation delegation (AppShell back button) */
+  navRef?: React.MutableRefObject<PopHealthNavRef>;
 }
 
 export const PopHealthProvider: React.FC<PopHealthProviderProps> = ({
   children,
   initialCohortId,
+  navRef,
 }) => {
   const [state, dispatch] = useReducer(popHealthReducer, {
     ...INITIAL_STATE,
@@ -288,13 +339,25 @@ export const PopHealthProvider: React.FC<PopHealthProviderProps> = ({
     }
   }, [initialCohortId]);
 
+  const canGoBack = state.routingTargetCohortId !== null;
+  const goBack = useCallback(() => {
+    dispatch({ type: 'ROUTING_RETURNED' });
+  }, []);
+
+  // Sync navRef so AppShell can read canGoBack/goBack without re-rendering
+  if (navRef) {
+    navRef.current = { canGoBack, goBack };
+  }
+
   const value = useMemo<PopHealthContextValue>(() => ({
     state,
     dispatch,
     isDrawerOpen: state.drawerStack.length > 0,
     currentDrawerView: state.drawerStack.length > 0 ? state.drawerStack[state.drawerStack.length - 1] : null,
     canDrawerGoBack: state.drawerStack.length > 1,
-  }), [state, dispatch]);
+    canGoBack,
+    goBack,
+  }), [state, dispatch, canGoBack, goBack]);
 
   return (
     <PopHealthContext.Provider value={value}>

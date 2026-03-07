@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
+import { CohortCanvasHeader } from '../CohortWorkspace/CohortWorkspace';
 import { SegmentedControl } from '../../components/primitives/SegmentedControl';
 import { colors, typography, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
 import type { AllPatientsView } from '../../types/population-health';
@@ -19,6 +20,11 @@ import type { AllPatientsView } from '../../types/population-health';
 export const AllPatientsCanvasHeader: React.FC = () => {
   const { state, dispatch } = usePopHealth();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // When routing-navigated, delegate to cohort canvas header
+  if (state.routingTargetCohortId) {
+    return <CohortCanvasHeader />;
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: 'SEARCH_CHANGED', query: e.target.value });

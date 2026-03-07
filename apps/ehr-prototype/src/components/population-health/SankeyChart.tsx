@@ -67,6 +67,20 @@ function getBandFill(
   const selected = isSelected(band.id, selection);
   if (selected) return colors.bg.accent.low;
   if (hoveredBandId === band.id) return colors.bg.accent.subtle;
+
+  // Center axis (risk): critical → alert, high → attention, rest → neutral
+  if (band.axis === 'center') {
+    if (band.id === 'risk-critical') return colors.bg.alert.low;
+    if (band.id === 'risk-high') return colors.bg.attention.low;
+  }
+
+  // Right axis (action status): urgent → alert, action-needed → attention
+  if (band.axis === 'right') {
+    if (band.id === 'action-urgent') return colors.bg.alert.low;
+    if (band.id === 'action-action-needed') return colors.bg.attention.low;
+  }
+
+  // Left axis bars: keep default (attention flag → amber, else neutral)
   if (band.attention) return colors.bg.attention.low;
   return colors.bg.neutral.subtle;
 }
@@ -114,13 +128,17 @@ function getBandOpacity(
   return 0.3;
 }
 
+/** Alert-tier band IDs (critical/urgent) */
+const ALERT_BAND_IDS = new Set(['risk-critical', 'action-urgent']);
+/** Attention-tier band IDs (high/action-needed) */
+const ATTENTION_BAND_IDS = new Set(['risk-high', 'action-action-needed']);
+
 function getFlowFill(
   flow: SankeyFlowLayout,
   selection: DimensionSelection,
   hoveredBandId: string | null,
 ): string {
-  if (flow.attention) return colors.bg.attention.medium;
-  // If connected to selection or hover, tint with accent
+  // Interactive states take priority
   const active = hasAnySelection(selection) || hoveredBandId !== null;
   if (active) {
     const connectedToSelection =
@@ -131,6 +149,15 @@ function getFlowFill(
       return colors.bg.accent.low;
     }
   }
+
+  // Semantic fill: flows touching alert bands → alert, attention bands → amber
+  if (ALERT_BAND_IDS.has(flow.sourceId) || ALERT_BAND_IDS.has(flow.targetId))
+    return colors.bg.alert.low;
+  if (ATTENTION_BAND_IDS.has(flow.sourceId) || ATTENTION_BAND_IDS.has(flow.targetId))
+    return colors.bg.attention.medium;
+
+  // Fallback: existing attention flag for left-axis flows
+  if (flow.attention) return colors.bg.attention.medium;
   return colors.bg.neutral.low;
 }
 

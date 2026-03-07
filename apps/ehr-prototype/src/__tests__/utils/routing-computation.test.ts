@@ -240,6 +240,17 @@ describe('computeRoutingData', () => {
     expect(diabetesCard!.riskBreakdown.moderate).toBe(0);
   });
 
+  it('computes action status breakdown', () => {
+    const result = computeRoutingData(patients, CONDITION_DEFS, PREVENTIVE_DEFS, EMPTY_SELECTION);
+
+    const diabetesCard = result.categories[0].cards.find((c) => c.cohortId === 'cond-diabetes');
+    expect(diabetesCard!.actionStatusBreakdown.urgent).toBe(1);
+    expect(diabetesCard!.actionStatusBreakdown['all-current']).toBe(1);
+    expect(diabetesCard!.actionStatusBreakdown.monitoring).toBe(0);
+    expect(diabetesCard!.actionStatusBreakdown['action-needed']).toBe(0);
+    expect(diabetesCard!.actionStatusBreakdown['not-enrolled']).toBe(0);
+  });
+
   it('includes node concentration', () => {
     const result = computeRoutingData(patients, CONDITION_DEFS, PREVENTIVE_DEFS, EMPTY_SELECTION);
 
