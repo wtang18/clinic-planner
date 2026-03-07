@@ -16,7 +16,6 @@ import type {
   DimensionSelection,
   AxisVisibility,
   AllPatientsView,
-  TreeFilter,
 } from '../types/population-health';
 
 // ============================================================================
@@ -54,8 +53,7 @@ export type PopHealthAction =
   | { type: 'ROUTING_RETURNED' }
   // Layer tree "Show Mine" actions
   | { type: 'SHOW_MINE_APPLIED'; nodeIds: string[] }
-  | { type: 'SHOW_MINE_CLEARED' }
-  | { type: 'TREE_FILTER_CHANGED'; filter: TreeFilter };
+  | { type: 'SHOW_MINE_CLEARED' };
 
 // ============================================================================
 // Initial State
@@ -92,7 +90,6 @@ const INITIAL_STATE: PopHealthState = {
   hoveredBandId: null,
   routingTargetCohortId: null,
   showMineActive: true,
-  treeFilter: 'all',
 };
 
 // ============================================================================
@@ -125,7 +122,6 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         hoveredBandId: null,
         routingTargetCohortId: null,
         showMineActive: true,
-        treeFilter: 'all',
         // allPatientsView persists across scope switches (intentional)
       };
 
@@ -227,7 +223,6 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
         showMineActive: true,
-        treeFilter: 'all',
       };
     }
 
@@ -311,9 +306,6 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         showMineActive: false,
         selectedNodeIds: [],
       };
-
-    case 'TREE_FILTER_CHANGED':
-      return { ...state, treeFilter: action.filter };
 
     default:
       return state;

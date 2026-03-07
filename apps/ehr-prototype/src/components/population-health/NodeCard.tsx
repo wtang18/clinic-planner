@@ -10,8 +10,8 @@
  *
  * Lifecycle state visual treatments (Decision #28, #29):
  * - Active: normal appearance
- * - Paused: orange left border + slight opacity reduction
- * - Draft: dashed border + reduced opacity + "(draft)" label
+ * - Paused: slight opacity reduction (lifecycle badge indicates state)
+ * - Draft: reduced opacity + "(draft)" label (solid border, same as normal)
  *
  * Selected/focus expansion:
  * - Connection handles persistently visible
@@ -121,8 +121,8 @@ export const NodeCard: React.FC<NodeCardProps> = ({
   const [isChevronHovered, setIsChevronHovered] = useState(false);
 
   const Icon = NODE_TYPE_ICONS[node.type];
-  const isPaused = node.lifecycleState === 'paused';
   const isDraft = node.lifecycleState === 'draft';
+  const isPaused = node.lifecycleState === 'paused';
 
   // Lifecycle-dependent opacity
   const computedOpacity = dimmed ? 0.4 : isDraft ? 0.7 : isPaused ? 0.85 : disabled ? 0.5 : 1;
@@ -130,9 +130,11 @@ export const NodeCard: React.FC<NodeCardProps> = ({
   const containerStyle: React.CSSProperties = {
     width: NODE_CARD_WIDTH,
     minHeight: NODE_CARD_MIN_HEIGHT,
-    padding: spaceAround.compact,
+    padding: selected || focused ? spaceAround.compact - 1 : spaceAround.compact,
     backgroundColor: colors.bg.neutral.base,
-    border: `1px ${isDraft ? 'dashed' : 'solid'} ${selected || focused ? colors.border.accent.low : colors.border.neutral.low}`,
+    border: selected || focused
+      ? `2px solid ${colors.border.accent.medium}`
+      : `1px solid ${colors.border.neutral.low}`,
     borderRadius: borderRadius.sm,
     cursor: disabled ? 'default' : 'pointer',
     opacity: computedOpacity,
@@ -142,10 +144,10 @@ export const NodeCard: React.FC<NodeCardProps> = ({
     gap: spaceBetween.coupled,
     position: 'relative',
     boxShadow: selected
-      ? `0 0 0 1.5px ${colors.border.accent.low}, 0 4px 12px rgba(0, 0, 0, 0.08)`
-      : '0 1px 3px rgba(0, 0, 0, 0.04)',
-    // Paused: orange left border
-    ...(isPaused ? { borderLeft: `3px solid ${colors.fg.attention.primary}` } : {}),
+      ? '0 4px 12px rgba(0, 0, 0, 0.08)'
+      : isHovered && !disabled
+        ? '0 2px 8px rgba(0, 0, 0, 0.08)'
+        : '0 1px 3px rgba(0, 0, 0, 0.04)',
   };
 
   const headerStyle: React.CSSProperties = {

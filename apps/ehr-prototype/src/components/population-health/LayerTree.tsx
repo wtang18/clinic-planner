@@ -5,9 +5,9 @@
  * Sequential nodes render at the same indent level. Only children of branch
  * nodes get indented, reflecting the actual flow structure.
  *
- * Single-click selects a layer; shift-click multi-selects pathways.
- * Inline stats per row: patient count, gap count dots (right-aligned).
- * Lifecycle state indicators: active (none), paused (Pause icon), draft (dashed border + label).
+ * Click selects a node; shift-click toggles multi-select.
+ * Right-aligned indicators: ★ (assigned), 🔺 (escalated), lifecycle label.
+ * "Select Mine" button auto-selects assigned + escalated nodes on cohort entry.
  */
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -28,7 +28,6 @@ import {
 import { usePopHealth } from '../../context/PopHealthContext';
 import { getPathwaysByCohort, PATHWAYS, MOCK_ESCALATION_FLAGS } from '../../data/mock-population-health';
 import type { PathwayNode, NodeType, Pathway, NodeLifecycleState } from '../../types/population-health';
-import { SegmentedControl } from '../primitives/SegmentedControl';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
@@ -148,8 +147,8 @@ const LifecycleIndicator: React.FC<{ state: NodeLifecycleState }> = ({ state: li
 
   if (lifecycleState === 'paused') {
     return (
-      <span style={{ display: 'flex', color: colors.fg.neutral.secondary, flexShrink: 0 }}>
-        <Pause size={10} />
+      <span style={{ display: 'flex', flexShrink: 0 }}>
+        <Pause size={10} fill={colors.fg.neutral.secondary} color="none" strokeWidth={0} />
       </span>
     );
   }
@@ -196,7 +195,6 @@ const PathwayRow: React.FC<PathwayRowProps> = ({
   onToggle,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const totalPatients = pathway.nodes[0]?.patientCount ?? 0;
 
   return (
     <div
@@ -243,16 +241,6 @@ const PathwayRow: React.FC<PathwayRowProps> = ({
       }}>
         {pathway.name}
       </span>
-
-      {/* Patient count */}
-      <span style={{
-        fontSize: 11,
-        fontFamily: typography.fontFamily.sans,
-        color: colors.fg.neutral.secondary,
-        flexShrink: 0,
-      }}>
-        {totalPatients}
-      </span>
     </div>
   );
 };
@@ -276,7 +264,6 @@ const NODE_INDENT_STEP = 14; // Additional indent per branch depth
 
 const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, isAssigned, isEscalated, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const isDraft = node.lifecycleState === 'draft';
 
   return (
     <div
@@ -294,13 +281,10 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, is
             : 'transparent',
         borderRadius: borderRadius.xs,
         cursor: 'pointer',
-        transition: `background-color ${transitions.fast}, opacity ${transitions.fast}`,
+        transition: `background-color ${transitions.fast}, opacity ${transitions.fast}, box-shadow ${transitions.fast}`,
         userSelect: 'none',
         opacity: isDimmed ? 0.4 : 1,
-        // Draft nodes get a dashed left border
-        ...(isDraft ? {
-          borderLeft: `2px dashed ${colors.border.neutral.low}`,
-        } : {}),
+        boxShadow: isHovered && !isSelected ? '0 1px 3px rgba(0, 0, 0, 0.06)' : 'none',
       }}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
@@ -318,24 +302,12 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, is
         {NODE_TYPE_ICONS[node.type]}
       </span>
 
-      {/* Assignment & escalation markers */}
-      {(isAssigned || isEscalated) && (
-        <span style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-          {isAssigned && (
-            <Star size={12} fill={colors.fg.neutral.secondary} color={colors.fg.neutral.secondary} style={{ opacity: 0.6 }} />
-          )}
-          {isEscalated && (
-            <Triangle size={12} fill={colors.fg.alert.primary} color={colors.fg.alert.primary} />
-          )}
-        </span>
-      )}
-
       {/* Label */}
       <span style={{
         flex: 1,
         fontSize: 13,
         fontFamily: typography.fontFamily.sans,
-        color: isDraft
+        color: node.lifecycleState === 'draft'
           ? colors.fg.neutral.spotReadable
           : isSelected ? colors.fg.accent.primary : colors.fg.neutral.primary,
         whiteSpace: 'nowrap',
@@ -345,31 +317,16 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, is
         {node.label}
       </span>
 
+      {/* Right-aligned trailing indicators: ★ 🔺 lifecycle */}
+      {isAssigned && (
+        <Star size={11} fill={colors.fg.neutral.secondary} color="none" strokeWidth={0} style={{ opacity: 0.6, flexShrink: 0 }} />
+      )}
+      {isEscalated && (
+        <Triangle size={11} fill={colors.fg.alert.primary} color={colors.fg.alert.primary} style={{ flexShrink: 0 }} />
+      )}
+
       {/* Lifecycle indicator */}
       <LifecycleIndicator state={node.lifecycleState} />
-
-      {/* Gap count (alert dot) */}
-      {node.gapCount !== undefined && node.gapCount > 0 && (
-        <span style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
-          backgroundColor: colors.fg.attention.primary,
-          flexShrink: 0,
-        }} />
-      )}
-
-      {/* Patient count */}
-      {node.patientCount !== undefined && (
-        <span style={{
-          fontSize: 11,
-          fontFamily: typography.fontFamily.sans,
-          color: colors.fg.neutral.secondary,
-          flexShrink: 0,
-        }}>
-          {node.patientCount}
-        </span>
-      )}
     </div>
   );
 };
@@ -377,12 +334,6 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, is
 // ============================================================================
 // LayerTree Component
 // ============================================================================
-
-/** Tree filter segments for the All/Mine toggle */
-const TREE_FILTER_SEGMENTS = [
-  { key: 'all', label: 'All' },
-  { key: 'mine', label: '★ Mine' },
-];
 
 export const LayerTree: React.FC = () => {
   const { state, dispatch } = usePopHealth();
@@ -505,53 +456,24 @@ export const LayerTree: React.FC = () => {
     dispatch({ type: 'SHOW_MINE_CLEARED' });
   }, [dispatch]);
 
-  const handleTreeFilterChange = useCallback((key: string) => {
-    dispatch({ type: 'TREE_FILTER_CHANGED', filter: key as 'all' | 'mine' });
-  }, [dispatch]);
-
-  // Pathways visible under "★ Mine" filter — only those with at least one mine node
-  const mineNodeSet = useMemo(() => new Set(mineNodeIds), [mineNodeIds]);
-  const visiblePathwayIds = useMemo(() => {
-    if (state.treeFilter === 'all') return null; // null = show all
-    const ids = new Set<string>();
-    for (const pathway of pathways) {
-      if (pathway.nodes.some((n) => mineNodeSet.has(n.id))) {
-        ids.add(pathway.id);
-      }
-    }
-    return ids;
-  }, [state.treeFilter, pathways, mineNodeSet]);
-
   const selectionCount = state.selectedNodeIds.length;
 
-  // Build "Show Mine" button label with modification delta
-  const showMineLabel = useMemo(() => {
-    if (!state.showMineActive) return '★ Show Mine';
-    if (showMineDelta > 0) return `★ Show Mine + ${showMineDelta}`;
-    if (showMineDelta < 0) return `★ Show Mine − ${Math.abs(showMineDelta)}`;
-    return '★ Show Mine';
+  // Build "★ Mine" button label with modification delta
+  const mineLabel = useMemo(() => {
+    if (!state.showMineActive) return 'Select Mine';
+    if (showMineDelta > 0) return `Select Mine + ${showMineDelta}`;
+    if (showMineDelta < 0) return `Select Mine − ${Math.abs(showMineDelta)}`;
+    return 'Select Mine';
   }, [state.showMineActive, showMineDelta]);
 
   return (
     <div style={treeStyles.container} data-testid="layer-tree">
-      {/* Header row: label + tree filter */}
+      {/* Header row: label left + ★ Mine button right */}
       <div style={treeStyles.header}>
         <span style={treeStyles.headerLabel}>Pathways</span>
-        <SegmentedControl
-          segments={TREE_FILTER_SEGMENTS}
-          value={state.treeFilter}
-          onChange={handleTreeFilterChange}
-          variant="inline"
-          size="sm"
-          testID="tree-filter"
-        />
-      </div>
-
-      {/* Action row: Show Mine toggle + Clear + selection badge */}
-      <div style={treeStyles.actionRow}>
         <button
           style={{
-            ...treeStyles.showMineButton,
+            ...treeStyles.mineButton,
             backgroundColor: state.showMineActive ? colors.bg.accent.low : 'transparent',
             color: state.showMineActive ? colors.fg.accent.primary : colors.fg.neutral.secondary,
             borderColor: state.showMineActive ? colors.border.accent.medium : colors.border.neutral.low,
@@ -559,29 +481,29 @@ export const LayerTree: React.FC = () => {
           onClick={handleShowMineClick}
           data-testid="show-mine-button"
         >
-          {showMineLabel}
+          {mineLabel}
         </button>
-        {selectionCount > 0 && (
+      </div>
+
+      {/* Selection banner — only when items are selected */}
+      {selectionCount > 0 && (
+        <div style={treeStyles.selectionBanner} data-testid="layer-tree-selection-banner">
+          <span style={treeStyles.selectionLabel}>
+            {selectionCount} node{selectionCount !== 1 ? 's' : ''} selected
+          </span>
           <button
             style={treeStyles.clearButton}
             onClick={handleClearClick}
             data-testid="clear-selection-button"
+            aria-label="Clear selection"
           >
-            Clear
+            ✕
           </button>
-        )}
-        {selectionCount > 1 && (
-          <span style={treeStyles.selectionBadge} data-testid="layer-tree-selection-badge">
-            {selectionCount} selected
-          </span>
-        )}
-      </div>
+        </div>
+      )}
 
       <div style={treeStyles.scrollArea}>
         {pathways.map((pathway) => {
-          // "★ Mine" filter: hide pathways with no mine nodes
-          if (visiblePathwayIds !== null && !visiblePathwayIds.has(pathway.id)) return null;
-
           const isExpanded = expandedPathways.has(pathway.id);
           const nodeEntries = pathwayNodeEntries.get(pathway.id) ?? [];
 
@@ -593,9 +515,6 @@ export const LayerTree: React.FC = () => {
                 onToggle={() => toggleExpanded(pathway.id)}
               />
               {isExpanded && nodeEntries.map((entry) => {
-                // "★ Mine" filter: hide non-mine nodes
-                if (visiblePathwayIds !== null && !mineNodeSet.has(entry.node.id)) return null;
-
                 const dimmedByLifecycle = state.lifecycleFilter.length > 0
                   && !state.lifecycleFilter.includes(entry.node.lifecycleState);
                 const dimmedBySearch = state.searchQuery.length > 0
@@ -652,14 +571,15 @@ const treeStyles: Record<string, React.CSSProperties> = {
     padding: `${spaceAround.tight}px ${spaceAround.default}px`,
     flexShrink: 0,
   },
-  actionRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: spaceBetween.coupled,
-    padding: `0 ${spaceAround.default}px ${spaceAround.tight}px`,
-    flexShrink: 0,
+  headerLabel: {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.fg.neutral.spotReadable,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
   },
-  showMineButton: {
+  mineButton: {
     display: 'inline-flex',
     alignItems: 'center',
     fontSize: 11,
@@ -673,9 +593,26 @@ const treeStyles: Record<string, React.CSSProperties> = {
     transition: `all ${transitions.fast}`,
     outline: 'none',
   },
+  selectionBanner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    margin: `${spaceBetween.coupled}px ${spaceAround.compact}px`,
+    backgroundColor: colors.bg.neutral.subtle,
+    borderRadius: borderRadius.xs,
+    flexShrink: 0,
+  },
+  selectionLabel: {
+    fontSize: 13,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.primary,
+    whiteSpace: 'nowrap' as const,
+  },
   clearButton: {
     display: 'inline-flex',
     alignItems: 'center',
+    justifyContent: 'center',
     fontSize: 11,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.secondary,
@@ -683,25 +620,7 @@ const treeStyles: Record<string, React.CSSProperties> = {
     border: 'none',
     padding: '2px 4px',
     cursor: 'pointer',
-    whiteSpace: 'nowrap' as const,
-  },
-  selectionBadge: {
-    fontSize: 10,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.accent.primary,
-    backgroundColor: colors.bg.accent.low,
-    borderRadius: borderRadius.full,
-    padding: '1px 8px',
-    whiteSpace: 'nowrap' as const,
-    marginLeft: 'auto',
-  },
-  headerLabel: {
-    fontSize: 11,
-    fontFamily: typography.fontFamily.sans,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.fg.neutral.spotReadable,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
+    lineHeight: 1,
   },
   scrollArea: {
     flex: 1,

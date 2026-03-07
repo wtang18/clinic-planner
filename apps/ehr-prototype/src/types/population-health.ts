@@ -342,9 +342,6 @@ export interface AxisVisibility {
 /** All-patients canvas view mode */
 export type AllPatientsView = 'map' | 'routing' | 'table';
 
-/** Layer tree visibility filter */
-export type TreeFilter = 'all' | 'mine';
-
 /** Selection stats for the context pane */
 export interface SelectionStats {
   totalPatients: number;
@@ -431,5 +428,4 @@ export interface PopHealthState {
   routingTargetCohortId: string | null;
   // Layer tree "Show Mine" preset
   showMineActive: boolean;
-  treeFilter: TreeFilter;
 }
