@@ -123,6 +123,30 @@ export interface PathwayNode {
   lifecycleState: NodeLifecycleState;
   ownership?: NodeOwnership;
   flowState?: NodeFlowState;
+  /** Provider ID assigned to manage this node's stage */
+  assignedProviderId?: string;
+}
+
+// ============================================================================
+// Assignment & Escalation Markers
+// ============================================================================
+
+/** Assignment of a care flow node to a provider */
+export interface NodeAssignment {
+  nodeId: string;
+  careFlowId: string;
+  assignedProviderId: string;
+  assignmentType: 'primary' | 'backup';
+}
+
+/** Escalation flag targeting a provider for attention on a node they may not own */
+export interface EscalationFlag {
+  nodeId: string;
+  careFlowId: string;
+  targetProviderId: string;
+  sourceItemIds: string[];
+  reason: string;
+  createdAt: Date;
 }
 
 export interface NodePill {
@@ -387,7 +411,7 @@ export type DrawerView =
 export interface PopHealthState {
   selectedCohortId: string | null;
   selectedPathwayIds: string[];
-  selectedNodeId: string | null;
+  selectedNodeIds: string[];
   selectedPatientId: string | null;
   activeView: ActiveView;
   filters: PopHealthFilter[];

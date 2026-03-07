@@ -17,7 +17,7 @@
 /** Preserved state for cohort views (restored on popScope) */
 export interface CohortViewState {
   selectedPathwayIds: string[];
-  selectedNodeId: string | null;
+  selectedNodeIds: string[];
   activeView: 'flow' | 'table';
   scrollPosition?: { x: number; y: number };
   activeFilters?: unknown[];

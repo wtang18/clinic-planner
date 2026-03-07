@@ -22,9 +22,11 @@ import {
   BarChart2,
   CornerDownLeft,
   Pause,
+  Star,
+  Triangle,
 } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
-import { getPathwaysByCohort, PATHWAYS } from '../../data/mock-population-health';
+import { getPathwaysByCohort, PATHWAYS, MOCK_ESCALATION_FLAGS } from '../../data/mock-population-health';
 import type { PathwayNode, NodeType, Pathway, NodeLifecycleState } from '../../types/population-health';
 import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
@@ -263,13 +265,15 @@ interface NodeRowProps {
   depth: number;
   isSelected: boolean;
   isDimmed: boolean;
-  onClick: () => void;
+  isAssigned: boolean;
+  isEscalated: boolean;
+  onClick: (e: React.MouseEvent) => void;
 }
 
 const NODE_INDENT_BASE = 16; // Base indent under pathway
 const NODE_INDENT_STEP = 14; // Additional indent per branch depth
 
-const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, onClick }) => {
+const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, isAssigned, isEscalated, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   const isDraft = node.lifecycleState === 'draft';
 
@@ -312,6 +316,18 @@ const NodeRow: React.FC<NodeRowProps> = ({ node, depth, isSelected, isDimmed, on
       }}>
         {NODE_TYPE_ICONS[node.type]}
       </span>
+
+      {/* Assignment & escalation markers */}
+      {(isAssigned || isEscalated) && (
+        <span style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+          {isAssigned && (
+            <Star size={12} fill={colors.fg.neutral.secondary} color={colors.fg.neutral.secondary} style={{ opacity: 0.6 }} />
+          )}
+          {isEscalated && (
+            <Triangle size={12} fill={colors.fg.alert.primary} color={colors.fg.alert.primary} />
+          )}
+        </span>
+      )}
 
       {/* Label */}
       <span style={{
@@ -398,25 +414,47 @@ export const LayerTree: React.FC = () => {
     setExpandedPathways(new Set(pathways.map(p => p.id)));
   }, [pathways]);
 
-  // Auto-expand pathway when a node is selected in the canvas
-  useEffect(() => {
-    if (!state.selectedNodeId) return;
-    const pathway = pathways.find((p) =>
-      p.nodes.some((n) => n.id === state.selectedNodeId)
-    );
-    if (pathway && !expandedPathways.has(pathway.id)) {
-      setExpandedPathways((prev) => new Set(prev).add(pathway.id));
+  // Build escalation lookup set for marker rendering
+  const escalatedNodeIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const flag of MOCK_ESCALATION_FLAGS) {
+      ids.add(flag.nodeId);
     }
-  }, [state.selectedNodeId, pathways]);
+    return ids;
+  }, []);
 
-  const handleNodeClick = useCallback((nodeId: string) => {
-    dispatch({ type: 'NODE_SELECTED', nodeId });
+  // Auto-expand pathways when nodes are selected in the canvas
+  useEffect(() => {
+    if (state.selectedNodeIds.length === 0) return;
+    setExpandedPathways((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const nodeId of state.selectedNodeIds) {
+        const pathway = pathways.find((p) => p.nodes.some((n) => n.id === nodeId));
+        if (pathway && !next.has(pathway.id)) {
+          next.add(pathway.id);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [state.selectedNodeIds, pathways]);
+
+  const handleNodeClick = useCallback((nodeId: string, e: React.MouseEvent) => {
+    dispatch({ type: 'NODE_SELECTED', nodeId, multi: e.shiftKey });
   }, [dispatch]);
+
+  const selectionCount = state.selectedNodeIds.length;
 
   return (
     <div style={treeStyles.container} data-testid="layer-tree">
       <div style={treeStyles.header}>
         <span style={treeStyles.headerLabel}>Pathways</span>
+        {selectionCount > 1 && (
+          <span style={treeStyles.selectionBadge} data-testid="layer-tree-selection-badge">
+            {selectionCount} nodes selected
+          </span>
+        )}
       </div>
       <div style={treeStyles.scrollArea}>
         {pathways.map((pathway) => {
@@ -442,9 +480,11 @@ export const LayerTree: React.FC = () => {
                     key={entry.node.id}
                     node={entry.node}
                     depth={entry.depth}
-                    isSelected={state.selectedNodeId === entry.node.id}
+                    isSelected={state.selectedNodeIds.includes(entry.node.id)}
                     isDimmed={isDimmed}
-                    onClick={() => handleNodeClick(entry.node.id)}
+                    isAssigned={entry.node.assignedProviderId === 'prov-current'}
+                    isEscalated={escalatedNodeIds.has(entry.node.id)}
+                    onClick={(e) => handleNodeClick(entry.node.id, e)}
                   />
                 );
               })}
@@ -481,8 +521,18 @@ const treeStyles: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: `${spaceAround.tight}px ${spaceAround.default}px`,
     flexShrink: 0,
+  },
+  selectionBadge: {
+    fontSize: 10,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.accent.primary,
+    backgroundColor: colors.bg.accent.low,
+    borderRadius: borderRadius.full,
+    padding: '1px 8px',
+    whiteSpace: 'nowrap' as const,
   },
   headerLabel: {
     fontSize: 11,

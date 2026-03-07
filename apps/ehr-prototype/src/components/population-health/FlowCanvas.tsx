@@ -238,29 +238,41 @@ const FlowCanvasInner: React.FC = () => {
   }, [allPathways, state.selectedPathwayIds]);
 
   // Node click handlers
-  const handleNodeClick = useCallback((nodeId: string) => {
+  const handleNodeClick = useCallback((nodeId: string, e?: React.MouseEvent | MouseEvent) => {
     canvasClickRef.current = nodeId;
-    dispatch({
-      type: state.selectedNodeId === nodeId ? 'NODE_DESELECTED' : 'NODE_SELECTED',
-      ...(state.selectedNodeId === nodeId ? {} : { nodeId }),
-    } as any);
-  }, [dispatch, state.selectedNodeId]);
+    const isShift = e && 'shiftKey' in e && e.shiftKey;
+    if (isShift) {
+      dispatch({ type: 'NODE_SELECTED', nodeId, multi: true });
+    } else {
+      // Single click: toggle off if only selection, otherwise replace
+      const isOnlySelected = state.selectedNodeIds.length === 1 && state.selectedNodeIds[0] === nodeId;
+      if (isOnlySelected) {
+        dispatch({ type: 'NODE_DESELECTED' });
+      } else {
+        dispatch({ type: 'NODE_SELECTED', nodeId });
+      }
+    }
+  }, [dispatch, state.selectedNodeIds]);
 
   const handleNodeDetails = useCallback((nodeId: string) => {
     dispatch({ type: 'DRAWER_OPENED', view: { type: 'node-detail', nodeId } });
   }, [dispatch]);
 
-  // Compute connected node set for stream highlighting
+  // Compute connected node set for stream highlighting — union across all selected nodes
   const connectedNodeSet = useMemo<Set<string> | null>(() => {
-    if (!state.selectedNodeId) return null;
-    // Find connections from all active pathways that contain the selected node
-    for (const pathway of activePathways) {
-      if (pathway.nodes.some((n) => n.id === state.selectedNodeId)) {
-        return getConnectedNodeIds(state.selectedNodeId, pathway.connections);
+    if (state.selectedNodeIds.length === 0) return null;
+    const union = new Set<string>();
+    for (const selectedId of state.selectedNodeIds) {
+      for (const pathway of activePathways) {
+        if (pathway.nodes.some((n) => n.id === selectedId)) {
+          for (const id of getConnectedNodeIds(selectedId, pathway.connections)) {
+            union.add(id);
+          }
+        }
       }
     }
-    return null;
-  }, [state.selectedNodeId, activePathways]);
+    return union.size > 0 ? union : null;
+  }, [state.selectedNodeIds, activePathways]);
 
   // Convert pathway data → React Flow nodes and edges, plus layout metrics
   const { flowNodes, flowEdges, maxColumnIndex, maxVerticalPosition } = useMemo(() => {
@@ -301,11 +313,11 @@ const FlowCanvasInner: React.FC = () => {
             y: CANVAS_PADDING + COLUMN_HEADER_HEIGHT + adjustedVerticalPos * ROW_HEIGHT,
           },
           // Selected node floats above all siblings (RF applies zIndex to its wrapper div)
-          zIndex: state.selectedNodeId === pNode.id ? 1000 : undefined,
+          zIndex: state.selectedNodeIds.includes(pNode.id) ? 1000 : undefined,
           data: {
             node: pNode,
-            selected: state.selectedNodeId === pNode.id,
-            focused: state.selectedNodeId === pNode.id || (isSearchMatch && !isDimmed),
+            selected: state.selectedNodeIds.includes(pNode.id),
+            focused: state.selectedNodeIds.includes(pNode.id) || (isSearchMatch && !isDimmed),
             dimmed: isDimmed,
             disabled: pNode.disabled ?? false,
             onClick: () => handleNodeClick(pNode.id),
@@ -388,7 +400,7 @@ const FlowCanvasInner: React.FC = () => {
     }
 
     return { flowNodes: nodes, flowEdges: edges, maxColumnIndex: maxCol, maxVerticalPosition: maxVert };
-  }, [activePathways, dimmedPathways, state.selectedNodeId, state.lifecycleFilter, state.searchQuery, state.filters, connectedNodeSet, handleNodeClick, handleNodeDetails]);
+  }, [activePathways, dimmedPathways, state.selectedNodeIds, state.lifecycleFilter, state.searchQuery, state.filters, connectedNodeSet, handleNodeClick, handleNodeDetails]);
 
   // ---- Enhancement 2: Conditional vertical scroll ----
   const contentHeight = (maxVerticalPosition + 1) * ROW_HEIGHT + 2 * CANVAS_PADDING + COLUMN_HEADER_HEIGHT;
@@ -436,19 +448,22 @@ const FlowCanvasInner: React.FC = () => {
   }, []);
 
   // ---- Enhancement 5: Tree-to-canvas auto-scroll ----
-  // Track previous selectedNodeId to skip auto-scroll on mount with pre-existing selection
-  // (e.g. switching from table view back to flow with a node already selected).
-  const prevSelectedNodeRef = useRef(state.selectedNodeId);
+  // Track previous selectedNodeIds to skip auto-scroll on mount with pre-existing selection
+  // (e.g. switching from table view back to flow with nodes already selected).
+  const prevSelectedNodesRef = useRef(state.selectedNodeIds);
 
   useEffect(() => {
-    const prev = prevSelectedNodeRef.current;
-    prevSelectedNodeRef.current = state.selectedNodeId;
+    const prev = prevSelectedNodesRef.current;
+    prevSelectedNodesRef.current = state.selectedNodeIds;
 
-    if (!state.selectedNodeId) return;
-    // Same selection as mount or last processed — no scroll needed
-    if (prev === state.selectedNodeId) return;
+    if (state.selectedNodeIds.length === 0) return;
+    // Same selection as last processed — no scroll needed
+    if (prev.length === state.selectedNodeIds.length && prev.every((id, i) => id === state.selectedNodeIds[i])) return;
+    // For shift-click multi-select, skip auto-scroll to avoid jarring pan
+    if (state.selectedNodeIds.length > 1 && prev.length > 0) return;
     // Skip canvas-initiated selections
-    if (canvasClickRef.current === state.selectedNodeId) {
+    const firstSelected = state.selectedNodeIds[0];
+    if (canvasClickRef.current === firstSelected) {
       canvasClickRef.current = null;
       return;
     }
@@ -456,8 +471,8 @@ const FlowCanvasInner: React.FC = () => {
     // Skip if container hasn't been measured yet
     if (containerHeight === 0) return;
 
-    // Find selected node's flow position
-    const node = flowNodes.find(n => n.id === state.selectedNodeId);
+    // Find first selected node's flow position for auto-scroll
+    const node = flowNodes.find(n => n.id === firstSelected);
     if (!node) return;
 
     // Target: node's left edge at 2nd column slot (SNAP_EDGE_PADDING + 1 column width)
@@ -470,7 +485,7 @@ const FlowCanvasInner: React.FC = () => {
     const clampedY = Math.min(0, targetY);
 
     rf.setViewport({ x: clampedX, y: clampedY, zoom: 1 }, { duration: 250 });
-  }, [state.selectedNodeId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.selectedNodeIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div style={canvasStyles.outerContainer} data-testid="flow-canvas">
@@ -526,7 +541,7 @@ const FlowCanvasInner: React.FC = () => {
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable={true}
-            onNodeClick={(_event, node) => handleNodeClick(node.id)}
+            onNodeClick={(event, node) => handleNodeClick(node.id, event)}
             onMove={handleMove}
             onMoveEnd={handleMoveEnd}
             proOptions={{ hideAttribution: true }}

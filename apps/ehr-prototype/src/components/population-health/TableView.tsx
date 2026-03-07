@@ -104,10 +104,10 @@ export const TableView: React.FC = () => {
   const filteredPatients = useMemo(() => {
     let result = patients;
 
-    // Filter by selected node
-    if (state.selectedNodeId) {
+    // Filter by selected nodes (union — patient at ANY selected node)
+    if (state.selectedNodeIds.length > 0) {
       result = result.filter((p) =>
-        p.pathways.some((a) => a.currentNodeId === state.selectedNodeId)
+        p.pathways.some((a) => state.selectedNodeIds.includes(a.currentNodeId))
       );
     }
 
@@ -139,7 +139,7 @@ export const TableView: React.FC = () => {
     }
 
     return result;
-  }, [patients, state.selectedNodeId, state.searchQuery, state.filters]);
+  }, [patients, state.selectedNodeIds, state.searchQuery, state.filters]);
 
   // Get columns
   const pathwayId = state.selectedPathwayIds[0];

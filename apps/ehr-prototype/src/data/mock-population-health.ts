@@ -14,6 +14,7 @@ import type {
   DashboardAlert,
   PopHealthFilter,
   RecentPatient,
+  EscalationFlag,
 } from '../types/population-health';
 
 // ============================================================================
@@ -183,17 +184,17 @@ export const PATHWAYS: Pathway[] = [
     nodes: [
       { id: 'da-1', type: 'cohort-source', label: 'Diabetes Cohort', columnIndex: 0, verticalPosition: 0, pills: [{ label: '15 pts' }], config: {}, patientCount: 15, lifecycleState: 'active',
         flowState: { inbound: { natural: 15, error: 0 }, atStage: { inProgress: 15, waiting: 0, error: 0 }, outbound: { completed: 15 } } },
-      { id: 'da-2', type: 'filter', label: 'A1c Due', description: 'Last A1c > 90 days ago', columnIndex: 1, verticalPosition: 0, pills: [{ label: '9 pts' }], config: { field: 'last_a1c_date', threshold: 90 }, patientCount: 9, lifecycleState: 'active',
+      { id: 'da-2', type: 'filter', label: 'A1c Due', description: 'Last A1c > 90 days ago', columnIndex: 1, verticalPosition: 0, pills: [{ label: '9 pts' }], config: { field: 'last_a1c_date', threshold: 90 }, patientCount: 9, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 15, error: 0 }, atStage: { inProgress: 2, waiting: 0, error: 0 }, outbound: { completed: 9, byPath: { due: 9, current: 6 } }, throughput: { avgDaysInStage: 1, patientsPerDay: 0.5 } } },
       { id: 'da-3', type: 'action', label: 'Order A1c Lab', columnIndex: 2, verticalPosition: 0, pills: [{ label: '5 pending' }], config: { orderType: 'lab', code: '83036' }, patientCount: 5, lifecycleState: 'active',
         flowState: { inbound: { natural: 9, error: 0 }, atStage: { inProgress: 5, waiting: 0, error: 0 }, outbound: { completed: 4 }, throughput: { avgDaysInStage: 3, patientsPerDay: 0.3 } } },
       { id: 'da-4', type: 'wait-monitor', label: 'Await Results', description: 'Monitor for lab completion', columnIndex: 3, verticalPosition: 0, pills: [{ label: '3 waiting', variant: 'info' }], config: { waitDays: 14 }, patientCount: 3, lifecycleState: 'active',
         flowState: { inbound: { natural: 5, error: 0 }, atStage: { inProgress: 0, waiting: 3, error: 0 }, outbound: { completed: 2 }, throughput: { avgDaysInStage: 7, patientsPerDay: 0.2 } } },
-      { id: 'da-5', type: 'branch', label: 'A1c Result', description: 'Route based on A1c value', columnIndex: 4, verticalPosition: 0, pills: [], config: { field: 'a1c_value', thresholds: [7, 9] }, patientCount: 6, lifecycleState: 'active',
+      { id: 'da-5', type: 'branch', label: 'A1c Result', description: 'Route based on A1c value', columnIndex: 4, verticalPosition: 0, pills: [], config: { field: 'a1c_value', thresholds: [7, 9] }, patientCount: 6, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 6, error: 0 }, atStage: { inProgress: 0, waiting: 0, error: 0 }, outbound: { completed: 6, byPath: { 'lt-7': 2, '7-9': 3, 'gt-9': 1 } } } },
       { id: 'da-6a', type: 'action', label: 'Continue Current Tx', description: 'A1c < 7%', columnIndex: 5, verticalPosition: 0, pills: [{ label: '< 7%' }], config: {}, patientCount: 2, lifecycleState: 'active',
         flowState: { inbound: { natural: 2, error: 0 }, atStage: { inProgress: 2, waiting: 0, error: 0 }, outbound: { completed: 2 }, throughput: { avgDaysInStage: 1 } } },
-      { id: 'da-6b', type: 'action', label: 'Adjust Medication', description: 'A1c 7-9%', columnIndex: 5, verticalPosition: 1, pills: [{ label: '7-9%', variant: 'warning' }], config: {}, patientCount: 3, lifecycleState: 'active',
+      { id: 'da-6b', type: 'action', label: 'Adjust Medication', description: 'A1c 7-9%', columnIndex: 5, verticalPosition: 1, pills: [{ label: '7-9%', variant: 'warning' }], config: {}, patientCount: 3, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 3, error: 0 }, atStage: { inProgress: 3, waiting: 0, error: 0 }, outbound: { completed: 1 }, throughput: { avgDaysInStage: 5, patientsPerDay: 0.1 } } },
       { id: 'da-6c', type: 'escalation', label: 'Endocrine Referral', description: 'A1c > 9%', columnIndex: 5, verticalPosition: 2, pills: [{ label: '> 9%', variant: 'warning' }, { label: '1 urgent' }], config: {}, patientCount: 1, gapCount: 1, lifecycleState: 'paused',
         flowState: { inbound: { natural: 1, error: 0 }, atStage: { inProgress: 0, waiting: 1, error: 0 }, outbound: { completed: 0 }, throughput: { avgDaysInStage: 18 } } },
@@ -232,13 +233,13 @@ export const PATHWAYS: Pathway[] = [
         flowState: { inbound: { natural: 12, error: 0 }, atStage: { inProgress: 0, waiting: 0, error: 0 }, outbound: { completed: 10, byPath: { eligible: 10, ineligible: 2 } }, throughput: { avgDaysInStage: 1 } } },
       { id: 'cs-3', type: 'branch', label: 'Screening Status', columnIndex: 2, verticalPosition: 0, pills: [], config: {}, patientCount: 10, lifecycleState: 'active',
         flowState: { inbound: { natural: 10, error: 0 }, atStage: { inProgress: 0, waiting: 0, error: 0 }, outbound: { completed: 10, byPath: { overdue: 4, fit_due: 3, current: 3 } } } },
-      { id: 'cs-4a', type: 'action', label: 'Schedule Colonoscopy', description: 'Never screened or overdue', columnIndex: 3, verticalPosition: 0, pills: [{ label: '4 overdue', variant: 'warning' }], config: {}, patientCount: 4, gapCount: 4, lifecycleState: 'active',
+      { id: 'cs-4a', type: 'action', label: 'Schedule Colonoscopy', description: 'Never screened or overdue', columnIndex: 3, verticalPosition: 0, pills: [{ label: '4 overdue', variant: 'warning' }], config: {}, patientCount: 4, gapCount: 4, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 4, error: 0 }, atStage: { inProgress: 2, waiting: 2, error: 0 }, outbound: { completed: 2 }, throughput: { avgDaysInStage: 14, patientsPerDay: 0.1 } } },
       { id: 'cs-4b', type: 'action', label: 'FIT Test Reminder', description: 'Annual FIT alternative', columnIndex: 3, verticalPosition: 1, pills: [{ label: '3 due' }], config: {}, patientCount: 3, lifecycleState: 'active',
         flowState: { inbound: { natural: 3, error: 0 }, atStage: { inProgress: 3, waiting: 0, error: 0 }, outbound: { completed: 1 }, throughput: { avgDaysInStage: 7 } } },
       { id: 'cs-4c', type: 'wait-monitor', label: 'Up to Date', description: 'No action needed', columnIndex: 3, verticalPosition: 2, pills: [{ label: '3 current' }], config: {}, patientCount: 3, lifecycleState: 'active',
         flowState: { inbound: { natural: 3, error: 0 }, atStage: { inProgress: 0, waiting: 3, error: 0 }, outbound: { completed: 0 } } },
-      { id: 'cs-5', type: 'action', label: 'Patient Contact', description: 'Outreach for scheduling', columnIndex: 4, verticalPosition: 0, pills: [{ label: '2 contacted' }], config: {}, patientCount: 2, lifecycleState: 'active',
+      { id: 'cs-5', type: 'action', label: 'Patient Contact', description: 'Outreach for scheduling', columnIndex: 4, verticalPosition: 0, pills: [{ label: '2 contacted' }], config: {}, patientCount: 2, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 2, error: 0 }, atStage: { inProgress: 2, waiting: 0, error: 0 }, outbound: { completed: 1 }, throughput: { avgDaysInStage: 10 } } },
       { id: 'cs-6', type: 'metric', label: 'Screening Rate', columnIndex: 5, verticalPosition: 0, pills: [{ label: '72%' }], config: {}, patientCount: 12, lifecycleState: 'active',
         flowState: { inbound: { natural: 6, error: 0 }, atStage: { inProgress: 12, waiting: 0, error: 0 }, outbound: { completed: 0 } } },
@@ -271,11 +272,11 @@ export const PATHWAYS: Pathway[] = [
         flowState: { inbound: { natural: 8, error: 0 }, atStage: { inProgress: 8, waiting: 0, error: 0 }, outbound: { completed: 8 } } },
       { id: 'pd-2', type: 'filter', label: 'High Readmit Risk', description: 'LACE score ≥ 10', columnIndex: 1, verticalPosition: 0, pills: [{ label: '3 high risk', variant: 'warning' }], config: { laceThreshold: 10 }, patientCount: 3, lifecycleState: 'active',
         flowState: { inbound: { natural: 8, error: 0 }, atStage: { inProgress: 0, waiting: 0, error: 0 }, outbound: { completed: 8, byPath: { high: 3, standard: 5 } }, throughput: { avgDaysInStage: 0.5 } } },
-      { id: 'pd-3a', type: 'action', label: '48h Phone Call', description: 'Prioritized outreach', columnIndex: 2, verticalPosition: 0, pills: [{ label: '2 pending' }], config: { timeframe: '48h' }, patientCount: 2, lifecycleState: 'active',
+      { id: 'pd-3a', type: 'action', label: '48h Phone Call', description: 'Prioritized outreach', columnIndex: 2, verticalPosition: 0, pills: [{ label: '2 pending' }], config: { timeframe: '48h' }, patientCount: 2, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 3, error: 0 }, atStage: { inProgress: 2, waiting: 0, error: 0 }, outbound: { completed: 1 }, throughput: { avgDaysInStage: 2, patientsPerDay: 0.5 } } },
       { id: 'pd-3b', type: 'action', label: '72h Phone Call', description: 'Standard outreach', columnIndex: 2, verticalPosition: 1, pills: [{ label: '3 pending' }], config: { timeframe: '72h' }, patientCount: 3, lifecycleState: 'active',
         flowState: { inbound: { natural: 5, error: 0 }, atStage: { inProgress: 3, waiting: 0, error: 0 }, outbound: { completed: 2 }, throughput: { avgDaysInStage: 3, patientsPerDay: 0.3 } } },
-      { id: 'pd-4', type: 'action', label: '7-day Visit', description: 'In-person follow-up', columnIndex: 3, verticalPosition: 0, pills: [{ label: '4 scheduled' }], config: {}, patientCount: 4, lifecycleState: 'active',
+      { id: 'pd-4', type: 'action', label: '7-day Visit', description: 'In-person follow-up', columnIndex: 3, verticalPosition: 0, pills: [{ label: '4 scheduled' }], config: {}, patientCount: 4, lifecycleState: 'active', assignedProviderId: 'prov-current',
         flowState: { inbound: { natural: 3, error: 0 }, atStage: { inProgress: 2, waiting: 2, error: 0 }, outbound: { completed: 2 }, throughput: { avgDaysInStage: 4, patientsPerDay: 0.3 } } },
       { id: 'pd-5', type: 'branch', label: 'Med Reconciliation', columnIndex: 4, verticalPosition: 0, pills: [], config: {}, patientCount: 4, lifecycleState: 'active',
         flowState: { inbound: { natural: 4, error: 0 }, atStage: { inProgress: 1, waiting: 0, error: 0 }, outbound: { completed: 3, byPath: { reconciled: 2, discrepancy: 1 } } } },
@@ -442,6 +443,39 @@ export const ENCOUNTER_PATIENT_MAP: Record<string, string> = {
   'p1': 'demo-pc',
   'p2': 'demo-healthy',  // Susan Chen → Dante Patterson's slot (demo)
 };
+
+// ============================================================================
+// Escalation Flags (targeting the current provider for attention on non-owned nodes)
+// ============================================================================
+
+const ef = (daysAgo: number) => new Date(Date.now() - daysAgo * 86400000);
+
+export const MOCK_ESCALATION_FLAGS: EscalationFlag[] = [
+  {
+    nodeId: 'da-6c',
+    careFlowId: 'pw-diabetes-a1c',
+    targetProviderId: 'prov-current',
+    sourceItemIds: ['p1'],
+    reason: 'A1c > 9% — endocrine referral needs provider sign-off',
+    createdAt: ef(12),
+  },
+  {
+    nodeId: 'pd-6b',
+    careFlowId: 'pw-post-discharge',
+    targetProviderId: 'prov-current',
+    sourceItemIds: ['p33'],
+    reason: 'Medication discrepancy found — missing beta-blocker',
+    createdAt: ef(1),
+  },
+  {
+    nodeId: 'cs-4a',
+    careFlowId: 'pw-colon-screening',
+    targetProviderId: 'prov-current',
+    sourceItemIds: ['p24', 'p25'],
+    reason: '2 patients overdue for colonoscopy scheduling',
+    createdAt: ef(5),
+  },
+];
 
 // ============================================================================
 // Recent Patients

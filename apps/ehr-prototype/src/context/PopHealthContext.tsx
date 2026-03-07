@@ -26,7 +26,7 @@ export type PopHealthAction =
   | { type: 'COHORT_SELECTED'; cohortId: string }
   | { type: 'PATHWAY_SELECTED'; pathwayId: string; multi?: boolean }
   | { type: 'PATHWAY_DESELECTED'; pathwayId: string }
-  | { type: 'NODE_SELECTED'; nodeId: string }
+  | { type: 'NODE_SELECTED'; nodeId: string; multi?: boolean }
   | { type: 'NODE_DESELECTED' }
   | { type: 'PATIENT_SELECTED'; patientId: string }
   | { type: 'PATIENT_DESELECTED' }
@@ -73,7 +73,7 @@ const INITIAL_AXIS_VISIBILITY: AxisVisibility = {
 const INITIAL_STATE: PopHealthState = {
   selectedCohortId: null,
   selectedPathwayIds: [],
-  selectedNodeId: null,
+  selectedNodeIds: [],
   selectedPatientId: null,
   activeView: 'flow',
   filters: [],
@@ -107,7 +107,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         ...state,
         selectedCohortId: action.cohortId,
         selectedPathwayIds: [],
-        selectedNodeId: null,
+        selectedNodeIds: [],
         selectedPatientId: null,
         filters: [],
         drawerStack: [],
@@ -129,14 +129,14 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
           selectedPathwayIds: exists
             ? state.selectedPathwayIds.filter((id) => id !== action.pathwayId)
             : [...state.selectedPathwayIds, action.pathwayId],
-          selectedNodeId: null,
+          selectedNodeIds: [],
         };
       }
       // Single select
       return {
         ...state,
         selectedPathwayIds: [action.pathwayId],
-        selectedNodeId: null,
+        selectedNodeIds: [],
       };
     }
 
@@ -144,14 +144,26 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
       return {
         ...state,
         selectedPathwayIds: state.selectedPathwayIds.filter((id) => id !== action.pathwayId),
-        selectedNodeId: null,
+        selectedNodeIds: [],
       };
 
-    case 'NODE_SELECTED':
-      return { ...state, selectedNodeId: action.nodeId };
+    case 'NODE_SELECTED': {
+      if (action.multi) {
+        // Shift-click: toggle node in/out of multi-select
+        const exists = state.selectedNodeIds.includes(action.nodeId);
+        return {
+          ...state,
+          selectedNodeIds: exists
+            ? state.selectedNodeIds.filter((id) => id !== action.nodeId)
+            : [...state.selectedNodeIds, action.nodeId],
+        };
+      }
+      // Single click: replace selection
+      return { ...state, selectedNodeIds: [action.nodeId] };
+    }
 
     case 'NODE_DESELECTED':
-      return { ...state, selectedNodeId: null };
+      return { ...state, selectedNodeIds: [] };
 
     case 'PATIENT_SELECTED':
       return { ...state, selectedPatientId: action.patientId };
@@ -196,7 +208,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         ...state,
         selectedCohortId: overviewCohortId,
         selectedPathwayIds: [],
-        selectedNodeId: null,
+        selectedNodeIds: [],
         selectedPatientId: null,
         filters: [],
         drawerStack: [],
@@ -249,7 +261,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         routingTargetCohortId: action.cohortId,
         // Reset cohort-level state
         selectedPathwayIds: [],
-        selectedNodeId: null,
+        selectedNodeIds: [],
         selectedPatientId: null,
         filters: [],
         drawerStack: [],
@@ -266,7 +278,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         routingTargetCohortId: null,
         // Reset cohort-level state
         selectedPathwayIds: [],
-        selectedNodeId: null,
+        selectedNodeIds: [],
         selectedPatientId: null,
         filters: [],
         drawerStack: [],
