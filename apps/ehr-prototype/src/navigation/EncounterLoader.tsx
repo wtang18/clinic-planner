@@ -319,7 +319,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100vh',
+    height: '100%',
     backgroundColor: colors.bg.neutral.min,
   },
   loadingSpinner: {
@@ -338,7 +338,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100vh',
+    height: '100%',
     backgroundColor: colors.bg.neutral.min,
     padding: spaceAround.defaultPlus,
   },

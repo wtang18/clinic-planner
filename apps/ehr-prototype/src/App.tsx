@@ -77,12 +77,9 @@ export const App: React.FC<AppProps> = ({
         document.head.appendChild(style);
       }
 
-      // Also directly apply to body and root elements
+      // Also directly apply to body element
       document.body.style.fontFamily = "'Inter', system-ui, -apple-system, sans-serif";
-      const rootEl = document.getElementById('root');
-      if (rootEl) {
-        rootEl.style.fontFamily = "'Inter', system-ui, -apple-system, sans-serif";
-      }
+      document.body.style.overflow = 'hidden';
     }
   }, []);
 
@@ -122,6 +119,16 @@ const AppContent: React.FC = () => {
       clearTriedShortcuts();
     }
   }, []);
+
+  // Set --demo-banner-height CSS variable so AppRouter can subtract it from 100vh
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.documentElement.style.setProperty(
+        '--demo-banner-height',
+        activePreset ? '36px' : '0px',
+      );
+    }
+  }, [activePreset]);
 
   // Close legend panel when navigating away from encounter screens
   useEffect(() => {

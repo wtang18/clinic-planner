@@ -30,8 +30,14 @@ export const globalStyles = `
     margin: 0;
     padding: 0;
     height: 100%;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root, #__next {
+    display: flex;
+    flex-direction: column;
   }
 
   /* Ensure inputs and buttons use Inter */

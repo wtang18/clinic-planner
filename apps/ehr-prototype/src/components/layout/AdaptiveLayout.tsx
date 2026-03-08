@@ -124,7 +124,7 @@ export const AdaptiveLayout: React.FC<AdaptiveLayoutProps> = ({
   const containerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
-    height: 'calc(100vh - var(--legend-panel-height, 0px))',
+    height: 'calc(100% - var(--legend-panel-height, 0px))',
     transition: 'height 200ms ease',
     width: '100%',
     backgroundColor: colors.bg.neutral.min,

@@ -123,8 +123,8 @@ export const AppRouter: React.FC = () => {
 
 const styles: Record<string, React.CSSProperties> = {
   routerContainer: {
-    height: '100vh',
-    width: '100vw',
+    height: 'calc(100vh - var(--demo-banner-height, 0px))',
+    width: '100%',
     overflow: 'hidden',
   },
   notFoundContainer: {
