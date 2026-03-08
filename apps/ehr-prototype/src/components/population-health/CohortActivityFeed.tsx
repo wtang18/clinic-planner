@@ -298,6 +298,7 @@ const feedStyles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflowY: 'auto',
     padding: spaceAround.default,
+    paddingBottom: 80,
   },
   eventRow: {
     display: 'flex',

@@ -298,7 +298,7 @@ export const AllPatientsContextPane: React.FC = () => {
       overflow: 'hidden',
       paddingTop: LAYOUT.headerHeight,
     }}>
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
         <DynamicStatsModule />
 
         <DimensionSection

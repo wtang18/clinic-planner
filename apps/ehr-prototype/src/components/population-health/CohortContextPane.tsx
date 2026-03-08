@@ -321,7 +321,7 @@ export const CohortContextPane: React.FC<CohortContextPaneProps> = ({
         />
       )}
       {currentTab === 'alerts' && (
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 80 }}>
           <Dashboard
             metrics={[]}
             alerts={dashboardAlerts}

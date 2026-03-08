@@ -531,7 +531,7 @@ export const RoutingView: React.FC = () => {
         paddingTop: LAYOUT.headerHeight + spaceAround.default,
         paddingLeft: spaceAround.default,
         paddingRight: spaceAround.default,
-        paddingBottom: spaceAround.spacious,
+        paddingBottom: 80,
         opacity: visible ? 1 : 0,
         transition: `opacity 200ms ease`,
       }}

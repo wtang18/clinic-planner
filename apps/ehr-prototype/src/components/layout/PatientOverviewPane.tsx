@@ -164,6 +164,7 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
     flexDirection: 'column',
     gap: spaceBetween.repeating,
     padding: LAYOUT.overviewContentPadding,
+    paddingBottom: 80,
   };
 
   if (!patient) {

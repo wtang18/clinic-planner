@@ -273,6 +273,7 @@ const tableStyles: Record<string, React.CSSProperties> = {
   scrollContainer: {
     flex: 1,
     overflow: 'auto',
+    paddingBottom: 80,
   },
   table: {
     width: '100%',

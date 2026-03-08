@@ -625,7 +625,7 @@ const treeStyles: Record<string, React.CSSProperties> = {
   scrollArea: {
     flex: 1,
     overflowY: 'auto',
-    padding: `0 ${spaceAround.compact}px ${spaceAround.compact}px`,
+    padding: `0 ${spaceAround.compact}px 80px`,
   },
   divider: {
     height: 1,
