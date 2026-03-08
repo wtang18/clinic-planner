@@ -5,7 +5,7 @@
  * When the legend panel is open, shows X icon to close it.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { HelpCircle, X } from 'lucide-react';
 import { colors, glass, transitions, zIndex as zIndexTokens, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS, LAYOUT } from '../../styles/foundations';
 import { HelpMenu } from './HelpMenu';
@@ -31,6 +31,16 @@ export const HelpHubButton: React.FC<HelpHubButtonProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Hide when a right-side SlideDrawer is open
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setDrawerOpen((e as CustomEvent).detail.open);
+    };
+    document.addEventListener('slide-drawer-change', handler);
+    return () => document.removeEventListener('slide-drawer-change', handler);
+  }, []);
 
   const handleClick = useCallback(() => {
     if (isLegendOpen) {
@@ -63,7 +73,10 @@ export const HelpHubButton: React.FC<HelpHubButtonProps> = ({
     WebkitBackdropFilter: glass.button.WebkitBackdropFilter,
     border: isHovered ? glass.buttonHover.border : glass.button.border,
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-    transition: `background-color ${transitions.fast}, border ${transitions.fast}, bottom 200ms ease`,
+    transform: drawerOpen ? 'translateY(60px)' : 'translateY(0)',
+    opacity: drawerOpen ? 0 : 1,
+    pointerEvents: drawerOpen ? 'none' : 'auto',
+    transition: `background-color ${transitions.fast}, border ${transitions.fast}, bottom 200ms ease, transform 200ms ease, opacity 200ms ease`,
   };
 
   const iconColor = colors.fg.neutral.secondary;
@@ -83,7 +96,7 @@ export const HelpHubButton: React.FC<HelpHubButtonProps> = ({
         <Icon size={20} color={iconColor} />
       </button>
 
-      {isMenuOpen && !isLegendOpen && (
+      {isMenuOpen && !isLegendOpen && !drawerOpen && (
         <HelpMenu
           onToggleLegend={() => {
             onToggleLegend();

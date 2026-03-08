@@ -18,8 +18,6 @@ import {
   borderRadius,
   transitions,
   glass,
-  GLASS_BUTTON_HEIGHT,
-  GLASS_BUTTON_RADIUS,
 } from '../../styles/foundations';
 
 // ============================================================================
@@ -103,9 +101,9 @@ export const DrawerFooter: React.FC<DrawerFooterProps> = ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: GLASS_BUTTON_HEIGHT,
-    height: GLASS_BUTTON_HEIGHT,
-    borderRadius: GLASS_BUTTON_RADIUS,
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
     cursor: 'pointer',
     color: colors.fg.neutral.secondary,
     flexShrink: 0,

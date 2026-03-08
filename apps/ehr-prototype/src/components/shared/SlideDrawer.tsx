@@ -6,7 +6,9 @@
  *
  * Features:
  * - No scrim overlay — elevation-only separation (transparent click-catcher for dismiss)
- * - Glass header with 44px buttons + gradient blur fade
+ * - Two header modes:
+ *   A) Gradient fade (title + buttons only): blur mask with maskImage gradient
+ *   B) Solid fill (title + subHeader): opaque translucent blur for multi-row headers
  * - Optional sticky footer slot with inverted gradient blur
  * - Named width variants: narrow (360px), standard (45%), wide (55%)
  */
@@ -57,6 +59,9 @@ export interface SlideDrawerProps {
   showBack?: boolean;
   /** Called when back button is clicked */
   onBack?: () => void;
+  /** Optional sticky sub-header content (e.g. filter bar, view controls).
+   *  When provided, header uses solid translucent fill instead of gradient fade. */
+  subHeader?: React.ReactNode;
   /** Optional sticky footer content (action bar) */
   footer?: React.ReactNode;
   /** Test ID */
@@ -77,6 +82,7 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
   header,
   showBack = false,
   onBack,
+  subHeader,
   footer,
   testID,
 }) => {
@@ -94,6 +100,15 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  // Notify floating UI elements (HelpHubButton, ChordBadge) when a right-side drawer opens/closes
+  useEffect(() => {
+    if (position !== 'right') return;
+    document.dispatchEvent(new CustomEvent('slide-drawer-change', { detail: { open } }));
+    return () => {
+      document.dispatchEvent(new CustomEvent('slide-drawer-change', { detail: { open: false } }));
+    };
+  }, [open, position]);
 
   // Width resolution: explicit width prop > size variant
   const resolvedWidth = width != null
@@ -132,28 +147,46 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
     boxShadow: open ? '-8px 0 24px rgba(0, 0, 0, 0.12)' : 'none',
   };
 
-  const headerStyle: React.CSSProperties = {
+  // Header container: wraps title row + optional sub-header
+  // Mode A (no subHeader): transparent bg — blur mask handles clipping
+  // Mode B (subHeader): solid translucent fill fully obscures scroll-through
+  const headerContainerStyle: React.CSSProperties = {
+    position: 'relative',
+    flexShrink: 0,
+    zIndex: 2,
+    ...(subHeader ? {
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      backgroundColor: 'rgba(255, 255, 255, 0.38)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.18)',
+    } : {}),
+  };
+
+  // Mode A: blur mask behind header (gradient fade for scroll clipping)
+  const blurMaskStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 76, // ~60px header + 16px fade zone
+    zIndex: -1,
+    pointerEvents: 'none',
+    backdropFilter: 'blur(32px)',
+    WebkitBackdropFilter: 'blur(32px)',
+    maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 60%, rgba(0,0,0,0.4) 85%, transparent 100%)',
+    WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.92) 60%, rgba(0,0,0,0.4) 85%, transparent 100%)',
+  };
+
+  const titleRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.related,
     padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    flexShrink: 0,
     minHeight: 60,
-    position: 'relative',
-    backdropFilter: 'blur(32px)',
-    WebkitBackdropFilter: 'blur(32px)',
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
   };
 
-  const headerFadeStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: -16,
-    height: 16,
-    background: 'linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 40%, transparent 100%)',
-    pointerEvents: 'none',
-    zIndex: 1,
+  const subHeaderRowStyle: React.CSSProperties = {
+    padding: `0 ${spaceAround.default}px ${spaceAround.tight}px`,
   };
 
   const headerContentStyle: React.CSSProperties = {
@@ -221,32 +254,39 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
         aria-modal="true"
         data-testid={testID}
       >
-        {/* Glass header with gradient fade */}
+        {/* Header: Mode A (gradient blur mask) or Mode B (solid fill with sub-header) */}
         {(header || showBack) && (
-          <div style={headerStyle}>
-            {showBack && (
+          <div style={headerContainerStyle}>
+            {/* Mode A: blur mask behind header for gradient scroll clipping */}
+            {!subHeader && <div style={blurMaskStyle} />}
+
+            {/* Title row: back? + header content + close */}
+            <div style={titleRowStyle}>
+              {showBack && (
+                <button
+                  type="button"
+                  style={glassButtonStyle}
+                  onClick={onBack}
+                  aria-label="Go back"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+              )}
+              <div style={headerContentStyle}>
+                {header}
+              </div>
               <button
                 type="button"
                 style={glassButtonStyle}
-                onClick={onBack}
-                aria-label="Go back"
+                onClick={onClose}
+                aria-label="Close drawer"
               >
-                <ChevronLeft size={18} />
+                <X size={18} />
               </button>
-            )}
-            <div style={headerContentStyle}>
-              {header}
             </div>
-            <button
-              type="button"
-              style={glassButtonStyle}
-              onClick={onClose}
-              aria-label="Close drawer"
-            >
-              <X size={18} />
-            </button>
-            {/* Gradient blur fade below header */}
-            <div style={headerFadeStyle} />
+
+            {/* Mode B: sub-header row */}
+            {subHeader && <div style={subHeaderRowStyle}>{subHeader}</div>}
           </div>
         )}
 

@@ -29,6 +29,16 @@ export const ChordBadge: React.FC = () => {
     return unsub;
   }, []);
 
+  // Hide when a right-side SlideDrawer is open
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setDrawerOpen((e as CustomEvent).detail.open);
+    };
+    document.addEventListener('slide-drawer-change', handler);
+    return () => document.removeEventListener('slide-drawer-change', handler);
+  }, []);
+
   // Listen for placeholder chord fires (unimplemented destinations)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -65,9 +75,10 @@ export const ChordBadge: React.FC = () => {
     fontWeight: 500,
     fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     letterSpacing: 0.5,
-    opacity: visible ? 1 : 0,
+    opacity: visible && !drawerOpen ? 1 : 0,
+    transform: drawerOpen ? 'translateY(60px)' : 'translateY(0)',
     pointerEvents: 'none',
-    transition: `opacity ${transitions.fast}, bottom 200ms ease`,
+    transition: `opacity ${transitions.fast}, bottom 200ms ease, transform 200ms ease`,
     zIndex: 250,
   };
 
