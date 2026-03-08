@@ -4,10 +4,14 @@
  * Main canvas view for the Priorities tab. Shows a filtered, sorted list
  * of PriorityCards computed from pathway/patient/escalation data.
  * Supports three sort modes (urgency, by-node, by-date) with section
- * headers in by-node mode. Follows the RoutingView pattern.
+ * headers in by-node mode.
+ *
+ * PV2: Cards are interactive — expand on click to reveal quick actions,
+ * checkboxes toggle, flag markers, defer/assign remove cards from queue.
+ * All interaction state is local (no reducer changes).
  */
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { PATHWAYS, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS } from '../../data/mock-population-health';
 import { derivePriorityItems, computePriorityQueue } from '../../utils/priority-computation';
@@ -27,12 +31,33 @@ const SORT_SEGMENTS: { key: PrioritySortMode; label: string }[] = [
 ];
 
 // ============================================================================
+// Helpers
+// ============================================================================
+
+/** Toggle an id in a Set, returning a new Set. */
+function toggleInSet(prev: Set<string>, id: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  return next;
+}
+
+// ============================================================================
 // Component
 // ============================================================================
 
 export const PrioritiesView: React.FC = () => {
-  const { state } = usePopHealth();
+  const { state, dispatch } = usePopHealth();
   const [sortMode, setSortMode] = useState<PrioritySortMode>('urgency');
+
+  // PV2: Local interaction state
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
   // Staged entrance animation
   const [visible, setVisible] = useState(false);
@@ -56,11 +81,17 @@ export const PrioritiesView: React.FC = () => {
     [allItems, state.selectedNodeIds, sortMode],
   );
 
+  // Filter out removed items
+  const visibleItems = useMemo(
+    () => removedIds.size === 0 ? sortedItems : sortedItems.filter((item) => !removedIds.has(item.id)),
+    [sortedItems, removedIds],
+  );
+
   // Group by node label for "by-node" sort mode
   const groupedByNode = useMemo(() => {
     if (sortMode !== 'by-node') return null;
     const groups = new Map<string, PriorityItem[]>();
-    for (const item of sortedItems) {
+    for (const item of visibleItems) {
       const existing = groups.get(item.nodeLabel);
       if (existing) {
         existing.push(item);
@@ -69,10 +100,56 @@ export const PrioritiesView: React.FC = () => {
       }
     }
     return groups;
-  }, [sortMode, sortedItems]);
+  }, [sortMode, visibleItems]);
 
   // Whether we have items at all (for empty state variant)
   const hasAnyItems = allItems.length > 0;
+
+  // ---- Handlers ----
+
+  const handleToggleExpand = useCallback((id: string) => {
+    setExpandedIds((prev) => toggleInSet(prev, id));
+  }, []);
+
+  const handleCheck = useCallback((id: string) => {
+    setCheckedIds((prev) => toggleInSet(prev, id));
+  }, []);
+
+  const handleFlag = useCallback((id: string) => {
+    setFlaggedIds((prev) => toggleInSet(prev, id));
+  }, []);
+
+  const handleRemoveCard = useCallback((id: string) => {
+    setRemovedIds((prev) => new Set(prev).add(id));
+    setExpandedIds((prev) => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const handleDetails = useCallback((patientId: string) => {
+    dispatch({ type: 'DRAWER_OPENED', view: { type: 'patient-preview', patientId } });
+  }, [dispatch]);
+
+  // ---- Render helpers ----
+
+  const renderCard = useCallback((item: PriorityItem) => (
+    <PriorityCard
+      key={item.id}
+      item={item}
+      expanded={expandedIds.has(item.id)}
+      checked={checkedIds.has(item.id)}
+      flagged={flaggedIds.has(item.id)}
+      onToggleExpand={() => handleToggleExpand(item.id)}
+      onCheck={() => handleCheck(item.id)}
+      onFlag={() => handleFlag(item.id)}
+      onDefer={() => handleRemoveCard(item.id)}
+      onAssign={() => handleRemoveCard(item.id)}
+      onDetails={() => handleDetails(item.patientId)}
+    />
+  ), [expandedIds, checkedIds, flaggedIds, handleToggleExpand, handleCheck, handleFlag, handleRemoveCard, handleDetails]);
 
   // ---- Styles ----
   const containerStyle: React.CSSProperties = {
@@ -148,7 +225,7 @@ export const PrioritiesView: React.FC = () => {
   };
 
   // ---- Empty state ----
-  if (sortedItems.length === 0) {
+  if (visibleItems.length === 0) {
     return (
       <div style={containerStyle} data-testid="priorities-view">
         <div style={barStyle}>
@@ -189,7 +266,7 @@ export const PrioritiesView: React.FC = () => {
             variant="inline"
             size="sm"
           />
-          <span style={countStyle}>{sortedItems.length} items</span>
+          <span style={countStyle}>{visibleItems.length} items</span>
         </div>
         <div style={listStyle}>
           {Array.from(groupedByNode.entries()).map(([nodeLabel, items]) => (
@@ -197,9 +274,7 @@ export const PrioritiesView: React.FC = () => {
               <div style={sectionHeaderStyle}>
                 {nodeLabel} ({items.length})
               </div>
-              {items.map((item) => (
-                <PriorityCard key={item.id} item={item} />
-              ))}
+              {items.map(renderCard)}
             </React.Fragment>
           ))}
         </div>
@@ -218,12 +293,10 @@ export const PrioritiesView: React.FC = () => {
           variant="inline"
           size="sm"
         />
-        <span style={countStyle}>{sortedItems.length} items</span>
+        <span style={countStyle}>{visibleItems.length} items</span>
       </div>
       <div style={listStyle}>
-        {sortedItems.map((item) => (
-          <PriorityCard key={item.id} item={item} />
-        ))}
+        {visibleItems.map(renderCard)}
       </div>
     </div>
   );
