@@ -6,14 +6,13 @@
  * Supports three sort modes (urgency, by-node, by-date) with section
  * headers in by-node mode.
  *
- * PV2: Cards are interactive — expand on click to reveal quick actions,
- * checkboxes toggle, flag markers, defer/assign remove cards from queue.
- * All interaction state is local (no reducer changes).
+ * Cards are always interactive — action row visible, click opens drawer.
+ * Cohort-scoped: only shows priorities for the active cohort's pathways.
  */
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { usePopHealth } from '../../context/PopHealthContext';
-import { PATHWAYS, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS } from '../../data/mock-population-health';
+import { PATHWAYS, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS, getPathwaysByCohort } from '../../data/mock-population-health';
 import { derivePriorityItems, computePriorityQueue } from '../../utils/priority-computation';
 import { PriorityCard } from './PriorityCard';
 import { SegmentedControl } from '../primitives/SegmentedControl';
@@ -53,8 +52,7 @@ export const PrioritiesView: React.FC = () => {
   const { state, dispatch } = usePopHealth();
   const [sortMode, setSortMode] = useState<PrioritySortMode>('urgency');
 
-  // PV2: Local interaction state
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  // Local interaction state
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
@@ -69,10 +67,18 @@ export const PrioritiesView: React.FC = () => {
     }
   }, []);
 
-  // Derive all priority items from source data (memoized)
+  // Cohort-scoped pathways (matches FlowCanvas/LayerTree pattern)
+  const pathways = useMemo(() => {
+    if (state.selectedCohortId) {
+      return getPathwaysByCohort(state.selectedCohortId);
+    }
+    return PATHWAYS;
+  }, [state.selectedCohortId]);
+
+  // Derive all priority items from source data (memoized, cohort-scoped)
   const allItems = useMemo(
-    () => derivePriorityItems(PATHWAYS, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS),
-    [],
+    () => derivePriorityItems(pathways, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS),
+    [pathways],
   );
 
   // Filter + sort based on selected nodes and sort mode
@@ -107,10 +113,6 @@ export const PrioritiesView: React.FC = () => {
 
   // ---- Handlers ----
 
-  const handleToggleExpand = useCallback((id: string) => {
-    setExpandedIds((prev) => toggleInSet(prev, id));
-  }, []);
-
   const handleCheck = useCallback((id: string) => {
     setCheckedIds((prev) => toggleInSet(prev, id));
   }, []);
@@ -121,12 +123,6 @@ export const PrioritiesView: React.FC = () => {
 
   const handleRemoveCard = useCallback((id: string) => {
     setRemovedIds((prev) => new Set(prev).add(id));
-    setExpandedIds((prev) => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      return next;
-    });
   }, []);
 
   const handleDetails = useCallback((patientId: string) => {
@@ -139,17 +135,15 @@ export const PrioritiesView: React.FC = () => {
     <PriorityCard
       key={item.id}
       item={item}
-      expanded={expandedIds.has(item.id)}
       checked={checkedIds.has(item.id)}
       flagged={flaggedIds.has(item.id)}
-      onToggleExpand={() => handleToggleExpand(item.id)}
       onCheck={() => handleCheck(item.id)}
       onFlag={() => handleFlag(item.id)}
       onDefer={() => handleRemoveCard(item.id)}
       onAssign={() => handleRemoveCard(item.id)}
       onDetails={() => handleDetails(item.patientId)}
     />
-  ), [expandedIds, checkedIds, flaggedIds, handleToggleExpand, handleCheck, handleFlag, handleRemoveCard, handleDetails]);
+  ), [checkedIds, flaggedIds, handleCheck, handleFlag, handleRemoveCard, handleDetails]);
 
   // ---- Styles ----
   const containerStyle: React.CSSProperties = {
@@ -183,7 +177,7 @@ export const PrioritiesView: React.FC = () => {
   };
 
   const listStyle: React.CSSProperties = {
-    padding: `0 ${spaceAround.default}px ${spaceAround.default}px`,
+    padding: `0 ${spaceAround.default}px 80px`,
     display: 'flex',
     flexDirection: 'column',
     gap: 6,

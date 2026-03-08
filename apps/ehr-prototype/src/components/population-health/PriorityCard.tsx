@@ -1,10 +1,10 @@
 /**
  * PriorityCard Component
  *
- * Interactive card for a single PriorityItem in the Priorities View.
- * Supports expansion to reveal a quick action row (Defer, Assign, Flag, Details),
- * functional checkboxes, and inline pickers for defer/assign options.
- * PV2: Card Expansion + Quick Actions.
+ * Compact card for a single PriorityItem in the Priorities View.
+ * Action row is always visible (no expand/collapse). Clicking the card
+ * opens the patient-preview drawer. Inline pickers for defer/assign
+ * allow quick triage without leaving the list.
  */
 
 import React, { useState, useCallback } from 'react';
@@ -38,10 +38,8 @@ type PickerMode = 'default' | 'defer' | 'assign';
 
 interface PriorityCardProps {
   item: PriorityItem;
-  expanded?: boolean;
   checked?: boolean;
   flagged?: boolean;
-  onToggleExpand?: () => void;
   onCheck?: () => void;
   onFlag?: () => void;
   onDefer?: () => void;
@@ -51,10 +49,8 @@ interface PriorityCardProps {
 
 export const PriorityCard: React.FC<PriorityCardProps> = ({
   item,
-  expanded = false,
   checked = false,
   flagged = false,
-  onToggleExpand,
   onCheck,
   onFlag,
   onDefer,
@@ -64,14 +60,6 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
   const badgeColor = BADGE_COLORS[item.badge];
   const [hovered, setHovered] = useState(false);
   const [pickerMode, setPickerMode] = useState<PickerMode>('default');
-
-  // Reset picker when card collapses
-  const prevExpanded = React.useRef(expanded);
-  if (!expanded && prevExpanded.current) {
-    // Collapsed — reset picker synchronously during render
-    if (pickerMode !== 'default') setPickerMode('default');
-  }
-  prevExpanded.current = expanded;
 
   const handleCheckClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -85,11 +73,6 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
   const handleAssignSelect = useCallback(() => {
     onAssign?.();
   }, [onAssign]);
-
-  const handleDetailsClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDetails?.();
-  }, [onDetails]);
 
   const handleFlagClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -106,7 +89,7 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     borderRadius: borderRadius.sm,
     border: `1px solid ${colors.border.neutral.low}`,
     cursor: 'pointer',
-    background: hovered ? colors.bg.neutral.low : 'transparent',
+    background: hovered ? 'rgba(0,0,0,0.03)' : 'transparent',
     transition: `background ${transitions.fast}`,
   };
 
@@ -142,19 +125,6 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     whiteSpace: 'nowrap',
   };
 
-  const badgeStyle: React.CSSProperties = {
-    fontSize: 11,
-    fontWeight: typography.fontWeight.semibold,
-    fontFamily: typography.fontFamily.sans,
-    color: badgeColor.fg,
-    background: badgeColor.bg,
-    padding: '2px 8px',
-    borderRadius: borderRadius.full,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    flexShrink: 0,
-  };
-
   const daysStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
@@ -170,11 +140,25 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     flexShrink: 0,
   };
 
+  const badgeStyle: React.CSSProperties = {
+    fontSize: 11,
+    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.sans,
+    color: badgeColor.fg,
+    background: badgeColor.bg,
+    padding: '2px 8px',
+    borderRadius: borderRadius.full,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    flexShrink: 0,
+  };
+
   const row2Style: React.CSSProperties = {
     fontSize: 12,
+    fontWeight: typography.fontWeight.medium,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.secondary,
-    paddingLeft: 24,
+    paddingLeft: 24, // align with name (16px circle + 8px gap)
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -190,27 +174,19 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     whiteSpace: 'nowrap',
   };
 
-  // Quick action row wrapper — animated expand/collapse
-  const actionRowWrapperStyle: React.CSSProperties = {
-    overflow: 'hidden',
-    maxHeight: expanded ? 48 : 0,
-    opacity: expanded ? 1 : 0,
-    transition: `max-height ${transitions.fast}, opacity ${transitions.fast}`,
-  };
-
   const actionRowStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: 6,
-    paddingTop: 6,
-    borderTop: `1px dashed ${colors.border.neutral.low}`,
+    paddingTop: 4,
+    paddingLeft: 24,
   };
 
   const actionBtnStyle: React.CSSProperties = {
     fontSize: 11,
     fontFamily: typography.fontFamily.sans,
     fontWeight: typography.fontWeight.medium,
-    height: 26,
+    height: 24,
     padding: '0 10px',
     cursor: 'pointer',
     display: 'inline-flex',
@@ -234,9 +210,9 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
       data-testid={`priority-card-${item.id}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={onToggleExpand}
+      onClick={onDetails}
     >
-      {/* Row 1: checkbox + name + badge + days + markers */}
+      {/* Row 1: checkbox + name + days + markers + badge (right-anchored) */}
       <div style={row1Style}>
         <button
           style={checkboxStyle}
@@ -247,100 +223,90 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
           {checked && <Check size={10} color={colors.fg.neutral.inversePrimary} strokeWidth={3} />}
         </button>
         <span style={nameStyle}>{item.patientName}</span>
-        <span style={badgeStyle}>{item.badge}</span>
         <span style={daysStyle}>
           {item.isStale && <Clock size={12} />}
           {item.daysAtStage}d
         </span>
         {item.isEscalated && <span style={markerStyle} title={item.escalationReason}>🔺</span>}
         {flagged && <span style={markerStyle} title="Flagged">🚩</span>}
+        <span style={badgeStyle}>{item.badge}</span>
       </div>
 
-      {/* Row 2: pathway name */}
-      <div style={row2Style}>{item.pathwayName}</div>
+      {/* Row 2: node action label (what to do) */}
+      <div style={row2Style}>{item.nodeLabel}</div>
 
-      {/* Row 3: context line */}
+      {/* Row 3: context line (clinical detail) */}
       {item.contextLine && <div style={row3Style}>{item.contextLine}</div>}
 
-      {/* Quick action row — visible when expanded */}
-      <div style={actionRowWrapperStyle}>
-        <div style={actionRowStyle}>
-          {pickerMode === 'default' && (
-            <>
-              <button
-                style={actionBtnStyle}
-                onClick={(e) => { e.stopPropagation(); setPickerMode('defer'); }}
-                data-testid={`priority-defer-${item.id}`}
-              >
-                ⏱ Defer
-              </button>
-              <button
-                style={actionBtnStyle}
-                onClick={(e) => { e.stopPropagation(); setPickerMode('assign'); }}
-                data-testid={`priority-assign-${item.id}`}
-              >
-                → Assign
-              </button>
-              <button
-                style={actionBtnStyle}
-                onClick={handleFlagClick}
-                data-testid={`priority-flag-${item.id}`}
-              >
-                🚩 Flag
-              </button>
-              <div style={{ flex: 1 }} />
-              <button
-                style={actionBtnStyle}
-                onClick={handleDetailsClick}
-                data-testid={`priority-details-${item.id}`}
-              >
-                Details <ChevronRight size={12} />
-              </button>
-            </>
-          )}
+      {/* Action row — always visible */}
+      <div style={actionRowStyle}>
+        {pickerMode === 'default' && (
+          <>
+            <button
+              style={actionBtnStyle}
+              onClick={(e) => { e.stopPropagation(); setPickerMode('defer'); }}
+              data-testid={`priority-defer-${item.id}`}
+            >
+              ⏱ Defer
+            </button>
+            <button
+              style={actionBtnStyle}
+              onClick={(e) => { e.stopPropagation(); setPickerMode('assign'); }}
+              data-testid={`priority-assign-${item.id}`}
+            >
+              → Assign
+            </button>
+            <button
+              style={actionBtnStyle}
+              onClick={handleFlagClick}
+              data-testid={`priority-flag-${item.id}`}
+            >
+              🚩 Flag
+            </button>
+          </>
+        )}
 
-          {pickerMode === 'defer' && (
-            <>
-              {DEFER_OPTIONS.map((option) => (
-                <button
-                  key={option}
-                  style={actionBtnStyle}
-                  onClick={(e) => { e.stopPropagation(); handleDeferSelect(); }}
-                  data-testid={`priority-defer-option-${option}`}
-                >
-                  {option}
-                </button>
-              ))}
+        {pickerMode === 'defer' && (
+          <>
+            {DEFER_OPTIONS.map((option) => (
               <button
-                style={cancelBtnStyle}
-                onClick={(e) => { e.stopPropagation(); setPickerMode('default'); }}
+                key={option}
+                style={actionBtnStyle}
+                onClick={(e) => { e.stopPropagation(); handleDeferSelect(); }}
+                data-testid={`priority-defer-option-${option}`}
               >
-                Cancel
+                {option}
               </button>
-            </>
-          )}
+            ))}
+            <button
+              style={cancelBtnStyle}
+              onClick={(e) => { e.stopPropagation(); setPickerMode('default'); }}
+            >
+              Cancel
+            </button>
+          </>
+        )}
 
-          {pickerMode === 'assign' && (
-            <>
-              {ASSIGN_OPTIONS.map((option) => (
-                <button
-                  key={option}
-                  style={actionBtnStyle}
-                  onClick={(e) => { e.stopPropagation(); handleAssignSelect(); }}
-                  data-testid={`priority-assign-option-${option}`}
-                >
-                  {option}
-                </button>
-              ))}
+        {pickerMode === 'assign' && (
+          <>
+            {ASSIGN_OPTIONS.map((option) => (
               <button
-                style={cancelBtnStyle}
-                onClick={(e) => { e.stopPropagation(); setPickerMode('default'); }}
+                key={option}
+                style={actionBtnStyle}
+                onClick={(e) => { e.stopPropagation(); handleAssignSelect(); }}
+                data-testid={`priority-assign-option-${option}`}
               >
-                Cancel
+                {option}
               </button>
-            </>
-          )}
-        </div>
+            ))}
+            <button
+              style={cancelBtnStyle}
+              onClick={(e) => { e.stopPropagation(); setPickerMode('default'); }}
+            >
+              Cancel
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
