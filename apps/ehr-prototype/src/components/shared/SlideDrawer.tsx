@@ -3,6 +3,12 @@
  *
  * Reusable slide-in drawer with view stack navigation.
  * Used by population health workspace; encounter detail pane can adopt later.
+ *
+ * Features:
+ * - No scrim overlay — elevation-only separation (transparent click-catcher for dismiss)
+ * - Glass header with 44px buttons + gradient blur fade
+ * - Optional sticky footer slot with inverted gradient blur
+ * - Named width variants: narrow (360px), standard (45%), wide (55%)
  */
 
 import React, { useEffect, useCallback } from 'react';
@@ -15,18 +21,31 @@ import {
   transitions,
   borderRadius,
   zIndex as zIndexTokens,
+  glass,
+  GLASS_BUTTON_HEIGHT,
+  GLASS_BUTTON_RADIUS,
 } from '../../styles/foundations';
 
 // ============================================================================
 // Types
 // ============================================================================
 
+export type DrawerSize = 'narrow' | 'standard' | 'wide';
+
+const SIZE_MAP: Record<DrawerSize, string> = {
+  narrow: '360px',
+  standard: '45%',
+  wide: '55%',
+};
+
 export interface SlideDrawerProps {
   /** Whether the drawer is open */
   open: boolean;
   /** Called when the drawer should close */
   onClose: () => void;
-  /** Drawer width (number = px, string = CSS value). Default ~45% */
+  /** Named width variant. Default 'standard' */
+  size?: DrawerSize;
+  /** Drawer width (number = px, string = CSS value). Overrides `size` if provided. */
   width?: number | string;
   /** Slide-in direction. Default 'right' */
   position?: 'right' | 'left';
@@ -38,8 +57,8 @@ export interface SlideDrawerProps {
   showBack?: boolean;
   /** Called when back button is clicked */
   onBack?: () => void;
-  /** Dim content behind drawer. Default true */
-  overlayDim?: boolean;
+  /** Optional sticky footer content (action bar) */
+  footer?: React.ReactNode;
   /** Test ID */
   testID?: string;
 }
@@ -51,13 +70,14 @@ export interface SlideDrawerProps {
 export const SlideDrawer: React.FC<SlideDrawerProps> = ({
   open,
   onClose,
-  width = '45%',
+  size = 'standard',
+  width,
   position = 'right',
   children,
   header,
   showBack = false,
   onBack,
-  overlayDim = true,
+  footer,
   testID,
 }) => {
   // Escape key dismisses
@@ -75,13 +95,16 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  const widthValue = typeof width === 'number' ? `${width}px` : width;
+  // Width resolution: explicit width prop > size variant
+  const resolvedWidth = width != null
+    ? (typeof width === 'number' ? `${width}px` : width)
+    : SIZE_MAP[size];
 
   const overlayStyle: React.CSSProperties = {
     position: 'absolute',
     inset: 0,
     zIndex: zIndexTokens.modal - 1,
-    backgroundColor: overlayDim ? 'rgba(0, 0, 0, 0.15)' : 'transparent',
+    backgroundColor: 'transparent',
     opacity: open ? 1 : 0,
     pointerEvents: open ? 'auto' : 'none',
     transition: `opacity ${transitions.base}`,
@@ -92,7 +115,7 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
     top: 0,
     bottom: 0,
     [position]: 0,
-    width: widthValue,
+    width: resolvedWidth,
     maxWidth: '90%',
     backgroundColor: colors.bg.neutral.base,
     borderLeft: position === 'right' ? `1px solid ${colors.border.neutral.low}` : 'none',
@@ -106,17 +129,31 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
         ? 'translateX(100%)'
         : 'translateX(-100%)',
     transition: `transform ${transitions.base}`,
-    boxShadow: open ? '-4px 0 16px rgba(0, 0, 0, 0.08)' : 'none',
+    boxShadow: open ? '-8px 0 24px rgba(0, 0, 0, 0.12)' : 'none',
   };
 
   const headerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     gap: spaceBetween.related,
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    borderBottom: `1px solid ${colors.border.neutral.low}`,
+    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
     flexShrink: 0,
-    minHeight: 48,
+    minHeight: 60,
+    position: 'relative',
+    backdropFilter: 'blur(32px)',
+    WebkitBackdropFilter: 'blur(32px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  };
+
+  const headerFadeStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -16,
+    height: 16,
+    background: 'linear-gradient(to bottom, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 40%, transparent 100%)',
+    pointerEvents: 'none',
+    zIndex: 1,
   };
 
   const headerContentStyle: React.CSSProperties = {
@@ -126,23 +163,18 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
     minWidth: 0,
   };
 
-  const closeButtonStyle: React.CSSProperties = {
+  const glassButtonStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: 32,
-    height: 32,
-    border: 'none',
-    borderRadius: borderRadius.sm,
-    backgroundColor: 'transparent',
+    width: GLASS_BUTTON_HEIGHT,
+    height: GLASS_BUTTON_HEIGHT,
+    borderRadius: GLASS_BUTTON_RADIUS,
     cursor: 'pointer',
     color: colors.fg.neutral.secondary,
     flexShrink: 0,
     transition: `background-color ${transitions.fast}`,
-  };
-
-  const backButtonStyle: React.CSSProperties = {
-    ...closeButtonStyle,
+    ...glass.button,
   };
 
   const bodyStyle: React.CSSProperties = {
@@ -150,9 +182,31 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
     overflow: 'auto',
   };
 
+  const footerContainerStyle: React.CSSProperties = {
+    flexShrink: 0,
+    position: 'relative',
+    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
+    backdropFilter: 'blur(32px)',
+    WebkitBackdropFilter: 'blur(32px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+  };
+
+  const footerFadeStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: -16,
+    height: 16,
+    background: 'linear-gradient(to top, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.3) 40%, transparent 100%)',
+    pointerEvents: 'none',
+  };
+
   return (
     <>
-      {/* Overlay */}
+      {/* Transparent click-catcher (no scrim) */}
       <div
         style={overlayStyle}
         onClick={onClose}
@@ -167,13 +221,13 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
         aria-modal="true"
         data-testid={testID}
       >
-        {/* Header */}
+        {/* Glass header with gradient fade */}
         {(header || showBack) && (
           <div style={headerStyle}>
             {showBack && (
               <button
                 type="button"
-                style={backButtonStyle}
+                style={glassButtonStyle}
                 onClick={onBack}
                 aria-label="Go back"
               >
@@ -185,12 +239,14 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
             </div>
             <button
               type="button"
-              style={closeButtonStyle}
+              style={glassButtonStyle}
               onClick={onClose}
               aria-label="Close drawer"
             >
               <X size={18} />
             </button>
+            {/* Gradient blur fade below header */}
+            <div style={headerFadeStyle} />
           </div>
         )}
 
@@ -198,6 +254,15 @@ export const SlideDrawer: React.FC<SlideDrawerProps> = ({
         <div style={bodyStyle}>
           {children}
         </div>
+
+        {/* Sticky footer slot */}
+        {footer && (
+          <div style={footerContainerStyle}>
+            {/* Gradient blur fade above footer */}
+            <div style={footerFadeStyle} />
+            {footer}
+          </div>
+        )}
       </div>
     </>
   );

@@ -6,6 +6,7 @@
  *
  * Renders the FilterBar as a sticky row below the floating nav,
  * and a SlideDrawer for node detail, patient preview, or filter views.
+ * Priority detail gets its own wide SlideDrawer (with sticky footer).
  */
 
 import React from 'react';
@@ -17,6 +18,7 @@ import { FilterBar } from '../../components/population-health/FilterBar';
 import { SlideDrawer } from '../../components/shared/SlideDrawer';
 import { NodeDetailView } from '../../components/population-health/NodeDetailView';
 import { PatientPreviewView } from '../../components/population-health/PatientPreviewView';
+import { PriorityDetailView } from '../../components/population-health/PriorityDetailView';
 import { colors, typography } from '../../styles/foundations';
 
 // ============================================================================
@@ -25,6 +27,8 @@ import { colors, typography } from '../../styles/foundations';
 
 export const PopHealthCanvas: React.FC = () => {
   const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
+
+  const isPriorityDetail = currentDrawerView?.type === 'priority-detail';
 
   const containerStyle: React.CSSProperties = {
     position: 'relative',
@@ -44,14 +48,14 @@ export const PopHealthCanvas: React.FC = () => {
       {state.activeView === 'flow' && <FlowCanvas />}
       {state.activeView === 'table' && <TableView />}
 
-      {/* Detail drawer — node detail, patient preview, or filter controls */}
+      {/* Standard drawer — node detail, patient preview, filter, dimension detail */}
       <SlideDrawer
-        open={isDrawerOpen}
+        open={isDrawerOpen && !isPriorityDetail}
         onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
         showBack={canDrawerGoBack}
         onBack={() => dispatch({ type: 'DRAWER_BACK' })}
         header={
-          currentDrawerView ? (
+          currentDrawerView && !isPriorityDetail ? (
             <span style={{
               fontSize: 14,
               fontWeight: 600,
@@ -78,6 +82,17 @@ export const PopHealthCanvas: React.FC = () => {
           <FilterDrawerPlaceholder />
         )}
       </SlideDrawer>
+
+      {/* Priority detail drawer — wide, with sticky footer */}
+      {isPriorityDetail && currentDrawerView.type === 'priority-detail' && (
+        <PriorityDetailView
+          priorityItemId={currentDrawerView.priorityItemId}
+          open={isDrawerOpen}
+          onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
+          showBack={canDrawerGoBack}
+          onBack={canDrawerGoBack ? () => dispatch({ type: 'DRAWER_BACK' }) : undefined}
+        />
+      )}
     </div>
   );
 };

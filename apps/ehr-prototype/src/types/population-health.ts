@@ -428,11 +428,14 @@ export interface PriorityItem {
   patientStatus: PathwayPatientStatus;
   isAssigned: boolean;
   isStale: boolean;
+  /** AI reasoning for REVIEW items — mock text explaining why this needs human review */
+  aiReasoning?: string;
 }
 
 export type DrawerView =
   | { type: 'node-detail'; nodeId: string }
   | { type: 'patient-preview'; patientId: string }
+  | { type: 'priority-detail'; priorityItemId: string }
   | { type: 'filter' }
   | { type: 'dimension-detail'; dimensionId: string; axis: string };
 

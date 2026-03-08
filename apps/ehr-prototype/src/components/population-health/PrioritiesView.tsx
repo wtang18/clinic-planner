@@ -125,8 +125,8 @@ export const PrioritiesView: React.FC = () => {
     setRemovedIds((prev) => new Set(prev).add(id));
   }, []);
 
-  const handleDetails = useCallback((patientId: string) => {
-    dispatch({ type: 'DRAWER_OPENED', view: { type: 'patient-preview', patientId } });
+  const handleDetails = useCallback((itemId: string) => {
+    dispatch({ type: 'DRAWER_OPENED', view: { type: 'priority-detail', priorityItemId: itemId } });
   }, [dispatch]);
 
   // ---- Render helpers ----
@@ -141,7 +141,7 @@ export const PrioritiesView: React.FC = () => {
       onFlag={() => handleFlag(item.id)}
       onDefer={() => handleRemoveCard(item.id)}
       onAssign={() => handleRemoveCard(item.id)}
-      onDetails={() => handleDetails(item.patientId)}
+      onDetails={() => handleDetails(item.id)}
     />
   ), [checkedIds, flaggedIds, handleCheck, handleFlag, handleRemoveCard, handleDetails]);
 

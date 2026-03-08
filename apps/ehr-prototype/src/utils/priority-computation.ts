@@ -32,6 +32,16 @@ const EXCLUDED_NODE_TYPES: Set<NodeType> = new Set([
 /** Default stale threshold when node has no avgDaysInStage */
 const DEFAULT_STALE_THRESHOLD_DAYS = 14;
 
+/** Mock AI reasoning text for REVIEW-badge items, keyed by pathway */
+const AI_REASONING_BY_PATHWAY: Record<string, string> = {
+  'pw-diabetes-a1c':
+    'Patient\'s A1c has increased from 7.2% to 8.1% over the past two quarters despite current metformin regimen. Recommend reviewing medication titration or adding a second-line agent. Adherence data suggests possible compliance gaps — patient missed two refill windows.',
+  'pw-colon-screening':
+    'Colonoscopy is overdue by 8 months based on age-appropriate screening guidelines. Patient has family history of colorectal cancer (first-degree relative). Risk stratification suggests this should be prioritized over routine scheduling.',
+  'pw-post-discharge':
+    'Medication reconciliation shows a potential gap: discharge summary lists amlodipine 10mg but pharmacy records show the prescription was never filled. Patient has two follow-up appointments missed since discharge. Readmission risk score is elevated.',
+};
+
 /** Stale multiplier — patient is stale if daysAtStage > multiplier × avgDaysInStage */
 const STALE_MULTIPLIER = 2;
 
@@ -215,6 +225,11 @@ export function derivePriorityItems(
       const badge = assignBadge(assignment, node, hasEscalation, stale, patient.riskTier);
       const contextLine = buildContextLine(patient, node, pathway);
 
+      // AI reasoning for REVIEW items — canned mock text per pathway
+      const aiReasoning = badge === 'REVIEW'
+        ? AI_REASONING_BY_PATHWAY[pathway.id]
+        : undefined;
+
       items.push({
         id: `${patient.patientId}::${node.id}`,
         patientName: patient.name,
@@ -232,6 +247,7 @@ export function derivePriorityItems(
         patientStatus: assignment.status,
         isAssigned,
         isStale: stale,
+        aiReasoning,
       });
     }
   }
