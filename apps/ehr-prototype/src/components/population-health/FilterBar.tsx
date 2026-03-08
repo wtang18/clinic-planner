@@ -13,7 +13,7 @@ import { X } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { DEFAULT_PATHWAY_FILTERS } from '../../data/mock-population-health';
 import type { PopHealthFilter, NodeLifecycleState } from '../../types/population-health';
-import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT, glass } from '../../styles/foundations';
 
 // ============================================================================
 // Lifecycle Toggle
@@ -193,6 +193,7 @@ const barStyles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap',
     // Positioned as sticky row within canvas pane, clearing the floating nav
     paddingTop: LAYOUT.headerHeight + spaceAround.tight,
+    ...glass.floating,
   },
   toggleGroup: {
     display: 'flex',

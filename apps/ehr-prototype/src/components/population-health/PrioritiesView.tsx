@@ -13,7 +13,7 @@ import { PATHWAYS, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS } from '../..
 import { derivePriorityItems, computePriorityQueue } from '../../utils/priority-computation';
 import { PriorityCard } from './PriorityCard';
 import { SegmentedControl } from '../primitives/SegmentedControl';
-import { colors, typography, spaceAround, transitions, LAYOUT } from '../../styles/foundations';
+import { colors, typography, spaceAround, transitions, LAYOUT, glass } from '../../styles/foundations';
 import type { PrioritySortMode, PriorityItem } from '../../types/population-health';
 
 // ============================================================================
@@ -79,18 +79,24 @@ export const PrioritiesView: React.FC = () => {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    overflow: 'hidden',
+    overflow: 'auto',
     opacity: visible ? 1 : 0,
     transition: `opacity ${transitions.base}`,
   };
 
-  const headerStyle: React.CSSProperties = {
+  const barStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
     paddingTop: LAYOUT.headerHeight + spaceAround.tight,
+    paddingBottom: spaceAround.tight,
+    paddingLeft: spaceAround.default,
+    paddingRight: spaceAround.default,
+    position: 'sticky',
+    top: 0,
+    zIndex: 2,
     flexShrink: 0,
+    ...glass.floating,
   };
 
   const countStyle: React.CSSProperties = {
@@ -100,8 +106,6 @@ export const PrioritiesView: React.FC = () => {
   };
 
   const listStyle: React.CSSProperties = {
-    flex: 1,
-    overflow: 'auto',
     padding: `0 ${spaceAround.default}px ${spaceAround.default}px`,
     display: 'flex',
     flexDirection: 'column',
@@ -147,7 +151,7 @@ export const PrioritiesView: React.FC = () => {
   if (sortedItems.length === 0) {
     return (
       <div style={containerStyle} data-testid="priorities-view">
-        <div style={headerStyle}>
+        <div style={barStyle}>
           <SegmentedControl
             segments={SORT_SEGMENTS}
             value={sortMode}
@@ -177,7 +181,7 @@ export const PrioritiesView: React.FC = () => {
   if (groupedByNode) {
     return (
       <div style={containerStyle} data-testid="priorities-view">
-        <div style={headerStyle}>
+        <div style={barStyle}>
           <SegmentedControl
             segments={SORT_SEGMENTS}
             value={sortMode}
@@ -206,7 +210,7 @@ export const PrioritiesView: React.FC = () => {
   // ---- Flat rendering (urgency / by-date modes) ----
   return (
     <div style={containerStyle} data-testid="priorities-view">
-      <div style={headerStyle}>
+      <div style={barStyle}>
         <SegmentedControl
           segments={SORT_SEGMENTS}
           value={sortMode}

@@ -14,7 +14,7 @@ import {
   PATHWAYS,
 } from '../../data/mock-population-health';
 import type { PathwayPatient } from '../../types/population-health';
-import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions, LAYOUT } from '../../styles/foundations';
+import { colors, spaceAround, spaceBetween, typography, borderRadius, transitions } from '../../styles/foundations';
 
 // ============================================================================
 // Column Definitions
@@ -273,7 +273,6 @@ const tableStyles: Record<string, React.CSSProperties> = {
   scrollContainer: {
     flex: 1,
     overflow: 'auto',
-    paddingTop: LAYOUT.headerHeight,
   },
   table: {
     width: '100%',

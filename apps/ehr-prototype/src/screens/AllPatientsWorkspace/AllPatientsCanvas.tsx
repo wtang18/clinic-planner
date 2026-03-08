@@ -275,9 +275,7 @@ const DimensionFilterChips: React.FC = () => {
       left: 0,
       right: 0,
       zIndex: 5,
-      backgroundColor: 'transparent',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      ...glass.floating,
     }}>
       {chips.map((chip) => (
         <button

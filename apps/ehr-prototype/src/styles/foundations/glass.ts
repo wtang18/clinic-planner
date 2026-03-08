@@ -12,9 +12,9 @@ export const GLASS_BUTTON_RADIUS = 22; // Half of height for perfect circle
 export const glass = {
   // Floating layer - higher elevation glassmorphic panels (menu pane, nav row)
   floating: {
-    backgroundColor: 'rgba(255, 255, 255, 0.72)',
-    backdropFilter: 'blur(20px)',
-    WebkitBackdropFilter: 'blur(20px)',
+    backgroundColor: 'rgba(255, 255, 255, 0.38)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     borderBottom: '1px solid rgba(255, 255, 255, 0.18)',
   },
   floatingPanel: {

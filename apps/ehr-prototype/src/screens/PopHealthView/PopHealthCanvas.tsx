@@ -36,8 +36,8 @@ export const PopHealthCanvas: React.FC = () => {
 
   return (
     <div style={containerStyle} data-testid="pop-health-canvas">
-      {/* Sticky filter row — lifecycle toggles + chips, clears floating nav */}
-      <FilterBar />
+      {/* Sticky filter row — lifecycle toggles + chips, only for flow/table views */}
+      {state.activeView !== 'priorities' && <FilterBar />}
 
       {/* Main canvas area */}
       {state.activeView === 'priorities' && <PrioritiesView />}

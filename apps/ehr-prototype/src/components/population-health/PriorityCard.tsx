@@ -6,9 +6,9 @@
  * pathway name, and context line. Follows CohortCard inline styling pattern.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Clock } from 'lucide-react';
-import { colors, typography, spaceAround, borderRadius, transitions } from '../../styles/foundations';
+import { colors, typography, spaceAround, borderRadius } from '../../styles/foundations';
 import type { PriorityItem, PriorityBadge } from '../../types/population-health';
 
 // ============================================================================
@@ -31,7 +31,6 @@ interface PriorityCardProps {
 }
 
 export const PriorityCard: React.FC<PriorityCardProps> = ({ item }) => {
-  const [hovered, setHovered] = useState(false);
   const badgeColor = BADGE_COLORS[item.badge];
 
   const cardStyle: React.CSSProperties = {
@@ -39,11 +38,9 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({ item }) => {
     flexDirection: 'column',
     gap: 4,
     padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    borderRadius: borderRadius.lg,
-    background: hovered ? colors.bg.neutral.low : 'transparent',
+    borderRadius: borderRadius.sm,
     border: `1px solid ${colors.border.neutral.low}`,
     cursor: 'default',
-    transition: `background ${transitions.fast}`,
   };
 
   const row1Style: React.CSSProperties = {
@@ -122,8 +119,6 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({ item }) => {
   return (
     <div
       style={cardStyle}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       data-testid={`priority-card-${item.id}`}
     >
       {/* Row 1: checkbox placeholder + name + badge + days + escalation */}
