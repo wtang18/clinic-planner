@@ -3,12 +3,17 @@
  *
  * Compact card for a single PriorityItem in the Priorities View.
  * Action row is always visible (no expand/collapse). Clicking the card
- * opens the patient-preview drawer. Inline pickers for defer/assign
+ * opens the priority-detail drawer. Inline pickers for defer/assign
  * allow quick triage without leaving the list.
+ *
+ * PV4 additions:
+ * - `batchMode`: When true, shows checkbox. When false, no checkbox (more compact).
+ * - `readOnly`: When true, hides defer/flag actions, shows responsibility indicator,
+ *   uses subtle background. Assign + Details still work for reassignment/audit.
  */
 
 import React, { useState, useCallback } from 'react';
-import { Clock, Check, ChevronRight } from 'lucide-react';
+import { Clock, Check } from 'lucide-react';
 import { colors, typography, spaceAround, borderRadius, transitions, glass } from '../../styles/foundations';
 import type { PriorityItem, PriorityBadge } from '../../types/population-health';
 
@@ -21,6 +26,15 @@ const BADGE_COLORS: Record<PriorityBadge, { bg: string; fg: string }> = {
   REVIEW: { bg: colors.bg.attention.low, fg: colors.fg.attention.primary },
   ACTION: { bg: colors.bg.accent.low, fg: colors.fg.accent.primary },
   MONITOR: { bg: colors.bg.neutral.low, fg: colors.fg.neutral.secondary },
+};
+
+// ============================================================================
+// Responsibility Labels
+// ============================================================================
+
+const RESPONSIBILITY_LABELS: Record<string, string> = {
+  ai: 'AI handling',
+  team: 'Assigned to team',
 };
 
 // ============================================================================
@@ -40,6 +54,8 @@ interface PriorityCardProps {
   item: PriorityItem;
   checked?: boolean;
   flagged?: boolean;
+  batchMode?: boolean;
+  readOnly?: boolean;
   onCheck?: () => void;
   onFlag?: () => void;
   onDefer?: () => void;
@@ -51,6 +67,8 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
   item,
   checked = false,
   flagged = false,
+  batchMode = false,
+  readOnly = false,
   onCheck,
   onFlag,
   onDefer,
@@ -79,6 +97,9 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     onFlag?.();
   }, [onFlag]);
 
+  // Left padding for rows 2-4 — aligns with name text after checkbox
+  const contentIndent = batchMode ? 24 : 0;
+
   // ---- Styles ----
 
   const cardStyle: React.CSSProperties = {
@@ -89,7 +110,9 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     borderRadius: borderRadius.sm,
     border: `1px solid ${colors.border.neutral.low}`,
     cursor: 'pointer',
-    background: hovered ? 'rgba(0,0,0,0.03)' : 'transparent',
+    background: readOnly
+      ? (hovered ? 'rgba(0,0,0,0.04)' : colors.bg.neutral.subtle)
+      : (hovered ? 'rgba(0,0,0,0.03)' : 'transparent'),
     transition: `background ${transitions.fast}`,
   };
 
@@ -119,7 +142,7 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     fontSize: 14,
     fontWeight: typography.fontWeight.semibold,
     fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.primary,
+    color: readOnly ? colors.fg.neutral.secondary : colors.fg.neutral.primary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -131,7 +154,9 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     gap: 3,
     fontSize: 12,
     fontFamily: typography.fontFamily.sans,
-    color: item.isStale ? colors.fg.attention.primary : colors.fg.neutral.secondary,
+    color: readOnly
+      ? colors.fg.neutral.secondary
+      : (item.isStale ? colors.fg.attention.primary : colors.fg.neutral.secondary),
     flexShrink: 0,
   };
 
@@ -158,7 +183,7 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     fontWeight: typography.fontWeight.medium,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.secondary,
-    paddingLeft: 24, // align with name (16px circle + 8px gap)
+    paddingLeft: contentIndent,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -167,8 +192,8 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
   const row3Style: React.CSSProperties = {
     fontSize: 12,
     fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.spotReadable,
-    paddingLeft: 24,
+    color: readOnly ? colors.fg.neutral.secondary : colors.fg.neutral.spotReadable,
+    paddingLeft: contentIndent,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -179,7 +204,7 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     alignItems: 'center',
     gap: 6,
     paddingTop: 4,
-    paddingLeft: 24,
+    paddingLeft: contentIndent,
   };
 
   const actionBtnStyle: React.CSSProperties = {
@@ -204,6 +229,11 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     color: colors.fg.neutral.secondary,
   };
 
+  // ---- Row 2 content: responsibility indicator for read-only, node label otherwise ----
+  const row2Content = readOnly
+    ? (RESPONSIBILITY_LABELS[item.responsibility] ?? item.nodeLabel)
+    : item.nodeLabel;
+
   return (
     <div
       style={cardStyle}
@@ -212,16 +242,18 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
       onMouseLeave={() => setHovered(false)}
       onClick={onDetails}
     >
-      {/* Row 1: checkbox + name + days + markers + badge (right-anchored) */}
+      {/* Row 1: [checkbox if batchMode] + name + days + markers + badge */}
       <div style={row1Style}>
-        <button
-          style={checkboxStyle}
-          onClick={handleCheckClick}
-          aria-label={checked ? 'Uncheck item' : 'Check item'}
-          data-testid={`priority-checkbox-${item.id}`}
-        >
-          {checked && <Check size={10} color={colors.fg.neutral.inversePrimary} strokeWidth={3} />}
-        </button>
+        {batchMode && (
+          <button
+            style={checkboxStyle}
+            onClick={handleCheckClick}
+            aria-label={checked ? 'Uncheck item' : 'Check item'}
+            data-testid={`priority-checkbox-${item.id}`}
+          >
+            {checked && <Check size={10} color={colors.fg.neutral.inversePrimary} strokeWidth={3} />}
+          </button>
+        )}
         <span style={nameStyle}>{item.patientName}</span>
         <span style={daysStyle}>
           {item.isStale && <Clock size={12} />}
@@ -232,23 +264,17 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
         <span style={badgeStyle}>{item.badge}</span>
       </div>
 
-      {/* Row 2: node action label (what to do) */}
-      <div style={row2Style}>{item.nodeLabel}</div>
+      {/* Row 2: responsibility indicator (read-only) or node action label */}
+      <div style={row2Style}>{row2Content}</div>
 
       {/* Row 3: context line (clinical detail) */}
       {item.contextLine && <div style={row3Style}>{item.contextLine}</div>}
 
-      {/* Action row — always visible */}
+      {/* Action row */}
       <div style={actionRowStyle}>
-        {pickerMode === 'default' && (
+        {readOnly ? (
+          /* Read-only: only Assign (reassign) and Details remain */
           <>
-            <button
-              style={actionBtnStyle}
-              onClick={(e) => { e.stopPropagation(); setPickerMode('defer'); }}
-              data-testid={`priority-defer-${item.id}`}
-            >
-              ⏱ Defer
-            </button>
             <button
               style={actionBtnStyle}
               onClick={(e) => { e.stopPropagation(); setPickerMode('assign'); }}
@@ -256,24 +282,68 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
             >
               → Assign
             </button>
-            <button
-              style={actionBtnStyle}
-              onClick={handleFlagClick}
-              data-testid={`priority-flag-${item.id}`}
-            >
-              🚩 Flag
-            </button>
+          </>
+        ) : (
+          /* Full action row for "mine" items */
+          <>
+            {pickerMode === 'default' && (
+              <>
+                <button
+                  style={actionBtnStyle}
+                  onClick={(e) => { e.stopPropagation(); setPickerMode('defer'); }}
+                  data-testid={`priority-defer-${item.id}`}
+                >
+                  ⏱ Defer
+                </button>
+                <button
+                  style={actionBtnStyle}
+                  onClick={(e) => { e.stopPropagation(); setPickerMode('assign'); }}
+                  data-testid={`priority-assign-${item.id}`}
+                >
+                  → Assign
+                </button>
+                <button
+                  style={actionBtnStyle}
+                  onClick={handleFlagClick}
+                  data-testid={`priority-flag-${item.id}`}
+                >
+                  🚩 Flag
+                </button>
+              </>
+            )}
+
+            {pickerMode === 'defer' && (
+              <>
+                {DEFER_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    style={actionBtnStyle}
+                    onClick={(e) => { e.stopPropagation(); handleDeferSelect(); }}
+                    data-testid={`priority-defer-option-${option}`}
+                  >
+                    {option}
+                  </button>
+                ))}
+                <button
+                  style={cancelBtnStyle}
+                  onClick={(e) => { e.stopPropagation(); setPickerMode('default'); }}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
           </>
         )}
 
-        {pickerMode === 'defer' && (
+        {/* Assign picker — works for both readOnly and mine */}
+        {pickerMode === 'assign' && !readOnly && (
           <>
-            {DEFER_OPTIONS.map((option) => (
+            {ASSIGN_OPTIONS.map((option) => (
               <button
                 key={option}
                 style={actionBtnStyle}
-                onClick={(e) => { e.stopPropagation(); handleDeferSelect(); }}
-                data-testid={`priority-defer-option-${option}`}
+                onClick={(e) => { e.stopPropagation(); handleAssignSelect(); }}
+                data-testid={`priority-assign-option-${option}`}
               >
                 {option}
               </button>
@@ -287,7 +357,8 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
           </>
         )}
 
-        {pickerMode === 'assign' && (
+        {/* Read-only assign picker */}
+        {pickerMode === 'assign' && readOnly && (
           <>
             {ASSIGN_OPTIONS.map((option) => (
               <button

@@ -410,6 +410,8 @@ export type PriorityBadge = 'URGENT' | 'REVIEW' | 'ACTION' | 'MONITOR';
 
 export type PrioritySortMode = 'urgency' | 'by-node' | 'by-date';
 
+export type Responsibility = 'mine' | 'team' | 'ai';
+
 export interface PriorityItem {
   /** Composite key: `${patientId}::${nodeId}` */
   id: string;
@@ -430,6 +432,8 @@ export interface PriorityItem {
   isStale: boolean;
   /** AI reasoning for REVIEW items — mock text explaining why this needs human review */
   aiReasoning?: string;
+  /** Who is responsible for acting on this item */
+  responsibility: Responsibility;
 }
 
 export type DrawerView =

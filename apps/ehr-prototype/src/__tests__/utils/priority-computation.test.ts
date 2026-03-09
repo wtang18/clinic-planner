@@ -13,6 +13,9 @@ import {
   isStaleAtNode,
   badgeWeight,
   buildContextLine,
+  deriveResponsibility,
+  groupBySection,
+  computeResponsibilityCounts,
 } from '../../utils/priority-computation';
 import type {
   Pathway,
@@ -388,6 +391,7 @@ describe('derivePriorityItems', () => {
     expect(item.patientStatus).toBe('active');
     expect(typeof item.contextLine).toBe('string');
     expect(typeof item.isStale).toBe('boolean');
+    expect(['mine', 'team', 'ai']).toContain(item.responsibility);
   });
 
   it('returns empty array when no patients', () => {
@@ -425,6 +429,7 @@ describe('computePriorityQueue', () => {
       patientStatus: 'active',
       isAssigned: false,
       isStale: false,
+      responsibility: 'mine',
       ...overrides,
     };
   }
@@ -518,5 +523,205 @@ describe('computePriorityQueue', () => {
       expect(computePriorityQueue([], [], 'urgency')).toEqual([]);
       expect(computePriorityQueue([], ['n1'], 'by-node')).toEqual([]);
     });
+  });
+});
+
+// ============================================================================
+// deriveResponsibility
+// ============================================================================
+
+describe('deriveResponsibility', () => {
+  it('returns "mine" for assigned-to-current-provider with URGENT badge', () => {
+    const node = makeNode({ id: 'n1', type: 'action', assignedProviderId: 'prov-current' });
+    expect(deriveResponsibility('URGENT', node)).toBe('mine');
+  });
+
+  it('returns "mine" for assigned-to-current-provider with REVIEW badge', () => {
+    const node = makeNode({ id: 'n1', type: 'action', assignedProviderId: 'prov-current' });
+    expect(deriveResponsibility('REVIEW', node)).toBe('mine');
+  });
+
+  it('returns "mine" for assigned-to-current-provider with ACTION badge', () => {
+    const node = makeNode({ id: 'n1', type: 'action', assignedProviderId: 'prov-current' });
+    expect(deriveResponsibility('ACTION', node)).toBe('mine');
+  });
+
+  it('returns "ai" for MONITOR badge at wait-monitor node', () => {
+    const node = makeNode({ id: 'n1', type: 'wait-monitor' });
+    expect(deriveResponsibility('MONITOR', node)).toBe('ai');
+  });
+
+  it('returns "ai" for MONITOR at wait-monitor even if assigned to current', () => {
+    const node = makeNode({ id: 'n1', type: 'wait-monitor', assignedProviderId: 'prov-current' });
+    expect(deriveResponsibility('MONITOR', node)).toBe('ai');
+  });
+
+  it('returns "team" for nodes assigned to another provider', () => {
+    const node = makeNode({ id: 'n1', type: 'action', assignedProviderId: 'prov-ma-chen' });
+    expect(deriveResponsibility('ACTION', node)).toBe('team');
+  });
+
+  it('returns "team" for MONITOR at non-wait-monitor node assigned to other', () => {
+    const node = makeNode({ id: 'n1', type: 'action', assignedProviderId: 'prov-ma-chen' });
+    expect(deriveResponsibility('MONITOR', node)).toBe('team');
+  });
+
+  it('returns "mine" for unassigned nodes (fallback)', () => {
+    const node = makeNode({ id: 'n1', type: 'action' });
+    expect(deriveResponsibility('ACTION', node)).toBe('mine');
+  });
+
+  it('returns "mine" for MONITOR at non-wait-monitor unassigned node', () => {
+    const node = makeNode({ id: 'n1', type: 'action' });
+    expect(deriveResponsibility('MONITOR', node)).toBe('mine');
+  });
+});
+
+// ============================================================================
+// groupBySection
+// ============================================================================
+
+describe('groupBySection', () => {
+  function makeItem(overrides: Partial<PriorityItem> & { id: string }): PriorityItem {
+    return {
+      patientName: overrides.id,
+      patientId: overrides.id,
+      badge: 'ACTION',
+      nodeId: 'n1',
+      nodeLabel: 'Node',
+      pathwayId: 'pw-test',
+      pathwayName: 'Test',
+      daysAtStage: 5,
+      contextLine: '',
+      isEscalated: false,
+      riskTier: 'stable',
+      patientStatus: 'active',
+      isAssigned: false,
+      isStale: false,
+      responsibility: 'mine',
+      ...overrides,
+    };
+  }
+
+  describe('urgency mode', () => {
+    it('groups by badge in fixed order', () => {
+      const items = [
+        makeItem({ id: 'a', badge: 'MONITOR' }),
+        makeItem({ id: 'b', badge: 'URGENT' }),
+        makeItem({ id: 'c', badge: 'ACTION' }),
+        makeItem({ id: 'd', badge: 'REVIEW' }),
+      ];
+      const groups = groupBySection(items, 'urgency');
+      const keys = Array.from(groups.keys());
+      expect(keys).toEqual(['URGENT', 'REVIEW', 'ACTION', 'MONITOR']);
+    });
+
+    it('omits empty badge groups', () => {
+      const items = [
+        makeItem({ id: 'a', badge: 'ACTION' }),
+        makeItem({ id: 'b', badge: 'MONITOR' }),
+      ];
+      const groups = groupBySection(items, 'urgency');
+      expect(Array.from(groups.keys())).toEqual(['ACTION', 'MONITOR']);
+    });
+
+    it('returns empty map for no items', () => {
+      const groups = groupBySection([], 'urgency');
+      expect(groups.size).toBe(0);
+    });
+  });
+
+  describe('by-node mode', () => {
+    it('groups by nodeLabel', () => {
+      const items = [
+        makeItem({ id: 'a', nodeLabel: 'Order Lab' }),
+        makeItem({ id: 'b', nodeLabel: 'Schedule Visit' }),
+        makeItem({ id: 'c', nodeLabel: 'Order Lab' }),
+      ];
+      const groups = groupBySection(items, 'by-node');
+      expect(groups.size).toBe(2);
+      expect(groups.get('Order Lab')!).toHaveLength(2);
+      expect(groups.get('Schedule Visit')!).toHaveLength(1);
+    });
+  });
+
+  describe('by-date mode', () => {
+    it('groups by recency bucket', () => {
+      const items = [
+        makeItem({ id: 'today', daysAtStage: 0 }),
+        makeItem({ id: 'yesterday', daysAtStage: 1 }),
+        makeItem({ id: 'this-week', daysAtStage: 5 }),
+        makeItem({ id: 'older', daysAtStage: 14 }),
+      ];
+      const groups = groupBySection(items, 'by-date');
+      expect(groups.get('Today')!).toHaveLength(1);
+      expect(groups.get('Yesterday')!).toHaveLength(1);
+      expect(groups.get('This week')!).toHaveLength(1);
+      expect(groups.get('Older')!).toHaveLength(1);
+    });
+
+    it('handles boundary: 7 days is "This week"', () => {
+      const items = [makeItem({ id: 'a', daysAtStage: 7 })];
+      const groups = groupBySection(items, 'by-date');
+      expect(groups.has('This week')).toBe(true);
+    });
+
+    it('handles boundary: 8 days is "Older"', () => {
+      const items = [makeItem({ id: 'a', daysAtStage: 8 })];
+      const groups = groupBySection(items, 'by-date');
+      expect(groups.has('Older')).toBe(true);
+    });
+  });
+});
+
+// ============================================================================
+// computeResponsibilityCounts
+// ============================================================================
+
+describe('computeResponsibilityCounts', () => {
+  function makeItem(overrides: Partial<PriorityItem> & { id: string }): PriorityItem {
+    return {
+      patientName: overrides.id,
+      patientId: overrides.id,
+      badge: 'ACTION',
+      nodeId: 'n1',
+      nodeLabel: 'Node',
+      pathwayId: 'pw-test',
+      pathwayName: 'Test',
+      daysAtStage: 5,
+      contextLine: '',
+      isEscalated: false,
+      riskTier: 'stable',
+      patientStatus: 'active',
+      isAssigned: false,
+      isStale: false,
+      responsibility: 'mine',
+      ...overrides,
+    };
+  }
+
+  it('counts items per responsibility category', () => {
+    const items = [
+      makeItem({ id: 'a', responsibility: 'mine' }),
+      makeItem({ id: 'b', responsibility: 'mine' }),
+      makeItem({ id: 'c', responsibility: 'team' }),
+      makeItem({ id: 'd', responsibility: 'ai' }),
+    ];
+    const counts = computeResponsibilityCounts(items);
+    expect(counts).toEqual({ mine: 2, team: 1, ai: 1 });
+  });
+
+  it('returns zeros for empty array', () => {
+    const counts = computeResponsibilityCounts([]);
+    expect(counts).toEqual({ mine: 0, team: 0, ai: 0 });
+  });
+
+  it('handles all-same responsibility', () => {
+    const items = [
+      makeItem({ id: 'a', responsibility: 'team' }),
+      makeItem({ id: 'b', responsibility: 'team' }),
+    ];
+    const counts = computeResponsibilityCounts(items);
+    expect(counts).toEqual({ mine: 0, team: 2, ai: 0 });
   });
 });

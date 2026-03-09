@@ -14,6 +14,7 @@ import type {
   PriorityBadge,
   PriorityItem,
   PrioritySortMode,
+  Responsibility,
   NodeType,
   PatientPathwayAssignment,
 } from '../types/population-health';
@@ -164,6 +165,111 @@ export function buildContextLine(
 }
 
 // ============================================================================
+// deriveResponsibility
+// ============================================================================
+
+/**
+ * Determine who is responsible for acting on a priority item.
+ * - 'mine': assigned to current provider AND has an active badge (URGENT/REVIEW/ACTION)
+ * - 'ai': automated monitoring at wait-monitor nodes with MONITOR badge
+ * - 'team': assigned to someone else (not current provider)
+ * - Fallback: 'mine'
+ */
+export function deriveResponsibility(
+  badge: PriorityBadge,
+  node: PathwayNode,
+): Responsibility {
+  const isCurrentProvider = node.assignedProviderId === 'prov-current';
+  const activeBadges: Set<PriorityBadge> = new Set(['URGENT', 'REVIEW', 'ACTION']);
+
+  // AI handles automated monitoring at wait-monitor nodes
+  if (badge === 'MONITOR' && node.type === 'wait-monitor') return 'ai';
+
+  // Assigned to current provider with active badge
+  if (isCurrentProvider && activeBadges.has(badge)) return 'mine';
+
+  // Assigned to someone else (not current provider, has an assignee)
+  if (node.assignedProviderId && !isCurrentProvider) return 'team';
+
+  // Unassigned nodes — fall back to mine (provider's panel)
+  return 'mine';
+}
+
+// ============================================================================
+// groupBySection
+// ============================================================================
+
+/**
+ * Group priority items by the current sort axis.
+ * Returns a Map with insertion-ordered keys (group label → items).
+ */
+export function groupBySection(
+  items: PriorityItem[],
+  sortMode: PrioritySortMode,
+): Map<string, PriorityItem[]> {
+  const groups = new Map<string, PriorityItem[]>();
+
+  if (sortMode === 'urgency') {
+    // Fixed order: URGENT, REVIEW, ACTION, MONITOR
+    const order: PriorityBadge[] = ['URGENT', 'REVIEW', 'ACTION', 'MONITOR'];
+    for (const badge of order) {
+      const matching = items.filter((item) => item.badge === badge);
+      if (matching.length > 0) {
+        groups.set(badge, matching);
+      }
+    }
+  } else if (sortMode === 'by-node') {
+    for (const item of items) {
+      const existing = groups.get(item.nodeLabel);
+      if (existing) {
+        existing.push(item);
+      } else {
+        groups.set(item.nodeLabel, [item]);
+      }
+    }
+  } else {
+    // by-date: bucket by recency
+    for (const item of items) {
+      const bucket = dateBucket(item.daysAtStage);
+      const existing = groups.get(bucket);
+      if (existing) {
+        existing.push(item);
+      } else {
+        groups.set(bucket, [item]);
+      }
+    }
+  }
+
+  return groups;
+}
+
+/** Map daysAtStage to a human-readable recency bucket */
+function dateBucket(daysAtStage: number): string {
+  if (daysAtStage <= 0) return 'Today';
+  if (daysAtStage === 1) return 'Yesterday';
+  if (daysAtStage <= 7) return 'This week';
+  return 'Older';
+}
+
+// ============================================================================
+// computeResponsibilityCounts
+// ============================================================================
+
+/**
+ * Count items per responsibility category.
+ * Operates on the full (unfiltered) item list for ambient counts.
+ */
+export function computeResponsibilityCounts(
+  items: PriorityItem[],
+): Record<Responsibility, number> {
+  const counts: Record<Responsibility, number> = { mine: 0, team: 0, ai: 0 };
+  for (const item of items) {
+    counts[item.responsibility]++;
+  }
+  return counts;
+}
+
+// ============================================================================
 // derivePriorityItems
 // ============================================================================
 
@@ -230,6 +336,8 @@ export function derivePriorityItems(
         ? AI_REASONING_BY_PATHWAY[pathway.id]
         : undefined;
 
+      const responsibility = deriveResponsibility(badge, node);
+
       items.push({
         id: `${patient.patientId}::${node.id}`,
         patientName: patient.name,
@@ -248,6 +356,7 @@ export function derivePriorityItems(
         isAssigned,
         isStale: stale,
         aiReasoning,
+        responsibility,
       });
     }
   }
