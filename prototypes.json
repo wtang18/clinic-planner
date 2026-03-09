@@ -39,6 +39,16 @@
       "path": "apps/ehr-prototype",
       "figmaUrl": null,
       "supabaseProject": null
+    },
+    {
+      "id": "carby-os",
+      "name": "Carby OS — Problems List",
+      "description": "Patient problem list prototype with 4 clinical record types, filter controls, and inline actions",
+      "status": "wip",
+      "port": 3002,
+      "path": "apps/carby-os",
+      "figmaUrl": "https://www.figma.com/design/Wm3cfzJvKzITMVvkxpX9mQ?node-id=12953:13268",
+      "supabaseProject": null
     }
   ]
 }
