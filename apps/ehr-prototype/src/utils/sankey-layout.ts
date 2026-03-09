@@ -18,11 +18,16 @@ import type {
 // ============================================================================
 
 export const SANKEY_PADDING = { top: 40, right: 140, bottom: 40, left: 140 };
+export const SANKEY_PADDING_COMPACT = { top: 40, right: 96, bottom: 40, left: 96 };
 export const AXIS_WIDTH = 24;
 export const MIN_BAND_HEIGHT = 18;
 export const BAND_GAP = 4;
 export const ZONE_DIVIDER_GAP = 16;
 export const LABEL_OFFSET = 12;
+/** Minimum drawable width (between padding) to render flow ribbons */
+export const MIN_FLOW_WIDTH = 200;
+/** Gap between axis columns in bands-only (compact, no-flow) mode */
+export const COMPACT_COLUMN_GAP = 8;
 
 // ============================================================================
 // Output Types
@@ -84,19 +89,22 @@ export interface SankeyLayoutResult {
  * @param containerWidth - Available width in pixels
  * @param containerHeight - Available height in pixels
  * @param axisVisibility - Which axes to include
+ * @param compact - Use reduced padding for split-pane compact mode
  */
 export function computeSankeyLayout(
   data: SankeyData,
   containerWidth: number,
   containerHeight: number,
   axisVisibility: AxisVisibility,
+  compact?: boolean,
 ): SankeyLayoutResult {
   const bands: SankeyBandLayout[] = [];
   const flows: SankeyFlowLayout[] = [];
   const dividers: SankeyDividerLayout[] = [];
 
-  const drawableWidth = containerWidth - SANKEY_PADDING.left - SANKEY_PADDING.right;
-  const drawableHeight = containerHeight - SANKEY_PADDING.top - SANKEY_PADDING.bottom;
+  const padding = compact ? SANKEY_PADDING_COMPACT : SANKEY_PADDING;
+  const drawableWidth = containerWidth - padding.left - padding.right;
+  const drawableHeight = containerHeight - padding.top - padding.bottom;
 
   // Determine visible axes
   const visibleAxes: ('left' | 'center' | 'right')[] = [];
@@ -108,14 +116,25 @@ export function computeSankeyLayout(
     return { bands, flows, dividers, width: containerWidth, height: containerHeight };
   }
 
-  // Distribute axis X positions evenly
+  // Distribute axis X positions.
+  // Two modes: when flows are rendered, spread axes across the full drawable width
+  // so ribbons have room. When flows are skipped (narrow viewport), pack columns
+  // tight with a small gap and center the group.
+  const showFlows = drawableWidth >= MIN_FLOW_WIDTH;
   const axisXPositions: Record<string, number> = {};
   if (visibleAxes.length === 1) {
-    axisXPositions[visibleAxes[0]] = SANKEY_PADDING.left + drawableWidth / 2 - AXIS_WIDTH / 2;
-  } else {
+    axisXPositions[visibleAxes[0]] = padding.left + drawableWidth / 2 - AXIS_WIDTH / 2;
+  } else if (showFlows) {
     const spacing = drawableWidth / (visibleAxes.length - 1);
     visibleAxes.forEach((axis, i) => {
-      axisXPositions[axis] = SANKEY_PADDING.left + spacing * i - AXIS_WIDTH / 2;
+      axisXPositions[axis] = padding.left + spacing * i - AXIS_WIDTH / 2;
+    });
+  } else {
+    // Bands-only: pack columns tight and center the group
+    const totalColumnsWidth = visibleAxes.length * AXIS_WIDTH + (visibleAxes.length - 1) * COMPACT_COLUMN_GAP;
+    const startX = padding.left + (drawableWidth - totalColumnsWidth) / 2;
+    visibleAxes.forEach((axis, i) => {
+      axisXPositions[axis] = startX + i * (AXIS_WIDTH + COMPACT_COLUMN_GAP);
     });
   }
 
@@ -137,7 +156,7 @@ export function computeSankeyLayout(
     // Proportional heights
     const totalCount = [...conditionBands, ...preventiveBands].reduce((s, b) => s + Math.max(b.count, 1), 0);
 
-    let currentY = SANKEY_PADDING.top;
+    let currentY = padding.top;
 
     // Condition zone
     for (let i = 0; i < conditionBands.length; i++) {
@@ -188,65 +207,65 @@ export function computeSankeyLayout(
   if (visibleAxes.includes('center')) {
     const x = axisXPositions.center;
     const visibleBands = data.centerAxis.filter((b) => b.count > 0 || true); // show all tiers
-    layoutAxisBands(visibleBands, x, drawableHeight, 'center', bands);
+    layoutAxisBands(visibleBands, x, drawableHeight, 'center', bands, padding.top);
   }
 
   // --- Layout right axis ---
   if (visibleAxes.includes('right')) {
     const x = axisXPositions.right;
-    layoutAxisBands(data.rightAxis, x, drawableHeight, 'right', bands);
+    layoutAxisBands(data.rightAxis, x, drawableHeight, 'right', bands, padding.top);
   }
 
-  // --- Build band lookup for flow computation ---
-  const bandLookup = new Map<string, SankeyBandLayout>();
-  for (const band of bands) {
-    bandLookup.set(band.id, band);
-  }
-
-  // --- Pre-compute total inbound/outbound flow counts per band ---
-  // Left axis over-counts (multi-membership), so total inbound flow to a center
-  // band can exceed band.count. We normalize by actual total flow to keep
-  // ribbons within band height.
-  const totalOutbound = new Map<string, number>();
-  const totalInbound = new Map<string, number>();
-
-  const activeLeftToCenter = visibleAxes.includes('left') && visibleAxes.includes('center');
-  const activeCenterToRight = visibleAxes.includes('center') && visibleAxes.includes('right');
-
-  if (activeLeftToCenter) {
-    for (const flow of data.leftToCenterFlows) {
-      if (flow.patientCount === 0) continue;
-      totalOutbound.set(flow.sourceId, (totalOutbound.get(flow.sourceId) ?? 0) + flow.patientCount);
-      totalInbound.set(flow.targetId, (totalInbound.get(flow.targetId) ?? 0) + flow.patientCount);
+  // --- Flow computation (skip when drawable area is too narrow) ---
+  // Below MIN_FLOW_WIDTH, ribbons become illegible — render bands only.
+  if (showFlows) {
+    const bandLookup = new Map<string, SankeyBandLayout>();
+    for (const band of bands) {
+      bandLookup.set(band.id, band);
     }
-  }
 
-  if (activeCenterToRight) {
-    for (const flow of data.centerToRightFlows) {
-      if (flow.patientCount === 0) continue;
-      totalOutbound.set(flow.sourceId, (totalOutbound.get(flow.sourceId) ?? 0) + flow.patientCount);
-      totalInbound.set(flow.targetId, (totalInbound.get(flow.targetId) ?? 0) + flow.patientCount);
+    // Pre-compute total inbound/outbound flow counts per band.
+    // Left axis over-counts (multi-membership), so total inbound flow to a center
+    // band can exceed band.count. We normalize by actual total flow to keep
+    // ribbons within band height.
+    const totalOutbound = new Map<string, number>();
+    const totalInbound = new Map<string, number>();
+
+    const activeLeftToCenter = visibleAxes.includes('left') && visibleAxes.includes('center');
+    const activeCenterToRight = visibleAxes.includes('center') && visibleAxes.includes('right');
+
+    if (activeLeftToCenter) {
+      for (const flow of data.leftToCenterFlows) {
+        if (flow.patientCount === 0) continue;
+        totalOutbound.set(flow.sourceId, (totalOutbound.get(flow.sourceId) ?? 0) + flow.patientCount);
+        totalInbound.set(flow.targetId, (totalInbound.get(flow.targetId) ?? 0) + flow.patientCount);
+      }
     }
-  }
 
-  // --- Compute flow exit/entry y-ranges and build paths ---
-  // For each axis, track how much of each band's height has been "consumed" by flows
-  const bandSourceConsumed = new Map<string, number>();
-  const bandTargetConsumed = new Map<string, number>();
-
-  // Left-to-center flows
-  if (activeLeftToCenter) {
-    for (const flow of data.leftToCenterFlows) {
-      const path = computeFlowPath(flow, bandLookup, bandSourceConsumed, bandTargetConsumed, totalOutbound, totalInbound);
-      if (path) flows.push(path);
+    if (activeCenterToRight) {
+      for (const flow of data.centerToRightFlows) {
+        if (flow.patientCount === 0) continue;
+        totalOutbound.set(flow.sourceId, (totalOutbound.get(flow.sourceId) ?? 0) + flow.patientCount);
+        totalInbound.set(flow.targetId, (totalInbound.get(flow.targetId) ?? 0) + flow.patientCount);
+      }
     }
-  }
 
-  // Center-to-right flows
-  if (activeCenterToRight) {
-    for (const flow of data.centerToRightFlows) {
-      const path = computeFlowPath(flow, bandLookup, bandSourceConsumed, bandTargetConsumed, totalOutbound, totalInbound);
-      if (path) flows.push(path);
+    // Compute flow exit/entry y-ranges and build paths
+    const bandSourceConsumed = new Map<string, number>();
+    const bandTargetConsumed = new Map<string, number>();
+
+    if (activeLeftToCenter) {
+      for (const flow of data.leftToCenterFlows) {
+        const path = computeFlowPath(flow, bandLookup, bandSourceConsumed, bandTargetConsumed, totalOutbound, totalInbound);
+        if (path) flows.push(path);
+      }
+    }
+
+    if (activeCenterToRight) {
+      for (const flow of data.centerToRightFlows) {
+        const path = computeFlowPath(flow, bandLookup, bandSourceConsumed, bandTargetConsumed, totalOutbound, totalInbound);
+        if (path) flows.push(path);
+      }
     }
   }
 
@@ -269,12 +288,13 @@ function layoutAxisBands(
   drawableHeight: number,
   axis: 'center' | 'right',
   outBands: SankeyBandLayout[],
+  topPadding: number = SANKEY_PADDING.top,
 ): void {
   const totalGaps = Math.max(0, axisBands.length - 1) * BAND_GAP;
   const availableForBands = drawableHeight - totalGaps;
   const totalCount = axisBands.reduce((s, b) => s + Math.max(b.count, 1), 0);
 
-  let currentY = SANKEY_PADDING.top;
+  let currentY = topPadding;
 
   for (const band of axisBands) {
     const rawHeight = (Math.max(band.count, 1) / totalCount) * availableForBands;

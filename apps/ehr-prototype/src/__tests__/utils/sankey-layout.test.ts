@@ -8,8 +8,10 @@ import { describe, it, expect } from 'vitest';
 import {
   computeSankeyLayout,
   SANKEY_PADDING,
+  SANKEY_PADDING_COMPACT,
   AXIS_WIDTH,
   MIN_BAND_HEIGHT,
+  MIN_FLOW_WIDTH,
 } from '../../utils/sankey-layout';
 import { computeSankeyData } from '../../utils/sankey-computation';
 import type {
@@ -169,5 +171,49 @@ describe('computeSankeyLayout', () => {
     const layout = computeSankeyLayout(getData(), CONTAINER_W, CONTAINER_H, ALL_VISIBLE);
     expect(layout.width).toBe(CONTAINER_W);
     expect(layout.height).toBe(CONTAINER_H);
+  });
+
+  // --- Compact mode (R1) ---
+
+  it('compact mode uses reduced padding', () => {
+    const normal = computeSankeyLayout(getData(), CONTAINER_W, CONTAINER_H, ALL_VISIBLE);
+    const compact = computeSankeyLayout(getData(), CONTAINER_W, CONTAINER_H, ALL_VISIBLE, true);
+
+    // Left axis band should be positioned further left in compact mode (less left padding)
+    const normalLeft = normal.bands.find((b) => b.axis === 'left')!;
+    const compactLeft = compact.bands.find((b) => b.axis === 'left')!;
+    expect(compactLeft.x).toBeLessThan(normalLeft.x);
+
+    // Right axis band should be positioned further right in compact mode
+    const normalRight = normal.bands.find((b) => b.axis === 'right')!;
+    const compactRight = compact.bands.find((b) => b.axis === 'right')!;
+    expect(compactRight.x).toBeGreaterThan(normalRight.x);
+  });
+
+  it('compact mode still produces valid bands', () => {
+    const layout = computeSankeyLayout(getData(), 400, CONTAINER_H, ALL_VISIBLE, true);
+    expect(layout.bands.length).toBeGreaterThan(0);
+    for (const band of layout.bands) {
+      expect(band.height).toBeGreaterThanOrEqual(MIN_BAND_HEIGHT);
+      expect(band.width).toBe(AXIS_WIDTH);
+    }
+  });
+
+  // --- Bands-only fallback (R2) ---
+
+  it('skips flows when drawable width is below MIN_FLOW_WIDTH', () => {
+    // Compact padding: left 96 + right 96 = 192. drawableWidth = MIN_FLOW_WIDTH - 50 = 150 → no flows
+    const narrowWidth = SANKEY_PADDING_COMPACT.left + SANKEY_PADDING_COMPACT.right + (MIN_FLOW_WIDTH - 50);
+    const layout = computeSankeyLayout(getData(), narrowWidth, CONTAINER_H, ALL_VISIBLE, true);
+    expect(layout.bands.length).toBeGreaterThan(0);
+    expect(layout.flows.length).toBe(0);
+  });
+
+  it('produces flows when drawable width meets MIN_FLOW_WIDTH', () => {
+    // Compact padding: 192. drawableWidth = MIN_FLOW_WIDTH = 200 → flows rendered
+    const adequateWidth = SANKEY_PADDING_COMPACT.left + SANKEY_PADDING_COMPACT.right + MIN_FLOW_WIDTH;
+    const layout = computeSankeyLayout(getData(), adequateWidth, CONTAINER_H, ALL_VISIBLE, true);
+    expect(layout.bands.length).toBeGreaterThan(0);
+    expect(layout.flows.length).toBeGreaterThan(0);
   });
 });

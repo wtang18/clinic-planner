@@ -204,7 +204,9 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
   // ---- Styles ----
 
   const columnStyle: React.CSSProperties = {
-    flex: '0 0 60%',
+    flex: '1 1 60%',
+    maxWidth: 800,
+    minWidth: 320,
     display: 'flex',
     flexDirection: 'column',
     height: '100%',

@@ -116,7 +116,7 @@ const SankeyMapView: React.FC = () => {
   // SVG height accounts for header padding clearance, with a 400px minimum
   const svgHeight = Math.max(containerSize.height - LAYOUT.headerHeight, 400);
 
-  // Recompute layout using adjusted height
+  // Recompute layout using adjusted height (compact padding when navigator open)
   const adjustedLayout = useMemo(
     () =>
       computeSankeyLayout(
@@ -124,17 +124,19 @@ const SankeyMapView: React.FC = () => {
         containerSize.width,
         svgHeight,
         state.axisVisibility,
+        navigatorOpen,
       ),
-    [sankeyData, containerSize.width, svgHeight, state.axisVisibility],
+    [sankeyData, containerSize.width, svgHeight, state.axisVisibility, navigatorOpen],
   );
 
   return (
     <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
-      {/* Sankey chart pane — shrinks to 40% when navigator is open */}
+      {/* Sankey chart pane — flexes to fill remaining space after priority column */}
       <div
         ref={containerRef}
         style={{
-          flex: navigatorOpen ? '0 0 40%' : '1',
+          flex: '1 1 auto',
+          minWidth: navigatorOpen ? 300 : undefined,
           position: 'relative',
           overflow: 'auto',
           paddingTop: LAYOUT.headerHeight,
