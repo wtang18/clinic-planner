@@ -243,18 +243,36 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
       const bandId = action.axis === 'riskTiers' ? `risk-${action.id}`
         : action.axis === 'actionStatuses' ? `action-${action.id}`
         : action.id;
+
+      const newSelection = {
+        ...state.dimensionSelection,
+        [action.axis]: exists
+          ? arr.filter((v) => v !== action.id)
+          : [...arr, action.id],
+      };
+
+      let newNavigatorBandId: string | null;
+      if (!exists) {
+        // Selecting → open navigator for this band
+        newNavigatorBandId = bandId;
+      } else if (bandId !== state.sankeyNavigatorBandId) {
+        // Deselecting a non-navigator band → keep current navigator
+        newNavigatorBandId = state.sankeyNavigatorBandId;
+      } else {
+        // Deselecting the current navigator band → pick next remaining, or close
+        const remaining = [
+          ...newSelection.conditions,
+          ...newSelection.preventive,
+          ...newSelection.riskTiers.map((t: string) => `risk-${t}`),
+          ...newSelection.actionStatuses.map((s: string) => `action-${s}`),
+        ];
+        newNavigatorBandId = remaining.length > 0 ? remaining[remaining.length - 1] : null;
+      }
+
       return {
         ...state,
-        dimensionSelection: {
-          ...state.dimensionSelection,
-          [action.axis]: exists
-            ? arr.filter((v) => v !== action.id)
-            : [...arr, action.id],
-        },
-        // Select → open navigator for this band; deselect → close if it was showing this band
-        sankeyNavigatorBandId: exists
-          ? (bandId === state.sankeyNavigatorBandId ? null : state.sankeyNavigatorBandId)
-          : bandId,
+        dimensionSelection: newSelection,
+        sankeyNavigatorBandId: newNavigatorBandId,
       };
     }
 

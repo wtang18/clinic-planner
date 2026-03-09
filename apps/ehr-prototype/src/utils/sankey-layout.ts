@@ -17,8 +17,8 @@ import type {
 // Layout Constants
 // ============================================================================
 
-export const SANKEY_PADDING = { top: 40, right: 140, bottom: 40, left: 140 };
-export const SANKEY_PADDING_COMPACT = { top: 40, right: 96, bottom: 40, left: 96 };
+export const SANKEY_PADDING = { top: 12, right: 140, bottom: 20, left: 140 };
+export const SANKEY_PADDING_COMPACT = { top: 12, right: 96, bottom: 20, left: 96 };
 export const AXIS_WIDTH = 24;
 export const MIN_BAND_HEIGHT = 18;
 export const BAND_GAP = 4;
@@ -28,6 +28,8 @@ export const LABEL_OFFSET = 12;
 export const MIN_FLOW_WIDTH = 200;
 /** Gap between axis columns in bands-only (compact, no-flow) mode */
 export const COMPACT_COLUMN_GAP = 8;
+/** Must match borderRadius.xs used on band <rect rx={...}> */
+export const BAND_CORNER_RADIUS = 4;
 
 // ============================================================================
 // Output Types
@@ -335,7 +337,7 @@ function computeFlowPath(
 
   const sourceY0 = sourceBand.y + sourceOffset;
   const sourceY1 = sourceY0 + sourceSliceHeight;
-  const sourceX = sourceBand.x + sourceBand.width;
+  const sourceX = sourceBand.x + sourceBand.width - BAND_CORNER_RADIUS;
 
   // Target entry: proportional slice of target band's left edge.
   // Use actual total inbound flow count to ensure ribbons fit within band height.
@@ -346,7 +348,7 @@ function computeFlowPath(
 
   const targetY0 = targetBand.y + targetOffset;
   const targetY1 = targetY0 + targetSliceHeight;
-  const targetX = targetBand.x;
+  const targetX = targetBand.x + BAND_CORNER_RADIUS;
 
   // Build filled bezier ribbon path
   const path = buildRibbonPath(sourceX, sourceY0, sourceY1, targetX, targetY0, targetY1);

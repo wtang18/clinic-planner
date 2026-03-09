@@ -9,7 +9,9 @@ import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react'
 import { X } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { SankeyChart } from '../../components/population-health/SankeyChart';
-import { SankeyPriorityColumn } from '../../components/population-health/SankeyPriorityColumn';
+import { SankeyPriorityColumn, SORT_ITEMS } from '../../components/population-health/SankeyPriorityColumn';
+import type { SankeySortMode } from '../../components/population-health/SankeyPriorityColumn';
+import { SelectDropdown } from '../../components/primitives/SelectDropdown';
 import { PriorityDetailView } from '../../components/population-health/PriorityDetailView';
 import { RoutingView } from '../../components/population-health/RoutingView';
 import { PopHealthCanvas } from '../PopHealthView/PopHealthCanvas';
@@ -17,7 +19,6 @@ import { SlideDrawer } from '../../components/shared/SlideDrawer';
 import {
   computeSankeyData,
   filterSankeyData,
-  filterPatients,
   RISK_TIER_LABELS,
   ACTION_STATUS_LABELS,
 } from '../../utils/sankey-computation';
@@ -30,7 +31,9 @@ import type { DimensionSelection, RiskTier, ActionStatus } from '../../types/pop
 // SankeyMapView — main Sankey visualization
 // ============================================================================
 
-const SankeyMapView: React.FC = () => {
+const SankeyMapView: React.FC<{
+  sortMode: SankeySortMode;
+}> = ({ sortMode }) => {
   const { state, dispatch } = usePopHealth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 });
@@ -103,10 +106,6 @@ const SankeyMapView: React.FC = () => {
     dispatch({ type: 'DIMENSIONS_CLEARED' });
   }, [dispatch]);
 
-  const handleNavigatorClose = useCallback(() => {
-    dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId: null });
-  }, [dispatch]);
-
   const handleCardDetails = useCallback((itemId: string) => {
     dispatch({ type: 'DRAWER_OPENED', view: { type: 'priority-detail', priorityItemId: itemId } });
   }, [dispatch]);
@@ -117,14 +116,16 @@ const SankeyMapView: React.FC = () => {
     !state.axisVisibility.riskLevel &&
     !state.axisVisibility.actionStatus;
 
-  // No matching patients?
-  const filteredPatients = useMemo(
-    () => filterPatients(ALL_PATIENTS, state.dimensionSelection),
-    [state.dimensionSelection],
-  );
+  // When chips are showing (selection active), chips already push content below
+  // the nav bar — no extra paddingTop needed. When no chips, keep nav clearance.
+  const hasSelection =
+    state.dimensionSelection.conditions.length > 0 ||
+    state.dimensionSelection.preventive.length > 0 ||
+    state.dimensionSelection.riskTiers.length > 0 ||
+    state.dimensionSelection.actionStatuses.length > 0;
 
-  // SVG height accounts for header padding clearance, with a 400px minimum
-  const svgHeight = Math.max(containerSize.height - LAYOUT.headerHeight, 400);
+  // SVG height: subtract 80px for fixed AI bar clearance, with a 400px minimum
+  const svgHeight = Math.max(containerSize.height - 80, 400);
 
   // Recompute layout using adjusted height (compact padding when navigator open)
   const adjustedLayout = useMemo(
@@ -149,7 +150,7 @@ const SankeyMapView: React.FC = () => {
           minWidth: navigatorOpen ? 300 : undefined,
           position: 'relative',
           overflow: 'auto',
-          paddingTop: LAYOUT.headerHeight,
+          paddingTop: hasSelection ? 0 : LAYOUT.headerHeight,
           transition: 'flex 300ms ease',
         }}
       >
@@ -157,29 +158,6 @@ const SankeyMapView: React.FC = () => {
           <EmptyMessage
             title="No axes visible"
             description="Enable at least one dimension axis to view the Sankey diagram."
-          />
-        ) : filteredPatients.length === 0 ? (
-          <EmptyMessage
-            title="No matching patients"
-            description="No patients match the current filter selection."
-            action={
-              <button
-                type="button"
-                onClick={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
-                style={{
-                  ...glass.button,
-                  borderRadius: GLASS_BUTTON_RADIUS,
-                  height: 32,
-                  padding: '0 16px',
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.sans,
-                  color: colors.fg.accent.primary,
-                }}
-              >
-                Clear filters
-              </button>
-            }
           />
         ) : (
           <div style={{ minHeight: 400 }}>
@@ -202,8 +180,9 @@ const SankeyMapView: React.FC = () => {
         <SankeyPriorityColumn
           bandId={state.sankeyNavigatorBandId}
           dimensionSelection={state.dimensionSelection}
-          onClose={handleNavigatorClose}
+          sortMode={sortMode}
           onCardDetails={handleCardDetails}
+          onClearFilters={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
         />
       )}
     </div>
@@ -270,7 +249,11 @@ TablePlaceholder.displayName = 'TablePlaceholder';
 // DimensionFilterChips
 // ============================================================================
 
-const DimensionFilterChips: React.FC = () => {
+const DimensionFilterChips: React.FC<{
+  sortMode?: SankeySortMode;
+  onSortChange?: (mode: SankeySortMode) => void;
+  navigatorOpen?: boolean;
+}> = ({ sortMode, onSortChange, navigatorOpen }) => {
   const { state, dispatch } = usePopHealth();
   const sel = state.dimensionSelection;
 
@@ -295,11 +278,17 @@ const DimensionFilterChips: React.FC = () => {
 
   if (chips.length === 0) return null;
 
+  // Group chips by Sankey axis column: left (conditions+preventive), center (riskTiers), right (actionStatuses)
+  const leftChips = chips.filter(c => c.axis === 'conditions' || c.axis === 'preventive');
+  const centerChips = chips.filter(c => c.axis === 'riskTiers');
+  const rightChips = chips.filter(c => c.axis === 'actionStatuses');
+  const groups = [leftChips, centerChips, rightChips].filter(g => g.length > 0);
+
   return (
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: spaceBetween.relatedCompact,
+      gap: spaceBetween.repeating,
       padding: `${spaceAround.tight}px ${spaceAround.default}px`,
       paddingTop: LAYOUT.headerHeight + spaceAround.tight,
       flexWrap: 'wrap',
@@ -310,31 +299,43 @@ const DimensionFilterChips: React.FC = () => {
       zIndex: 5,
       ...glass.floating,
     }}>
-      {chips.map((chip) => (
-        <button
-          key={chip.key}
-          type="button"
-          onClick={() => dispatch({ type: 'DIMENSION_TOGGLED', axis: chip.axis, id: chip.id })}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-            height: 26,
-            padding: '0 8px 0 10px',
-            fontSize: 12,
-            fontFamily: typography.fontFamily.sans,
-            fontWeight: typography.fontWeight.medium,
-            color: colors.fg.accent.primary,
-            backgroundColor: 'transparent',
-            border: `1px solid ${colors.border.accent.medium}`,
-            borderRadius: borderRadius.full,
-            cursor: 'pointer',
-            transition: `all ${transitions.fast}`,
-          }}
-        >
-          {chip.label}
-          <X size={12} />
-        </button>
+      {groups.map((group, gi) => (
+        <React.Fragment key={gi}>
+          {gi > 0 && (
+            <span style={{
+              width: 1,
+              height: 16,
+              backgroundColor: colors.border.neutral.low,
+              flexShrink: 0,
+            }} />
+          )}
+          {group.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => dispatch({ type: 'DIMENSION_TOGGLED', axis: chip.axis, id: chip.id })}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                height: 26,
+                padding: '0 8px 0 10px',
+                fontSize: 12,
+                fontFamily: typography.fontFamily.sans,
+                fontWeight: typography.fontWeight.medium,
+                color: colors.fg.accent.primary,
+                backgroundColor: 'transparent',
+                border: `1px solid ${colors.border.accent.medium}`,
+                borderRadius: borderRadius.full,
+                cursor: 'pointer',
+                transition: `all ${transitions.fast}`,
+              }}
+            >
+              {chip.label}
+              <X size={12} />
+            </button>
+          ))}
+        </React.Fragment>
       ))}
       {chips.length > 1 && (
         <button
@@ -354,6 +355,17 @@ const DimensionFilterChips: React.FC = () => {
           Clear all
         </button>
       )}
+      {navigatorOpen && sortMode !== undefined && onSortChange && (
+        <>
+          <div style={{ flex: 1 }} />
+          <SelectDropdown
+            value={sortMode}
+            items={SORT_ITEMS}
+            onChange={onSortChange}
+            testID="sankey-sort-dropdown"
+          />
+        </>
+      )}
     </div>
   );
 };
@@ -366,6 +378,11 @@ DimensionFilterChips.displayName = 'DimensionFilterChips';
 
 export const AllPatientsCanvas: React.FC = () => {
   const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
+  const [sortMode, setSortMode] = useState<SankeySortMode>('urgency');
+  const navigatorOpen = state.sankeyNavigatorBandId !== null;
+
+  // Reset sort when navigator band changes
+  useEffect(() => { setSortMode('urgency'); }, [state.sankeyNavigatorBandId]);
 
   // Keyboard shortcuts 1/2/3 for Map/Routing/Table (all-patients mode only)
   useEffect(() => {
@@ -426,10 +443,14 @@ export const AllPatientsCanvas: React.FC = () => {
       data-testid="all-patients-canvas"
     >
       {/* Filter chips overlay */}
-      <DimensionFilterChips />
+      <DimensionFilterChips
+        sortMode={sortMode}
+        onSortChange={setSortMode}
+        navigatorOpen={navigatorOpen}
+      />
 
       {/* Main view */}
-      {state.allPatientsView === 'map' && <SankeyMapView />}
+      {state.allPatientsView === 'map' && <SankeyMapView sortMode={sortMode} />}
       {state.allPatientsView === 'routing' && <RoutingView />}
       {state.allPatientsView === 'table' && <TablePlaceholder />}
 
