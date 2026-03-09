@@ -9,7 +9,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Filter } from 'lucide-react';
 import { colors, typography, spaceAround, borderRadius, transitions, glass } from '../../styles/foundations';
-import type { PriorityItem } from '../../types/population-health';
+import type { PriorityItem, Responsibility } from '../../types/population-health';
 
 // ============================================================================
 // Types
@@ -26,6 +26,7 @@ interface RefineDropdownProps {
 
 type QuickSelection = 'review' | 'stale' | null;
 type RiskFilter = 'high' | 'rising' | 'stable' | null;
+type ResponsibilityFilter = Responsibility | null;
 
 // ============================================================================
 // Component
@@ -42,8 +43,8 @@ export const RefineDropdown: React.FC<RefineDropdownProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [quickSelection, setQuickSelection] = useState<QuickSelection>(null);
   const [riskFilter, setRiskFilter] = useState<RiskFilter>(null);
+  const [responsibilityFilter, setResponsibilityFilter] = useState<ResponsibilityFilter>(null);
   const [staleOnly, setStaleOnly] = useState(false);
-  const [flaggedOnly, setFlaggedOnly] = useState(false);
 
   // Click-outside dismiss
   useEffect(() => {
@@ -67,12 +68,29 @@ export const RefineDropdown: React.FC<RefineDropdownProps> = ({
     return () => document.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  // Apply quick selection
+  // Shared filter application — applies all active dimension filters
+  const applyFilters = useCallback((overrides: {
+    risk?: RiskFilter;
+    resp?: ResponsibilityFilter;
+    stale?: boolean;
+  } = {}) => {
+    const risk = overrides.risk !== undefined ? overrides.risk : riskFilter;
+    const resp = overrides.resp !== undefined ? overrides.resp : responsibilityFilter;
+    const stale = overrides.stale !== undefined ? overrides.stale : staleOnly;
+
+    let filtered = items;
+    if (risk) filtered = filtered.filter((i) => i.riskTier === risk);
+    if (resp) filtered = filtered.filter((i) => i.responsibility === resp);
+    if (stale) filtered = filtered.filter((i) => i.isStale);
+    onCheckedChange(new Set(filtered.map((i) => i.id)));
+  }, [items, riskFilter, responsibilityFilter, staleOnly, onCheckedChange]);
+
+  // Apply quick selection (resets dimension filters)
   const applyQuickSelection = useCallback((selection: QuickSelection) => {
     setQuickSelection(selection);
     setRiskFilter(null);
+    setResponsibilityFilter(null);
     setStaleOnly(false);
-    setFlaggedOnly(false);
 
     let matching: PriorityItem[];
     if (selection === 'review') {
@@ -89,37 +107,23 @@ export const RefineDropdown: React.FC<RefineDropdownProps> = ({
   const applyRiskFilter = useCallback((filter: RiskFilter) => {
     setQuickSelection(null);
     setRiskFilter(filter);
+    applyFilters({ risk: filter });
+  }, [applyFilters]);
 
-    let filtered = items;
-    if (filter) {
-      filtered = filtered.filter((i) => i.riskTier === filter);
-    }
-    if (staleOnly) {
-      filtered = filtered.filter((i) => i.isStale);
-    }
-    onCheckedChange(new Set(filtered.map((i) => i.id)));
-  }, [items, staleOnly, onCheckedChange]);
+  // Apply responsibility filter
+  const applyResponsibilityFilter = useCallback((filter: ResponsibilityFilter) => {
+    setQuickSelection(null);
+    setResponsibilityFilter(filter);
+    applyFilters({ resp: filter });
+  }, [applyFilters]);
 
   // Apply status toggle
   const applyStaleToggle = useCallback(() => {
     const newStale = !staleOnly;
     setStaleOnly(newStale);
     setQuickSelection(null);
-
-    let filtered = items;
-    if (riskFilter) {
-      filtered = filtered.filter((i) => i.riskTier === riskFilter);
-    }
-    if (newStale) {
-      filtered = filtered.filter((i) => i.isStale);
-    }
-    onCheckedChange(new Set(filtered.map((i) => i.id)));
-  }, [items, staleOnly, riskFilter, onCheckedChange]);
-
-  // Compute match count for preview
-  const computeMatchCount = useCallback((): number => {
-    return checkedIds.size;
-  }, [checkedIds]);
+    applyFilters({ stale: newStale });
+  }, [staleOnly, applyFilters]);
 
   // ---- Styles ----
 
@@ -262,6 +266,20 @@ export const RefineDropdown: React.FC<RefineDropdownProps> = ({
             ))}
           </div>
 
+          {/* Responsibility */}
+          <div style={sectionLabelStyle}>Responsibility</div>
+          <div style={chipRowStyle}>
+            {(['mine', 'team', 'ai'] as const).map((resp) => (
+              <button
+                key={resp}
+                style={chipStyle(responsibilityFilter === resp)}
+                onClick={() => applyResponsibilityFilter(responsibilityFilter === resp ? null : resp)}
+              >
+                {resp === 'ai' ? 'AI' : resp.charAt(0).toUpperCase() + resp.slice(1)}
+              </button>
+            ))}
+          </div>
+
           {/* Status */}
           <div style={sectionLabelStyle}>Status</div>
           <div style={chipRowStyle}>
@@ -275,7 +293,7 @@ export const RefineDropdown: React.FC<RefineDropdownProps> = ({
 
           {/* Count preview */}
           <div style={countPreviewStyle}>
-            {computeMatchCount()} items selected
+            {checkedIds.size} items selected
           </div>
         </div>
       )}

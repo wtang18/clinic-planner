@@ -191,6 +191,12 @@ function SelectDropdownRow<T extends string>({
     minWidth: 0,
   };
 
+  const labelRowStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+  };
+
   const labelStyle: React.CSSProperties = {
     fontSize: 13,
     fontWeight: selected ? typography.fontWeight.semibold : typography.fontWeight.medium,
@@ -198,19 +204,18 @@ function SelectDropdownRow<T extends string>({
     color: colors.fg.neutral.primary,
   };
 
-  const descStyle: React.CSSProperties = {
-    fontSize: 11,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.secondary,
-    marginTop: 1,
-  };
-
   const badgeStyle: React.CSSProperties = {
     fontSize: 12,
     fontWeight: typography.fontWeight.medium,
     fontFamily: typography.fontFamily.sans,
     color: colors.fg.neutral.secondary,
-    flexShrink: 0,
+    marginLeft: 'auto',
+  };
+
+  const descStyle: React.CSSProperties = {
+    fontSize: 11,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
     marginTop: 1,
   };
 
@@ -223,10 +228,12 @@ function SelectDropdownRow<T extends string>({
     >
       <div style={dotStyle} />
       <div style={contentStyle}>
-        <div style={labelStyle}>{item.label}</div>
+        <div style={labelRowStyle}>
+          <span style={labelStyle}>{item.label}</span>
+          {item.badge != null && <span style={badgeStyle}>{item.badge}</span>}
+        </div>
         {item.description && <div style={descStyle}>{item.description}</div>}
       </div>
-      {item.badge != null && <div style={badgeStyle}>{item.badge}</div>}
     </div>
   );
 }
