@@ -38,6 +38,8 @@ export interface SankeyBandLayout {
   height: number;
   zone?: 'conditions' | 'preventive';
   attention?: boolean;
+  /** Abbreviated label for compact display */
+  shortLabel?: string;
   /** Which axis this band belongs to */
   axis: 'left' | 'center' | 'right';
   /** Label position */

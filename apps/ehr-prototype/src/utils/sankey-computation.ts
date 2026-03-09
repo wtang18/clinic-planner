@@ -48,6 +48,20 @@ const ACTION_STATUS_LABELS: Record<ActionStatus, string> = {
 
 const ATTENTION_ACTION_STATUSES: ActionStatus[] = ['urgent', 'action-needed'];
 
+/** Abbreviated labels for compact display of center/right axis bands */
+const RISK_TIER_SHORT_LABELS: Partial<Record<RiskTier, string>> = {
+  critical: 'Crit',
+  moderate: 'Mod',
+  unassessed: 'N/A',
+};
+
+const ACTION_STATUS_SHORT_LABELS: Partial<Record<ActionStatus, string>> = {
+  'action-needed': 'Action',
+  monitoring: 'Moni',
+  'all-current': 'Current',
+  'not-enrolled': 'N/E',
+};
+
 // ============================================================================
 // computeSankeyData
 // ============================================================================
@@ -71,6 +85,7 @@ export function computeSankeyData(
       p.conditionAssignments.some((a) => a.conditionCohortId === def.id),
     ).length,
     zone: 'conditions' as const,
+    shortLabel: def.shortLabel,
   }));
 
   const preventiveBands: SankeyBand[] = preventiveDefs.map((def) => ({
@@ -80,6 +95,7 @@ export function computeSankeyData(
       p.preventiveAssignments.some((a) => a.preventiveCohortId === def.id),
     ).length,
     zone: 'preventive' as const,
+    shortLabel: def.shortLabel,
   }));
 
   const leftAxis: SankeyAxisGroup[] = [
@@ -92,6 +108,7 @@ export function computeSankeyData(
     id: `risk-${tier}`,
     label: RISK_TIER_LABELS[tier],
     count: patients.filter((p) => p.riskTier === tier).length,
+    shortLabel: RISK_TIER_SHORT_LABELS[tier],
   }));
 
   // --- Right axis (action statuses) ---
@@ -100,6 +117,7 @@ export function computeSankeyData(
     label: ACTION_STATUS_LABELS[status],
     count: patients.filter((p) => p.actionStatus === status).length,
     attention: ATTENTION_ACTION_STATUSES.includes(status),
+    shortLabel: ACTION_STATUS_SHORT_LABELS[status],
   }));
 
   // --- Left-to-center flows ---

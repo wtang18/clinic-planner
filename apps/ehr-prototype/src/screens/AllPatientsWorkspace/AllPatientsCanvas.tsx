@@ -9,6 +9,8 @@ import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react'
 import { X } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { SankeyChart } from '../../components/population-health/SankeyChart';
+import { SankeyPriorityColumn } from '../../components/population-health/SankeyPriorityColumn';
+import { PriorityDetailView } from '../../components/population-health/PriorityDetailView';
 import { RoutingView } from '../../components/population-health/RoutingView';
 import { PopHealthCanvas } from '../PopHealthView/PopHealthCanvas';
 import { SlideDrawer } from '../../components/shared/SlideDrawer';
@@ -32,6 +34,8 @@ const SankeyMapView: React.FC = () => {
   const { state, dispatch } = usePopHealth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 });
+
+  const navigatorOpen = state.sankeyNavigatorBandId !== null;
 
   // ResizeObserver for container size
   useEffect(() => {
@@ -68,24 +72,10 @@ const SankeyMapView: React.FC = () => {
     return computeSankeyData(ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS);
   }, [state.dimensionSelection]);
 
-  // Band click → toggle dimension
+  // Band click → open/toggle Sankey navigator
   const handleBandClick = useCallback(
-    (bandId: string, axis: 'left' | 'center' | 'right') => {
-      if (axis === 'left') {
-        // Determine if condition or preventive
-        const isCondition = CONDITION_COHORTS.some((c) => c.id === bandId);
-        dispatch({
-          type: 'DIMENSION_TOGGLED',
-          axis: isCondition ? 'conditions' : 'preventive',
-          id: bandId,
-        });
-      } else if (axis === 'center') {
-        const tier = bandId.replace('risk-', '') as RiskTier;
-        dispatch({ type: 'DIMENSION_TOGGLED', axis: 'riskTiers', id: tier });
-      } else {
-        const status = bandId.replace('action-', '') as ActionStatus;
-        dispatch({ type: 'DIMENSION_TOGGLED', axis: 'actionStatuses', id: status });
-      }
+    (bandId: string, _axis: 'left' | 'center' | 'right') => {
+      dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId });
     },
     [dispatch],
   );
@@ -96,6 +86,20 @@ const SankeyMapView: React.FC = () => {
     },
     [dispatch],
   );
+
+  const handleBackgroundClick = useCallback(() => {
+    if (navigatorOpen) {
+      dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId: null });
+    }
+  }, [dispatch, navigatorOpen]);
+
+  const handleNavigatorClose = useCallback(() => {
+    dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId: null });
+  }, [dispatch]);
+
+  const handleCardDetails = useCallback((itemId: string) => {
+    dispatch({ type: 'DRAWER_OPENED', view: { type: 'priority-detail', priorityItemId: itemId } });
+  }, [dispatch]);
 
   // All axes hidden?
   const allHidden = !state.axisVisibility.conditions &&
@@ -125,53 +129,70 @@ const SankeyMapView: React.FC = () => {
   );
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        flex: 1,
-        position: 'relative',
-        overflow: 'auto',
-        paddingTop: LAYOUT.headerHeight,
-      }}
-    >
-      {allHidden ? (
-        <EmptyMessage
-          title="No axes visible"
-          description="Enable at least one dimension axis to view the Sankey diagram."
-        />
-      ) : filteredPatients.length === 0 ? (
-        <EmptyMessage
-          title="No matching patients"
-          description="No patients match the current filter selection."
-          action={
-            <button
-              type="button"
-              onClick={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
-              style={{
-                ...glass.button,
-                borderRadius: GLASS_BUTTON_RADIUS,
-                height: 32,
-                padding: '0 16px',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontFamily: typography.fontFamily.sans,
-                color: colors.fg.accent.primary,
-              }}
-            >
-              Clear filters
-            </button>
-          }
-        />
-      ) : (
-        <div style={{ minHeight: 400 }}>
-          <SankeyChart
-            layout={adjustedLayout}
-            dimensionSelection={state.dimensionSelection}
-            hoveredBandId={state.hoveredBandId}
-            onBandClick={handleBandClick}
-            onBandHover={handleBandHover}
+    <div style={{ display: 'flex', flex: 1, height: '100%', overflow: 'hidden' }}>
+      {/* Sankey chart pane — shrinks to 40% when navigator is open */}
+      <div
+        ref={containerRef}
+        style={{
+          flex: navigatorOpen ? '0 0 40%' : '1',
+          position: 'relative',
+          overflow: 'auto',
+          paddingTop: LAYOUT.headerHeight,
+          transition: 'flex 300ms ease',
+        }}
+      >
+        {allHidden ? (
+          <EmptyMessage
+            title="No axes visible"
+            description="Enable at least one dimension axis to view the Sankey diagram."
           />
-        </div>
+        ) : filteredPatients.length === 0 ? (
+          <EmptyMessage
+            title="No matching patients"
+            description="No patients match the current filter selection."
+            action={
+              <button
+                type="button"
+                onClick={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
+                style={{
+                  ...glass.button,
+                  borderRadius: GLASS_BUTTON_RADIUS,
+                  height: 32,
+                  padding: '0 16px',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontFamily: typography.fontFamily.sans,
+                  color: colors.fg.accent.primary,
+                }}
+              >
+                Clear filters
+              </button>
+            }
+          />
+        ) : (
+          <div style={{ minHeight: 400 }}>
+            <SankeyChart
+              layout={adjustedLayout}
+              dimensionSelection={state.dimensionSelection}
+              hoveredBandId={state.hoveredBandId}
+              onBandClick={handleBandClick}
+              onBandHover={handleBandHover}
+              compact={navigatorOpen}
+              navigatorBandId={state.sankeyNavigatorBandId}
+              onBackgroundClick={handleBackgroundClick}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Sankey priority column — slides in at 60% */}
+      {navigatorOpen && state.sankeyNavigatorBandId && (
+        <SankeyPriorityColumn
+          bandId={state.sankeyNavigatorBandId}
+          dimensionSelection={state.dimensionSelection}
+          onClose={handleNavigatorClose}
+          onCardDetails={handleCardDetails}
+        />
       )}
     </div>
   );
@@ -379,6 +400,8 @@ export const AllPatientsCanvas: React.FC = () => {
     );
   }
 
+  const isPriorityDetail = currentDrawerView?.type === 'priority-detail';
+
   return (
     <div
       style={{
@@ -398,9 +421,9 @@ export const AllPatientsCanvas: React.FC = () => {
       {state.allPatientsView === 'routing' && <RoutingView />}
       {state.allPatientsView === 'table' && <TablePlaceholder />}
 
-      {/* Drawer */}
+      {/* Standard drawer (filter, dimension-detail) — hidden when priority-detail is active */}
       <SlideDrawer
-        open={isDrawerOpen}
+        open={isDrawerOpen && !isPriorityDetail}
         onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
         showBack={canDrawerGoBack}
         onBack={() => dispatch({ type: 'DRAWER_BACK' })}
@@ -438,6 +461,17 @@ export const AllPatientsCanvas: React.FC = () => {
           </div>
         )}
       </SlideDrawer>
+
+      {/* Priority detail drawer — wide, self-contained (same dual-drawer pattern as PopHealthCanvas) */}
+      {isPriorityDetail && currentDrawerView.type === 'priority-detail' && (
+        <PriorityDetailView
+          priorityItemId={currentDrawerView.priorityItemId}
+          open={isDrawerOpen}
+          onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
+          showBack={canDrawerGoBack}
+          onBack={canDrawerGoBack ? () => dispatch({ type: 'DRAWER_BACK' }) : undefined}
+        />
+      )}
     </div>
   );
 };

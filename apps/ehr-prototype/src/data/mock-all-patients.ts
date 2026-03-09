@@ -19,16 +19,16 @@ import type {
 
 export const CONDITION_COHORTS: SankeyCohortDef[] = [
   { id: 'cond-diabetes', label: 'Diabetes', zone: 'conditions' },
-  { id: 'cond-hypertension', label: 'Hypertension', zone: 'conditions' },
+  { id: 'cond-hypertension', label: 'Hypertension', zone: 'conditions', shortLabel: 'HTN' },
   { id: 'cond-copd', label: 'COPD', zone: 'conditions' },
   { id: 'cond-chf', label: 'CHF', zone: 'conditions' },
   { id: 'cond-ckd', label: 'CKD', zone: 'conditions' },
 ];
 
 export const PREVENTIVE_COHORTS: SankeyCohortDef[] = [
-  { id: 'prev-colon-screen', label: 'Colon Screen', zone: 'preventive' },
-  { id: 'prev-breast-screen', label: 'Breast Screen', zone: 'preventive' },
-  { id: 'prev-immunizations', label: 'Immunizations Due', zone: 'preventive' },
+  { id: 'prev-colon-screen', label: 'Colon Screen', zone: 'preventive', shortLabel: 'Colon' },
+  { id: 'prev-breast-screen', label: 'Breast Screen', zone: 'preventive', shortLabel: 'Breast' },
+  { id: 'prev-immunizations', label: 'Vaccines', zone: 'preventive' },
 ];
 
 // ============================================================================

@@ -21,6 +21,12 @@ interface SankeyChartProps {
   hoveredBandId: string | null;
   onBandClick: (bandId: string, axis: 'left' | 'center' | 'right') => void;
   onBandHover: (bandId: string | null) => void;
+  /** When true, use short labels where available (for split-pane compact mode) */
+  compact?: boolean;
+  /** Band ID currently drilled into via Sankey Navigator */
+  navigatorBandId?: string | null;
+  /** Called when clicking empty SVG background (to close navigator) */
+  onBackgroundClick?: () => void;
 }
 
 // ============================================================================
@@ -223,6 +229,9 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
   hoveredBandId,
   onBandClick,
   onBandHover,
+  compact = false,
+  navigatorBandId,
+  onBackgroundClick,
 }) => {
   // ---------------------------------------------------------------------------
   // Staged entrance: bands settle first, then flows fade in
@@ -275,6 +284,11 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
       height={layout.height}
       viewBox={`0 0 ${layout.width} ${layout.height}`}
       style={{ display: 'block' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && onBackgroundClick) {
+          onBackgroundClick();
+        }
+      }}
     >
       {/* Flow ribbons (behind bands) — hidden until bands settle */}
       <g className="flows">
@@ -316,16 +330,28 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
             : mountPhase === 'bands' ? ENTRANCE_TRANSITION
             : BAND_TRANSITION;
 
+          const isNavigatorActive = navigatorBandId === band.id;
+          const bandFill = isNavigatorActive
+            ? colors.bg.accent.medium
+            : getBandFill(band, dimensionSelection, hoveredBandId, layout.flows);
+          const bandStroke = isNavigatorActive
+            ? colors.border.accent.medium
+            : getBandStroke(band, dimensionSelection, hoveredBandId);
+          const bandStrokeWidth = isNavigatorActive
+            ? 1.5
+            : getBandStrokeWidth(band, dimensionSelection, hoveredBandId);
+
           return (
             <g key={band.id}>
+              <title>{`${band.label} (${band.count})`}</title>
               <rect
                 rx={borderRadius.xs}
                 style={svgStyle({
                   x: band.x, y: band.y,
                   width: band.width, height: band.height,
-                  fill: getBandFill(band, dimensionSelection, hoveredBandId, layout.flows),
-                  stroke: getBandStroke(band, dimensionSelection, hoveredBandId),
-                  strokeWidth: getBandStrokeWidth(band, dimensionSelection, hoveredBandId),
+                  fill: bandFill,
+                  stroke: bandStroke,
+                  strokeWidth: bandStrokeWidth,
                   opacity: bandsVisible ? getBandOpacity(band, dimensionSelection, hoveredBandId, layout.flows) : 0,
                   cursor: 'pointer',
                   transition: bandTransition,
@@ -364,7 +390,7 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
                   pointerEvents: 'none',
                 }}
               >
-                {band.label}
+                {compact && band.shortLabel ? band.shortLabel : band.label}
               </text>
               {/* Count text */}
               <text

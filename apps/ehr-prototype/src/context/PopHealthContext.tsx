@@ -51,6 +51,8 @@ export type PopHealthAction =
   // Routing navigation actions
   | { type: 'ROUTING_NAVIGATED'; cohortId: string }
   | { type: 'ROUTING_RETURNED' }
+  // Sankey navigator actions
+  | { type: 'SANKEY_NAVIGATOR_TOGGLED'; bandId: string | null }
   // Layer tree "Show Mine" actions
   | { type: 'SHOW_MINE_APPLIED'; nodeIds: string[] }
   | { type: 'SHOW_MINE_CLEARED' };
@@ -88,6 +90,7 @@ const INITIAL_STATE: PopHealthState = {
   axisVisibility: INITIAL_AXIS_VISIBILITY,
   allPatientsView: 'map',
   hoveredBandId: null,
+  sankeyNavigatorBandId: null,
   routingTargetCohortId: null,
   showMineActive: true,
 };
@@ -120,6 +123,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         dimensionSelection: INITIAL_DIMENSION_SELECTION,
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
+        sankeyNavigatorBandId: null,
         routingTargetCohortId: null,
         showMineActive: true,
         // allPatientsView persists across scope switches (intentional)
@@ -222,6 +226,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         dimensionSelection: INITIAL_DIMENSION_SELECTION,
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
+        sankeyNavigatorBandId: null,
         showMineActive: true,
       };
     }
@@ -245,7 +250,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
     }
 
     case 'DIMENSIONS_CLEARED':
-      return { ...state, dimensionSelection: INITIAL_DIMENSION_SELECTION };
+      return { ...state, dimensionSelection: INITIAL_DIMENSION_SELECTION, sankeyNavigatorBandId: null };
 
     case 'AXIS_VISIBILITY_CHANGED':
       return {
@@ -254,10 +259,18 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
       };
 
     case 'ALL_PATIENTS_VIEW_CHANGED':
-      return { ...state, allPatientsView: action.view };
+      return { ...state, allPatientsView: action.view, sankeyNavigatorBandId: null };
 
     case 'BAND_HOVERED':
       return { ...state, hoveredBandId: action.bandId };
+
+    // Sankey navigator: toggle band drill-down
+    case 'SANKEY_NAVIGATOR_TOGGLED':
+      return {
+        ...state,
+        sankeyNavigatorBandId:
+          action.bandId === state.sankeyNavigatorBandId ? null : action.bandId,
+      };
 
     // Routing navigation: drill from all-patients routing into a specific cohort
     case 'ROUTING_NAVIGATED':

@@ -286,6 +286,8 @@ export interface SankeyCohortDef {
   id: string;
   label: string;
   zone: 'conditions' | 'preventive';
+  /** Abbreviated label for compact display (e.g. "HTN" for "Hypertension") */
+  shortLabel?: string;
 }
 
 /** A single band (row) on a Sankey axis */
@@ -295,6 +297,8 @@ export interface SankeyBand {
   count: number;
   zone?: 'conditions' | 'preventive';
   attention?: boolean;
+  /** Abbreviated label for compact display */
+  shortLabel?: string;
 }
 
 /** A group of bands on one side of the Sankey (grouped by zone) */
@@ -461,6 +465,8 @@ export interface PopHealthState {
   hoveredBandId: string | null;
   // Routing navigation: set when user navigates from all-patients routing into a cohort
   routingTargetCohortId: string | null;
+  // Sankey navigator: which band is drilled into
+  sankeyNavigatorBandId: string | null;
   // Layer tree "Show Mine" preset
   showMineActive: boolean;
 }
