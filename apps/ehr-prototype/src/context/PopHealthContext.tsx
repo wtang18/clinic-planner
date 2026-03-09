@@ -286,7 +286,7 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
       };
 
     case 'ALL_PATIENTS_VIEW_CHANGED':
-      return { ...state, allPatientsView: action.view, sankeyNavigatorBandId: null };
+      return { ...state, allPatientsView: action.view };
 
     case 'BAND_HOVERED':
       return { ...state, hoveredBandId: action.bandId };

@@ -362,6 +362,7 @@ const DimensionFilterChips: React.FC<{
             value={sortMode}
             items={SORT_ITEMS}
             onChange={onSortChange}
+            position="bottom-right"
             testID="sankey-sort-dropdown"
           />
         </>
