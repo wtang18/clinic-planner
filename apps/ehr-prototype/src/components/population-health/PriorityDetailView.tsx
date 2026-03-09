@@ -17,7 +17,7 @@
  */
 
 import React, { useMemo, useCallback, useState } from 'react';
-import { User, AlertTriangle, Sparkles } from 'lucide-react';
+import { User, AlertTriangle, Sparkles, Flag, Timer, ArrowRight } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import {
@@ -57,7 +57,7 @@ const BADGE_COLORS: Record<PriorityBadge, { bg: string; fg: string }> = {
 // ============================================================================
 
 const DEFER_OPTIONS = ['1hr', '4hr', 'Tomorrow', '1 wk'] as const;
-const ASSIGN_OPTIONS = ['AI \u2728', 'MA Chen', 'Dr. Park'] as const;
+const ASSIGN_OPTIONS = ['AI', 'MA Chen', 'Dr. Park'] as const;
 
 type PickerMode = 'default' | 'defer' | 'assign';
 
@@ -397,13 +397,13 @@ export const PriorityDetailView: React.FC<PriorityDetailViewProps> = ({
               {pickerMode === 'default' && (
                 <>
                   <button style={st.actionBtn} onClick={() => setPickerMode('defer')}>
-                    {'\u23F1'} Defer
+                    <Timer size={14} /> Defer
                   </button>
                   <button style={st.actionBtn} onClick={() => setPickerMode('assign')}>
-                    {'\u2192'} Assign
+                    <ArrowRight size={14} /> Assign
                   </button>
                   <button style={st.actionBtn} onClick={() => setFlagged((f) => !f)}>
-                    {flagged ? '\uD83D\uDEA9 Unflag' : '\uD83D\uDEA9 Flag'}
+                    <Flag size={14} /> {flagged ? 'Unflag' : 'Flag'}
                   </button>
                 </>
               )}
