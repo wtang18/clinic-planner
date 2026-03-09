@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { ChevronDown, ChevronRight, LayoutGrid, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { PATHWAYS, MOCK_POP_HEALTH_PATIENTS, MOCK_ESCALATION_FLAGS, getPathwaysByCohort } from '../../data/mock-population-health';
 import { derivePriorityItems, computePriorityQueue, groupBySection, computeResponsibilityCounts } from '../../utils/priority-computation';
@@ -39,7 +39,7 @@ const RESPONSIBILITY_ITEMS = [
 ];
 
 const DEFER_OPTIONS = ['1hr', '4hr', 'Tomorrow', '1 wk'] as const;
-const ASSIGN_OPTIONS = ['AI ✨', 'MA Chen', 'Dr. Park'] as const;
+const ASSIGN_OPTIONS = ['AI', 'MA Chen', 'Dr. Park'] as const;
 
 // ============================================================================
 // Helpers
@@ -422,7 +422,15 @@ export const PrioritiesView: React.FC = () => {
     transition: `background ${transitions.fast}`,
   };
 
-  const exitBtnStyle: React.CSSProperties = {
+  const batchLabelStyle: React.CSSProperties = {
+    fontSize: 12,
+    fontWeight: typography.fontWeight.semibold,
+    fontFamily: typography.fontFamily.sans,
+    color: colors.fg.neutral.secondary,
+    whiteSpace: 'nowrap',
+  };
+
+  const cancelBatchBtnStyle: React.CSSProperties = {
     ...batchBtnStyle,
     color: colors.fg.neutral.primary,
     ...glass.secondary,
@@ -469,9 +477,7 @@ export const PrioritiesView: React.FC = () => {
     if (batchMode) {
       return (
         <div style={barStyle}>
-          <button style={exitBtnStyle} onClick={exitBatchMode} data-testid="batch-exit">
-            <X size={12} /> Exit
-          </button>
+          <span style={batchLabelStyle}>Batch Edit:</span>
           <SelectDropdown
             value={sortMode}
             items={SORT_ITEMS}
@@ -486,10 +492,10 @@ export const PrioritiesView: React.FC = () => {
             onClose={() => setRefineOpen(false)}
             onOpen={() => setRefineOpen(true)}
           />
+          <span style={selectionSummaryStyle}>
+            {checkedIds.size} of {visibleItems.length}
+          </span>
           <div style={barRightStyle}>
-            <span style={selectionSummaryStyle}>
-              {checkedIds.size} of {visibleItems.length} selected
-            </span>
             {batchPickerMode === 'default' && (
               <>
                 <button
@@ -532,6 +538,9 @@ export const PrioritiesView: React.FC = () => {
                 </button>
               </>
             )}
+            <button style={cancelBatchBtnStyle} onClick={exitBatchMode} data-testid="batch-exit">
+              Cancel
+            </button>
           </div>
         </div>
       );

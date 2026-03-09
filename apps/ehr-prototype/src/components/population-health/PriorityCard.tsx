@@ -13,7 +13,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { Clock, Check } from 'lucide-react';
+import { Clock, Check, AlertTriangle, Flag, Timer, ArrowRight } from 'lucide-react';
 import { colors, typography, spaceAround, borderRadius, transitions, glass } from '../../styles/foundations';
 import type { PriorityItem, PriorityBadge } from '../../types/population-health';
 
@@ -42,7 +42,7 @@ const RESPONSIBILITY_LABELS: Record<string, string> = {
 // ============================================================================
 
 const DEFER_OPTIONS = ['1hr', '4hr', 'Tomorrow', '1 wk'] as const;
-const ASSIGN_OPTIONS = ['AI ✨', 'MA Chen', 'Dr. Park'] as const;
+const ASSIGN_OPTIONS = ['AI', 'MA Chen', 'Dr. Park'] as const;
 
 type PickerMode = 'default' | 'defer' | 'assign';
 
@@ -160,11 +160,6 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
     flexShrink: 0,
   };
 
-  const markerStyle: React.CSSProperties = {
-    fontSize: 14,
-    flexShrink: 0,
-  };
-
   const badgeStyle: React.CSSProperties = {
     fontSize: 11,
     fontWeight: typography.fontWeight.semibold,
@@ -259,8 +254,8 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
           {item.isStale && <Clock size={12} />}
           {item.daysAtStage}d
         </span>
-        {item.isEscalated && <span style={markerStyle} title={item.escalationReason}>🔺</span>}
-        {flagged && <span style={markerStyle} title="Flagged">🚩</span>}
+        {item.isEscalated && <span title={item.escalationReason} style={{ flexShrink: 0, display: 'inline-flex' }}><AlertTriangle size={14} color={colors.fg.alert.primary} /></span>}
+        {flagged && <span title="Flagged" style={{ flexShrink: 0, display: 'inline-flex' }}><Flag size={14} color={colors.fg.attention.primary} /></span>}
         <span style={badgeStyle}>{item.badge}</span>
       </div>
 
@@ -280,7 +275,7 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
               onClick={(e) => { e.stopPropagation(); setPickerMode('assign'); }}
               data-testid={`priority-assign-${item.id}`}
             >
-              → Assign
+              <ArrowRight size={12} /> Assign
             </button>
           </>
         ) : (
@@ -293,21 +288,21 @@ export const PriorityCard: React.FC<PriorityCardProps> = ({
                   onClick={(e) => { e.stopPropagation(); setPickerMode('defer'); }}
                   data-testid={`priority-defer-${item.id}`}
                 >
-                  ⏱ Defer
+                  <Timer size={12} /> Defer
                 </button>
                 <button
                   style={actionBtnStyle}
                   onClick={(e) => { e.stopPropagation(); setPickerMode('assign'); }}
                   data-testid={`priority-assign-${item.id}`}
                 >
-                  → Assign
+                  <ArrowRight size={12} /> Assign
                 </button>
                 <button
                   style={actionBtnStyle}
                   onClick={handleFlagClick}
                   data-testid={`priority-flag-${item.id}`}
                 >
-                  🚩 Flag
+                  <Flag size={12} /> Flag
                 </button>
               </>
             )}
