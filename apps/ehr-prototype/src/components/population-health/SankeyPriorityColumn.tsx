@@ -13,7 +13,7 @@ import {
   deriveSankeyPriorityItems,
 } from '../../utils/sankey-priority-bridge';
 import { computePriorityQueue, groupBySection } from '../../utils/priority-computation';
-import { colors, typography, spaceAround, LAYOUT } from '../../styles/foundations';
+import { colors, typography, spaceAround, transitions, LAYOUT } from '../../styles/foundations';
 import type { DimensionSelection, PriorityItem, PrioritySortMode } from '../../types/population-health';
 
 // ============================================================================
@@ -26,6 +26,13 @@ interface SankeyPriorityColumnProps {
   bandId: string;
   dimensionSelection: DimensionSelection;
   sortMode: SankeySortMode;
+  batchMode?: boolean;
+  checkedIds: Set<string>;
+  onCheckToggle: (id: string) => void;
+  onSectionCheck: (ids: string[]) => void;
+  removedIds: Set<string>;
+  onRemoveCard: (id: string) => void;
+  onVisibleCountChange?: (count: number) => void;
   onCardDetails: (itemId: string) => void;
   onClearFilters?: () => void;
 }
@@ -78,7 +85,10 @@ const SectionHeader: React.FC<{
   count: number;
   collapsed: boolean;
   onToggle: () => void;
-}> = ({ label, count, collapsed, onToggle }) => (
+  batchMode?: boolean;
+  checked?: 'all' | 'some' | 'none';
+  onCheckToggle?: () => void;
+}> = ({ label, count, collapsed, onToggle, batchMode = false, checked = 'none', onCheckToggle }) => (
   <div
     style={{
       display: 'flex',
@@ -89,20 +99,51 @@ const SectionHeader: React.FC<{
       cursor: 'pointer',
       userSelect: 'none',
     }}
-    onClick={onToggle}
   >
-    <span style={{
-      flex: 1,
-      fontSize: 11,
-      fontWeight: typography.fontWeight.semibold,
-      fontFamily: typography.fontFamily.sans,
-      color: colors.fg.neutral.secondary,
-      textTransform: 'uppercase',
-      letterSpacing: 0.8,
-    }}>
+    {batchMode && (
+      <button
+        style={{
+          width: 14,
+          height: 14,
+          borderRadius: 3,
+          border: checked === 'all'
+            ? `1.5px solid ${colors.bg.accent.medium}`
+            : `1.5px solid ${colors.border.neutral.medium}`,
+          background: checked === 'all' ? colors.bg.accent.medium : 'transparent',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          padding: 0,
+          transition: `all ${transitions.fast}`,
+        }}
+        onClick={(e) => { e.stopPropagation(); onCheckToggle?.(); }}
+        aria-label={`Select all ${label} items`}
+      >
+        {checked === 'all' && (
+          <span style={{ color: colors.fg.neutral.inversePrimary, fontSize: 10, fontWeight: 700, lineHeight: 1 }}>✓</span>
+        )}
+        {checked === 'some' && (
+          <span style={{ color: colors.fg.neutral.secondary, fontSize: 12, fontWeight: 700, lineHeight: 1 }}>━</span>
+        )}
+      </button>
+    )}
+    <span
+      style={{
+        flex: 1,
+        fontSize: 11,
+        fontWeight: typography.fontWeight.semibold,
+        fontFamily: typography.fontFamily.sans,
+        color: colors.fg.neutral.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.8,
+      }}
+      onClick={onToggle}
+    >
       {label} ({count})
     </span>
-    <span style={{ flexShrink: 0, color: colors.fg.neutral.secondary }}>
+    <span style={{ flexShrink: 0, color: colors.fg.neutral.secondary }} onClick={onToggle}>
       {collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
     </span>
   </div>
@@ -116,12 +157,17 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
   bandId,
   dimensionSelection,
   sortMode,
+  batchMode,
+  checkedIds,
+  onCheckToggle,
+  onSectionCheck,
+  removedIds,
+  onRemoveCard,
+  onVisibleCountChange,
   onCardDetails,
   onClearFilters,
 }) => {
-  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
-  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => new Set(['MONITOR']));
 
   // Slide-in animation
@@ -134,11 +180,9 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
     }
   }, []);
 
-  // Reset local state when band changes
+  // Reset column-local state when band changes
   useEffect(() => {
-    setCheckedIds(new Set());
     setFlaggedIds(new Set());
-    setRemovedIds(new Set());
     setCollapsedSections(new Set(['MONITOR']));
   }, [bandId]);
 
@@ -171,17 +215,14 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
     return groupBySection(visibleItems, prioritySortMode);
   }, [visibleItems, sortMode]);
 
-  // Handlers
-  const handleCheck = useCallback((id: string) => {
-    setCheckedIds((prev) => toggleInSet(prev, id));
-  }, []);
+  // Report visible count to parent
+  useEffect(() => {
+    onVisibleCountChange?.(visibleItems.length);
+  }, [visibleItems.length, onVisibleCountChange]);
 
+  // Handlers
   const handleFlag = useCallback((id: string) => {
     setFlaggedIds((prev) => toggleInSet(prev, id));
-  }, []);
-
-  const handleRemoveCard = useCallback((id: string) => {
-    setRemovedIds((prev) => new Set(prev).add(id));
   }, []);
 
   const handleToggleSection = useCallback((label: string) => {
@@ -195,6 +236,14 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
       return next;
     });
   }, []);
+
+  const getSectionCheckState = useCallback((sectionItems: PriorityItem[]): 'all' | 'some' | 'none' => {
+    const ids = sectionItems.map((i) => i.id);
+    const checkedCount = ids.filter((id) => checkedIds.has(id)).length;
+    if (checkedCount === 0) return 'none';
+    if (checkedCount === ids.length) return 'all';
+    return 'some';
+  }, [checkedIds]);
 
   // ---- Styles ----
 
@@ -286,21 +335,24 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
                   count={sectionItems.length}
                   collapsed={isCollapsed}
                   onToggle={() => handleToggleSection(sectionLabel)}
+                  batchMode={batchMode}
+                  checked={getSectionCheckState(sectionItems)}
+                  onCheckToggle={() => onSectionCheck(sectionItems.map((i) => i.id))}
                 />
                 {!isCollapsed && sectionItems.map((item) => (
                   <PriorityCard
                     key={item.id}
                     item={{
                       ...item,
-                      // Enrich context line with pathway name for cross-cohort clarity
                       contextLine: `${item.pathwayName} — ${item.contextLine}`,
                     }}
+                    batchMode={batchMode}
                     checked={checkedIds.has(item.id)}
                     flagged={flaggedIds.has(item.id)}
-                    onCheck={() => handleCheck(item.id)}
+                    onCheck={() => onCheckToggle(item.id)}
                     onFlag={() => handleFlag(item.id)}
-                    onDefer={() => handleRemoveCard(item.id)}
-                    onAssign={() => handleRemoveCard(item.id)}
+                    onDefer={() => onRemoveCard(item.id)}
+                    onAssign={() => onRemoveCard(item.id)}
                     onDetails={() => onCardDetails(item.id)}
                   />
                 ))}

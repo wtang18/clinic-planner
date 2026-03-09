@@ -6,7 +6,7 @@
  */
 
 import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, LayoutGrid } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { SankeyChart } from '../../components/population-health/SankeyChart';
 import { SankeyPriorityColumn, SORT_ITEMS } from '../../components/population-health/SankeyPriorityColumn';
@@ -28,12 +28,32 @@ import { colors, typography, spaceAround, spaceBetween, borderRadius, LAYOUT, tr
 import type { DimensionSelection, RiskTier, ActionStatus } from '../../types/population-health';
 
 // ============================================================================
+// Constants
+// ============================================================================
+
+const DEFER_OPTIONS = ['1hr', '4hr', 'Tomorrow', '1 wk'] as const;
+const ASSIGN_OPTIONS = ['AI', 'MA Chen', 'Dr. Park'] as const;
+
+function toggleInSet(prev: Set<string>, id: string): Set<string> {
+  const next = new Set(prev);
+  if (next.has(id)) next.delete(id); else next.add(id);
+  return next;
+}
+
+// ============================================================================
 // SankeyMapView — main Sankey visualization
 // ============================================================================
 
 const SankeyMapView: React.FC<{
   sortMode: SankeySortMode;
-}> = ({ sortMode }) => {
+  batchMode: boolean;
+  checkedIds: Set<string>;
+  onCheckToggle: (id: string) => void;
+  onSectionCheck: (ids: string[]) => void;
+  removedIds: Set<string>;
+  onRemoveCard: (id: string) => void;
+  onVisibleCountChange: (count: number) => void;
+}> = ({ sortMode, batchMode, checkedIds, onCheckToggle, onSectionCheck, removedIds, onRemoveCard, onVisibleCountChange }) => {
   const { state, dispatch } = usePopHealth();
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 });
@@ -181,6 +201,13 @@ const SankeyMapView: React.FC<{
           bandId={state.sankeyNavigatorBandId}
           dimensionSelection={state.dimensionSelection}
           sortMode={sortMode}
+          batchMode={batchMode}
+          checkedIds={checkedIds}
+          onCheckToggle={onCheckToggle}
+          onSectionCheck={onSectionCheck}
+          removedIds={removedIds}
+          onRemoveCard={onRemoveCard}
+          onVisibleCountChange={onVisibleCountChange}
           onCardDetails={handleCardDetails}
           onClearFilters={() => dispatch({ type: 'DIMENSIONS_CLEARED' })}
         />
@@ -253,7 +280,23 @@ const DimensionFilterChips: React.FC<{
   sortMode?: SankeySortMode;
   onSortChange?: (mode: SankeySortMode) => void;
   navigatorOpen?: boolean;
-}> = ({ sortMode, onSortChange, navigatorOpen }) => {
+  batchMode?: boolean;
+  onBatchToggle?: () => void;
+  // Batch bar props (used when batchMode is true)
+  batchPickerMode?: 'default' | 'defer' | 'assign';
+  onBatchPickerModeChange?: (mode: 'default' | 'defer' | 'assign') => void;
+  checkedCount?: number;
+  visibleItemCount?: number;
+  onBatchDefer?: () => void;
+  onBatchAssign?: () => void;
+  onExitBatch?: () => void;
+}> = ({
+  sortMode, onSortChange, navigatorOpen,
+  batchMode, onBatchToggle,
+  batchPickerMode, onBatchPickerModeChange,
+  checkedCount = 0, visibleItemCount = 0,
+  onBatchDefer, onBatchAssign, onExitBatch,
+}) => {
   const { state, dispatch } = usePopHealth();
   const sel = state.dimensionSelection;
 
@@ -278,6 +321,148 @@ const DimensionFilterChips: React.FC<{
 
   if (chips.length === 0) return null;
 
+  // Shared bar container style
+  const barStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spaceBetween.repeating,
+    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
+    paddingTop: LAYOUT.headerHeight + spaceAround.tight,
+    flexWrap: 'wrap',
+    position: 'sticky',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 5,
+    ...glass.floating,
+  };
+
+  // ---- Batch bar mode ----
+  if (batchMode && navigatorOpen) {
+    const actionBtnBase: React.CSSProperties = {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 4,
+      height: 28,
+      padding: '0 10px',
+      fontSize: 12,
+      fontWeight: typography.fontWeight.medium,
+      fontFamily: typography.fontFamily.sans,
+      borderRadius: borderRadius.full,
+      ...glass.secondary,
+      border: 'none',
+      transition: `background ${transitions.fast}`,
+    };
+
+    return (
+      <div style={barStyle}>
+        {batchPickerMode === 'default' && (
+          <>
+            <span style={{
+              fontSize: 12,
+              fontWeight: typography.fontWeight.semibold,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.secondary,
+              whiteSpace: 'nowrap',
+            }}>
+              Batch Edit:
+            </span>
+            {sortMode !== undefined && onSortChange && (
+              <SelectDropdown
+                value={sortMode}
+                items={SORT_ITEMS}
+                onChange={onSortChange}
+                position="bottom-left"
+                testID="sankey-sort-dropdown"
+              />
+            )}
+            <span style={{
+              fontSize: 12,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.secondary,
+              whiteSpace: 'nowrap',
+            }}>
+              {checkedCount} of {visibleItemCount}
+            </span>
+            <div style={{ flex: 1 }} />
+            <button
+              style={{
+                ...actionBtnBase,
+                color: checkedCount > 0 ? colors.fg.neutral.primary : colors.fg.neutral.disabled,
+                cursor: checkedCount > 0 ? 'pointer' : 'default',
+              }}
+              onClick={() => checkedCount > 0 && onBatchPickerModeChange?.('defer')}
+              data-testid="sankey-batch-defer"
+            >
+              Defer ▾
+            </button>
+            <button
+              style={{
+                ...actionBtnBase,
+                color: checkedCount > 0 ? colors.fg.neutral.primary : colors.fg.neutral.disabled,
+                cursor: checkedCount > 0 ? 'pointer' : 'default',
+              }}
+              onClick={() => checkedCount > 0 && onBatchPickerModeChange?.('assign')}
+              data-testid="sankey-batch-assign"
+            >
+              Assign ▾
+            </button>
+            <button
+              style={{
+                ...actionBtnBase,
+                color: colors.fg.neutral.primary,
+                cursor: 'pointer',
+              }}
+              onClick={onExitBatch}
+              data-testid="sankey-batch-cancel"
+            >
+              Cancel
+            </button>
+          </>
+        )}
+        {batchPickerMode === 'defer' && (
+          <>
+            {DEFER_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                style={{ ...actionBtnBase, color: colors.fg.neutral.primary, cursor: 'pointer' }}
+                onClick={onBatchDefer}
+              >
+                {opt}
+              </button>
+            ))}
+            <button
+              style={{ ...actionBtnBase, color: colors.fg.neutral.secondary, cursor: 'pointer' }}
+              onClick={() => onBatchPickerModeChange?.('default')}
+            >
+              Cancel
+            </button>
+          </>
+        )}
+        {batchPickerMode === 'assign' && (
+          <>
+            {ASSIGN_OPTIONS.map((opt) => (
+              <button
+                key={opt}
+                style={{ ...actionBtnBase, color: colors.fg.neutral.primary, cursor: 'pointer' }}
+                onClick={onBatchAssign}
+              >
+                {opt}
+              </button>
+            ))}
+            <button
+              style={{ ...actionBtnBase, color: colors.fg.neutral.secondary, cursor: 'pointer' }}
+              onClick={() => onBatchPickerModeChange?.('default')}
+            >
+              Cancel
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // ---- Normal chips mode ----
   // Group chips by Sankey axis column: left (conditions+preventive), center (riskTiers), right (actionStatuses)
   const leftChips = chips.filter(c => c.axis === 'conditions' || c.axis === 'preventive');
   const centerChips = chips.filter(c => c.axis === 'riskTiers');
@@ -285,20 +470,25 @@ const DimensionFilterChips: React.FC<{
   const groups = [leftChips, centerChips, rightChips].filter(g => g.length > 0);
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: spaceBetween.repeating,
-      padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-      paddingTop: LAYOUT.headerHeight + spaceAround.tight,
-      flexWrap: 'wrap',
-      position: 'sticky',
-      top: 0,
-      left: 0,
-      right: 0,
-      zIndex: 5,
-      ...glass.floating,
-    }}>
+    <div style={barStyle}>
+      {/* Sort pill — leading, before chips (navigator only) */}
+      {navigatorOpen && sortMode !== undefined && onSortChange && (
+        <>
+          <SelectDropdown
+            value={sortMode}
+            items={SORT_ITEMS}
+            onChange={onSortChange}
+            position="bottom-left"
+            testID="sankey-sort-dropdown"
+          />
+          <span style={{
+            width: 1,
+            height: 16,
+            backgroundColor: colors.border.neutral.low,
+            flexShrink: 0,
+          }} />
+        </>
+      )}
       {groups.map((group, gi) => (
         <React.Fragment key={gi}>
           {gi > 0 && (
@@ -355,16 +545,33 @@ const DimensionFilterChips: React.FC<{
           Clear all
         </button>
       )}
-      {navigatorOpen && sortMode !== undefined && onSortChange && (
+      {/* Batch toggle — trailing, after spacer (navigator only) */}
+      {navigatorOpen && onBatchToggle && (
         <>
           <div style={{ flex: 1 }} />
-          <SelectDropdown
-            value={sortMode}
-            items={SORT_ITEMS}
-            onChange={onSortChange}
-            position="bottom-right"
-            testID="sankey-sort-dropdown"
-          />
+          <button
+            type="button"
+            onClick={onBatchToggle}
+            data-testid="sankey-batch-toggle"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              height: 28,
+              padding: '0 10px',
+              fontSize: 12,
+              fontWeight: typography.fontWeight.medium,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.secondary,
+              cursor: 'pointer',
+              borderRadius: borderRadius.full,
+              ...glass.ghost,
+              border: 'none',
+              transition: `background ${transitions.fast}`,
+            }}
+          >
+            <LayoutGrid size={12} /> Batch
+          </button>
         </>
       )}
     </div>
@@ -380,10 +587,82 @@ DimensionFilterChips.displayName = 'DimensionFilterChips';
 export const AllPatientsCanvas: React.FC = () => {
   const { state, dispatch, isDrawerOpen, currentDrawerView, canDrawerGoBack } = usePopHealth();
   const [sortMode, setSortMode] = useState<SankeySortMode>('urgency');
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchPickerMode, setBatchPickerMode] = useState<'default' | 'defer' | 'assign'>('default');
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
+  const [visibleItemCount, setVisibleItemCount] = useState(0);
   const navigatorOpen = state.sankeyNavigatorBandId !== null;
 
-  // Reset sort when navigator band changes
-  useEffect(() => { setSortMode('urgency'); }, [state.sankeyNavigatorBandId]);
+  // Reset all batch + sort state when navigator band changes
+  useEffect(() => {
+    setSortMode('urgency');
+    setBatchMode(false);
+    setBatchPickerMode('default');
+    setCheckedIds(new Set());
+    setRemovedIds(new Set());
+  }, [state.sankeyNavigatorBandId]);
+
+  // Reset picker when batch mode exits
+  useEffect(() => {
+    if (!batchMode) {
+      setBatchPickerMode('default');
+      setCheckedIds(new Set());
+    }
+  }, [batchMode]);
+
+  const handleBatchToggle = useCallback(() => {
+    setBatchMode((prev) => !prev);
+  }, []);
+
+  const handleExitBatch = useCallback(() => {
+    setBatchMode(false);
+  }, []);
+
+  const handleCheckToggle = useCallback((id: string) => {
+    setCheckedIds((prev) => toggleInSet(prev, id));
+  }, []);
+
+  const handleRemoveCard = useCallback((id: string) => {
+    setRemovedIds((prev) => new Set(prev).add(id));
+  }, []);
+
+  const handleVisibleCountChange = useCallback((count: number) => {
+    setVisibleItemCount(count);
+  }, []);
+
+  const handleBatchDefer = useCallback(() => {
+    setRemovedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of checkedIds) next.add(id);
+      return next;
+    });
+    setCheckedIds(new Set());
+    setBatchPickerMode('default');
+  }, [checkedIds]);
+
+  const handleBatchAssign = useCallback(() => {
+    setRemovedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of checkedIds) next.add(id);
+      return next;
+    });
+    setCheckedIds(new Set());
+    setBatchPickerMode('default');
+  }, [checkedIds]);
+
+  const handleSectionCheck = useCallback((sectionIds: string[]) => {
+    setCheckedIds((prev) => {
+      const allChecked = sectionIds.every((id) => prev.has(id));
+      const next = new Set(prev);
+      if (allChecked) {
+        for (const id of sectionIds) next.delete(id);
+      } else {
+        for (const id of sectionIds) next.add(id);
+      }
+      return next;
+    });
+  }, []);
 
   // Keyboard shortcuts 1/2/3 for Map/Routing/Table (all-patients mode only)
   useEffect(() => {
@@ -448,10 +727,30 @@ export const AllPatientsCanvas: React.FC = () => {
         sortMode={sortMode}
         onSortChange={setSortMode}
         navigatorOpen={navigatorOpen}
+        batchMode={batchMode}
+        onBatchToggle={handleBatchToggle}
+        batchPickerMode={batchPickerMode}
+        onBatchPickerModeChange={setBatchPickerMode}
+        checkedCount={checkedIds.size}
+        visibleItemCount={visibleItemCount}
+        onBatchDefer={handleBatchDefer}
+        onBatchAssign={handleBatchAssign}
+        onExitBatch={handleExitBatch}
       />
 
       {/* Main view */}
-      {state.allPatientsView === 'map' && <SankeyMapView sortMode={sortMode} />}
+      {state.allPatientsView === 'map' && (
+        <SankeyMapView
+          sortMode={sortMode}
+          batchMode={batchMode}
+          checkedIds={checkedIds}
+          onCheckToggle={handleCheckToggle}
+          onSectionCheck={handleSectionCheck}
+          removedIds={removedIds}
+          onRemoveCard={handleRemoveCard}
+          onVisibleCountChange={handleVisibleCountChange}
+        />
+      )}
       {state.allPatientsView === 'routing' && <RoutingView />}
       {state.allPatientsView === 'table' && <TablePlaceholder />}
 
