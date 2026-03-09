@@ -1,11 +1,10 @@
 import { PatientShell } from '@/shell/PatientShell'
+import { ProblemsListView } from '@/features/problems-list/ProblemsListView'
 
 export default function App() {
   return (
     <PatientShell>
-      <div className="p-6 text-fg-neutral-secondary text-sm">
-        Problems List content goes here
-      </div>
+      <ProblemsListView />
     </PatientShell>
   )
 }
