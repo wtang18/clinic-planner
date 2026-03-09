@@ -21,6 +21,7 @@ import type {
 import type { Mode, User } from '../types';
 import type { Role } from '../../types/common';
 import type { DraftAction } from './draft-actions';
+import type { ProtocolAction } from './protocol-actions';
 
 // ============================================================================
 // Chart Item Actions
@@ -199,9 +200,11 @@ export type EncounterAction =
   | SessionAction
   | CollaborationAction
   | SyncAction
-  | DraftAction;
+  | DraftAction
+  | ProtocolAction;
 
 export type { DraftAction } from './draft-actions';
+export type { ProtocolAction } from './protocol-actions';
 
 // ============================================================================
 // Action Type Constants
@@ -275,3 +278,4 @@ export const SYNC_ACTION_TYPES = [
 ] as const;
 
 export { DRAFT_ACTION_TYPES } from './draft-actions';
+export { PROTOCOL_ACTION_TYPES } from './protocol-actions';

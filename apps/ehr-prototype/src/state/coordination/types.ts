@@ -33,6 +33,9 @@ export type PaneView = 'menu' | 'ai' | 'transcript';
 /** Module identifier used in action payloads. */
 export type ModuleId = 'ai' | 'tm';
 
+/** Reference pane tab (overview/activity are always present; protocol is conditional). */
+export type OverviewTab = 'overview' | 'activity' | 'protocol';
+
 // ---------------------------------------------------------------------------
 // Coordination State
 // ---------------------------------------------------------------------------
@@ -56,6 +59,12 @@ export interface CoordinationState {
   txEligible: boolean;
   /** Whether the overview pane is expanded (visible). Independent of coordination invariants. */
   overviewExpanded: boolean;
+  /** Reference pane state — tracks tab visibility and protocol tab lifecycle. */
+  referencePane: {
+    expanded: boolean;
+    activeTab: OverviewTab;
+    protocolTabState: import('../../types/protocol').ProtocolTabState;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -85,7 +94,14 @@ export type CoordinationAction =
 
   // Overview pane (independent of coordination invariants)
   | { type: 'OVERVIEW_COLLAPSED' }
-  | { type: 'OVERVIEW_EXPANDED' };
+  | { type: 'OVERVIEW_EXPANDED' }
+
+  // Reference pane tabs & protocol lifecycle
+  | { type: 'OVERVIEW_TAB_CHANGED'; payload: { tab: OverviewTab } }
+  | { type: 'PROTOCOL_TAB_AVAILABLE' }
+  | { type: 'PROTOCOL_TAB_ACTIVATED' }
+  | { type: 'PROTOCOL_TAB_DISMISSED' }
+  | { type: 'PROTOCOL_TAB_COMPLETED' };
 
 // ---------------------------------------------------------------------------
 // Derived Types

@@ -41,14 +41,16 @@ export function createInitialState(): EncounterState {
       tasks: {},
       careGaps: {},
       drafts: {},
+      protocols: {},
     },
-    
+
     // Empty relationships
     relationships: {
       itemOrder: [],
       taskToItem: {},
       suggestionToItem: {},
       careGapToItems: {},
+      protocolToItems: {},
     },
     
     // No context loaded

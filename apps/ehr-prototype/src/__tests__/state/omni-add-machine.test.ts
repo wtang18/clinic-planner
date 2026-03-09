@@ -45,8 +45,9 @@ describe('Category metadata', () => {
     expect(getCategoryVariant('note')).toBe('narrative');
   });
 
-  it('maps data-entry category correctly', () => {
+  it('maps data-entry categories correctly', () => {
     expect(getCategoryVariant('vitals')).toBe('data-entry');
+    expect(getCategoryVariant('assessment')).toBe('data-entry');
   });
 
   it('has 5 primary categories', () => {
@@ -55,8 +56,8 @@ describe('Category metadata', () => {
     expect(names).toEqual(['medication', 'lab', 'diagnosis', 'imaging', 'procedure']);
   });
 
-  it('has 12 secondary categories', () => {
-    expect(SECONDARY_CATEGORIES).toHaveLength(12);
+  it('has 13 secondary categories', () => {
+    expect(SECONDARY_CATEGORIES).toHaveLength(13);
   });
 
   it('finds categories by keyboard shortcut', () => {

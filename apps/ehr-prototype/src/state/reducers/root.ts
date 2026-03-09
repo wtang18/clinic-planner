@@ -12,6 +12,7 @@ import {
   careGapsReducer,
   draftsReducer,
 } from './entities';
+import { protocolsReducer } from './protocol';
 import { relationshipsReducer } from './relationships';
 import { contextReducer } from './context';
 import { sessionReducer } from './session';
@@ -32,6 +33,7 @@ export function rootReducer(
     tasks: tasksReducer(state.entities.tasks, action),
     careGaps: careGapsReducer(state.entities.careGaps, action),
     drafts: draftsReducer(state.entities.drafts, action),
+    protocols: protocolsReducer(state.entities.protocols, action),
   };
   
   // Handle other slices

@@ -7,7 +7,7 @@
  * @see COORDINATION_STATE_MACHINE.md §11 (Width Model), §13 (Selectors)
  */
 
-import type { CoordinationState, BottomBarVisibility, PaneView } from './types';
+import type { CoordinationState, BottomBarVisibility, PaneView, OverviewTab } from './types';
 
 // ---------------------------------------------------------------------------
 // Design Token CSS Custom Property Names (spec §11)
@@ -131,4 +131,39 @@ export function selectIsModuleInDrawer(
  */
 export function selectHasPaletteOpen(state: CoordinationState): boolean {
   return state.aiTier === 'palette' || (state.txEligible && state.txTier === 'palette');
+}
+
+// ---------------------------------------------------------------------------
+// Reference Pane Selectors
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether the Protocol tab should be visible in the reference pane.
+ */
+export function selectIsProtocolTabVisible(state: CoordinationState): boolean {
+  return state.referencePane.protocolTabState !== 'hidden';
+}
+
+/**
+ * Badge type for the Protocol tab segment.
+ * Returns 'dot' for active, 'check' for completed, null otherwise.
+ */
+export function selectProtocolTabBadge(
+  state: CoordinationState
+): 'dot' | 'check' | null {
+  switch (state.referencePane.protocolTabState) {
+    case 'active':
+      return 'dot';
+    case 'completed':
+      return 'check';
+    default:
+      return null;
+  }
+}
+
+/**
+ * Currently active tab in the reference pane.
+ */
+export function selectActiveOverviewTab(state: CoordinationState): OverviewTab {
+  return state.referencePane.activeTab;
 }

@@ -36,3 +36,6 @@ export * from './collaboration';
 
 // Population health types
 export * from './population-health';
+
+// Protocol types
+export * from './protocol';

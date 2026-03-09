@@ -15,6 +15,7 @@ import { ProcedureDetailForm } from '../omni-add/form/ProcedureDetailForm';
 import { AllergyDetailForm } from '../omni-add/form/AllergyDetailForm';
 import { ReferralDetailForm } from '../omni-add/form/ReferralDetailForm';
 import { VitalsDetailForm } from '../omni-add/form/VitalsDetailForm';
+import { AssessmentDetailForm } from '../omni-add/form/AssessmentDetailForm';
 import { InstructionEditor } from './InstructionEditor';
 import { colors, spaceAround, spaceBetween, typography, borderRadius } from '../../styles/foundations';
 
@@ -115,6 +116,16 @@ export const DetailsPaneContent: React.FC<DetailsPaneContentProps> = ({ item, on
     case 'vitals':
       return (
         <VitalsDetailForm
+          initialData={item as unknown as Partial<ChartItem>}
+          onSubmit={(changes) => onUpdate(changes)}
+          onCancel={() => {}}
+          mode="edit"
+        />
+      );
+
+    case 'assessment':
+      return (
+        <AssessmentDetailForm
           initialData={item as unknown as Partial<ChartItem>}
           onSubmit={(changes) => onUpdate(changes)}
           onCancel={() => {}}

@@ -64,6 +64,7 @@ describe('CoordinationProvider + useCoordination', () => {
       paneExpanded: true,
       txEligible: false,
       overviewExpanded: true,
+      referencePane: { expanded: true, activeTab: 'overview', protocolTabState: 'available' },
     });
   });
 

@@ -12,6 +12,7 @@ import { ProcedureFieldDef } from './ProcedureFields';
 import { AllergyFieldDef } from './AllergyFields';
 import { ReferralFieldDef } from './ReferralFields';
 import { ReportMedFieldDef } from './ReportMedFields';
+import { AssessmentFieldDef } from './AssessmentFields';
 
 export type { FieldConfig, CategoryFieldDef } from './types';
 export { RxFieldDef } from './RxFields';
@@ -22,6 +23,7 @@ export { ProcedureFieldDef } from './ProcedureFields';
 export { AllergyFieldDef } from './AllergyFields';
 export { ReferralFieldDef } from './ReferralFields';
 export { ReportMedFieldDef } from './ReportMedFields';
+export { AssessmentFieldDef } from './AssessmentFields';
 
 /**
  * Registry mapping structured categories to their field definitions.
@@ -35,6 +37,7 @@ const FIELD_DEFS: Partial<Record<ItemCategory, CategoryFieldDef>> = {
   procedure: ProcedureFieldDef,
   allergy: AllergyFieldDef,
   referral: ReferralFieldDef,
+  assessment: AssessmentFieldDef,
 };
 
 /**

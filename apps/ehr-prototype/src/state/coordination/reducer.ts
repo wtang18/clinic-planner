@@ -7,7 +7,7 @@
  * @see COORDINATION_STATE_MACHINE.md §7-§10 (transitions), §13 (reducer structure)
  */
 
-import type { CoordinationState, CoordinationAction, TierState, PaneView, ModuleId } from './types';
+import type { CoordinationState, CoordinationAction, TierState, PaneView, ModuleId, OverviewTab } from './types';
 import { assertInvariants } from './invariants';
 
 // ---------------------------------------------------------------------------
@@ -21,6 +21,11 @@ export const initialCoordinationState: CoordinationState = {
   paneExpanded: true,
   txEligible: false,
   overviewExpanded: true,
+  referencePane: {
+    expanded: true,
+    activeTab: 'overview',
+    protocolTabState: 'available',
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -483,6 +488,11 @@ function handleEncounterExited(state: CoordinationState): CoordinationState {
     ...state,
     txEligible: false,
     txTier: 'bar', // Reset to inert default (ignored when txEligible is false)
+    referencePane: {
+      expanded: true,
+      activeTab: 'overview',
+      protocolTabState: 'available',
+    },
   };
 
   // If AI was at anchor (TM was at palette), AI restores to bar
@@ -514,6 +524,32 @@ function handleEncounterSwitched(state: CoordinationState): CoordinationState {
 
   // Already in encounter → switching. Tiers preserved, session layer handles recording.
   return state;
+}
+
+// ---------------------------------------------------------------------------
+// Reference Pane Tab Handler
+// ---------------------------------------------------------------------------
+
+/**
+ * OVERVIEW_TAB_CHANGED — User taps a tab in the reference pane.
+ *
+ * Protocol tab only accessible when protocolTabState !== 'hidden'.
+ */
+function handleOverviewTabChanged(state: CoordinationState, tab: OverviewTab): CoordinationState {
+  // Block protocol tab when it's hidden
+  if (tab === 'protocol' && state.referencePane.protocolTabState === 'hidden') {
+    return state;
+  }
+
+  if (state.referencePane.activeTab === tab) return state;
+
+  return {
+    ...state,
+    referencePane: {
+      ...state.referencePane,
+      activeTab: tab,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -569,10 +605,51 @@ export function coordinationReducer(
       next = handleEncounterSwitched(state);
       break;
     case 'OVERVIEW_COLLAPSED':
-      next = state.overviewExpanded ? { ...state, overviewExpanded: false } : state;
+      next = state.overviewExpanded
+        ? { ...state, overviewExpanded: false, referencePane: { ...state.referencePane, expanded: false } }
+        : state;
       break;
     case 'OVERVIEW_EXPANDED':
-      next = !state.overviewExpanded ? { ...state, overviewExpanded: true } : state;
+      next = !state.overviewExpanded
+        ? { ...state, overviewExpanded: true, referencePane: { ...state.referencePane, expanded: true } }
+        : state;
+      break;
+    case 'OVERVIEW_TAB_CHANGED':
+      next = handleOverviewTabChanged(state, action.payload.tab);
+      break;
+    case 'PROTOCOL_TAB_AVAILABLE':
+      next = state.referencePane.protocolTabState === 'hidden'
+        ? { ...state, referencePane: { ...state.referencePane, protocolTabState: 'available' } }
+        : state;
+      break;
+    case 'PROTOCOL_TAB_ACTIVATED':
+      next = {
+        ...state,
+        referencePane: {
+          ...state.referencePane,
+          protocolTabState: 'active',
+          activeTab: 'protocol', // Auto-switch to protocol tab on activation
+        },
+      };
+      break;
+    case 'PROTOCOL_TAB_DISMISSED':
+      next = {
+        ...state,
+        referencePane: {
+          ...state.referencePane,
+          protocolTabState: 'dismissed',
+          activeTab: state.referencePane.activeTab === 'protocol' ? 'overview' : state.referencePane.activeTab,
+        },
+      };
+      break;
+    case 'PROTOCOL_TAB_COMPLETED':
+      next = {
+        ...state,
+        referencePane: {
+          ...state.referencePane,
+          protocolTabState: 'completed',
+        },
+      };
       break;
     default:
       next = state;

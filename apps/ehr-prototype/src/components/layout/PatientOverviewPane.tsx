@@ -6,15 +6,18 @@
  * Supports Overview and Activity tabs via segmented control.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { colors, spaceAround, spaceBetween, LAYOUT } from '../../styles/foundations';
 import { SegmentedControl } from '../primitives/SegmentedControl';
+import type { Segment } from '../primitives/SegmentedControl';
 import { PatientIdentityHeader } from './PatientIdentityHeader';
 import { AllergiesSection, Allergy } from '../overview/AllergiesSection';
 import { MedicationsSection, Medication } from '../overview/MedicationsSection';
 import { ProblemsSection, Problem } from '../overview/ProblemsSection';
 import { VitalsSection, Vital } from '../overview/VitalsSection';
 import { ActivityTab, TimelineEvent } from '../overview/ActivityTab';
+import type { ProtocolTabState } from '../../types/protocol';
+import { ProtocolSearch } from '../protocol/ProtocolSearch';
 
 // ============================================================================
 // Types
@@ -43,7 +46,7 @@ export interface PatientOverviewData {
   vitals: Vital[];
 }
 
-export type OverviewTab = 'overview' | 'activity';
+export type OverviewTab = 'overview' | 'activity' | 'protocol';
 
 export interface PatientOverviewPaneProps {
   /** Patient data */
@@ -74,6 +77,12 @@ export interface PatientOverviewPaneProps {
   hideHeader?: boolean;
   /** Whether to show the tab control */
   showTabs?: boolean;
+  /** Protocol tab visibility state (from coordination). Hidden = 2 tabs, else 3. */
+  protocolTabState?: ProtocolTabState;
+  /** Content to render when protocol tab is active (slot). */
+  protocolContent?: React.ReactNode;
+  /** Badge for the protocol tab segment ('check' for completed, null otherwise). */
+  protocolBadge?: 'check' | null;
   /** Custom styles */
   style?: React.CSSProperties;
   /** Test ID */
@@ -84,10 +93,39 @@ export interface PatientOverviewPaneProps {
 // Component
 // ============================================================================
 
-const TAB_SEGMENTS = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'activity', label: 'Activity' },
-];
+/** Badge check for completed protocol tab. */
+const ProtocolCheckBadge: React.FC = () => (
+  <span style={{
+    fontSize: 10,
+    lineHeight: 1,
+    color: colors.fg.positive.primary,
+  }}>
+    ✓
+  </span>
+);
+
+/** Build tab segments dynamically based on protocol tab state. */
+function getTabSegments(
+  protocolTabState: ProtocolTabState | undefined,
+  protocolBadge: 'check' | null | undefined
+): Segment<OverviewTab>[] {
+  const segments: Segment<OverviewTab>[] = [
+    { key: 'overview', label: 'Overview' },
+    { key: 'activity', label: 'Activity' },
+  ];
+
+  if (protocolTabState && protocolTabState !== 'hidden') {
+    segments.push({
+      key: 'protocol',
+      label: 'Protocols',
+      badge: protocolBadge === 'check'
+        ? React.createElement(ProtocolCheckBadge)
+        : undefined,
+    });
+  }
+
+  return segments;
+}
 
 export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
   patient,
@@ -104,12 +142,20 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
   onTimelineEventClick,
   hideHeader = false,
   showTabs = true,
+  protocolTabState,
+  protocolContent,
+  protocolBadge,
   style,
   testID,
 }) => {
   // Support both controlled and uncontrolled tab state
   const [internalTab, setInternalTab] = useState<OverviewTab>(defaultTab);
   const currentTab = controlledActiveTab ?? internalTab;
+
+  const tabSegments = useMemo(
+    () => getTabSegments(protocolTabState, protocolBadge),
+    [protocolTabState, protocolBadge]
+  );
 
   const handleTabChange = (tabId: string) => {
     const newTab = tabId as OverviewTab;
@@ -123,8 +169,10 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const handler = () => {
-      // Toggle between overview and activity
-      const next: OverviewTab = currentTab === 'overview' ? 'activity' : 'overview';
+      // Cycle through visible tabs (2 or 3 depending on protocol visibility)
+      const tabKeys = tabSegments.map(s => s.key);
+      const currentIndex = tabKeys.indexOf(currentTab);
+      const next = tabKeys[(currentIndex + 1) % tabKeys.length];
       if (!controlledActiveTab) {
         setInternalTab(next);
       }
@@ -132,7 +180,7 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
     };
     window.addEventListener('ehr:cycle-overview-tab', handler);
     return () => window.removeEventListener('ehr:cycle-overview-tab', handler);
-  }, [currentTab, controlledActiveTab, onTabChange]);
+  }, [currentTab, controlledActiveTab, onTabChange, tabSegments]);
 
   const containerStyle: React.CSSProperties = {
     display: 'flex',
@@ -208,10 +256,10 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
       {/* Tab bar */}
       {showTabs && (
         <div style={tabBarStyle}>
-          <SegmentedControl
-            segments={TAB_SEGMENTS}
+          <SegmentedControl<OverviewTab>
+            segments={tabSegments}
             value={currentTab}
-            onChange={handleTabChange as (key: string) => void}
+            onChange={handleTabChange as (key: OverviewTab) => void}
             variant="inline"
             size="sm"
             testID="overview-tabs"
@@ -220,7 +268,7 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
       )}
 
       {/* Tab content */}
-      {currentTab === 'overview' ? (
+      {currentTab === 'overview' && (
         <div style={scrollContainerStyle}>
           <div style={sectionsContainerStyle}>
             {/* Allergies - Safety critical, always first */}
@@ -251,18 +299,59 @@ export const PatientOverviewPane: React.FC<PatientOverviewPaneProps> = ({
             />
           </div>
         </div>
-      ) : (
+      )}
+      {currentTab === 'activity' && (
         <ActivityTab
           events={timelineEvents}
           onEventClick={onTimelineEventClick}
           testID="activity-tab"
         />
       )}
+      {currentTab === 'protocol' && (
+        <div style={scrollContainerStyle} data-testid="protocol-tab">
+          <div style={sectionsContainerStyle}>
+            {protocolContent ?? (
+              <ProtocolEmptyState />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 PatientOverviewPane.displayName = 'PatientOverviewPane';
+
+/** Empty state shown when protocol tab is active but no protocol is loaded. */
+const ProtocolEmptyState: React.FC = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spaceBetween.related,
+  }}>
+    <ProtocolSearch testID="protocol-search" />
+    <div style={{
+      textAlign: 'center',
+      padding: `${spaceAround.default}px 0`,
+    }}>
+      <div style={{
+        fontSize: 14,
+        fontWeight: 500,
+        color: colors.fg.neutral.primary,
+      }}>
+        No active protocol
+      </div>
+      <div style={{
+        fontSize: 13,
+        color: colors.fg.neutral.spotReadable,
+        lineHeight: 1.4,
+        marginTop: spaceBetween.coupled,
+      }}>
+        Protocols appear here when clinical relevance is confirmed.
+      </div>
+    </div>
+  </div>
+);
 
 // Re-export types for convenience
 export type { Allergy } from '../overview/AllergiesSection';

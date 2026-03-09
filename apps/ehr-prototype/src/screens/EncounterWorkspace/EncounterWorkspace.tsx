@@ -21,6 +21,8 @@ import { CanvasPane } from '../../components/layout/CanvasPane';
 import { EncounterContextBar } from '../../components/layout/EncounterContextBar';
 import { PatientIdentityHeader } from '../../components/layout/PatientIdentityHeader';
 import { PatientOverviewPane } from '../../components/layout/PatientOverviewPane';
+import { ProtocolView } from '../../components/protocol/ProtocolView';
+import { selectActiveProtocol } from '../../state/selectors/protocol';
 import { SegmentedControl, type Segment } from '../../components/primitives/SegmentedControl';
 import { ChartItemCard } from '../../components/chart-items/ChartItemCard';
 import { OmniAddBarV2 as OmniAddBar } from '../../components/omni-add/OmniAddBarV2';
@@ -795,18 +797,45 @@ export const EncounterScrolledContent: React.FC<{ canvasScrolled: boolean }> = (
 
 EncounterScrolledContent.displayName = 'EncounterScrolledContent';
 
-/** Patient overview pane wrapper */
+/** Patient overview pane wrapper — wires coordination state for protocol tab. */
 export const EncounterOverview: React.FC<{
   selectedPatient: NonNullable<ReturnType<typeof useEncounterContext>['state']['context']['patient']> | null;
 }> = ({ selectedPatient }) => {
   if (!selectedPatient) return undefined;
+  const { state, coordState, coordDispatch } = useEncounterContext();
   const data = buildPatientOverviewData(selectedPatient);
+
+  // Bridge: sync encounter protocol state → coordination protocolTabState.
+  // When a scenario dispatches PROTOCOL_LOADED/ACTIVATED, the coordination
+  // state auto-updates so the tab appears without manual coordination dispatch.
+  const activeProtocol = selectActiveProtocol(state);
+  const prevProtocolRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    const currentId = activeProtocol?.id ?? null;
+    if (currentId && currentId !== prevProtocolRef.current) {
+      // New protocol activated — show tab and switch to it
+      if (coordState.referencePane.protocolTabState !== 'active') {
+        coordDispatch({ type: 'PROTOCOL_TAB_ACTIVATED' });
+      }
+    }
+    prevProtocolRef.current = currentId;
+  }, [activeProtocol?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const { protocolTabState, activeTab } = coordState.referencePane;
+  const protocolBadge = protocolTabState === 'completed' ? 'check' as const : null;
+
   return (
     <PatientOverviewPane
       patient={data}
       onPatientClick={() => {}}
       onCopyMrn={() => navigator.clipboard?.writeText(selectedPatient.mrn)}
       hideHeader={true}
+      protocolTabState={protocolTabState}
+      protocolBadge={protocolBadge}
+      protocolContent={activeProtocol ? <ProtocolView testID="protocol-view" /> : undefined}
+      activeTab={activeTab}
+      onTabChange={(tab) => coordDispatch({ type: 'OVERVIEW_TAB_CHANGED', payload: { tab } })}
     />
   );
 };

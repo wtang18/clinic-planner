@@ -23,23 +23,23 @@ import type { CoordinationState } from '../../../state/coordination/types';
 // ---------------------------------------------------------------------------
 
 const S = {
-  N1: { aiTier: 'bar' as const,     txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: true,  txEligible: false, overviewExpanded: true },
-  N2: { aiTier: 'bar' as const,     txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: false, txEligible: false, overviewExpanded: true },
-  N3: { aiTier: 'palette' as const, txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: true,  txEligible: false, overviewExpanded: true },
-  N4: { aiTier: 'palette' as const, txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: false, txEligible: false, overviewExpanded: true },
-  N5: { aiTier: 'drawer' as const,  txTier: 'bar' as const, paneView: 'ai' as const,     paneExpanded: true,  txEligible: false, overviewExpanded: true },
+  N1: { aiTier: 'bar' as const,     txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: true,  txEligible: false, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  N2: { aiTier: 'bar' as const,     txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: false, txEligible: false, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  N3: { aiTier: 'palette' as const, txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: true,  txEligible: false, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  N4: { aiTier: 'palette' as const, txTier: 'bar' as const, paneView: 'menu' as const,   paneExpanded: false, txEligible: false, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  N5: { aiTier: 'drawer' as const,  txTier: 'bar' as const, paneView: 'ai' as const,     paneExpanded: true,  txEligible: false, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
 
-  E1: { aiTier: 'bar' as const,     txTier: 'bar' as const,     paneView: 'menu' as const, paneExpanded: true,  txEligible: true, overviewExpanded: true },
-  E2: { aiTier: 'bar' as const,     txTier: 'bar' as const,     paneView: 'menu' as const, paneExpanded: false, txEligible: true, overviewExpanded: true },
-  E3: { aiTier: 'palette' as const, txTier: 'anchor' as const,  paneView: 'menu' as const, paneExpanded: true,  txEligible: true, overviewExpanded: true },
-  E4: { aiTier: 'palette' as const, txTier: 'anchor' as const,  paneView: 'menu' as const, paneExpanded: false, txEligible: true, overviewExpanded: true },
-  E5: { aiTier: 'anchor' as const,  txTier: 'palette' as const, paneView: 'menu' as const, paneExpanded: true,  txEligible: true, overviewExpanded: true },
-  E6: { aiTier: 'anchor' as const,  txTier: 'palette' as const, paneView: 'menu' as const, paneExpanded: false, txEligible: true, overviewExpanded: true },
+  E1: { aiTier: 'bar' as const,     txTier: 'bar' as const,     paneView: 'menu' as const, paneExpanded: true,  txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E2: { aiTier: 'bar' as const,     txTier: 'bar' as const,     paneView: 'menu' as const, paneExpanded: false, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E3: { aiTier: 'palette' as const, txTier: 'anchor' as const,  paneView: 'menu' as const, paneExpanded: true,  txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E4: { aiTier: 'palette' as const, txTier: 'anchor' as const,  paneView: 'menu' as const, paneExpanded: false, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E5: { aiTier: 'anchor' as const,  txTier: 'palette' as const, paneView: 'menu' as const, paneExpanded: true,  txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E6: { aiTier: 'anchor' as const,  txTier: 'palette' as const, paneView: 'menu' as const, paneExpanded: false, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
 
-  E7:  { aiTier: 'drawer' as const,  txTier: 'bar' as const,     paneView: 'ai' as const,         paneExpanded: true, txEligible: true, overviewExpanded: true },
-  E8:  { aiTier: 'drawer' as const,  txTier: 'palette' as const, paneView: 'ai' as const,         paneExpanded: true, txEligible: true, overviewExpanded: true },
-  E9:  { aiTier: 'bar' as const,     txTier: 'drawer' as const,  paneView: 'transcript' as const, paneExpanded: true, txEligible: true, overviewExpanded: true },
-  E10: { aiTier: 'palette' as const, txTier: 'drawer' as const,  paneView: 'transcript' as const, paneExpanded: true, txEligible: true, overviewExpanded: true },
+  E7:  { aiTier: 'drawer' as const,  txTier: 'bar' as const,     paneView: 'ai' as const,         paneExpanded: true, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E8:  { aiTier: 'drawer' as const,  txTier: 'palette' as const, paneView: 'ai' as const,         paneExpanded: true, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E9:  { aiTier: 'bar' as const,     txTier: 'drawer' as const,  paneView: 'transcript' as const, paneExpanded: true, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
+  E10: { aiTier: 'palette' as const, txTier: 'drawer' as const,  paneView: 'transcript' as const, paneExpanded: true, txEligible: true, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const } },
 };
 
 // ---------------------------------------------------------------------------
@@ -201,7 +201,7 @@ describe('selectHasPaletteOpen', () => {
   it('false for TM palette when txEligible=false', () => {
     // Artificial state for testing the gate (wouldn't normally occur)
     const state: CoordinationState = {
-      aiTier: 'bar', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: false, overviewExpanded: true,
+      aiTier: 'bar', txTier: 'palette', paneView: 'menu', paneExpanded: true, txEligible: false, overviewExpanded: true, referencePane: { expanded: true, activeTab: 'overview' as const, protocolTabState: 'available' as const },
     };
     expect(selectHasPaletteOpen(state)).toBe(false);
   });

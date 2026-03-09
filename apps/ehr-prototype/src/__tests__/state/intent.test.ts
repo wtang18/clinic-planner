@@ -11,13 +11,14 @@ import {
 } from '../../types/chart-items';
 
 // ============================================================================
-// All 15 ItemCategory values (exhaustive)
+// All 16 ItemCategory values (exhaustive)
 // ============================================================================
 
 const ALL_CATEGORIES: ItemCategory[] = [
   'chief-complaint', 'hpi', 'ros', 'physical-exam', 'vitals',
   'medication', 'allergy', 'lab', 'imaging', 'procedure',
   'diagnosis', 'plan', 'instruction', 'note', 'referral',
+  'assessment',
 ];
 
 // ============================================================================
@@ -25,7 +26,7 @@ const ALL_CATEGORIES: ItemCategory[] = [
 // ============================================================================
 
 describe('DEFAULT_INTENT', () => {
-  it('covers all 15 ItemCategory values', () => {
+  it('covers all 16 ItemCategory values', () => {
     for (const cat of ALL_CATEGORIES) {
       expect(DEFAULT_INTENT[cat]).toBeDefined();
     }
@@ -63,6 +64,10 @@ describe('DEFAULT_INTENT', () => {
 
   it('vitals defaults to report', () => {
     expect(DEFAULT_INTENT['vitals']).toBe('report');
+  });
+
+  it('assessment defaults to assess', () => {
+    expect(DEFAULT_INTENT['assessment']).toBe('assess');
   });
 });
 

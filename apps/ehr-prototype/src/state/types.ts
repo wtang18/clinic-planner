@@ -8,6 +8,7 @@ import type {
   BackgroundTask,
   CareGapInstance,
   AIDraft,
+  ActiveProtocolState,
   EncounterMeta,
   PatientContext,
   VisitMeta,
@@ -30,6 +31,7 @@ export interface EncounterState {
     tasks: Record<string, BackgroundTask>;
     careGaps: Record<string, CareGapInstance>;
     drafts: Record<string, AIDraft>;
+    protocols: Record<string, ActiveProtocolState>;
   };
   
   /** Explicit relationships between entities */
@@ -38,6 +40,7 @@ export interface EncounterState {
     taskToItem: Record<string, string>;         // Task ID → Item ID
     suggestionToItem: Record<string, string | null>; // Suggestion ID → Item ID (null if general)
     careGapToItems: Record<string, string[]>;   // Gap ID → Item IDs addressing it
+    protocolToItems: Record<string, string[]>; // Protocol ID → Item IDs from protocol actions
   };
   
   /** Encounter context - loaded at open, rarely mutated */

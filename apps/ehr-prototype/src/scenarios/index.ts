@@ -14,6 +14,8 @@ export {
 // Scenario Definitions
 export { UC_COUGH_SCENARIO } from './definitions/uc-cough';
 export { PC_DIABETES_SCENARIO } from './definitions/pc-diabetes';
+export { LBP_PROTOCOL_SCENARIO } from './definitions/lbp-protocol';
+export { URI_PROTOCOL_SCENARIO } from './definitions/uri-protocol';
 
 // To-Do Mock Data
 export {
@@ -59,11 +61,15 @@ export {
 // All scenarios
 import { UC_COUGH_SCENARIO } from './definitions/uc-cough';
 import { PC_DIABETES_SCENARIO } from './definitions/pc-diabetes';
+import { LBP_PROTOCOL_SCENARIO } from './definitions/lbp-protocol';
+import { URI_PROTOCOL_SCENARIO } from './definitions/uri-protocol';
 import type { Scenario } from './ScenarioRunner';
 
 export const ALL_SCENARIOS: Scenario[] = [
   UC_COUGH_SCENARIO,
   PC_DIABETES_SCENARIO,
+  LBP_PROTOCOL_SCENARIO,
+  URI_PROTOCOL_SCENARIO,
 ];
 
 /**

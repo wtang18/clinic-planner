@@ -36,6 +36,7 @@ const CATEGORY_VARIANTS: Record<ItemCategory, CategoryVariant> = {
   'instruction': 'narrative',
   'note': 'narrative',
   'vitals': 'data-entry',
+  'assessment': 'data-entry',
 };
 
 export function getCategoryVariant(category: ItemCategory): CategoryVariant {
@@ -71,6 +72,7 @@ export const CATEGORIES: CategoryMeta[] = [
   { category: 'instruction',     label: 'Instruction', prefix: 'instr:',              primary: false },
   { category: 'note',            label: 'Note',      prefix: 'note:',                 primary: false },
   { category: 'referral',        label: 'Referral',  prefix: 'ref:',                  primary: false },
+  { category: 'assessment',      label: 'Assessment', prefix: 'assess:',              primary: false },
   { category: 'medication',      label: 'Med',       prefix: 'med:',                  primary: false, intent: 'report' },
   { category: 'diagnosis',       label: 'R/O',       prefix: 'ro:',                   primary: false, intent: 'rule-out' },
 ];

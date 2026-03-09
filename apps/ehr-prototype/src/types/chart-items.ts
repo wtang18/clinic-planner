@@ -25,7 +25,8 @@ export type ItemCategory =
   | 'plan'
   | 'instruction'
   | 'note'
-  | 'referral';
+  | 'referral'
+  | 'assessment';   // Scored clinical measures (e.g., pain scale, PHQ-9, ROM)
 
 /**
  * How the item was created — tracks clinical provenance.
@@ -443,6 +444,34 @@ export interface ProcedureItem extends ChartItemBase {
 }
 
 // ============================================================================
+// Assessment Item
+// ============================================================================
+
+/** Assessment type identifier for scored clinical measures */
+export type AssessmentType =
+  | 'pain-scale'
+  | 'phq-9'
+  | 'gad-7'
+  | 'start-back'
+  | 'rom'                // Range of Motion
+  | 'neuro-screening'
+  | 'functional-limitation'
+  | string;              // Extensible for future assessment types
+
+export interface AssessmentItem extends ChartItemBase {
+  category: 'assessment';
+  data: {
+    assessmentType: AssessmentType;
+    label: string;                       // e.g., 'Pain Scale', 'PHQ-9'
+    scale: { min: number; max: number }; // e.g., { min: 0, max: 10 }
+    value: number | null;                // Numeric score (null if not yet recorded)
+    method: 'patient-reported' | 'provider-assessed' | 'calculated';
+    bodyRegion?: string;                 // e.g., 'lumbar spine', 'left knee'
+    notes?: string;
+  };
+}
+
+// ============================================================================
 // Union Type
 // ============================================================================
 
@@ -457,7 +486,8 @@ export type ChartItem =
   | AllergyItem
   | InstructionItem
   | ReferralItem
-  | ProcedureItem;
+  | ProcedureItem
+  | AssessmentItem;
 
 // ============================================================================
 // Data Map — extracts the `data` shape for each category
@@ -480,6 +510,7 @@ export type ChartItemDataMap = {
   'instruction': InstructionItem['data'];
   'note': NarrativeItem['data'];
   'referral': ReferralItem['data'];
+  'assessment': AssessmentItem['data'];
 };
 
 // ============================================================================
@@ -503,6 +534,7 @@ export const DEFAULT_INTENT: Record<ItemCategory, ItemIntent> = {
   instruction: 'draft',
   note: 'draft',
   vitals: 'report',
+  assessment: 'assess',
 };
 
 /** Resolve the effective intent: explicit value or category default. */

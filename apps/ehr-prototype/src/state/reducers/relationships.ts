@@ -87,6 +87,7 @@ export function relationshipsReducer(
           taskToItem: {},
           suggestionToItem: {},
           careGapToItems: {},
+          protocolToItems: {},
         };
       }
       return state;
