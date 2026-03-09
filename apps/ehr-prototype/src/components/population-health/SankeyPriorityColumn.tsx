@@ -7,36 +7,34 @@
  */
 
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { X, ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { PriorityCard } from './PriorityCard';
-import { SelectDropdown } from '../primitives/SelectDropdown';
 import {
   deriveSankeyPriorityItems,
-  getBandLabel,
-  getBandPatientCount,
 } from '../../utils/sankey-priority-bridge';
 import { computePriorityQueue, groupBySection } from '../../utils/priority-computation';
-import { colors, typography, spaceAround, borderRadius, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
+import { colors, typography, spaceAround, LAYOUT } from '../../styles/foundations';
 import type { DimensionSelection, PriorityItem, PrioritySortMode } from '../../types/population-health';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type SankeySortMode = 'urgency' | 'by-cohort' | 'by-date';
+export type SankeySortMode = 'urgency' | 'by-cohort' | 'by-date';
 
 interface SankeyPriorityColumnProps {
   bandId: string;
   dimensionSelection: DimensionSelection;
-  onClose: () => void;
+  sortMode: SankeySortMode;
   onCardDetails: (itemId: string) => void;
+  onClearFilters?: () => void;
 }
 
 // ============================================================================
 // Constants
 // ============================================================================
 
-const SORT_ITEMS = [
+export const SORT_ITEMS = [
   { key: 'urgency' as SankeySortMode, label: 'Urgency', description: 'Grouped by priority tier' },
   { key: 'by-cohort' as SankeySortMode, label: 'By Cohort', description: 'Grouped by care program' },
   { key: 'by-date' as SankeySortMode, label: 'By Date', description: 'Grouped by recency' },
@@ -117,10 +115,10 @@ const SectionHeader: React.FC<{
 export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
   bandId,
   dimensionSelection,
-  onClose,
+  sortMode,
   onCardDetails,
+  onClearFilters,
 }) => {
-  const [sortMode, setSortMode] = useState<SankeySortMode>('urgency');
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set());
   const [flaggedIds, setFlaggedIds] = useState<Set<string>>(new Set());
   const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
@@ -173,9 +171,6 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
     return groupBySection(visibleItems, prioritySortMode);
   }, [visibleItems, sortMode]);
 
-  const bandLabel = useMemo(() => getBandLabel(bandId), [bandId]);
-  const bandPatientCount = useMemo(() => getBandPatientCount(bandId), [bandId]);
-
   // Handlers
   const handleCheck = useCallback((id: string) => {
     setCheckedIds((prev) => toggleInSet(prev, id));
@@ -211,59 +206,10 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
     flexDirection: 'column',
     height: '100%',
     borderLeft: `1px solid ${colors.border.neutral.low}`,
-    background: colors.bg.neutral.base,
     opacity: visible ? 1 : 0,
     transform: visible ? 'translateX(0)' : 'translateX(20px)',
     transition: `opacity 300ms ease, transform 300ms ease`,
     overflow: 'hidden',
-  };
-
-  const headerStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: `${spaceAround.compact}px ${spaceAround.default}px`,
-    flexShrink: 0,
-    ...glass.floating,
-  };
-
-  const titleStyle: React.CSSProperties = {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: typography.fontWeight.semibold,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.primary,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  };
-
-  const countStyle: React.CSSProperties = {
-    fontSize: 12,
-    fontFamily: typography.fontFamily.sans,
-    color: colors.fg.neutral.secondary,
-    flexShrink: 0,
-  };
-
-  const closeBtnStyle: React.CSSProperties = {
-    ...glass.button,
-    borderRadius: GLASS_BUTTON_RADIUS,
-    width: GLASS_BUTTON_HEIGHT,
-    height: GLASS_BUTTON_HEIGHT,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    flexShrink: 0,
-    border: 'none',
-  };
-
-  const sortBarStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: `${spaceAround.tight}px ${spaceAround.default}px`,
-    flexShrink: 0,
   };
 
   const listStyle: React.CSSProperties = {
@@ -287,32 +233,6 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
 
   return (
     <div style={columnStyle} data-testid="sankey-priority-column">
-      {/* Header */}
-      <div style={headerStyle}>
-        <span style={titleStyle}>{bandLabel}</span>
-        <span style={countStyle}>{bandPatientCount} patients</span>
-        <button style={closeBtnStyle} onClick={onClose} aria-label="Close navigator">
-          <X size={14} color={colors.fg.neutral.secondary} />
-        </button>
-      </div>
-
-      {/* Sort bar */}
-      <div style={sortBarStyle}>
-        <SelectDropdown
-          value={sortMode}
-          items={SORT_ITEMS}
-          onChange={setSortMode}
-          testID="sankey-sort-dropdown"
-        />
-        <span style={{
-          fontSize: 12,
-          fontFamily: typography.fontFamily.sans,
-          color: colors.fg.neutral.secondary,
-        }}>
-          {visibleItems.length} priority {visibleItems.length === 1 ? 'item' : 'items'}
-        </span>
-      </div>
-
       {/* Card list or empty state */}
       {visibleItems.length === 0 ? (
         <div style={emptyStyle}>
@@ -331,8 +251,29 @@ export const SankeyPriorityColumn: React.FC<SankeyPriorityColumnProps> = ({
             textAlign: 'center',
             maxWidth: 260,
           }}>
-            No patients in this group have actionable items in active care flows.
+            {sortedItems.length === 0
+              ? 'No patients match the current filter selection.'
+              : 'No patients in this group have actionable items in active care flows.'}
           </span>
+          {sortedItems.length === 0 && onClearFilters && (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              style={{
+                height: 32,
+                padding: '0 16px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontFamily: typography.fontFamily.sans,
+                color: colors.fg.accent.primary,
+                backgroundColor: 'transparent',
+                border: `1px solid ${colors.border.accent.medium}`,
+                borderRadius: 16,
+              }}
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         <div style={listStyle}>

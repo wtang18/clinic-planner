@@ -50,18 +50,83 @@ function hasAnySelection(selection: DimensionSelection): boolean {
   );
 }
 
-/** Get connected band IDs from a given band via flows */
+/** Collect all selected band IDs from the current dimension selection */
+function getSelectedBandIds(selection: DimensionSelection): string[] {
+  const ids: string[] = [];
+  ids.push(...selection.conditions);
+  ids.push(...selection.preventive);
+  for (const tier of selection.riskTiers) ids.push(`risk-${tier}`);
+  for (const status of selection.actionStatuses) ids.push(`action-${status}`);
+  return ids;
+}
+
+/** Get transitively connected band IDs from a given band via flows (BFS) */
 function getConnectedBandIds(
   bandId: string,
   flows: SankeyFlowLayout[],
 ): Set<string> {
   const connected = new Set<string>();
   connected.add(bandId);
-  for (const flow of flows) {
-    if (flow.sourceId === bandId) connected.add(flow.targetId);
-    if (flow.targetId === bandId) connected.add(flow.sourceId);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const flow of flows) {
+      if (connected.has(flow.sourceId) && !connected.has(flow.targetId)) {
+        connected.add(flow.targetId);
+        changed = true;
+      }
+      if (connected.has(flow.targetId) && !connected.has(flow.sourceId)) {
+        connected.add(flow.sourceId);
+        changed = true;
+      }
+    }
   }
   return connected;
+}
+
+/**
+ * Directed lineage tracing for flow highlighting.
+ * Forward: flows where S is source → collect targets → flows where those targets are source.
+ * Backward: flows where S is target → collect sources → flows where those sources are target.
+ * This gives full chain coverage without the bidirectional BFS problem of reaching everything.
+ */
+function getLineageFlowKeys(
+  selectedBandId: string,
+  flows: SankeyFlowLayout[],
+): Set<string> {
+  const keys = new Set<string>();
+
+  // Forward phase 1: flows where S is source
+  const forwardTargets = new Set<string>();
+  for (const flow of flows) {
+    if (flow.sourceId === selectedBandId) {
+      keys.add(`${flow.sourceId}-${flow.targetId}`);
+      forwardTargets.add(flow.targetId);
+    }
+  }
+  // Forward phase 2: flows where a forward target is source
+  for (const flow of flows) {
+    if (forwardTargets.has(flow.sourceId)) {
+      keys.add(`${flow.sourceId}-${flow.targetId}`);
+    }
+  }
+
+  // Backward phase 1: flows where S is target
+  const backwardSources = new Set<string>();
+  for (const flow of flows) {
+    if (flow.targetId === selectedBandId) {
+      keys.add(`${flow.sourceId}-${flow.targetId}`);
+      backwardSources.add(flow.sourceId);
+    }
+  }
+  // Backward phase 2: flows where a backward source is target
+  for (const flow of flows) {
+    if (backwardSources.has(flow.targetId)) {
+      keys.add(`${flow.sourceId}-${flow.targetId}`);
+    }
+  }
+
+  return keys;
 }
 
 function getBandFill(
@@ -130,6 +195,14 @@ function getBandOpacity(
     if (connected.has(band.id)) return 1;
   }
 
+  // If connected to any selected band, full opacity (lineage tracing)
+  if (hasAnySelection(selection)) {
+    const selectedIds = getSelectedBandIds(selection);
+    for (const selId of selectedIds) {
+      if (getConnectedBandIds(selId, flows).has(band.id)) return 1;
+    }
+  }
+
   // Dimmed
   return 0.3;
 }
@@ -141,47 +214,41 @@ const ATTENTION_BAND_IDS = new Set(['risk-high', 'action-action-needed']);
 
 function getFlowFill(
   flow: SankeyFlowLayout,
-  selection: DimensionSelection,
-  hoveredBandId: string | null,
+  lineageKeys: Set<string>,
 ): string {
-  // Interactive states take priority
-  const active = hasAnySelection(selection) || hoveredBandId !== null;
-  if (active) {
-    const connectedToSelection =
-      isSelected(flow.sourceId, selection) || isSelected(flow.targetId, selection);
-    const connectedToHover =
-      hoveredBandId === flow.sourceId || hoveredBandId === flow.targetId;
-    if (connectedToSelection || connectedToHover) {
-      return colors.bg.accent.low;
-    }
+  const flowKey = `${flow.sourceId}-${flow.targetId}`;
+  if (lineageKeys.size > 0 && lineageKeys.has(flowKey)) {
+    // Preserve semantic colors for flows touching alert/attention bands
+    if (ALERT_BAND_IDS.has(flow.sourceId) || ALERT_BAND_IDS.has(flow.targetId))
+      return colors.bg.alert.low;
+    if (ATTENTION_BAND_IDS.has(flow.sourceId) || ATTENTION_BAND_IDS.has(flow.targetId))
+      return colors.bg.attention.medium;
+    return colors.bg.accent.low;
   }
-
-  // Semantic fill: flows touching alert bands → alert, attention bands → amber
+  // Passive semantic fill
   if (ALERT_BAND_IDS.has(flow.sourceId) || ALERT_BAND_IDS.has(flow.targetId))
     return colors.bg.alert.low;
   if (ATTENTION_BAND_IDS.has(flow.sourceId) || ATTENTION_BAND_IDS.has(flow.targetId))
     return colors.bg.attention.medium;
-
-  // Fallback: existing attention flag for left-axis flows
   if (flow.attention) return colors.bg.attention.medium;
   return colors.bg.neutral.low;
 }
 
 function getFlowOpacity(
   flow: SankeyFlowLayout,
-  selection: DimensionSelection,
-  hoveredBandId: string | null,
+  lineageKeys: Set<string>,
 ): number {
-  const active = hasAnySelection(selection) || hoveredBandId !== null;
-  if (!active) return flow.attention ? 0.5 : 0.25;
-
-  const connectedToSelection =
-    isSelected(flow.sourceId, selection) || isSelected(flow.targetId, selection);
-  const connectedToHover =
-    hoveredBandId === flow.sourceId || hoveredBandId === flow.targetId;
-
-  if (connectedToSelection || connectedToHover) return 0.6;
+  if (lineageKeys.size === 0) return flow.attention ? 0.5 : 0.25;
+  if (lineageKeys.has(`${flow.sourceId}-${flow.targetId}`)) return 0.6;
   return 0.08;
+}
+
+/** Whether a flow is highlighted (in lineage set) — used for z-ordering */
+function isFlowHighlighted(
+  flow: SankeyFlowLayout,
+  lineageKeys: Set<string>,
+): boolean {
+  return lineageKeys.has(`${flow.sourceId}-${flow.targetId}`);
 }
 
 // ============================================================================
@@ -204,7 +271,7 @@ const BAND_TRANSITION = [
 
 const LABEL_TRANSITION = `opacity ${VIS_TRANSITION}, fill ${VIS_TRANSITION}`;
 
-const FLOW_TRANSITION = `opacity 450ms ease-in, fill ${VIS_TRANSITION}`;
+const FLOW_TRANSITION = `opacity 300ms ease-out, fill ${VIS_TRANSITION}`;
 
 const DIVIDER_TRANSITION = [
   `x1 ${GEO_TRANSITION}`, `y1 ${GEO_TRANSITION}`,
@@ -274,6 +341,31 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     [onBandHover],
   );
 
+  // Pre-compute directed lineage flow keys for all selected + hovered bands
+  const lineageFlowKeys = useMemo(() => {
+    const keys = new Set<string>();
+    const selectedIds = getSelectedBandIds(dimensionSelection);
+    for (const selId of selectedIds) {
+      for (const key of getLineageFlowKeys(selId, layout.flows)) keys.add(key);
+    }
+    if (hoveredBandId) {
+      for (const key of getLineageFlowKeys(hoveredBandId, layout.flows)) keys.add(key);
+    }
+    return keys;
+  }, [layout.flows, dimensionSelection, hoveredBandId]);
+
+  // Sort flows so highlighted ones render on top (SVG paints in document order)
+  const sortedFlows = useMemo(() => {
+    const flows = [...layout.flows];
+    flows.sort((a, b) => {
+      const aH = isFlowHighlighted(a, lineageFlowKeys);
+      const bH = isFlowHighlighted(b, lineageFlowKeys);
+      if (aH === bH) return 0;
+      return aH ? 1 : -1;
+    });
+    return flows;
+  }, [layout.flows, lineageFlowKeys]);
+
   // SVG geometry properties set via style for CSS transition support (SVG2).
   // Cast needed because React's CSSProperties doesn't include SVG geometry props.
   const svgStyle = (props: Record<string, unknown>) => props as React.CSSProperties;
@@ -292,13 +384,13 @@ export const SankeyChart: React.FC<SankeyChartProps> = ({
     >
       {/* Flow ribbons (behind bands) — hidden until bands settle */}
       <g className="flows">
-        {layout.flows.map((flow) => (
+        {sortedFlows.map((flow) => (
           <path
             key={`flow-${flow.sourceId}-${flow.targetId}`}
             d={flow.path}
             style={svgStyle({
-              fill: getFlowFill(flow, dimensionSelection, hoveredBandId),
-              opacity: flowsVisible ? getFlowOpacity(flow, dimensionSelection, hoveredBandId) : 0,
+              fill: getFlowFill(flow, lineageFlowKeys),
+              opacity: flowsVisible ? getFlowOpacity(flow, lineageFlowKeys) : 0,
               transition: flowsVisible ? FLOW_TRANSITION : 'none',
             })}
           />
