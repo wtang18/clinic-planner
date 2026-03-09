@@ -30,12 +30,6 @@ const DynamicStatsModule: React.FC = () => {
     [state.dimensionSelection],
   );
 
-  const hasSelection =
-    state.dimensionSelection.conditions.length > 0 ||
-    state.dimensionSelection.preventive.length > 0 ||
-    state.dimensionSelection.riskTiers.length > 0 ||
-    state.dimensionSelection.actionStatuses.length > 0;
-
   const metrics: DashboardMetric[] = useMemo(() => [
     { id: 'ap-total', label: 'Total Patients', value: stats.totalPatients },
     { id: 'ap-attention', label: 'Needs Attention', value: stats.needsAttention },
@@ -45,46 +39,7 @@ const DynamicStatsModule: React.FC = () => {
 
   return (
     <div>
-      {/* Header */}
-      <div style={{
-        padding: `${spaceAround.compact}px ${spaceAround.default}px ${spaceAround.tight}px`,
-      }}>
-        <span style={{
-          fontSize: 11,
-          fontFamily: typography.fontFamily.sans,
-          fontWeight: typography.fontWeight.semibold,
-          color: colors.fg.neutral.spotReadable,
-          textTransform: 'uppercase' as const,
-          letterSpacing: 0.5,
-        }}>
-          {stats.contextLabel}
-        </span>
-      </div>
-
       <Dashboard metrics={metrics} alerts={[]} testID="all-patients-stats" />
-
-      {/* Investigate button */}
-      <div style={{ padding: `0 ${spaceAround.default}px ${spaceAround.compact}px` }}>
-        <button
-          type="button"
-          onClick={() => {/* future: open investigation modal */}}
-          disabled={!hasSelection}
-          style={{
-            width: '100%',
-            height: 32,
-            borderRadius: borderRadius.sm,
-            border: `1px solid ${colors.border.neutral.low}`,
-            background: 'transparent',
-            cursor: hasSelection ? 'pointer' : 'default',
-            fontSize: 13,
-            fontFamily: typography.fontFamily.sans,
-            color: hasSelection ? colors.fg.neutral.secondary : colors.fg.neutral.spotReadable,
-            opacity: hasSelection ? 1 : 0.5,
-          }}
-        >
-          Investigate Selection…
-        </button>
-      </div>
     </div>
   );
 };
