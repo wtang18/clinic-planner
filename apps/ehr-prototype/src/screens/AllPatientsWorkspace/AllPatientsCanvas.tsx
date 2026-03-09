@@ -6,7 +6,7 @@
  */
 
 import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
-import { X, LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, LayoutGrid, ChevronUp, ChevronDown, User } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { SankeyChart } from '../../components/population-health/SankeyChart';
 import { SankeyPriorityColumn, SORT_ITEMS } from '../../components/population-health/SankeyPriorityColumn';
@@ -22,7 +22,7 @@ import {
   ACTION_STATUS_LABELS,
 } from '../../utils/sankey-computation';
 import { computeSankeyLayout } from '../../utils/sankey-layout';
-import { ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS, getConditionLabel, getPreventiveLabel } from '../../data/mock-all-patients';
+import { ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS, getConditionLabel, getPreventiveLabel, getPatientById } from '../../data/mock-all-patients';
 import { colors, typography, spaceAround, spaceBetween, borderRadius, LAYOUT, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
 import type { DimensionSelection, RiskTier, ActionStatus, AllPatientsPatient } from '../../types/population-health';
 
@@ -469,6 +469,135 @@ const apTableStyles: Record<string, React.CSSProperties> = {
     textAlign: 'center' as const,
     color: colors.fg.neutral.secondary,
   },
+};
+
+// ============================================================================
+// AllPatientsPatientPreview — drawer content for patient-preview
+// ============================================================================
+
+const AllPatientsPatientPreview: React.FC<{ patientId: string }> = ({ patientId }) => {
+  const patient = useMemo(() => getPatientById(patientId), [patientId]);
+
+  if (!patient) {
+    return (
+      <div style={{ padding: spaceAround.default, color: colors.fg.neutral.secondary, fontSize: 13, fontFamily: typography.fontFamily.sans }}>
+        Patient not found
+      </div>
+    );
+  }
+
+  const conditions = patient.conditionAssignments.map((a) => getConditionLabel(a.conditionCohortId));
+  const preventive = patient.preventiveAssignments.map((a) => getPreventiveLabel(a.preventiveCohortId));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: spaceAround.default }} data-testid="all-patients-patient-preview">
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 40, height: 40, borderRadius: '50%',
+          backgroundColor: colors.bg.neutral.subtle,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <User size={20} color={colors.fg.neutral.secondary} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={{ fontSize: 16, fontFamily: typography.fontFamily.sans, fontWeight: typography.fontWeight.semibold, color: colors.fg.neutral.primary }}>
+            {patient.name}
+          </span>
+          <span style={{ fontSize: 13, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.secondary }}>
+            {patient.age} · {patient.gender} ·{' '}
+            <span style={{ color: riskColor(patient.riskTier), fontWeight: 500 }}>{patient.riskTier} risk</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Status row */}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <StatusPill label={patient.riskTier} color={riskColor(patient.riskTier)} />
+        <StatusPill label={patient.actionStatus} color={actionColor(patient.actionStatus)} />
+        {patient.daysWaiting != null && patient.daysWaiting > 0 && (
+          <StatusPill label={`${patient.daysWaiting}d waiting`} color={colors.fg.neutral.secondary} />
+        )}
+      </div>
+
+      {/* Conditions */}
+      {conditions.length > 0 && (
+        <PreviewSection title="Conditions">
+          {conditions.map((c) => (
+            <span key={c} style={previewFieldStyle}>{c}</span>
+          ))}
+        </PreviewSection>
+      )}
+
+      {/* Preventive */}
+      {preventive.length > 0 && (
+        <PreviewSection title="Preventive Programs">
+          {preventive.map((p) => (
+            <span key={p} style={previewFieldStyle}>{p}</span>
+          ))}
+        </PreviewSection>
+      )}
+
+      {/* Clinical data */}
+      {Object.keys(patient.clinicalData).length > 0 && (
+        <PreviewSection title="Clinical Data">
+          {Object.entries(patient.clinicalData).map(([key, value]) => {
+            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase()).trim();
+            const display = Array.isArray(value) ? value.join(', ') : String(value);
+            return (
+              <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ fontSize: 12, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.secondary, flexShrink: 0 }}>{label}</span>
+                <span style={{ fontSize: 12, fontFamily: typography.fontFamily.sans, color: colors.fg.neutral.primary, textAlign: 'right' as const, maxWidth: '60%', wordBreak: 'break-word' as const }}>{display}</span>
+              </div>
+            );
+          })}
+        </PreviewSection>
+      )}
+    </div>
+  );
+};
+
+AllPatientsPatientPreview.displayName = 'AllPatientsPatientPreview';
+
+const StatusPill: React.FC<{ label: string; color: string }> = ({ label, color }) => (
+  <span style={{
+    fontSize: 11,
+    fontFamily: typography.fontFamily.sans,
+    fontWeight: typography.fontWeight.medium,
+    color,
+    textTransform: 'capitalize' as const,
+    padding: '2px 8px',
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.bg.neutral.subtle,
+  }}>
+    {label}
+  </span>
+);
+
+StatusPill.displayName = 'StatusPill';
+
+const PreviewSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <span style={{
+      fontSize: 11,
+      fontFamily: typography.fontFamily.sans,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.fg.neutral.spotReadable,
+      textTransform: 'uppercase' as const,
+      letterSpacing: 0.5,
+    }}>
+      {title}
+    </span>
+    {children}
+  </div>
+);
+
+PreviewSection.displayName = 'PreviewSection';
+
+const previewFieldStyle: React.CSSProperties = {
+  fontSize: 13,
+  fontFamily: typography.fontFamily.sans,
+  color: colors.fg.neutral.primary,
 };
 
 // ============================================================================
@@ -919,14 +1048,23 @@ export const AllPatientsCanvas: React.FC = () => {
       )}
       {state.allPatientsView === 'table' && <AllPatientsTableView />}
 
-      {/* Standard drawer (filter, dimension-detail) — hidden when priority-detail is active */}
+      {/* Standard drawer (filter, dimension-detail, patient-preview) — hidden when priority-detail is active */}
       <SlideDrawer
         open={isDrawerOpen && !isPriorityDetail}
         onClose={() => dispatch({ type: 'DRAWER_CLOSED' })}
         showBack={canDrawerGoBack}
         onBack={() => dispatch({ type: 'DRAWER_BACK' })}
         header={
-          currentDrawerView?.type === 'dimension-detail' ? (
+          currentDrawerView?.type === 'patient-preview' ? (
+            <span style={{
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: typography.fontFamily.sans,
+              color: colors.fg.neutral.primary,
+            }}>
+              Patient Preview
+            </span>
+          ) : currentDrawerView?.type === 'dimension-detail' ? (
             <span style={{
               fontSize: 14,
               fontWeight: 600,
@@ -948,6 +1086,9 @@ export const AllPatientsCanvas: React.FC = () => {
         }
         testID="all-patients-drawer"
       >
+        {currentDrawerView?.type === 'patient-preview' && (
+          <AllPatientsPatientPreview patientId={currentDrawerView.patientId} />
+        )}
         {currentDrawerView?.type === 'filter' && (
           <div style={{ padding: 20, color: colors.fg.neutral.secondary, fontSize: 13, fontFamily: typography.fontFamily.sans }}>
             Advanced filter controls for all-patients view.
