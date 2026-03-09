@@ -178,6 +178,11 @@ const SankeyMapView: React.FC<{
             title="No axes visible"
             description="Enable at least one dimension axis to view the Sankey diagram."
           />
+        ) : sankeyData.totalPatients === 0 ? (
+          <EmptyMessage
+            title="No patients match"
+            description="Adjust dimension filters to see patients."
+          />
         ) : (
           <div style={{ minHeight: 400 }}>
             <SankeyChart

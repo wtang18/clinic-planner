@@ -50,6 +50,8 @@ export type PopHealthAction =
   | { type: 'BAND_HOVERED'; bandId: string | null }
   // Sankey navigator actions
   | { type: 'SANKEY_NAVIGATOR_TOGGLED'; bandId: string | null }
+  // Scope restoration
+  | { type: 'ALL_PATIENTS_SCOPE_RESTORED' }
   // Layer tree "Show Mine" actions
   | { type: 'SHOW_MINE_APPLIED'; nodeIds: string[] }
   | { type: 'SHOW_MINE_CLEARED' };
@@ -72,7 +74,10 @@ const INITIAL_AXIS_VISIBILITY: AxisVisibility = {
   actionStatus: true,
 };
 
-const INITIAL_STATE: PopHealthState = {
+export const INITIAL_DIMENSION_SELECTION_VALUE = INITIAL_DIMENSION_SELECTION;
+export const INITIAL_AXIS_VISIBILITY_VALUE = INITIAL_AXIS_VISIBILITY;
+
+export const INITIAL_STATE: PopHealthState = {
   selectedCohortId: null,
   selectedPathwayIds: [],
   selectedNodeIds: [],
@@ -89,6 +94,7 @@ const INITIAL_STATE: PopHealthState = {
   hoveredBandId: null,
   sankeyNavigatorBandId: null,
   showMineActive: true,
+  allPatientsSnapshot: null,
 };
 
 // ============================================================================
@@ -103,11 +109,17 @@ const CATEGORY_OVERVIEW_MAP: Record<string, string> = {
   'care-transitions': 'coh-transitions-overview',
 };
 
-function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHealthState {
+export function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHealthState {
   switch (action.type) {
     case 'COHORT_SELECTED':
       return {
         ...state,
+        // Save All-Patients state on first transition (AP → cohort)
+        // Don't overwrite on cohort → cohort transitions
+        allPatientsSnapshot: state.allPatientsSnapshot ?? {
+          dimensionSelection: state.dimensionSelection,
+          axisVisibility: state.axisVisibility,
+        },
         selectedCohortId: action.cohortId,
         selectedPathwayIds: [],
         selectedNodeIds: [],
@@ -210,6 +222,10 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
       if (!overviewCohortId) return state;
       return {
         ...state,
+        allPatientsSnapshot: state.allPatientsSnapshot ?? {
+          dimensionSelection: state.dimensionSelection,
+          axisVisibility: state.axisVisibility,
+        },
         selectedCohortId: overviewCohortId,
         selectedPathwayIds: [],
         selectedNodeIds: [],
@@ -225,6 +241,28 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         showMineActive: true,
       };
     }
+
+    case 'ALL_PATIENTS_SCOPE_RESTORED':
+      return {
+        ...state,
+        selectedCohortId: null,
+        dimensionSelection: state.allPatientsSnapshot?.dimensionSelection
+          ?? INITIAL_DIMENSION_SELECTION,
+        axisVisibility: state.allPatientsSnapshot?.axisVisibility
+          ?? INITIAL_AXIS_VISIBILITY,
+        allPatientsSnapshot: null,
+        // Reset cohort-specific state
+        selectedPathwayIds: [],
+        selectedNodeIds: [],
+        selectedPatientId: null,
+        filters: [],
+        drawerStack: [],
+        focusedColumnIndex: null,
+        searchQuery: '',
+        hoveredBandId: null,
+        sankeyNavigatorBandId: null,
+        showMineActive: true,
+      };
 
     case 'SEARCH_CHANGED':
       return { ...state, searchQuery: action.query };
@@ -364,12 +402,17 @@ export const PopHealthProvider: React.FC<PopHealthProviderProps> = ({
 
   // When initialCohortId changes after mount, dispatch COHORT_SELECTED to reset
   // pop health state without remounting the entire tree (preserves menu state).
+  // When returning to All Patients (initialCohortId becomes undefined),
+  // restore the snapshot of dimension/axis state.
   const initialCohortRef = useRef(initialCohortId);
   useEffect(() => {
     if (initialCohortId !== initialCohortRef.current) {
       initialCohortRef.current = initialCohortId;
       if (initialCohortId) {
         dispatch({ type: 'COHORT_SELECTED', cohortId: initialCohortId });
+      } else {
+        // Returning to All Patients — restore snapshot
+        dispatch({ type: 'ALL_PATIENTS_SCOPE_RESTORED' });
       }
     }
   }, [initialCohortId]);

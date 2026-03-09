@@ -422,4 +422,9 @@ export interface PopHealthState {
   sankeyNavigatorBandId: string | null;
   // Layer tree "Show Mine" preset
   showMineActive: boolean;
+  // Snapshot of All-Patients dimension/axis state for scope-change persistence
+  allPatientsSnapshot: {
+    dimensionSelection: DimensionSelection;
+    axisVisibility: AxisVisibility;
+  } | null;
 }
