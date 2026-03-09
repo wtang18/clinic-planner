@@ -1,11 +1,11 @@
-import { Button, Pill, TogglePill } from '@/design-system'
+import { PatientShell } from '@/shell/PatientShell'
 
 export default function App() {
   return (
-    <div className="h-screen w-screen bg-bg-neutral-subtle p-8 flex flex-col gap-4">
-      <Button type="transparent" size="x-small" label="Confirm" />
-      <Pill type="attention" size="small" label="Unconfirmed" />
-      <TogglePill label="Active" selected={true} rightSubtext="2" onChange={() => {}} />
-    </div>
+    <PatientShell>
+      <div className="p-6 text-fg-neutral-secondary text-sm">
+        Problems List content goes here
+      </div>
+    </PatientShell>
   )
 }
