@@ -50,7 +50,7 @@ export function ProblemCard({
   const actions = getActions(item)
 
   return (
-    <div className="bg-white rounded-2xl px-4 py-3 flex items-center gap-2">
+    <div className="bg-white rounded-2xl px-4 py-3 flex items-start gap-2">
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         {/* Description */}

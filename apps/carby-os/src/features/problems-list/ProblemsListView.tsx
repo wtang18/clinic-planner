@@ -44,7 +44,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
   }
 
   return (
-    <div className="flex flex-col gap-4 px-5 py-3 h-full overflow-auto">
+    <div className="flex flex-col gap-4 px-5 py-3 h-full overflow-auto pb-12">
       <FilterBar
         activeFilters={activeFilters}
         counts={filterCounts}
