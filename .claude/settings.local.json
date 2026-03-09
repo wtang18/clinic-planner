@@ -96,7 +96,14 @@
       "Bash(})",
       "Bash(wc:*)",
       "Bash(echo:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(git reset:*)",
+      "Bash(git tag:*)",
+      "Bash(python3:*)",
+      "Bash(echo Checking for Metro cache locations...:*)",
+      "Bash(head:*)",
+      "Bash(sed:*)",
+      "Bash(# The bundle might be too large for sed. Let's use awk to get specific lines\ncurl -s \"http://localhost:8081/index.ts.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable\" 2>/dev/null | awk 'NR>=371910 && NR<=371925' 2>/dev/null)"
     ],
     "deny": [],
     "ask": []
