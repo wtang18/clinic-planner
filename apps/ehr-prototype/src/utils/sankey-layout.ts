@@ -22,7 +22,7 @@ export const SANKEY_PADDING_COMPACT = { top: 40, right: 96, bottom: 40, left: 96
 export const AXIS_WIDTH = 24;
 export const MIN_BAND_HEIGHT = 18;
 export const BAND_GAP = 4;
-export const ZONE_DIVIDER_GAP = 16;
+export const ZONE_DIVIDER_GAP = 10;
 export const LABEL_OFFSET = 12;
 /** Minimum drawable width (between padding) to render flow ribbons */
 export const MIN_FLOW_WIDTH = 200;

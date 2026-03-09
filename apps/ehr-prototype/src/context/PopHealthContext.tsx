@@ -238,6 +238,11 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
     case 'DIMENSION_TOGGLED': {
       const arr = state.dimensionSelection[action.axis] as string[];
       const exists = arr.includes(action.id);
+      // Reconstruct bandId for navigator (conditions/preventive use id as-is,
+      // riskTiers/actionStatuses need prefix)
+      const bandId = action.axis === 'riskTiers' ? `risk-${action.id}`
+        : action.axis === 'actionStatuses' ? `action-${action.id}`
+        : action.id;
       return {
         ...state,
         dimensionSelection: {
@@ -246,6 +251,10 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
             ? arr.filter((v) => v !== action.id)
             : [...arr, action.id],
         },
+        // Select → open navigator for this band; deselect → close if it was showing this band
+        sankeyNavigatorBandId: exists
+          ? (bandId === state.sankeyNavigatorBandId ? null : state.sankeyNavigatorBandId)
+          : bandId,
       };
     }
 

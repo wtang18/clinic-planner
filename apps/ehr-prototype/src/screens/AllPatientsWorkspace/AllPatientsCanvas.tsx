@@ -72,10 +72,22 @@ const SankeyMapView: React.FC = () => {
     return computeSankeyData(ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS);
   }, [state.dimensionSelection]);
 
-  // Band click → open/toggle Sankey navigator
+  // Band click → unified: select dimension AND open navigator
   const handleBandClick = useCallback(
-    (bandId: string, _axis: 'left' | 'center' | 'right') => {
-      dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId });
+    (bandId: string, axis: 'left' | 'center' | 'right') => {
+      let dimensionAxis: keyof DimensionSelection;
+      let dimensionId: string;
+      if (axis === 'center') {
+        dimensionAxis = 'riskTiers';
+        dimensionId = bandId.replace(/^risk-/, '');
+      } else if (axis === 'right') {
+        dimensionAxis = 'actionStatuses';
+        dimensionId = bandId.replace(/^action-/, '');
+      } else {
+        dimensionAxis = bandId.startsWith('prev-') ? 'preventive' : 'conditions';
+        dimensionId = bandId;
+      }
+      dispatch({ type: 'DIMENSION_TOGGLED', axis: dimensionAxis, id: dimensionId });
     },
     [dispatch],
   );
@@ -88,10 +100,8 @@ const SankeyMapView: React.FC = () => {
   );
 
   const handleBackgroundClick = useCallback(() => {
-    if (navigatorOpen) {
-      dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId: null });
-    }
-  }, [dispatch, navigatorOpen]);
+    dispatch({ type: 'DIMENSIONS_CLEARED' });
+  }, [dispatch]);
 
   const handleNavigatorClose = useCallback(() => {
     dispatch({ type: 'SANKEY_NAVIGATOR_TOGGLED', bandId: null });
