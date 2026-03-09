@@ -48,9 +48,6 @@ export type PopHealthAction =
   | { type: 'AXIS_VISIBILITY_CHANGED'; axis: keyof AxisVisibility; visible: boolean }
   | { type: 'ALL_PATIENTS_VIEW_CHANGED'; view: AllPatientsView }
   | { type: 'BAND_HOVERED'; bandId: string | null }
-  // Routing navigation actions
-  | { type: 'ROUTING_NAVIGATED'; cohortId: string }
-  | { type: 'ROUTING_RETURNED' }
   // Sankey navigator actions
   | { type: 'SANKEY_NAVIGATOR_TOGGLED'; bandId: string | null }
   // Layer tree "Show Mine" actions
@@ -91,7 +88,6 @@ const INITIAL_STATE: PopHealthState = {
   allPatientsView: 'map',
   hoveredBandId: null,
   sankeyNavigatorBandId: null,
-  routingTargetCohortId: null,
   showMineActive: true,
 };
 
@@ -124,7 +120,6 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
         axisVisibility: INITIAL_AXIS_VISIBILITY,
         hoveredBandId: null,
         sankeyNavigatorBandId: null,
-        routingTargetCohortId: null,
         showMineActive: true,
         // allPatientsView persists across scope switches (intentional)
       };
@@ -299,39 +294,6 @@ function popHealthReducer(state: PopHealthState, action: PopHealthAction): PopHe
           action.bandId === state.sankeyNavigatorBandId ? null : action.bandId,
       };
 
-    // Routing navigation: drill from all-patients routing into a specific cohort
-    case 'ROUTING_NAVIGATED':
-      return {
-        ...state,
-        selectedCohortId: action.cohortId,
-        routingTargetCohortId: action.cohortId,
-        // Reset cohort-level state
-        selectedPathwayIds: [],
-        selectedNodeIds: [],
-        selectedPatientId: null,
-        filters: [],
-        drawerStack: [],
-        focusedColumnIndex: null,
-        searchQuery: '',
-        // Preserve all-patients state (dimensionSelection, axisVisibility, allPatientsView)
-      };
-
-    // Return from routing-navigated cohort back to all-patients
-    case 'ROUTING_RETURNED':
-      return {
-        ...state,
-        selectedCohortId: null,
-        routingTargetCohortId: null,
-        // Reset cohort-level state
-        selectedPathwayIds: [],
-        selectedNodeIds: [],
-        selectedPatientId: null,
-        filters: [],
-        drawerStack: [],
-        focusedColumnIndex: null,
-        searchQuery: '',
-      };
-
     // Layer tree "Show Mine" actions
     case 'SHOW_MINE_APPLIED':
       return {
@@ -365,9 +327,9 @@ interface PopHealthContextValue {
   currentDrawerView: DrawerView | null;
   /** Whether the drawer has a back stack */
   canDrawerGoBack: boolean;
-  /** Whether we can go back from routing-navigated cohort to all-patients */
+  /** Whether we can go back (reserved for future navigation) */
   canGoBack: boolean;
-  /** Go back from routing-navigated cohort to all-patients */
+  /** Go back (no-op — reserved for navRef interface stability) */
   goBack: () => void;
 }
 
@@ -412,9 +374,9 @@ export const PopHealthProvider: React.FC<PopHealthProviderProps> = ({
     }
   }, [initialCohortId]);
 
-  const canGoBack = state.routingTargetCohortId !== null;
+  const canGoBack = false;
   const goBack = useCallback(() => {
-    dispatch({ type: 'ROUTING_RETURNED' });
+    // No-op — reserved for navRef interface stability
   }, []);
 
   // Sync navRef so AppShell can read canGoBack/goBack without re-rendering

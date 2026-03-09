@@ -2,8 +2,8 @@
  * Priority Computation Engine
  *
  * Pure functions that transform pathway + patient + escalation data into
- * PriorityItems for the Priorities View. Follows the routing-computation.ts
- * pattern: no React, no side effects, memoization-friendly.
+ * PriorityItems for the Priorities View. Pure functions:
+ * no React, no side effects, memoization-friendly.
  */
 
 import type {

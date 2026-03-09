@@ -1,31 +1,30 @@
 /**
  * AllPatientsCanvas
  *
- * Canvas for the all-patients scope. Routes between Map (Sankey), Routing,
- * and Table views. Renders filter chips and the slide drawer.
+ * Canvas for the all-patients scope. Routes between Map (Sankey) and Table
+ * views. Renders filter chips and the slide drawer.
  */
 
 import React, { useMemo, useCallback, useRef, useState, useEffect } from 'react';
-import { X, LayoutGrid } from 'lucide-react';
+import { X, LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
 import { SankeyChart } from '../../components/population-health/SankeyChart';
 import { SankeyPriorityColumn, SORT_ITEMS } from '../../components/population-health/SankeyPriorityColumn';
 import type { SankeySortMode } from '../../components/population-health/SankeyPriorityColumn';
 import { SelectDropdown } from '../../components/primitives/SelectDropdown';
 import { PriorityDetailView } from '../../components/population-health/PriorityDetailView';
-import { RoutingView } from '../../components/population-health/RoutingView';
-import { PopHealthCanvas } from '../PopHealthView/PopHealthCanvas';
 import { SlideDrawer } from '../../components/shared/SlideDrawer';
 import {
   computeSankeyData,
   filterSankeyData,
+  filterPatients,
   RISK_TIER_LABELS,
   ACTION_STATUS_LABELS,
 } from '../../utils/sankey-computation';
 import { computeSankeyLayout } from '../../utils/sankey-layout';
 import { ALL_PATIENTS, CONDITION_COHORTS, PREVENTIVE_COHORTS, getConditionLabel, getPreventiveLabel } from '../../data/mock-all-patients';
 import { colors, typography, spaceAround, spaceBetween, borderRadius, LAYOUT, transitions, glass, GLASS_BUTTON_HEIGHT, GLASS_BUTTON_RADIUS } from '../../styles/foundations';
-import type { DimensionSelection, RiskTier, ActionStatus } from '../../types/population-health';
+import type { DimensionSelection, RiskTier, ActionStatus, AllPatientsPatient } from '../../types/population-health';
 
 // ============================================================================
 // Constants
@@ -260,17 +259,217 @@ const EmptyMessage: React.FC<{
 EmptyMessage.displayName = 'EmptyMessage';
 
 // ============================================================================
-// Placeholder views
+// AllPatientsTableView — sortable patient table filtered by dimensions
 // ============================================================================
 
-const TablePlaceholder: React.FC = () => (
-  <EmptyMessage
-    title="Table View"
-    description="Sortable, filterable patient table with condition, risk, and action columns. Coming soon."
-  />
-);
+interface APColumn {
+  key: string;
+  label: string;
+  width?: number;
+  getValue: (p: AllPatientsPatient) => string | number;
+}
 
-TablePlaceholder.displayName = 'TablePlaceholder';
+const AP_COLUMNS: APColumn[] = [
+  { key: 'name', label: 'Patient', width: 160, getValue: (p) => p.name },
+  { key: 'age', label: 'Age', width: 50, getValue: (p) => p.age },
+  { key: 'gender', label: 'Gender', width: 60, getValue: (p) => p.gender },
+  { key: 'riskTier', label: 'Risk', width: 80, getValue: (p) => p.riskTier },
+  { key: 'actionStatus', label: 'Action Status', width: 130, getValue: (p) => p.actionStatus },
+  {
+    key: 'conditions', label: 'Conditions', width: 200,
+    getValue: (p) =>
+      p.conditionAssignments.map((a) => getConditionLabel(a.conditionCohortId)).join(', ') || '—',
+  },
+  { key: 'daysWaiting', label: 'Days Waiting', width: 80, getValue: (p) => p.daysWaiting ?? 0 },
+];
+
+type SortDir = 'asc' | 'desc';
+
+const riskColor = (tier: string) => {
+  switch (tier) {
+    case 'critical':
+    case 'high': return colors.fg.alert.primary;
+    case 'moderate': return colors.fg.attention.primary;
+    default: return colors.fg.neutral.primary;
+  }
+};
+
+const actionColor = (status: string) => {
+  switch (status) {
+    case 'urgent': return colors.fg.alert.primary;
+    case 'action-needed': return colors.fg.attention.primary;
+    default: return colors.fg.neutral.primary;
+  }
+};
+
+const AllPatientsTableView: React.FC = () => {
+  const { state, dispatch } = usePopHealth();
+  const [sortKey, setSortKey] = useState<string>('name');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+
+  const filtered = useMemo(
+    () => filterPatients(ALL_PATIENTS, state.dimensionSelection),
+    [state.dimensionSelection],
+  );
+
+  const sorted = useMemo(() => {
+    const col = AP_COLUMNS.find((c) => c.key === sortKey);
+    if (!col) return filtered;
+    return [...filtered].sort((a, b) => {
+      const va = col.getValue(a);
+      const vb = col.getValue(b);
+      const cmp =
+        typeof va === 'number' && typeof vb === 'number'
+          ? va - vb
+          : String(va).localeCompare(String(vb));
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [filtered, sortKey, sortDir]);
+
+  const handleSort = useCallback(
+    (key: string) => {
+      if (sortKey === key) {
+        setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortKey(key);
+        setSortDir('asc');
+      }
+    },
+    [sortKey],
+  );
+
+  const handleRowClick = useCallback(
+    (patientId: string) => {
+      dispatch({ type: 'DRAWER_OPENED', view: { type: 'patient-preview', patientId } });
+    },
+    [dispatch],
+  );
+
+  const hasSelection =
+    state.dimensionSelection.conditions.length > 0 ||
+    state.dimensionSelection.preventive.length > 0 ||
+    state.dimensionSelection.riskTiers.length > 0 ||
+    state.dimensionSelection.actionStatuses.length > 0;
+
+  return (
+    <div style={apTableStyles.outerContainer} data-testid="all-patients-table-view">
+      <div style={{ ...apTableStyles.scrollContainer, paddingTop: hasSelection ? 0 : LAYOUT.headerHeight }}>
+        <table style={apTableStyles.table}>
+          <thead>
+            <tr>
+              {AP_COLUMNS.map((col) => (
+                <th
+                  key={col.key}
+                  style={{ ...apTableStyles.th, width: col.width, cursor: 'pointer' }}
+                  onClick={() => handleSort(col.key)}
+                >
+                  <div style={apTableStyles.thContent}>
+                    <span>{col.label}</span>
+                    {sortKey === col.key && (
+                      sortDir === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((patient) => (
+              <tr
+                key={patient.patientId}
+                style={apTableStyles.tr}
+                onClick={() => handleRowClick(patient.patientId)}
+              >
+                {AP_COLUMNS.map((col) => {
+                  const value = col.getValue(patient);
+                  return (
+                    <td
+                      key={col.key}
+                      style={{
+                        ...apTableStyles.td,
+                        ...(col.key === 'name' ? { fontWeight: typography.fontWeight.medium } : {}),
+                        ...(col.key === 'riskTier' ? { color: riskColor(String(value)), textTransform: 'capitalize' as const } : {}),
+                        ...(col.key === 'actionStatus' ? { color: actionColor(String(value)), textTransform: 'capitalize' as const } : {}),
+                      }}
+                    >
+                      {value}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            {sorted.length === 0 && (
+              <tr>
+                <td colSpan={AP_COLUMNS.length} style={apTableStyles.emptyCell}>
+                  No patients match current filters
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+AllPatientsTableView.displayName = 'AllPatientsTableView';
+
+const apTableStyles: Record<string, React.CSSProperties> = {
+  outerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+    overflow: 'hidden',
+  },
+  scrollContainer: {
+    flex: 1,
+    overflow: 'auto',
+    paddingBottom: 80,
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse',
+    fontFamily: typography.fontFamily.sans,
+    fontSize: 13,
+  },
+  th: {
+    position: 'sticky',
+    top: 0,
+    backgroundColor: colors.bg.neutral.base,
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    textAlign: 'left' as const,
+    fontSize: 11,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.fg.neutral.secondary,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.3,
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
+    whiteSpace: 'nowrap',
+    userSelect: 'none',
+  },
+  thContent: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 3,
+  },
+  tr: {
+    cursor: 'pointer',
+    borderBottom: `1px solid ${colors.border.neutral.low}`,
+  },
+  td: {
+    padding: `${spaceAround.tight}px ${spaceAround.compact}px`,
+    color: colors.fg.neutral.primary,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: 200,
+  },
+  emptyCell: {
+    padding: spaceAround.default,
+    textAlign: 'center' as const,
+    color: colors.fg.neutral.secondary,
+  },
+};
 
 // ============================================================================
 // DimensionFilterChips
@@ -664,50 +863,17 @@ export const AllPatientsCanvas: React.FC = () => {
     });
   }, []);
 
-  // Keyboard shortcuts 1/2/3 for Map/Routing/Table (all-patients mode only)
+  // Keyboard shortcuts 1/2 for Map/Table (all-patients mode)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (state.routingTargetCohortId) return; // Don't register all-patients shortcuts when viewing cohort
     const handler = (e: Event) => {
       const { index } = (e as CustomEvent).detail;
       if (index === 1) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'map' });
-      if (index === 2) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'routing' });
-      if (index === 3) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'table' });
+      if (index === 2) dispatch({ type: 'ALL_PATIENTS_VIEW_CHANGED', view: 'table' });
     };
     window.addEventListener('ehr:context-segment', handler);
     return () => window.removeEventListener('ehr:context-segment', handler);
-  }, [dispatch, state.routingTargetCohortId]);
-
-  // Keyboard shortcuts 1/2 for Flow/Table (cohort mode — when routing-navigated)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (!state.routingTargetCohortId) return;
-    const handler = (e: Event) => {
-      const { index } = (e as CustomEvent).detail;
-      if (index === 1) dispatch({ type: 'VIEW_CHANGED', view: 'flow' });
-      if (index === 2) dispatch({ type: 'VIEW_CHANGED', view: 'table' });
-    };
-    window.addEventListener('ehr:context-segment', handler);
-    return () => window.removeEventListener('ehr:context-segment', handler);
-  }, [dispatch, state.routingTargetCohortId]);
-
-  // When routing-navigated, delegate to cohort canvas
-  if (state.routingTargetCohortId) {
-    return (
-      <div
-        style={{
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          overflow: 'hidden',
-        }}
-        data-testid="all-patients-canvas"
-      >
-        <PopHealthCanvas />
-      </div>
-    );
-  }
+  }, [dispatch]);
 
   const isPriorityDetail = currentDrawerView?.type === 'priority-detail';
 
@@ -751,8 +917,7 @@ export const AllPatientsCanvas: React.FC = () => {
           onVisibleCountChange={handleVisibleCountChange}
         />
       )}
-      {state.allPatientsView === 'routing' && <RoutingView />}
-      {state.allPatientsView === 'table' && <TablePlaceholder />}
+      {state.allPatientsView === 'table' && <AllPatientsTableView />}
 
       {/* Standard drawer (filter, dimension-detail) — hidden when priority-detail is active */}
       <SlideDrawer

@@ -10,7 +10,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { Eye, EyeOff, ChevronDown, ChevronRight } from 'lucide-react';
 import { usePopHealth } from '../../context/PopHealthContext';
-import { CohortContextPane } from './CohortContextPane';
 import { Dashboard } from './Dashboard';
 import { computeSelectionStats, RISK_TIER_ORDER, ACTION_STATUS_ORDER, RISK_TIER_LABELS, ACTION_STATUS_LABELS } from '../../utils/sankey-computation';
 import { computeSankeyData } from '../../utils/sankey-computation';
@@ -197,11 +196,6 @@ DimensionSection.displayName = 'DimensionSection';
 
 export const AllPatientsContextPane: React.FC = () => {
   const { state } = usePopHealth();
-
-  // When routing-navigated, delegate to cohort context pane
-  if (state.routingTargetCohortId) {
-    return <CohortContextPane cohortId={state.routingTargetCohortId} hideHeader />;
-  }
 
   // Compute full Sankey data for counts (unfiltered — dimension counts should show full panel)
   const fullData = useMemo(

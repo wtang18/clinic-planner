@@ -344,7 +344,7 @@ export interface AxisVisibility {
 }
 
 /** All-patients canvas view mode */
-export type AllPatientsView = 'map' | 'routing' | 'table';
+export type AllPatientsView = 'map' | 'table';
 
 /** Selection stats for the context pane */
 export interface SelectionStats {
@@ -353,51 +353,6 @@ export interface SelectionStats {
   notEnrolled: number;
   enrollmentRate: string;
   contextLabel: string;
-}
-
-// ============================================================================
-// Routing View Types
-// ============================================================================
-
-/** Full routing data for the Routing view */
-export interface RoutingData {
-  categories: RoutingCategory[];
-  unenrolled: UnenrolledGroup;
-}
-
-/** A category grouping of cohort cards (e.g. "Chronic Disease", "Preventive Care") */
-export interface RoutingCategory {
-  key: string;
-  label: string;
-  cards: RoutingCohortCard[];
-}
-
-/** A single cohort card in the Routing view */
-export interface RoutingCohortCard {
-  cohortId: string;
-  cohortName: string;
-  totalPatients: number;
-  filteredPatients: number;
-  urgentCount: number;
-  actionNeededCount: number;
-  avgDaysWaiting: number;
-  riskBreakdown: Record<RiskTier, number>;
-  actionStatusBreakdown: Record<ActionStatus, number>;
-  nodeConcentration: NodeConcentrationItem[];
-}
-
-/** A node label + patient count within a cohort */
-export interface NodeConcentrationItem {
-  nodeLabel: string;
-  patientCount: number;
-}
-
-/** Patients not enrolled in any condition or preventive flow */
-export interface UnenrolledGroup {
-  totalCount: number;
-  filteredCount: number;
-  riskBreakdown: Record<RiskTier, number>;
-  conditionLabels: string[];
 }
 
 // ============================================================================
@@ -463,8 +418,6 @@ export interface PopHealthState {
   axisVisibility: AxisVisibility;
   allPatientsView: AllPatientsView;
   hoveredBandId: string | null;
-  // Routing navigation: set when user navigates from all-patients routing into a cohort
-  routingTargetCohortId: string | null;
   // Sankey navigator: which band is drilled into
   sankeyNavigatorBandId: string | null;
   // Layer tree "Show Mine" preset
