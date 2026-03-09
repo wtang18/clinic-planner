@@ -46,7 +46,7 @@ export const FieldOptionPills: React.FC<FieldOptionPillsProps> = ({
   theme = 'light',
 }) => {
   const isDark = theme === 'dark';
-  const [customMode, setCustomMode] = React.useState(false);
+  const [customMode, setCustomMode] = React.useState(allowOther && options.length === 0);
   const [customValue, setCustomValue] = React.useState('');
   const customInputRef = React.useRef<HTMLInputElement>(null);
 

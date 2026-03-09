@@ -19,8 +19,12 @@ import { ProcedureFieldDef } from '../../components/omni-add/fields/ProcedureFie
 import { AllergyFieldDef } from '../../components/omni-add/fields/AllergyFields';
 import { ReferralFieldDef } from '../../components/omni-add/fields/ReferralFields';
 import { ReportMedFieldDef } from '../../components/omni-add/fields/ReportMedFields';
+import { RuleOutDxFieldDef } from '../../components/omni-add/fields/RuleOutDxFields';
+import { AssessmentFieldDef } from '../../components/omni-add/fields/AssessmentFields';
 import { getFieldDef } from '../../components/omni-add/fields';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
+import { isQuickPickComplete } from '../../data/mock-quick-picks';
+import { getCategoryBadge } from '../../utils/suggestion-helpers';
 import type {
   MedicationItem,
   LabItem,
@@ -652,8 +656,8 @@ describe('Intent-aware getFieldDef', () => {
     expect(getFieldDef('medication')).toBe(RxFieldDef);
   });
 
-  it('returns DxFieldDef for diagnosis + rule-out (no override)', () => {
-    expect(getFieldDef('diagnosis', 'rule-out')).toBe(DxFieldDef);
+  it('returns RuleOutDxFieldDef for diagnosis + rule-out', () => {
+    expect(getFieldDef('diagnosis', 'rule-out')).toBe(RuleOutDxFieldDef);
   });
 
   it('returns undefined for narrative + draft intent', () => {
@@ -745,5 +749,298 @@ describe('ReportMedFieldDef', () => {
     expect(data.verificationStatus).toBe('unverified');
     expect(data.prescriptionType).toBe('new');
     expect(data.isControlled).toBe(false);
+  });
+});
+
+// ============================================================================
+// RuleOutDxFieldDef
+// ============================================================================
+
+const ruleOutDxItem: QuickPickItem = {
+  id: 'dx-pneumonia',
+  label: 'Pneumonia (J18.9)',
+  chipLabel: 'Pneumonia',
+  category: 'diagnosis',
+  data: {
+    description: 'Pneumonia, unspecified',
+    icdCode: 'J18.9',
+    ranking: 'secondary',
+    type: 'encounter',
+    clinicalStatus: 'active',
+  },
+};
+
+describe('RuleOutDxFieldDef', () => {
+  it('returns 3 field configs (ranking, type, certainty)', () => {
+    const fields = RuleOutDxFieldDef.getFields(ruleOutDxItem);
+    expect(fields).toHaveLength(3);
+    expect(fields.map(f => f.key)).toEqual(['ranking', 'type', 'certainty']);
+  });
+
+  it('certainty has 3 options: suspected, probable, possible', () => {
+    const fields = RuleOutDxFieldDef.getFields(ruleOutDxItem);
+    const certaintyField = fields.find(f => f.key === 'certainty')!;
+    expect(certaintyField.options).toHaveLength(3);
+    expect(certaintyField.options.map(o => o.value)).toEqual(['suspected', 'probable', 'possible']);
+  });
+
+  it('getDefaults extracts ranking/type from item and defaults certainty to suspected', () => {
+    const defaults = RuleOutDxFieldDef.getDefaults(ruleOutDxItem);
+    expect(defaults).toEqual({
+      ranking: 'secondary',
+      type: 'encounter',
+      certainty: 'suspected',
+    });
+  });
+
+  it('buildData produces DiagnosisItem data with certainty and active clinicalStatus', () => {
+    const data: DiagnosisItem['data'] = RuleOutDxFieldDef.buildData(
+      { ranking: 'primary', type: 'encounter', certainty: 'probable' },
+      ruleOutDxItem,
+    );
+    expect(data.description).toBe('Pneumonia, unspecified');
+    expect(data.icdCode).toBe('J18.9');
+    expect(data.ranking).toBe('primary');
+    expect(data.type).toBe('encounter');
+    expect(data.clinicalStatus).toBe('active');
+    expect(data.certainty).toBe('probable');
+    expect(data.onsetDate).toBeInstanceOf(Date);
+  });
+});
+
+// ============================================================================
+// AssessmentFieldDef
+// ============================================================================
+
+const assessItem: QuickPickItem = {
+  id: 'assess-pain-scale',
+  label: 'Pain Scale (NRS 0-10)',
+  chipLabel: 'Pain Scale',
+  category: 'assessment',
+  data: {
+    assessmentName: 'Numeric Pain Rating Scale',
+    assessmentCode: 'NRS',
+    scaleType: 'numeric',
+    scaleRange: '0-10',
+    value: null,
+    method: 'patient-reported',
+  },
+};
+
+const phq9Item: QuickPickItem = {
+  id: 'assess-phq9',
+  label: 'PHQ-9 (Depression)',
+  chipLabel: 'PHQ-9',
+  category: 'assessment',
+  data: {
+    assessmentName: 'Patient Health Questionnaire-9',
+    assessmentCode: 'PHQ-9',
+    scaleType: 'scored',
+    scaleRange: '0-27',
+    value: null,
+    method: 'patient-reported',
+  },
+};
+
+describe('AssessmentFieldDef', () => {
+  it('returns 3 fields for NRS (value, method, bodyRegion)', () => {
+    const fields = AssessmentFieldDef.getFields(assessItem);
+    expect(fields).toHaveLength(3);
+    expect(fields.map(f => f.key)).toEqual(['value', 'method', 'bodyRegion']);
+  });
+
+  it('returns 2 fields for non-NRS (value, method — no bodyRegion)', () => {
+    const fields = AssessmentFieldDef.getFields(phq9Item);
+    expect(fields).toHaveLength(2);
+    expect(fields.map(f => f.key)).toEqual(['value', 'method']);
+  });
+
+  it('value field label includes scaleRange', () => {
+    const fields = AssessmentFieldDef.getFields(assessItem);
+    expect(fields[0].label).toBe('Score (0-10)');
+  });
+
+  it('value field has allowOther for free-text entry', () => {
+    const fields = AssessmentFieldDef.getFields(assessItem);
+    expect(fields[0].allowOther).toBe(true);
+    expect(fields[0].options).toEqual([]);
+  });
+
+  it('bodyRegion field has allowOther for free-text entry', () => {
+    const fields = AssessmentFieldDef.getFields(assessItem);
+    const bodyRegionField = fields.find(f => f.key === 'bodyRegion')!;
+    expect(bodyRegionField.allowOther).toBe(true);
+  });
+
+  it('getDefaults extracts value and method', () => {
+    const defaults = AssessmentFieldDef.getDefaults(assessItem);
+    expect(defaults.value).toBe('');
+    expect(defaults.method).toBe('patient-reported');
+  });
+
+  it('getDefaults includes bodyRegion for NRS', () => {
+    const defaults = AssessmentFieldDef.getDefaults(assessItem);
+    expect(defaults.bodyRegion).toBe('');
+  });
+
+  it('getDefaults omits bodyRegion for non-NRS', () => {
+    const defaults = AssessmentFieldDef.getDefaults(phq9Item);
+    expect(defaults.bodyRegion).toBeUndefined();
+  });
+
+  it('buildData converts string value to number', () => {
+    const data = AssessmentFieldDef.buildData(
+      { value: '7', method: 'patient-reported' },
+      assessItem,
+    );
+    expect(data.value).toBe(7);
+    expect(data.method).toBe('patient-reported');
+  });
+
+  it('buildData returns null for empty value', () => {
+    const data = AssessmentFieldDef.buildData(
+      { value: '', method: 'provider-assessed' },
+      assessItem,
+    );
+    expect(data.value).toBeNull();
+    expect(data.method).toBe('provider-assessed');
+  });
+
+  it('buildData returns null for non-numeric value', () => {
+    const data = AssessmentFieldDef.buildData(
+      { value: 'abc', method: 'patient-reported' },
+      assessItem,
+    );
+    expect(data.value).toBeNull();
+  });
+
+  it('buildData preserves baseline data', () => {
+    const data = AssessmentFieldDef.buildData(
+      { value: '5', method: 'patient-reported' },
+      assessItem,
+    );
+    expect(data.assessmentType).toBeUndefined(); // Not in QuickPickItem data — only in ChartItem
+    expect((data as any).assessmentCode).toBe('NRS');
+    expect((data as any).scaleRange).toBe('0-10');
+  });
+
+  it('buildData includes bodyRegion when provided', () => {
+    const data = AssessmentFieldDef.buildData(
+      { value: '8', method: 'patient-reported', bodyRegion: 'lumbar spine' },
+      assessItem,
+    );
+    expect(data.bodyRegion).toBe('lumbar spine');
+  });
+});
+
+// ============================================================================
+// FieldOptionPills: customMode auto-start
+// ============================================================================
+
+/**
+ * When a field has allowOther=true but no options (like Assessment value/bodyRegion),
+ * customMode should start as true so the text input shows immediately — no extra
+ * "Other" tap needed. Fields with non-empty options still start in pill mode.
+ */
+
+function resolveInitialCustomMode(
+  allowOther: boolean,
+  optionsLength: number,
+): boolean {
+  return allowOther && optionsLength === 0;
+}
+
+describe('FieldOptionPills customMode auto-start', () => {
+  it('starts in customMode when allowOther=true and options is empty', () => {
+    expect(resolveInitialCustomMode(true, 0)).toBe(true);
+  });
+
+  it('starts in pill mode when options are present even with allowOther', () => {
+    expect(resolveInitialCustomMode(true, 3)).toBe(false);
+  });
+
+  it('stays in pill mode when allowOther=false regardless of options', () => {
+    expect(resolveInitialCustomMode(false, 0)).toBe(false);
+    expect(resolveInitialCustomMode(false, 5)).toBe(false);
+  });
+
+  it('assessment value field triggers auto-start (empty options + allowOther)', () => {
+    const fields = AssessmentFieldDef.getFields(assessItem);
+    const valueField = fields.find(f => f.key === 'value')!;
+    expect(resolveInitialCustomMode(valueField.allowOther!, valueField.options.length)).toBe(true);
+  });
+
+  it('assessment bodyRegion field triggers auto-start', () => {
+    const fields = AssessmentFieldDef.getFields(assessItem);
+    const bodyRegionField = fields.find(f => f.key === 'bodyRegion')!;
+    expect(resolveInitialCustomMode(bodyRegionField.allowOther!, bodyRegionField.options.length)).toBe(true);
+  });
+
+  it('rx dosage field does NOT auto-start (has options + allowOther)', () => {
+    const fields = RxFieldDef.getFields(rxItem);
+    const dosageField = fields.find(f => f.key === 'dosage')!;
+    expect(resolveInitialCustomMode(dosageField.allowOther!, dosageField.options.length)).toBe(false);
+  });
+});
+
+// ============================================================================
+// isQuickPickComplete
+// ============================================================================
+
+describe('isQuickPickComplete', () => {
+  it('medication with drugName and dosage is complete', () => {
+    expect(isQuickPickComplete(rxItem)).toBe(true);
+  });
+
+  it('lab with testName is complete', () => {
+    expect(isQuickPickComplete(labItem)).toBe(true);
+  });
+
+  it('diagnosis with icdCode is complete', () => {
+    expect(isQuickPickComplete(dxItem)).toBe(true);
+  });
+
+  it('assessment with value: null is incomplete', () => {
+    expect(isQuickPickComplete(assessItem)).toBe(false);
+  });
+
+  it('assessment with value: 5 is complete', () => {
+    const completeAssess = { ...assessItem, data: { ...assessItem.data, value: 5 } };
+    expect(isQuickPickComplete(completeAssess)).toBe(true);
+  });
+
+  it('assessment with value: 0 is complete (falsy but not null)', () => {
+    const zeroAssess = { ...assessItem, data: { ...assessItem.data, value: 0 } };
+    expect(isQuickPickComplete(zeroAssess)).toBe(true);
+  });
+});
+
+// ============================================================================
+// getCategoryBadge
+// ============================================================================
+
+describe('getCategoryBadge', () => {
+  it('returns "Rx" for medication without intent', () => {
+    expect(getCategoryBadge('medication')).toBe('Rx');
+  });
+
+  it('returns "Med" for medication with report intent', () => {
+    expect(getCategoryBadge('medication', 'report')).toBe('Med');
+  });
+
+  it('returns "Dx" for diagnosis without intent', () => {
+    expect(getCategoryBadge('diagnosis')).toBe('Dx');
+  });
+
+  it('returns "R/O" for diagnosis with rule-out intent', () => {
+    expect(getCategoryBadge('diagnosis', 'rule-out')).toBe('R/O');
+  });
+
+  it('returns "Assess" for assessment', () => {
+    expect(getCategoryBadge('assessment')).toBe('Assess');
+  });
+
+  it('returns "Lab" for lab', () => {
+    expect(getCategoryBadge('lab')).toBe('Lab');
   });
 });
