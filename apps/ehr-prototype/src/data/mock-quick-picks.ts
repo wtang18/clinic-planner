@@ -1063,6 +1063,97 @@ const REFERRAL_PICKS: QuickPickItem[] = [
 ];
 
 // ============================================================================
+// Assessment quick-picks
+// ============================================================================
+
+const ASSESSMENT_PICKS: QuickPickItem[] = [
+  {
+    id: 'assess-pain-scale',
+    label: 'Pain Scale (NRS 0-10)',
+    chipLabel: 'Pain Scale',
+    category: 'assessment',
+    data: {
+      assessmentName: 'Numeric Pain Rating Scale',
+      assessmentCode: 'NRS',
+      scaleType: 'numeric',
+      scaleRange: '0-10',
+      value: null,
+      method: 'patient-reported',
+    },
+  },
+  {
+    id: 'assess-phq9',
+    label: 'PHQ-9 (Depression)',
+    chipLabel: 'PHQ-9',
+    category: 'assessment',
+    data: {
+      assessmentName: 'Patient Health Questionnaire-9',
+      assessmentCode: 'PHQ-9',
+      scaleType: 'scored',
+      scaleRange: '0-27',
+      value: null,
+      method: 'patient-reported',
+    },
+  },
+  {
+    id: 'assess-gad7',
+    label: 'GAD-7 (Anxiety)',
+    chipLabel: 'GAD-7',
+    category: 'assessment',
+    data: {
+      assessmentName: 'Generalized Anxiety Disorder-7',
+      assessmentCode: 'GAD-7',
+      scaleType: 'scored',
+      scaleRange: '0-21',
+      value: null,
+      method: 'patient-reported',
+    },
+  },
+  {
+    id: 'assess-fall-risk',
+    label: 'Fall Risk (Morse)',
+    chipLabel: 'Fall Risk',
+    category: 'assessment',
+    data: {
+      assessmentName: 'Morse Fall Scale',
+      assessmentCode: 'MFS',
+      scaleType: 'scored',
+      scaleRange: '0-125',
+      value: null,
+      method: 'provider-assessed',
+    },
+  },
+  {
+    id: 'assess-cage',
+    label: 'CAGE (Alcohol Screening)',
+    chipLabel: 'CAGE',
+    category: 'assessment',
+    data: {
+      assessmentName: 'CAGE Questionnaire',
+      assessmentCode: 'CAGE',
+      scaleType: 'scored',
+      scaleRange: '0-4',
+      value: null,
+      method: 'patient-reported',
+    },
+  },
+  {
+    id: 'assess-braden',
+    label: 'Braden Scale (Pressure Injury)',
+    chipLabel: 'Braden',
+    category: 'assessment',
+    data: {
+      assessmentName: 'Braden Scale for Predicting Pressure Sore Risk',
+      assessmentCode: 'BRADEN',
+      scaleType: 'scored',
+      scaleRange: '6-23',
+      value: null,
+      method: 'provider-assessed',
+    },
+  },
+];
+
+// ============================================================================
 // Export: get quick picks by category
 // ============================================================================
 
@@ -1074,6 +1165,7 @@ const QUICK_PICKS: Partial<Record<ItemCategory, QuickPickItem[]>> = {
   'procedure': PROCEDURE_PICKS,
   'allergy': ALLERGY_PICKS,
   'referral': REFERRAL_PICKS,
+  'assessment': ASSESSMENT_PICKS,
 };
 
 export function getQuickPicks(category: ItemCategory): QuickPickItem[] {
@@ -1097,6 +1189,35 @@ export function searchAllCategories(query: string): QuickPickItem[] {
     }
   }
   return results;
+}
+
+/**
+ * Check if a quick-pick item has all required fields populated.
+ * Used to guard suggestion card rendering at depth 1 — incomplete items
+ * (e.g., assessments with value: null) should not be shown as one-tap suggestions.
+ */
+export function isQuickPickComplete(item: QuickPickItem): boolean {
+  const d = item.data;
+  switch (item.category) {
+    case 'assessment':
+      return d.value != null;
+    case 'medication':
+      return d.drugName != null && d.dosage != null;
+    case 'lab':
+      return d.testName != null;
+    case 'diagnosis':
+      return d.icdCode != null;
+    case 'imaging':
+      return d.studyType != null;
+    case 'procedure':
+      return d.procedureName != null;
+    case 'allergy':
+      return d.allergen != null;
+    case 'referral':
+      return d.specialty != null;
+    default:
+      return true;
+  }
 }
 
 /**

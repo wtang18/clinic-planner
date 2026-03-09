@@ -17,7 +17,7 @@
 import React, { useCallback, useEffect } from 'react';
 import type { ItemCategory, ItemIntent } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
-import { getQuickPicks } from '../../data/mock-quick-picks';
+import { getQuickPicks, isQuickPickComplete } from '../../data/mock-quick-picks';
 import { getCategoryVariant } from './omni-add-machine';
 import { CategoryPills } from './CategoryPills';
 import { ItemPills } from './ItemPills';
@@ -43,7 +43,7 @@ export interface DetailAreaProps {
   selectedItem: QuickPickItem | null;
   /** Grouped results from ambiguity grouping */
   ambiguousGroups?: { category: ItemCategory; label: string; items: QuickPickItem[] }[];
-  onCategorySelect: (category: ItemCategory) => void;
+  onCategorySelect: (category: ItemCategory, intent?: ItemIntent) => void;
   onItemSelect: (item: QuickPickItem) => void;
   /** Quick-add: accepts item with defaults */
   onItemAdd: (item: QuickPickItem) => void;
@@ -61,6 +61,15 @@ export interface DetailAreaProps {
   /** Ref for keyboard add handler (⌘↩) — set by DetailArea when in edit mode */
   keyboardAddRef?: React.MutableRefObject<(() => void) | null>;
 }
+
+// ============================================================================
+// Intent-context labels — shown at depth 1 when an intent override is active
+// ============================================================================
+
+const INTENT_CONTEXT_LABELS: Record<string, string> = {
+  'medication:report': 'Report existing medication',
+  'diagnosis:rule-out': 'Rule out diagnosis',
+};
 
 // ============================================================================
 // Instructions line builder
@@ -199,21 +208,34 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
       ? searchInCategory(category, text)
       : getQuickPicks(category);
 
+    const intentLabel = intent
+      ? INTENT_CONTEXT_LABELS[`${category}:${intent}`] ?? null
+      : null;
+
     return (
       <div style={styles.container} data-testid="detail-area-category">
-        <ItemPills items={items} onSelect={onItemSelect} />
-        {!text && items.slice(0, 3).length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: spaceBetween.repeating }}>
-            {items.slice(0, 3).map((item) => (
-              <SuggestionCard
-                key={item.id}
-                item={item}
-                onAdd={onItemAdd}
-                onEdit={handleEditClick}
-              />
-            ))}
-          </div>
+        {intentLabel && (
+          <span style={styles.intentLabel} data-testid="intent-context-label">
+            {intentLabel}
+          </span>
         )}
+        <ItemPills items={items} onSelect={onItemSelect} />
+        {!text && (() => {
+          const completeItems = items.filter(isQuickPickComplete).slice(0, 3);
+          return completeItems.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: spaceBetween.repeating }}>
+              {completeItems.map((item) => (
+                <SuggestionCard
+                  key={item.id}
+                  item={item}
+                  intent={intent}
+                  onAdd={onItemAdd}
+                  onEdit={handleEditClick}
+                />
+              ))}
+            </div>
+          ) : null;
+        })()}
       </div>
     );
   }
@@ -245,6 +267,7 @@ export const DetailArea: React.FC<DetailAreaProps> = ({
         {!editMode && (
           <SuggestionCard
             item={selectedItem}
+            intent={intent}
             onAdd={onItemAdd}
             onEdit={handleEditClick}
             showShortcutHint
@@ -297,6 +320,11 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: spaceBetween.related,
+  },
+  intentLabel: {
+    fontSize: 12,
+    color: colors.fg.neutral.spotReadable,
+    paddingBottom: spaceBetween.coupled,
   },
   group: {
     display: 'flex',

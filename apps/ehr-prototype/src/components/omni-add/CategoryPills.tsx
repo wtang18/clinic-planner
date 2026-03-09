@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
-import type { ItemCategory } from '../../types/chart-items';
+import type { ItemCategory, ItemIntent } from '../../types/chart-items';
 import { PRIMARY_CATEGORIES, SECONDARY_CATEGORIES, type CategoryMeta } from './omni-add-machine';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
 import { useRovingTabindex, type RovingProps } from './useRovingTabindex';
@@ -17,7 +17,7 @@ import { useRovingTabindex, type RovingProps } from './useRovingTabindex';
 // ============================================================================
 
 export interface CategoryPillsProps {
-  onSelect: (category: ItemCategory) => void;
+  onSelect: (category: ItemCategory, intent?: ItemIntent) => void;
   disabled?: boolean;
 }
 
@@ -37,7 +37,7 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
     onEnter: (i) => {
       if (disabled) return;
       if (i < PRIMARY_CATEGORIES.length) {
-        onSelect(PRIMARY_CATEGORIES[i].category);
+        onSelect(PRIMARY_CATEGORIES[i].category, PRIMARY_CATEGORIES[i].intent);
       } else {
         setShowMore(prev => !prev);
       }
@@ -49,7 +49,7 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
     count: showMore ? SECONDARY_CATEGORIES.length : 0,
     onEnter: (i) => {
       if (disabled) return;
-      onSelect(SECONDARY_CATEGORIES[i].category);
+      onSelect(SECONDARY_CATEGORIES[i].category, SECONDARY_CATEGORIES[i].intent);
     },
   });
 
@@ -62,7 +62,7 @@ export const CategoryPills: React.FC<CategoryPillsProps> = ({
       key={meta.category}
       type="button"
       style={styles.pill}
-      onClick={() => onSelect(meta.category)}
+      onClick={() => onSelect(meta.category, meta.intent)}
       disabled={disabled}
       data-testid={`cat-pill-${meta.category}`}
       {...rovingProps}

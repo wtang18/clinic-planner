@@ -224,12 +224,13 @@ describe('Assessment field definition', () => {
     expect(fieldDef).toBeDefined();
   });
 
-  it('provides method field with 3 options', () => {
+  it('provides value and method fields (2 for non-NRS)', () => {
     const fieldDef = getFieldDef('assessment')!;
     const fields = fieldDef.getFields({ data: {} } as any);
-    expect(fields).toHaveLength(1);
-    expect(fields[0].key).toBe('method');
-    expect(fields[0].options).toHaveLength(3);
+    expect(fields).toHaveLength(2);
+    expect(fields[0].key).toBe('value');
+    expect(fields[1].key).toBe('method');
+    expect(fields[1].options).toHaveLength(3);
   });
 
   it('defaults to patient-reported method', () => {

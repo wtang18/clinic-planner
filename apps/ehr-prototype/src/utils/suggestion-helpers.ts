@@ -81,6 +81,7 @@ export function getCategoryBadge(category: ItemCategory, intent?: ItemIntent): s
     procedure: 'Proc',
     allergy: 'Allergy',
     referral: 'Ref',
+    assessment: 'Assess',
     hpi: 'HPI',
     plan: 'Plan',
     instruction: 'Instr',

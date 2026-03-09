@@ -12,6 +12,7 @@
 
 import React from 'react';
 import { Pencil } from 'lucide-react';
+import type { ItemIntent } from '../../types/chart-items';
 import type { QuickPickItem } from '../../data/mock-quick-picks';
 import { buildItemSummary, getCategoryBadge } from '../../utils/suggestion-helpers';
 import { colors, spaceAround, spaceBetween, borderRadius, typography, transitions } from '../../styles/foundations';
@@ -26,6 +27,8 @@ export interface SuggestionCardProps {
   item: QuickPickItem;
   /** Display summary (e.g., "100mg PO TID PRN #21, 0RF") */
   summary?: string;
+  /** Override intent for badge display (e.g., 'report' → Med, 'rule-out' → R/O) */
+  intent?: ItemIntent;
   /** Called when user taps [Add] — accepts with defaults */
   onAdd: (item: QuickPickItem) => void;
   /** Called when user taps [Edit] — opens depth 3 with pre-selected values */
@@ -42,6 +45,7 @@ export interface SuggestionCardProps {
 export const SuggestionCard: React.FC<SuggestionCardProps> = ({
   item,
   summary,
+  intent,
   onAdd,
   onEdit,
   disabled = false,
@@ -53,7 +57,7 @@ export const SuggestionCard: React.FC<SuggestionCardProps> = ({
     <div style={styles.card} data-testid={`suggestion-card-${item.id}`} data-omni-section>
       {/* Left: badge + content */}
       <div style={styles.content}>
-        <span style={styles.badge}>{getCategoryBadge(item.category)}</span>
+        <span style={styles.badge}>{getCategoryBadge(item.category, intent)}</span>
         <div style={styles.textArea}>
           <span style={styles.label}>{item.label}</span>
           {displaySummary && (

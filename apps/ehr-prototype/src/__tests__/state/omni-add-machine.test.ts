@@ -18,7 +18,9 @@ import {
   findCategoryByPrefix,
   PRIMARY_CATEGORIES,
   SECONDARY_CATEGORIES,
+  CATEGORIES,
 } from '../../components/omni-add/omni-add-machine';
+import { makeCategoryPill } from '../../components/omni-add/omni-input-machine';
 
 // ============================================================================
 // Category Metadata
@@ -47,7 +49,10 @@ describe('Category metadata', () => {
 
   it('maps data-entry categories correctly', () => {
     expect(getCategoryVariant('vitals')).toBe('data-entry');
-    expect(getCategoryVariant('assessment')).toBe('data-entry');
+  });
+
+  it('maps assessment to structured', () => {
+    expect(getCategoryVariant('assessment')).toBe('structured');
   });
 
   it('has 5 primary categories', () => {
@@ -99,5 +104,82 @@ describe('Category metadata', () => {
   it('"rx:" prefix has no intent override', () => {
     const result = findCategoryByPrefix('rx:amox');
     expect(result).toEqual({ category: 'medication', query: 'amox' });
+  });
+});
+
+// ============================================================================
+// handleSpace priority — category label/prefix match vs auto-category
+// ============================================================================
+
+describe('Category label matching for handleSpace', () => {
+  // Helper matching the same logic as handleSpace in OmniAddBarV2
+  function findCatMatch(typed: string) {
+    const lower = typed.toLowerCase();
+    return CATEGORIES.find(
+      c => c.label.toLowerCase() === lower
+        || (c.category as string) === lower
+        || c.prefix?.replace(':', '') === lower,
+    );
+  }
+
+  it('"med" matches the "Med" category label (medication with report intent)', () => {
+    const match = findCatMatch('med');
+    expect(match).toBeDefined();
+    expect(match!.category).toBe('medication');
+    expect(match!.intent).toBe('report');
+    expect(match!.label).toBe('Med');
+  });
+
+  it('"rx" matches the "Rx" category label (medication without intent)', () => {
+    const match = findCatMatch('rx');
+    expect(match).toBeDefined();
+    expect(match!.category).toBe('medication');
+    expect(match!.intent).toBeUndefined();
+  });
+
+  it('"r/o" matches the "R/O" category label (diagnosis with rule-out)', () => {
+    const match = findCatMatch('r/o');
+    expect(match).toBeDefined();
+    expect(match!.category).toBe('diagnosis');
+    expect(match!.intent).toBe('rule-out');
+  });
+
+  it('"ro" matches via prefix (ro:)', () => {
+    const match = findCatMatch('ro');
+    expect(match).toBeDefined();
+    expect(match!.category).toBe('diagnosis');
+    expect(match!.intent).toBe('rule-out');
+  });
+});
+
+// ============================================================================
+// makeCategoryPill intent propagation
+// ============================================================================
+
+describe('makeCategoryPill intent propagation', () => {
+  it('creates pill with report intent and "Med" label', () => {
+    const pill = makeCategoryPill('medication', 'report');
+    expect(pill.label).toBe('Med');
+    expect(pill.intent).toBe('report');
+    expect(pill.category).toBe('medication');
+  });
+
+  it('creates pill with rule-out intent and "R/O" label', () => {
+    const pill = makeCategoryPill('diagnosis', 'rule-out');
+    expect(pill.label).toBe('R/O');
+    expect(pill.intent).toBe('rule-out');
+    expect(pill.category).toBe('diagnosis');
+  });
+
+  it('creates pill without intent — standard label "Rx"', () => {
+    const pill = makeCategoryPill('medication');
+    expect(pill.label).toBe('Rx');
+    expect(pill.intent).toBeUndefined();
+  });
+
+  it('creates pill without intent — standard label "Dx"', () => {
+    const pill = makeCategoryPill('diagnosis');
+    expect(pill.label).toBe('Dx');
+    expect(pill.intent).toBeUndefined();
   });
 });

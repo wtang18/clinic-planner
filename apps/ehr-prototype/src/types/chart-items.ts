@@ -232,6 +232,9 @@ export interface DiagnosisItem extends ChartItemBase {
     onsetDate?: Date;
     resolvedDate?: Date;
     
+    // Rule-out support
+    certainty?: 'suspected' | 'probable' | 'possible';
+
     // For billing/coding
     isPOA?: boolean;         // Present on Admission (hospital)
   };

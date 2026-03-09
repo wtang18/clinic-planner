@@ -36,7 +36,7 @@ const CATEGORY_VARIANTS: Record<ItemCategory, CategoryVariant> = {
   'instruction': 'narrative',
   'note': 'narrative',
   'vitals': 'data-entry',
-  'assessment': 'data-entry',
+  'assessment': 'structured',
 };
 
 export function getCategoryVariant(category: ItemCategory): CategoryVariant {

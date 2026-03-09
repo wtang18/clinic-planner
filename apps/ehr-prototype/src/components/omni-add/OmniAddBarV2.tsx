@@ -169,7 +169,20 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
   }, []);
 
   const handleSpace = useCallback(() => {
-    // Try recognition result first
+    // 1. Try matching typed text against category labels/prefixes FIRST
+    //    (prevents "med" from auto-categorizing to referral via "Sleep Medicine" match)
+    const typed = state.text.trim().toLowerCase();
+    const catMatch = CATEGORIES.find(
+      c => c.label.toLowerCase() === typed
+        || c.category === typed
+        || c.prefix?.replace(':', '') === typed,
+    );
+    if (catMatch) {
+      dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(catMatch.category, catMatch.intent) });
+      return;
+    }
+
+    // 2. Then try auto-category recognition from search results
     if (recognition?.kind === 'auto-category') {
       const parsedOverrides = parseNLParams(recognition.category, state.text);
       dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(recognition.category) });
@@ -188,20 +201,10 @@ export const OmniAddBarV2: React.FC<OmniAddBarV2Props> = ({
       }
       return;
     }
-    // Try matching typed text against category labels/prefixes
-    const typed = state.text.trim().toLowerCase();
-    const match = CATEGORIES.find(
-      c => c.label.toLowerCase() === typed
-        || c.category === typed
-        || c.prefix?.replace(':', '') === typed,
-    );
-    if (match) {
-      dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(match.category) });
-    }
   }, [recognition, state.text]);
 
-  const handleCategorySelect = useCallback((cat: ItemCategory) => {
-    dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(cat) });
+  const handleCategorySelect = useCallback((cat: ItemCategory, intent?: ItemIntent) => {
+    dispatch({ type: 'INSERT_PILL', pill: makeCategoryPill(cat, intent) });
   }, []);
 
   const handleItemSelect = useCallback((item: QuickPickItem) => {

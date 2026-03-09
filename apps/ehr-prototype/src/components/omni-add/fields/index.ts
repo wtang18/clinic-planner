@@ -13,6 +13,7 @@ import { AllergyFieldDef } from './AllergyFields';
 import { ReferralFieldDef } from './ReferralFields';
 import { ReportMedFieldDef } from './ReportMedFields';
 import { AssessmentFieldDef } from './AssessmentFields';
+import { RuleOutDxFieldDef } from './RuleOutDxFields';
 
 export type { FieldConfig, CategoryFieldDef } from './types';
 export { RxFieldDef } from './RxFields';
@@ -24,6 +25,7 @@ export { AllergyFieldDef } from './AllergyFields';
 export { ReferralFieldDef } from './ReferralFields';
 export { ReportMedFieldDef } from './ReportMedFields';
 export { AssessmentFieldDef } from './AssessmentFields';
+export { RuleOutDxFieldDef } from './RuleOutDxFields';
 
 /**
  * Registry mapping structured categories to their field definitions.
@@ -46,6 +48,7 @@ const FIELD_DEFS: Partial<Record<ItemCategory, CategoryFieldDef>> = {
  */
 const INTENT_FIELD_DEFS: Record<string, CategoryFieldDef> = {
   'medication:report': ReportMedFieldDef,
+  'diagnosis:rule-out': RuleOutDxFieldDef,
 };
 
 /**
