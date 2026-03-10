@@ -56,6 +56,29 @@ export function getSourcePillLabel(item: ProblemItem): string {
   return item.source === 'screened' ? 'Screened' : 'Reported'
 }
 
+/**
+ * Determine if a confirmed+active item is in the "transitional" state.
+ * Transitional = the item was just confirmed but hasn't had an explicit
+ * clinical status action (marked-active, marked-inactive, etc.) yet.
+ */
+export function isConfirmedTransitional(item: ProblemItem): boolean {
+  if (item.verificationStatus !== 'confirmed' || item.clinicalStatus !== 'active') return false
+  for (const evt of item.history) {
+    if (evt.type === 'confirmed') return true
+    if (
+      evt.type === 'marked-active' ||
+      evt.type === 'marked-inactive' ||
+      evt.type === 'marked-resolved' ||
+      evt.type === 'marked-addressed' ||
+      evt.type === 'reopened' ||
+      evt.type === 'recurrence'
+    ) {
+      return false
+    }
+  }
+  return false
+}
+
 /** Format activity event description for the activity log */
 export function formatEventDescription(type: ProblemItem['history'][number]['type']): string {
   switch (type) {
@@ -65,6 +88,7 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'confirmed': return 'Confirmed'
     case 'excluded': return 'Excluded'
     case 'undo-excluded': return 'Exclusion undone'
+    case 'undo-confirmed': return 'Confirmation undone'
     case 'marked-active': return 'Marked active'
     case 'marked-inactive': return 'Marked inactive'
     case 'marked-resolved': return 'Marked resolved'

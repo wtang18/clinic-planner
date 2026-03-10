@@ -5,7 +5,7 @@ export const mockPatient = {
   dob: '06/14/1973',
   insurance: 'Blue Cross PPO',
   insuredName: 'Maria Santos',
-  pcp: 'Dr. Sarah Chen, MD',
+  pcp: 'Dr. Priya Sharma, MD',
   patientId: '2847391',
   phone: '(415) 555-0142',
   email: 'm.santos@email.com',
@@ -20,7 +20,7 @@ export const mockPatient = {
 export const mockAppointment = {
   time: '10:30 AM PDT',
   date: 'March 9, 2026',
-  provider: 'Albert Chong, PA-C',
+  provider: 'Marco Rivera, PA-C',
   clinic: 'Carbon Health — SoMa',
   reason: 'Follow-up, Type 2 Diabetes',
   appointmentId: '19284756',

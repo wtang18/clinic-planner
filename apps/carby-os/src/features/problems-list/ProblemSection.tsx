@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { ChevronUp, ChevronDown } from 'lucide-react'
 import type { ProblemItem } from './types'
 import { ProblemCard } from './ProblemCard'
@@ -37,38 +38,44 @@ export function ProblemSection({
   children,
 }: ProblemSectionProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [sectionRef] = useAutoAnimate({ duration: 200 })
+  const [cardListRef] = useAutoAnimate({ duration: 200 })
   const Chevron = collapsed ? ChevronDown : ChevronUp
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Header — entire row is tappable to collapse */}
-      <div
-        className="flex items-center gap-2 cursor-pointer select-none"
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <h3 className="text-base font-semibold text-fg-neutral-secondary flex-1">{title}</h3>
-        {rightLabel && (
-          <div className="flex items-center gap-2 flex-1">
-            <span className="text-sm text-fg-neutral-secondary text-right flex-1">{rightLabel}</span>
-          </div>
-        )}
+    <div ref={sectionRef} className="flex flex-col gap-2">
+      {/* Header */}
+      <div className="flex items-baseline gap-2">
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex items-baseline gap-2 flex-1 min-w-0 cursor-pointer"
+        >
+          <h3 className="text-base font-semibold text-fg-neutral-secondary">{title}</h3>
+          {collapsed && items.length > 0 && (
+            <span className="text-sm text-fg-neutral-secondary">
+              {items.filter(i => i.clinicalStatus === 'active' && i.verificationStatus === 'confirmed').length} active
+            </span>
+          )}
+          <div className="flex-1" />
+          {rightLabel && (
+            <span className="self-center text-sm text-fg-neutral-secondary">{rightLabel}</span>
+          )}
+          <Chevron size={16} className="self-center text-fg-neutral-secondary shrink-0" />
+        </button>
         {actions.map(({ label, onClick }) => (
           <button
             key={label}
-            onClick={(e) => { e.stopPropagation(); onClick() }}
-            className="px-3 py-0.5 rounded-full bg-bg-transparent-low text-xs font-semibold text-fg-neutral-primary cursor-pointer hover:bg-bg-transparent-medium transition-colors"
+            onClick={onClick}
+            className="self-center px-3 py-0.5 rounded-full bg-bg-transparent-low text-xs font-semibold text-fg-neutral-primary cursor-pointer hover:bg-bg-transparent-medium transition-colors"
           >
             {label}
           </button>
         ))}
-        <div className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary">
-          <Chevron size={16} />
-        </div>
       </div>
 
       {/* Content */}
       {!collapsed && (
-        <div className="flex flex-col gap-2">
+        <div ref={cardListRef} className="flex flex-col gap-2">
           {children}
           {items.map(item => (
             <ProblemCard

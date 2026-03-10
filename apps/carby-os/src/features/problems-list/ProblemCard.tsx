@@ -1,10 +1,12 @@
 import { ChevronRight } from 'lucide-react'
+import { Pill } from '@/design-system'
 import type { ProblemItem } from './types'
 import {
   DEACTIVATE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
   getSourcePillLabel,
+  isConfirmedTransitional,
 } from './display-labels'
 
 interface ProblemCardProps {
@@ -59,17 +61,25 @@ export function ProblemCard({
   const actions = getActions(item)
   const sourcePillLabel = getSourcePillLabel(item)
   const muted = isMuted(item)
+  const isExcluded = item.verificationStatus === 'excluded'
 
-  // Card bg: white for active states, semi-transparent for inactive/excluded
-  // Hover: bg-transparent-inverse-medium
-  const cardClasses = muted
-    ? 'bg-bg-transparent-inverse-high rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer hover:bg-bg-transparent-inverse-medium transition-colors'
-    : 'bg-white rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer hover:bg-bg-transparent-inverse-medium transition-colors'
+  // Card styles per Figma:
+  // - Excluded: border + no bg fill (transparent), border-only pills, secondary text
+  // - Inactive/resolved: semi-transparent bg, no border, border-only pills, secondary text
+  // - Active/default: white bg, no border, filled pills, primary text
+  const baseCardClasses = 'rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer transition-colors border'
+  const cardClasses = isExcluded
+    ? `border-border-transparent-soft ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
+    : muted
+      ? `border-transparent bg-bg-transparent-inverse-high ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
+      : `border-transparent bg-white ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
 
-  // Description text: secondary for muted, primary for active
-  const descriptionClasses = muted
-    ? 'text-sm font-medium text-fg-neutral-secondary truncate'
-    : 'text-sm font-medium text-fg-neutral-primary truncate'
+  // Description text: secondary for muted/excluded, primary for active
+  const descriptionClasses = isExcluded
+    ? 'text-sm font-medium text-fg-neutral-secondary truncate line-through'
+    : muted
+      ? 'text-sm font-medium text-fg-neutral-secondary truncate'
+      : 'text-sm font-medium text-fg-neutral-primary truncate'
 
   return (
     <div onClick={() => onDetailClick?.(item.id)} className={cardClasses}>
@@ -80,40 +90,32 @@ export function ProblemCard({
         </p>
         {/* Pill row */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Unconfirmed pill — attention variant */}
+          {/* Unconfirmed pill */}
           {item.verificationStatus === 'unconfirmed' && (
-            <span className="px-1.5 py-0.5 rounded-lg bg-bg-attention-low text-xs font-medium text-fg-attention-primary whitespace-nowrap">
-              Unconfirmed
-            </span>
+            <Pill type="attention" size="small" label="Unconfirmed" />
           )}
-          {/* Recurrence pill */}
-          {item.clinicalStatus === 'recurrence' && (
-            <MutedOrFilledPill label="Recurrence" muted={false} />
+          {/* Confirmed (transitional) pill */}
+          {isConfirmedTransitional(item) && (
+            <Pill type="transparent" size="small" label="Confirmed" />
+          )}
+          {/* Active pill — info-emphasis (dark blue fill, white text) */}
+          {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && !isConfirmedTransitional(item) && (
+            <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
           )}
           {/* Clinical status pill (inactive/resolved) */}
           {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-            <MutedOrFilledPill label={capitalizeFirst(item.clinicalStatus)} muted={muted} />
+            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={capitalizeFirst(item.clinicalStatus)} />
           )}
           {/* Excluded pill */}
           {item.verificationStatus === 'excluded' && (
-            <MutedOrFilledPill label="Excluded" muted={true} />
+            <Pill type="subtle-outlined" size="small" label="Excluded" />
           )}
           {/* ICD code pill */}
           {item.icdCode && (
-            <MutedOrFilledPill label={item.icdCode} muted={muted} />
+            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={item.icdCode} />
           )}
           {/* Source + date pill */}
-          {muted ? (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg border border-border-transparent-soft text-xs text-fg-neutral-secondary whitespace-nowrap">
-              <span>{sourcePillLabel}</span>
-              <span className="font-medium">{item.sourceDate}</span>
-            </span>
-          ) : (
-            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-bg-transparent-low">
-              <span className="text-xs text-fg-neutral-secondary">{sourcePillLabel}</span>
-              <span className="text-xs font-medium text-fg-neutral-primary">{item.sourceDate}</span>
-            </div>
-          )}
+          <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
         </div>
       </div>
 
@@ -188,38 +190,4 @@ export function ProblemCard({
   }
 }
 
-/**
- * Pill that switches between filled (bg-transparent-low) and muted (border-only) styles.
- * Muted style matches Figma inactive/excluded cards: border + secondary text, no fill.
- */
-function MutedOrFilledPill({ label, muted }: { label: string; muted: boolean }) {
-  if (muted) {
-    return (
-      <span className="px-1.5 py-0.5 rounded-lg border border-border-transparent-soft text-xs font-medium text-fg-neutral-secondary whitespace-nowrap">
-        {label}
-      </span>
-    )
-  }
-  return (
-    <span className="px-1.5 py-0.5 rounded-lg bg-bg-transparent-low text-xs font-medium text-fg-neutral-primary whitespace-nowrap">
-      {label}
-    </span>
-  )
-}
 
-function isConfirmedTransitional(item: ProblemItem): boolean {
-  for (const evt of item.history) {
-    if (evt.type === 'confirmed') return true
-    if (
-      evt.type === 'marked-active' ||
-      evt.type === 'marked-inactive' ||
-      evt.type === 'marked-resolved' ||
-      evt.type === 'marked-addressed' ||
-      evt.type === 'reopened' ||
-      evt.type === 'recurrence'
-    ) {
-      return false
-    }
-  }
-  return false
-}

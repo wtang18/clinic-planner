@@ -22,6 +22,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     confirmItem,
     excludeItem,
     undoExclude,
+    undoConfirm,
     markActive,
     markInactive,
     markResolved,
@@ -110,6 +111,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           onConfirm={confirmItem}
           onExclude={excludeItem}
           onUndoExclude={undoExclude}
+          onUndoConfirm={undoConfirm}
           onMarkActive={markActive}
           onMarkInactive={markInactive}
           onMarkResolved={markResolved}

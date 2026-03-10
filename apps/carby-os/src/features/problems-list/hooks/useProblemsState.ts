@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import type { ProblemItem, ProblemEvent, ProblemEventType, FilterKey, ProblemCategory } from '../types'
 import { mockProblems } from '../mock-data'
+import { isConfirmedTransitional } from '../display-labels'
 
 interface FilterCounts {
   unconfirmed: number
@@ -10,7 +11,7 @@ interface FilterCounts {
   excluded: number
 }
 
-const MOCK_PERFORMER = 'Albert Chong, PA-C'
+const MOCK_PERFORMER = 'Marco Rivera, PA-C'
 
 function createEvent(type: ProblemEventType, note?: string): ProblemEvent {
   const now = new Date()
@@ -83,10 +84,22 @@ export function useProblemsState() {
     return false
   }, [activeFilters])
 
-  // Get items for a specific category, filtered
+  // Sort priority: unconfirmed → confirmed (transitional) → active → inactive/resolved → excluded
+  const getSortKey = useCallback((item: ProblemItem): number => {
+    if (item.verificationStatus === 'unconfirmed') return 0
+    if (item.verificationStatus === 'excluded') return 4
+    if (isConfirmedTransitional(item)) return 1
+    if (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') return 2
+    if (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') return 3
+    return 2
+  }, [])
+
+  // Get items for a specific category, filtered and sorted
   const getFilteredItems = useCallback((category: ProblemCategory): ProblemItem[] => {
-    return items.filter(i => i.category === category && matchesFilter(i))
-  }, [items, matchesFilter])
+    return items
+      .filter(i => i.category === category && matchesFilter(i))
+      .sort((a, b) => getSortKey(a) - getSortKey(b))
+  }, [items, matchesFilter, getSortKey])
 
   // Core updater — applies field changes and appends an event
   const updateItemWithEvent = useCallback((
@@ -112,6 +125,10 @@ export function useProblemsState() {
 
   const undoExclude = useCallback((id: string) => {
     updateItemWithEvent(id, { verificationStatus: 'unconfirmed' }, 'undo-excluded')
+  }, [updateItemWithEvent])
+
+  const undoConfirm = useCallback((id: string) => {
+    updateItemWithEvent(id, { verificationStatus: 'unconfirmed' }, 'undo-confirmed')
   }, [updateItemWithEvent])
 
   const markActive = useCallback((id: string) => {
@@ -162,6 +179,7 @@ export function useProblemsState() {
     confirmItem,
     excludeItem,
     undoExclude,
+    undoConfirm,
     markActive,
     markInactive,
     markResolved,

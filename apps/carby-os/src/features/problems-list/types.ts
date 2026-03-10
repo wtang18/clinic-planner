@@ -15,6 +15,7 @@ export type ProblemEventType =
   | 'confirmed'
   | 'excluded'
   | 'undo-excluded'
+  | 'undo-confirmed'
   | 'marked-active'
   | 'marked-inactive'
   | 'marked-resolved'
