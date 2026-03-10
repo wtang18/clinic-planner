@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useProblemsState } from './hooks/useProblemsState'
 import { FilterBar } from './FilterBar'
 import { ProblemSection } from './ProblemSection'
 import { ScreeningBanner } from './ScreeningBanner'
+import { ProblemDetailDrawer } from './ProblemDetailDrawer'
 import { screeningInstruments } from './mock-data'
 
 interface ProblemsListViewProps {
@@ -12,6 +14,9 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
   const {
     activeFilters,
     filterCounts,
+    selectedItem,
+    selectItem,
+    clearSelection,
     toggleFilter,
     getFilteredItems,
     confirmItem,
@@ -22,7 +27,10 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     markResolved,
     markAddressed,
     reopenItem,
+    removeItem,
   } = useProblemsState()
+
+  const [isEditing, setIsEditing] = useState(false)
 
   const conditions = getFilteredItems('condition')
   const encounterDx = getFilteredItems('encounter-dx')
@@ -38,9 +46,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     onMarkResolved: markResolved,
     onMarkAddressed: markAddressed,
     onReopen: reopenItem,
-    onDetailClick: (_id: string) => {
-      // Phase 2: open detail drawer
-    },
+    onDetailClick: selectItem,
   }
 
   const handleAddPlaceholder = () => {
@@ -48,51 +54,71 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
   }
 
   return (
-    <div className="flex flex-col gap-4 px-5 py-3 h-full overflow-auto pb-12">
-      <FilterBar
-        activeFilters={activeFilters}
-        counts={filterCounts}
-        onToggle={toggleFilter}
-      />
-
-      <div className="flex flex-col gap-6">
-        {/* Conditions */}
-        <ProblemSection
-          title="Conditions"
-          items={conditions}
-          actions={[{ label: 'Add', onClick: handleAddPlaceholder }]}
-          {...sharedHandlers}
+    <>
+      <div className="flex flex-col gap-4 px-5 py-3 h-full overflow-auto pb-12">
+        <FilterBar
+          activeFilters={activeFilters}
+          counts={filterCounts}
+          onToggle={toggleFilter}
         />
 
-        {/* Encounter Dx */}
-        <ProblemSection
-          title="Encounter Dx"
-          items={encounterDx}
-          rightLabel="Automatically imported"
-          {...sharedHandlers}
-        />
+        <div className="flex flex-col gap-6">
+          {/* Conditions */}
+          <ProblemSection
+            title="Conditions"
+            items={conditions}
+            actions={[{ label: 'Add', onClick: handleAddPlaceholder }]}
+            {...sharedHandlers}
+          />
 
-        {/* Social Determinants */}
-        <ProblemSection
-          title="Social Determinants"
-          items={sdoh}
-          actions={[
-            { label: 'Administer Screening', onClick: handleAddPlaceholder },
-            { label: 'Add', onClick: handleAddPlaceholder },
-          ]}
-          {...sharedHandlers}
-        >
-          <ScreeningBanner screenings={screeningInstruments} />
-        </ProblemSection>
+          {/* Encounter Dx */}
+          <ProblemSection
+            title="Encounter Dx"
+            items={encounterDx}
+            rightLabel="Automatically imported"
+            {...sharedHandlers}
+          />
 
-        {/* Health Concerns */}
-        <ProblemSection
-          title="Health Concerns"
-          items={healthConcerns}
-          actions={[{ label: 'Add', onClick: handleAddPlaceholder }]}
-          {...sharedHandlers}
-        />
+          {/* Social Determinants */}
+          <ProblemSection
+            title="Social Determinants"
+            items={sdoh}
+            actions={[
+              { label: 'Administer Screening', onClick: handleAddPlaceholder },
+              { label: 'Add', onClick: handleAddPlaceholder },
+            ]}
+            {...sharedHandlers}
+          >
+            <ScreeningBanner screenings={screeningInstruments} />
+          </ProblemSection>
+
+          {/* Health Concerns */}
+          <ProblemSection
+            title="Health Concerns"
+            items={healthConcerns}
+            actions={[{ label: 'Add', onClick: handleAddPlaceholder }]}
+            {...sharedHandlers}
+          />
+        </div>
       </div>
-    </div>
+
+      {/* Detail drawer */}
+      {selectedItem && !isEditing && (
+        <ProblemDetailDrawer
+          item={selectedItem}
+          onClose={clearSelection}
+          onConfirm={confirmItem}
+          onExclude={excludeItem}
+          onUndoExclude={undoExclude}
+          onMarkActive={markActive}
+          onMarkInactive={markInactive}
+          onMarkResolved={markResolved}
+          onMarkAddressed={markAddressed}
+          onReopen={reopenItem}
+          onRemove={removeItem}
+          onEditClick={() => setIsEditing(true)}
+        />
+      )}
+    </>
   )
 }

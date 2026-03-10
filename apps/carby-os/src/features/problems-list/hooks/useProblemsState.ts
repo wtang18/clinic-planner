@@ -34,6 +34,12 @@ function createEvent(type: ProblemEventType, note?: string): ProblemEvent {
 export function useProblemsState() {
   const [items, setItems] = useState<ProblemItem[]>(mockProblems)
   const [activeFilters, setActiveFilters] = useState<Set<FilterKey>>(new Set(['all']))
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
+
+  // Derived: the currently selected item (for detail drawer)
+  const selectedItem = useMemo(() =>
+    selectedItemId ? items.find(i => i.id === selectedItemId) ?? null : null
+  , [items, selectedItemId])
 
   // Compute filter counts across all items
   const filterCounts = useMemo<FilterCounts>(() => ({
@@ -141,10 +147,16 @@ export function useProblemsState() {
     }))
   }, [])
 
+  const selectItem = useCallback((id: string) => setSelectedItemId(id), [])
+  const clearSelection = useCallback(() => setSelectedItemId(null), [])
+
   return {
     items,
     activeFilters,
     filterCounts,
+    selectedItem,
+    selectItem,
+    clearSelection,
     toggleFilter,
     getFilteredItems,
     confirmItem,
