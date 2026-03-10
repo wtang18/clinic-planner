@@ -59,6 +59,13 @@ module.exports = {
         'bg-transparent-high': 'var(--color-bg-transparent-high)',
         'bg-transparent-subtle': 'var(--color-bg-transparent-subtle)',
 
+        // Transparent inverse tokens (used for inactive/muted cards)
+        'bg-transparent-inverse-high': 'var(--color-bg-transparent-inverse-high)',
+        'bg-transparent-inverse-medium': 'var(--color-bg-transparent-inverse-medium)',
+
+        // Border tokens
+        'border-transparent-soft': 'var(--color-fg-transparent-soft)',
+
         // Input tokens (used for filter pills)
         'bg-input-low': 'var(--color-bg-input-low)',
         'bg-input-medium': 'var(--color-bg-input-medium)',

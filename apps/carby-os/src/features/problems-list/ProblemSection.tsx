@@ -41,8 +41,11 @@ export function ProblemSection({
 
   return (
     <div className="flex flex-col gap-2">
-      {/* Header */}
-      <div className="flex items-center gap-2">
+      {/* Header — entire row is tappable to collapse */}
+      <div
+        className="flex items-center gap-2 cursor-pointer select-none"
+        onClick={() => setCollapsed(!collapsed)}
+      >
         <h3 className="text-base font-semibold text-fg-neutral-secondary flex-1">{title}</h3>
         {rightLabel && (
           <div className="flex items-center gap-2 flex-1">
@@ -52,15 +55,15 @@ export function ProblemSection({
         {actions.map(({ label, onClick }) => (
           <button
             key={label}
-            onClick={onClick}
+            onClick={(e) => { e.stopPropagation(); onClick() }}
             className="px-3 py-0.5 rounded-full bg-bg-transparent-low text-xs font-semibold text-fg-neutral-primary cursor-pointer hover:bg-bg-transparent-medium transition-colors"
           >
             {label}
           </button>
         ))}
-        <button onClick={() => setCollapsed(!collapsed)} className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary">
+        <div className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary">
           <Chevron size={16} />
-        </button>
+        </div>
       </div>
 
       {/* Content */}

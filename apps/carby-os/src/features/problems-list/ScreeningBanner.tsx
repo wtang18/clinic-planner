@@ -23,7 +23,7 @@ export function ScreeningBanner({ screenings }: ScreeningBannerProps) {
     )
   }
 
-  const latest = screenings[0]
+  const latest = screenings[0]!
   const summary = `${screenings.length} screening${screenings.length > 1 ? 's' : ''} administered`
   const lastInfo = latest.abbreviation && latest.administeredDate
     ? ` · Last: ${latest.abbreviation} ${latest.administeredDate}`

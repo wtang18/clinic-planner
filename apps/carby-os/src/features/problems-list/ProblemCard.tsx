@@ -1,5 +1,4 @@
 import { ChevronRight } from 'lucide-react'
-import { Pill } from '@/design-system'
 import type { ProblemItem } from './types'
 import {
   DEACTIVATE_LABEL,
@@ -36,6 +35,15 @@ function capitalizeFirst(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+/** Is this item in a muted/deemphasized state? (inactive, resolved, or excluded) */
+function isMuted(item: ProblemItem): boolean {
+  return (
+    item.verificationStatus === 'excluded' ||
+    item.clinicalStatus === 'inactive' ||
+    item.clinicalStatus === 'resolved'
+  )
+}
+
 export function ProblemCard({
   item,
   onConfirm,
@@ -50,42 +58,62 @@ export function ProblemCard({
 }: ProblemCardProps) {
   const actions = getActions(item)
   const sourcePillLabel = getSourcePillLabel(item)
+  const muted = isMuted(item)
+
+  // Card bg: white for active states, semi-transparent for inactive/excluded
+  // Hover: bg-transparent-inverse-medium
+  const cardClasses = muted
+    ? 'bg-bg-transparent-inverse-high rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer hover:bg-bg-transparent-inverse-medium transition-colors'
+    : 'bg-white rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer hover:bg-bg-transparent-inverse-medium transition-colors'
+
+  // Description text: secondary for muted, primary for active
+  const descriptionClasses = muted
+    ? 'text-sm font-medium text-fg-neutral-secondary truncate'
+    : 'text-sm font-medium text-fg-neutral-primary truncate'
 
   return (
-    <div className="bg-white rounded-2xl px-4 py-3 flex items-start gap-2">
+    <div onClick={() => onDetailClick?.(item.id)} className={cardClasses}>
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-2">
-        {/* Description — truncate long text */}
-        <p className="text-sm font-medium text-fg-neutral-primary truncate" title={item.description}>
+        <p className={descriptionClasses} title={item.description}>
           {item.description}
         </p>
         {/* Pill row */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Verification status pill (only if unconfirmed) */}
+          {/* Unconfirmed pill — attention variant */}
           {item.verificationStatus === 'unconfirmed' && (
-            <Pill type="attention" size="x-small" label="Unconfirmed" />
+            <span className="px-1.5 py-0.5 rounded-lg bg-bg-attention-low text-xs font-medium text-fg-attention-primary whitespace-nowrap">
+              Unconfirmed
+            </span>
           )}
           {/* Recurrence pill */}
           {item.clinicalStatus === 'recurrence' && (
-            <Pill type="transparent" size="x-small" label="Recurrence" />
+            <MutedOrFilledPill label="Recurrence" muted={false} />
           )}
-          {/* Clinical status pill (for non-active confirmed items) */}
+          {/* Clinical status pill (inactive/resolved) */}
           {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-            <Pill type="transparent" size="x-small" label={capitalizeFirst(item.clinicalStatus)} />
+            <MutedOrFilledPill label={capitalizeFirst(item.clinicalStatus)} muted={muted} />
           )}
           {/* Excluded pill */}
           {item.verificationStatus === 'excluded' && (
-            <Pill type="transparent" size="x-small" label="Excluded" />
+            <MutedOrFilledPill label="Excluded" muted={true} />
           )}
           {/* ICD code pill */}
           {item.icdCode && (
-            <Pill type="transparent" size="x-small" label={item.icdCode} />
+            <MutedOrFilledPill label={item.icdCode} muted={muted} />
           )}
           {/* Source + date pill */}
-          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-bg-transparent-low">
-            <span className="text-xs text-fg-neutral-secondary">{sourcePillLabel}</span>
-            <span className="text-xs font-medium text-fg-neutral-primary">{item.sourceDate}</span>
-          </div>
+          {muted ? (
+            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg border border-border-transparent-soft text-xs text-fg-neutral-secondary whitespace-nowrap">
+              <span>{sourcePillLabel}</span>
+              <span className="font-medium">{item.sourceDate}</span>
+            </span>
+          ) : (
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-bg-transparent-low">
+              <span className="text-xs text-fg-neutral-secondary">{sourcePillLabel}</span>
+              <span className="text-xs font-medium text-fg-neutral-primary">{item.sourceDate}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -98,12 +126,9 @@ export function ProblemCard({
             onClick={() => action.handler(item.id)}
           />
         ))}
-        <button
-          onClick={() => onDetailClick?.(item.id)}
-          className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary"
-        >
+        <div className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary">
           <ChevronRight size={16} />
-        </button>
+        </div>
       </div>
     </div>
   )
@@ -112,44 +137,34 @@ export function ProblemCard({
     const result: Array<{ label: string; handler: (id: string) => void }> = []
     const cat = _item.category
 
-    // --- Unconfirmed ---
     if (_item.verificationStatus === 'unconfirmed') {
       if (onExclude) result.push({ label: 'Exclude', handler: onExclude })
       if (onConfirm) result.push({ label: 'Confirm', handler: onConfirm })
       return result
     }
 
-    // --- Excluded ---
     if (_item.verificationStatus === 'excluded') {
       if (onUndoExclude) result.push({ label: 'Undo Exclude', handler: onUndoExclude })
       return result
     }
 
-    // --- Confirmed (transitional): confirmed + active, but was just confirmed ---
-    // Detect transitional: confirmed + active, and the most recent non-confirmed event
-    // isn't a marked-active (i.e. they haven't explicitly chosen active yet)
     const isTransitional = _item.verificationStatus === 'confirmed'
       && _item.clinicalStatus === 'active'
       && isConfirmedTransitional(_item)
 
     if (isTransitional) {
-      // Show both deactivate and activate
-      const deactivateLabel = DEACTIVATE_LABEL[cat]
-      const activateLabel = ACTIVATE_FROM_CONFIRMED_LABEL[cat]
       const deactivateHandler = getDeactivateHandler(cat)
-      if (deactivateHandler) result.push({ label: deactivateLabel, handler: deactivateHandler })
-      if (onMarkActive) result.push({ label: activateLabel, handler: onMarkActive })
+      if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
+      if (onMarkActive) result.push({ label: ACTIVATE_FROM_CONFIRMED_LABEL[cat], handler: onMarkActive })
       return result
     }
 
-    // --- Active (including Recurrence) ---
     if (_item.clinicalStatus === 'active' || _item.clinicalStatus === 'recurrence') {
       const deactivateHandler = getDeactivateHandler(cat)
       if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
       return result
     }
 
-    // --- Inactive / Resolved ---
     if (_item.clinicalStatus === 'inactive' || _item.clinicalStatus === 'resolved') {
       const activateLabel = ACTIVATE_FROM_INACTIVE_LABEL[cat]
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
@@ -174,14 +189,25 @@ export function ProblemCard({
 }
 
 /**
- * Determine if a confirmed+active item is in the "transitional" state.
- * Transitional = the item was just confirmed but hasn't had an explicit
- * clinical status action (marked-active, marked-inactive, etc.) yet.
+ * Pill that switches between filled (bg-transparent-low) and muted (border-only) styles.
+ * Muted style matches Figma inactive/excluded cards: border + secondary text, no fill.
  */
+function MutedOrFilledPill({ label, muted }: { label: string; muted: boolean }) {
+  if (muted) {
+    return (
+      <span className="px-1.5 py-0.5 rounded-lg border border-border-transparent-soft text-xs font-medium text-fg-neutral-secondary whitespace-nowrap">
+        {label}
+      </span>
+    )
+  }
+  return (
+    <span className="px-1.5 py-0.5 rounded-lg bg-bg-transparent-low text-xs font-medium text-fg-neutral-primary whitespace-nowrap">
+      {label}
+    </span>
+  )
+}
+
 function isConfirmedTransitional(item: ProblemItem): boolean {
-  // Look through history for the most recent non-confirm event
-  // If there's a 'confirmed' event and no subsequent clinical status event,
-  // it's transitional
   for (const evt of item.history) {
     if (evt.type === 'confirmed') return true
     if (
