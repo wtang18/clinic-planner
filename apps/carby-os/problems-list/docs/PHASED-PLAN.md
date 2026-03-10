@@ -1,6 +1,6 @@
 # Problems List Prototype — Phased Plan
 
-> **Status:** Draft (Rev 3)
+> **Status:** Complete (Rev 3)
 > **Last Updated:** 2026-03-10
 > **Design Spec:** `DESIGN-SPEC.md`
 
@@ -52,12 +52,12 @@
 - [x] Multiple filters can be active simultaneously
 - [x] Sections collapse/expand
 - [x] Card layout matches Figma (pills, actions, chevron)
-- [ ] Screening banner renders at top of SDOH section
-- [ ] Category-aware action labels per §5.3 (2-button max: {Soft Close} + Mark Resolved for active cards)
-- [ ] Resolved filter pill in FilterBar
-- [ ] Source pill labels change based on item state (including `Resolved [DATE]` for resolved items)
-- [ ] Undo Exclude button shown on excluded cards
-- [ ] Recurrence state renders correctly for Conditions/Enc Dx
+- [x] Screening banner renders at top of SDOH section
+- [x] Category-aware action labels per §5.3 (2-button max: {Soft Close} + Mark Resolved for active cards)
+- [x] Resolved filter pill in FilterBar
+- [x] Source pill labels change based on item state (including `Resolved [DATE]` for resolved items)
+- [x] Undo Exclude button shown on excluded cards
+- [x] Recurrence state renders correctly for Conditions/Enc Dx
 
 ---
 
@@ -82,10 +82,10 @@
 - [x] Correct action buttons shown per state (per Design Spec §5.3)
 - [x] Filter pill counts reflect state changes
 - [x] Toast appears on action
-- [ ] Undo Exclude action works
-- [ ] Activity events generated on each action
-- [ ] Category-specific action labels per §5.3 (Mark Inactive/Addressed + Mark Resolved, 2-button max)
-- [ ] `abatementDate` auto-managed on deactivation/reactivation
+- [x] Undo Exclude action works
+- [x] Activity events generated on each action
+- [x] Category-specific action labels per §5.3 (Mark Inactive/Addressed + Mark Resolved, 2-button max)
+- [x] `abatementDate` auto-managed on deactivation/reactivation
 
 ---
 
@@ -108,13 +108,13 @@
 - Empty states when filters yield zero items
 
 **Exit Criteria:**
-- [ ] Chevron opens detail drawer with correct category title
-- [ ] Summary card shows same pills/actions as list card + Edit button
-- [ ] Activity log renders events newest-first with actor + timestamp
-- [ ] SDOH items show Related Screening section when applicable
-- [ ] Edit mode: can edit dates + notes (+ description for Health Concerns)
-- [ ] Save creates activity event and returns to detail view
-- [ ] Kebab menu shows disabled Split/Merge placeholders
-- [ ] Remove button works with reason picker and confirmation
-- [ ] ProblemsListView works in both tab and drawer mode
-- [ ] Visual quality suitable for stakeholder review
+- [x] Chevron opens detail drawer with correct category title
+- [x] Summary card shows same pills/actions as list card + Edit button
+- [x] Activity log renders events newest-first with actor + timestamp
+- [ ] SDOH items show Related Screening section when applicable (deferred)
+- [x] Edit mode: can edit dates + notes (+ description for Health Concerns)
+- [x] Save creates activity event and returns to detail view
+- [x] Kebab menu shows disabled Split/Merge placeholders
+- [x] Remove button works with reason picker and confirmation
+- [x] ProblemsListView works in both tab and drawer mode
+- [x] Visual quality suitable for stakeholder review
