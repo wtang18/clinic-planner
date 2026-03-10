@@ -1600,21 +1600,331 @@ git commit -m "Update progress tracker — Phases 1-3 complete"
 
 ---
 
+---
+
+# Rev 2 Addendum — Card States, Detail Drawer, Activity History
+
+> Added 2026-03-09 after Figma card states review (node 13027:15996) and detail drawer discussion.
+> Design Spec updated to Rev 2. See PROGRESS.md for full change summary.
+
+---
+
+## Task 12: Update Types + Mock Data for Activity History
+
+**Files:**
+- Modify: `apps/carby-os/src/features/problems-list/types.ts`
+- Modify: `apps/carby-os/src/features/problems-list/mock-data.ts`
+- Create: `apps/carby-os/src/features/problems-list/display-labels.ts`
+
+**Step 1: Add ProblemEvent types to types.ts**
+
+Add to the existing types file:
+
+```typescript
+type ProblemEventType =
+  | 'reported'
+  | 'imported'
+  | 'screening-detected'
+  | 'confirmed'
+  | 'excluded'
+  | 'undo-excluded'
+  | 'marked-active'
+  | 'marked-inactive'
+  | 'marked-resolved'
+  | 'marked-addressed'
+  | 'recurrence'
+  | 'reopened'
+  | 'edited'
+  | 'note-added';
+
+interface ProblemEvent {
+  id: string;
+  type: ProblemEventType;
+  performedBy: string;
+  performedAt: string;
+  effectiveDate?: string;
+  note?: string;
+  changes?: { field: string; from: string; to: string }[];
+}
+```
+
+Add `history: ProblemEvent[]`, `notes?: string`, `relatedScreeningId?: string` to `ProblemItem`.
+
+Remove `'entered-in-error'` from `VerificationStatus` (not in v1 scope). Ensure `ClinicalStatus` includes `'recurrence'`.
+
+**Step 2: Create display-labels.ts**
+
+Category-aware label mappings:
+
+```typescript
+import { ProblemCategory } from './types';
+
+export const DEACTIVATE_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Inactive',
+  'encounter-dx': 'Mark Inactive',
+  'sdoh': 'Mark Addressed',
+  'health-concern': 'Mark Resolved',
+};
+
+export const ACTIVATE_FROM_INACTIVE_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Active',
+  'encounter-dx': 'Mark Active',
+  'sdoh': 'Reopen',
+  'health-concern': 'Reopen',
+};
+
+export const ACTIVATE_FROM_CONFIRMED_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Active',
+  'encounter-dx': 'Mark Active',
+  'sdoh': 'Mark Active',
+  'health-concern': 'Mark Active',
+};
+
+export const DRAWER_TITLE: Record<ProblemCategory, string> = {
+  'condition': 'Condition Details',
+  'encounter-dx': 'Encounter Diagnosis Details',
+  'sdoh': 'Social Determinant Details',
+  'health-concern': 'Patient Concern Details',
+};
+
+export function getSourcePillLabel(item: ProblemItem): string {
+  // Logic per DESIGN-SPEC §5.4 source pill label table
+  if (item.verificationStatus === 'excluded') {
+    return item.source === 'screened' ? 'Screened' : 'Reported';
+  }
+  if (item.clinicalStatus === 'recurrence') return 'Recurrence';
+  if (item.clinicalStatus === 'active' && item.verificationStatus === 'confirmed') return 'Onset';
+  if (item.verificationStatus === 'confirmed') return 'Diagnosed';
+  return item.source === 'screened' ? 'Screened' : 'Reported';
+}
+```
+
+**Step 3: Update mock-data.ts**
+
+Add 2-5 `ProblemEvent` entries to each mock item's `history[]`. Example for Type 2 Diabetes:
+
+```typescript
+history: [
+  { id: 'evt-1', type: 'marked-active', performedBy: 'Paige Anderson, PA-C', performedAt: '03/15/22, 10:15a PT' },
+  { id: 'evt-2', type: 'confirmed', performedBy: 'Paige Anderson, PA-C', performedAt: '03/15/22, 10:14a PT' },
+  { id: 'evt-3', type: 'imported', performedBy: 'System — CCDA Import', performedAt: '03/15/22, 9:00a PT' },
+]
+```
+
+Add `relatedScreeningId` to SDOH items that come from screenings. Add screening instrument mock data with scores.
+
+**Step 4: Commit**
+
+```bash
+git add apps/carby-os/src/features/problems-list/types.ts apps/carby-os/src/features/problems-list/mock-data.ts apps/carby-os/src/features/problems-list/display-labels.ts
+git commit -m "Add ProblemEvent types, activity history mock data, and category-aware display labels"
+```
+
+---
+
+## Task 13: Update ProblemCard + useProblemsState for Rev 2
+
+**Files:**
+- Modify: `apps/carby-os/src/features/problems-list/ProblemCard.tsx`
+- Modify: `apps/carby-os/src/features/problems-list/hooks/useProblemsState.ts`
+
+**Step 1: Update ProblemCard for category-aware actions**
+
+- Import from `display-labels.ts` to get correct button labels per category
+- Add `Undo Exclude` button for excluded items (was showing chevron only)
+- Add Confirmed transitional state: show BOTH activate + deactivate buttons
+- Add Recurrence status pill rendering
+- Update source pill to use `getSourcePillLabel()` from display-labels.ts
+- Long descriptions: add `truncate` class on card, ensure title shows full text
+
+**Step 2: Update useProblemsState for activity history**
+
+- Each action handler now also appends a `ProblemEvent` to the item's `history[]`
+- Add `undoExclude` action: sets `verificationStatus: 'unconfirmed'`, appends `undo-excluded` event
+- Ensure `confirm` action creates `confirmed` event
+- Ensure category-specific actions (`marked-resolved`, `marked-addressed`) use correct event types
+- Add `removeItem` action: removes item from state entirely
+
+**Step 3: Commit**
+
+```bash
+git add apps/carby-os/src/features/problems-list/ProblemCard.tsx apps/carby-os/src/features/problems-list/hooks/useProblemsState.ts
+git commit -m "ProblemCard category-aware actions, undo exclude, activity history on state changes"
+```
+
+---
+
+## Task 14: Replace ScreeningInstruments with ScreeningBanner
+
+**Files:**
+- Delete or replace: `apps/carby-os/src/features/problems-list/ScreeningInstruments.tsx` → `ScreeningBanner.tsx`
+- Modify: `apps/carby-os/src/features/problems-list/ProblemsListView.tsx` (update import)
+
+**Step 1: Build ScreeningBanner**
+
+Compact banner component:
+- Left: clipboard icon + "2 screenings administered · Last: AHC HRSN 02/10/26"
+- Right: "View All" button → toast "Screening History — coming soon"
+- Props: `screenings: ScreeningInstrument[]`
+- Fallback: "No screenings administered" + "Administer Screening" → toast
+- Styling: subtle card-like bg, 12px 16px padding, single line
+
+**Step 2: Update ProblemsListView**
+
+Replace `<ScreeningInstruments />` with `<ScreeningBanner />` at top of SDOH section.
+
+**Step 3: Commit**
+
+```bash
+git add apps/carby-os/src/features/problems-list/ScreeningBanner.tsx apps/carby-os/src/features/problems-list/ProblemsListView.tsx
+git rm apps/carby-os/src/features/problems-list/ScreeningInstruments.tsx 2>/dev/null; true
+git commit -m "Replace screening gallery with compact screening banner"
+```
+
+---
+
+## Task 15: Build ProblemDetailDrawer
+
+**Files:**
+- Create: `apps/carby-os/src/features/problems-list/ProblemDetailDrawer.tsx`
+- Modify: `apps/carby-os/src/features/problems-list/ProblemsListView.tsx` (wire drawer open)
+- Modify: `apps/carby-os/src/features/problems-list/hooks/useProblemsState.ts` (add selectedItemId)
+
+**Step 1: Add selectedItemId to state**
+
+In `useProblemsState`, add `selectedItemId: string | null` state. Chevron click sets it. Drawer close clears it.
+
+**Step 2: Build ProblemDetailDrawer**
+
+Structure per DESIGN-SPEC §5.5:
+
+```
+Header: [←?] {DRAWER_TITLE[category]} [×]
+Summary Card: ProblemCard in detail mode (+ Edit button top-right)
+Related Screening: (SDOH only, conditional on relatedScreeningId)
+Activity: chronological list of item.history[], newest first
+Kebab menu: ⋯ with disabled "Merge with..." and "Split record" → toast
+Footer: [🚫 Remove] button with confirmation
+```
+
+Key implementation notes:
+- Drawer slides in from right, `position: fixed`, full height, ~400px wide
+- Overlay backdrop on rest of page (click to close)
+- Summary card reuses ProblemCard but with `mode="detail"` prop that adds Edit button
+- Activity rows: event description (left) + timestamp (right), divider between rows
+- Related Screening: static card showing screening name, score, interpretation, "View Full Results" → toast
+- Kebab menu: two items, both disabled, both → toast "Coming in a future release"
+- Remove button: red bg, white text, prohibition icon. On click → confirmation toast. On confirm → calls `removeItem(id)`, closes drawer.
+
+**Step 3: Wire to ProblemsListView**
+
+Chevron click on ProblemCard → sets `selectedItemId`. ProblemDetailDrawer renders when `selectedItemId !== null`. Actions within drawer call the same action handlers (shared from useProblemsState).
+
+**Step 4: Commit**
+
+```bash
+git add apps/carby-os/src/features/problems-list/ProblemDetailDrawer.tsx apps/carby-os/src/features/problems-list/ProblemsListView.tsx apps/carby-os/src/features/problems-list/hooks/useProblemsState.ts
+git commit -m "Build ProblemDetailDrawer — summary card, activity log, related screening, remove, split/merge placeholder"
+```
+
+---
+
+## Task 16: Build ProblemEditMode
+
+**Files:**
+- Create: `apps/carby-os/src/features/problems-list/ProblemEditMode.tsx`
+- Modify: `apps/carby-os/src/features/problems-list/ProblemDetailDrawer.tsx` (wire edit toggle)
+- Modify: `apps/carby-os/src/features/problems-list/hooks/useProblemsState.ts` (add editItem action)
+
+**Step 1: Build ProblemEditMode**
+
+Inline edit form that replaces the summary card content when Edit is clicked:
+
+- Header: [Cancel] "Edit {Category}" [Save]
+- For Conditions/Enc Dx/SDOH: description + ICD shown as display-only text, editable fields = onset date + notes
+- For Health Concerns: description is an editable text input, editable fields = reported date + notes
+- Date fields: plain text inputs (no date picker widget in v1)
+- Notes: textarea
+- Cancel: revert, return to detail view
+- Save: generate `edited` ProblemEvent with `changes[]`, update item, toast "Changes saved", return to detail view
+
+**Step 2: Add editItem action to useProblemsState**
+
+```typescript
+editItem: (id: string, changes: { field: string; from: string; to: string }[]) => {
+  // Update the item fields
+  // Append 'edited' ProblemEvent with changes array
+}
+```
+
+**Step 3: Wire in ProblemDetailDrawer**
+
+Edit button click → toggles `isEditing` local state → renders ProblemEditMode instead of summary card.
+
+**Step 4: Commit**
+
+```bash
+git add apps/carby-os/src/features/problems-list/ProblemEditMode.tsx apps/carby-os/src/features/problems-list/ProblemDetailDrawer.tsx apps/carby-os/src/features/problems-list/hooks/useProblemsState.ts
+git commit -m "Build ProblemEditMode — inline edit for dates, notes, Health Concern descriptions"
+```
+
+---
+
+## Task 17: Final Polish + Progress Update
+
+**Files:**
+- Modify: various (visual alignment)
+- Modify: `apps/carby-os/problems-list/docs/PROGRESS.md`
+
+**Step 1: Visual polish pass**
+
+- Verify all card states render per Figma node 13027:15996
+- Check drawer spacing, typography, color tokens against spec §6
+- Verify dual display mode (tab vs drawer)
+- Check empty states when all items filtered out
+- Verify toast messages are clear and consistent
+- Ensure long description truncation works on cards
+
+**Step 2: Update PROGRESS.md**
+
+Mark all phases complete. Clear "Still needed" items. Add final decision log entries.
+
+**Step 3: Build verification**
+
+```bash
+cd apps/carby-os && npm run build
+```
+
+**Step 4: Commit**
+
+```bash
+git add -A
+git commit -m "Final polish pass — visual alignment, progress tracker update, build verified"
+```
+
+---
+
 ## Summary
 
-| Task | Description | Estimated Commits |
-|------|-------------|------------------|
-| 1 | Initialize Vite app | 1 |
-| 2 | Configure Tailwind + tokens | 1 |
-| 3 | Copy design system components | 1 |
-| 4 | Build patient shell | 1 |
-| 5 | Define types + mock data | 1 |
-| 6 | Build useProblemsState hook | 1 |
-| 7 | Build ProblemCard | 1 |
-| 8 | Build FilterBar, ProblemSection, ScreeningInstruments | 1 |
-| 9 | Build ProblemsListView + wire everything | 1 |
-| 10 | Visual polish | 1 |
-| 11 | Update progress | 1 |
-| **Total** | | **11 commits** |
+| Task | Description | Phase | Estimated Commits |
+|------|-------------|-------|------------------|
+| 1 | Initialize Vite app | 1 | 1 |
+| 2 | Configure Tailwind + tokens | 1 | 1 |
+| 3 | Copy design system components | 1 | 1 |
+| 4 | Build patient shell | 1 | 1 |
+| 5 | Define types + mock data | 2 | 1 |
+| 6 | Build useProblemsState hook | 2-3 | 1 |
+| 7 | Build ProblemCard | 2 | 1 |
+| 8 | Build FilterBar, ProblemSection, ScreeningInstruments | 2 | 1 |
+| 9 | Build ProblemsListView + wire everything | 3 | 1 |
+| 10 | Visual polish | 3 | 1 |
+| 11 | Update progress | 3 | 1 |
+| **12** | **Update types + mock data for activity history** | **2 (Rev 2)** | **1** |
+| **13** | **ProblemCard + state management Rev 2 updates** | **2-3 (Rev 2)** | **1** |
+| **14** | **Replace ScreeningInstruments with ScreeningBanner** | **2 (Rev 2)** | **1** |
+| **15** | **Build ProblemDetailDrawer** | **4** | **1** |
+| **16** | **Build ProblemEditMode** | **4** | **1** |
+| **17** | **Final polish + progress update** | **4** | **1** |
+| **Total** | | | **17 commits** |
 
-Phase 4 (Detail Drawer) deferred until user shares the detail drawer Figma node.
+Tasks 1-11: Original scope (Phases 1-3). Tasks 12-17: Rev 2 addendum (Phase 2-3 updates + Phase 4).
