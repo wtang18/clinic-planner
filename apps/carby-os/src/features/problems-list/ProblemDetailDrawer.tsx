@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { X, Pencil, EllipsisVertical } from 'lucide-react'
 import type { ProblemItem, ProblemEvent, RemovalReason } from './types'
 import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
-import { Pill } from '@/design-system'
-import { Button } from '@/design-system'
+import { Pill, Button, Input } from '@/design-system'
 import { screeningInstruments } from './mock-data'
 import { ScreeningDetailCard } from './ScreeningBanner'
 import {
@@ -83,6 +82,20 @@ export function ProblemDetailDrawer({
   const relatedScreening = item.relatedScreeningId
     ? screeningInstruments.find(s => s.id === item.relatedScreeningId)
     : undefined
+
+  // Single-drawer: when editing an event, show ONLY the EventEditDrawer
+  if (editingEvent) {
+    return (
+      <EventEditDrawer
+        event={editingEvent}
+        onClose={() => setEditingEvent(null)}
+        onSave={(newDate) => {
+          onEditEventDate(item.id, editingEvent.id, newDate)
+          setEditingEvent(null)
+        }}
+      />
+    )
+  }
 
   return (
     <>
@@ -192,18 +205,71 @@ export function ProblemDetailDrawer({
           </div>
         )}
       </div>
+    </>
+  )
+}
 
-      {/* Event edit drawer */}
-      {editingEvent && (
-        <EventEditDrawer
-          event={editingEvent}
-          onClose={() => setEditingEvent(null)}
-          onSave={(newDate) => {
-            onEditEventDate(item.id, editingEvent.id, newDate)
-            setEditingEvent(null)
-          }}
-        />
-      )}
+/* --- Event Edit Drawer --- */
+
+interface EventEditDrawerProps {
+  event: ProblemEvent
+  onClose: () => void
+  onSave: (newDate: string) => void
+}
+
+function EventEditDrawer({ event, onClose, onSave }: EventEditDrawerProps) {
+  const [date, setDate] = useState(event.effectiveDate ?? '')
+
+  const handleSave = () => {
+    if (date && date !== event.effectiveDate) {
+      onSave(date)
+    } else {
+      onClose()
+    }
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
+
+      {/* Drawer */}
+      <div className="fixed right-0 top-0 h-full w-[600px] bg-bg-neutral-subtle z-50 shadow-xl flex flex-col animate-slide-in">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-neutral-low">
+          <h2 className="text-base font-semibold text-fg-neutral-primary">Edit Event Date</h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-auto px-5 py-4 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl px-4 py-4 flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium text-fg-neutral-primary">{formatEventDescription(event.type)}</p>
+              <p className="text-xs text-fg-neutral-secondary">{event.performedBy}</p>
+              <p className="text-xs text-fg-neutral-secondary">Recorded: {event.performedAt}</p>
+            </div>
+            <Input
+              label="Effective Date"
+              helperText="The date this status change clinically took effect, which may differ from when it was recorded."
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              placeholder="MM/DD/YY"
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-border-neutral-low flex items-center justify-end gap-2">
+          <Button type="transparent" size="medium" label="Cancel" onClick={onClose} />
+          <Button type="primary" size="medium" label="Save" onClick={handleSave} />
+        </div>
+      </div>
     </>
   )
 }
@@ -505,69 +571,5 @@ function ActivityLog({ item, onEditEvent }: { item: ProblemItem; onEditEvent: (e
         <p className="text-sm text-fg-neutral-secondary py-2">No activity recorded.</p>
       )}
     </div>
-  )
-}
-
-/* --- Event Edit Drawer --- */
-
-function EventEditDrawer({ event, onClose, onSave }: {
-  event: ProblemEvent
-  onClose: () => void
-  onSave: (newDate: string) => void
-}) {
-  const currentDate = event.effectiveDate ?? ''
-  const [date, setDate] = useState(currentDate)
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/20 z-[60]" onClick={onClose} />
-      <div className="fixed right-0 top-0 h-full w-[400px] bg-bg-neutral-subtle z-[70] shadow-xl flex flex-col animate-slide-in">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border-neutral-low">
-          <h2 className="text-base font-semibold text-fg-neutral-primary">Edit Activity Entry</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-auto px-5 py-4 flex flex-col gap-5">
-          {/* Event summary */}
-          <div className="bg-white rounded-2xl px-4 py-3 flex flex-col gap-1">
-            <p className="text-sm font-medium text-fg-neutral-primary">{formatEventDescription(event.type)}</p>
-            <p className="text-xs text-fg-neutral-secondary">{event.performedBy}</p>
-            <p className="text-xs text-fg-neutral-secondary">Recorded: {event.performedAt}</p>
-          </div>
-
-          {/* Effective date field */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">
-              Effective Date
-            </label>
-            <input
-              type="text"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              placeholder="MM/DD/YY"
-              className="px-3 py-2 rounded-xl border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-border-accent-medium"
-            />
-            <p className="text-xs text-fg-neutral-secondary">
-              The date this status change clinically took effect, which may differ from when it was recorded.
-            </p>
-          </div>
-        </div>
-
-        <div className="px-5 py-4 border-t border-border-neutral-low flex justify-end gap-2">
-          <Button type="transparent" size="medium" label="Cancel" onClick={onClose} />
-          <Button
-            type="primary"
-            size="medium"
-            label="Save"
-            onClick={() => date && onSave(date)}
-          />
-        </div>
-      </div>
-    </>
   )
 }
