@@ -19,7 +19,7 @@ const pillVariants = cva(
       type: {
         transparent: "bg-[var(--color-bg-transparent-low)] !text-[var(--color-fg-neutral-primary)]",
         outlined: "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-medium)] !text-[var(--color-fg-neutral-primary)]",
-        "subtle-outlined": "shadow-[inset_0_0_0_1px_var(--color-bg-neutral-subtle)] !text-[var(--color-fg-neutral-secondary)]",
+        "subtle-outlined": "shadow-[inset_0_0_0_1px_var(--color-fg-transparent-soft)] !text-[var(--color-fg-neutral-secondary)]",
         positive: "bg-[var(--color-bg-positive-low)] !text-[var(--color-fg-positive-primary)]",
         attention: "bg-[var(--color-bg-attention-low)] !text-[var(--color-fg-attention-primary)]",
         alert: "bg-[var(--color-bg-alert-low)] !text-[var(--color-fg-alert-primary)]",

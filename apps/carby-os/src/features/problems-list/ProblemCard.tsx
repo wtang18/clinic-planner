@@ -6,6 +6,7 @@ import {
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
   getSourcePillLabel,
+  isConfirmedTransitional,
 } from './display-labels'
 
 interface ProblemCardProps {
@@ -17,6 +18,7 @@ interface ProblemCardProps {
   onMarkInactive?: (id: string) => void
   onMarkResolved?: (id: string) => void
   onMarkAddressed?: (id: string) => void
+  onNoteRecurrence?: (id: string) => void
   onReopen?: (id: string) => void
   onDetailClick?: (id: string) => void
 }
@@ -36,6 +38,20 @@ function capitalizeFirst(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+/** Is this item in a muted/deemphasized state? (inactive, resolved, or excluded) */
+function isMuted(item: ProblemItem): boolean {
+  return (
+    item.verificationStatus === 'excluded' ||
+    item.clinicalStatus === 'inactive' ||
+    item.clinicalStatus === 'resolved'
+  )
+}
+
+/** Can recurrence apply? Only conditions and encounter-dx */
+function supportsRecurrence(item: ProblemItem): boolean {
+  return item.category === 'condition' || item.category === 'encounter-dx'
+}
+
 export function ProblemCard({
   item,
   onConfirm,
@@ -45,47 +61,56 @@ export function ProblemCard({
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
   onDetailClick,
 }: ProblemCardProps) {
   const actions = getActions(item)
   const sourcePillLabel = getSourcePillLabel(item)
+  const muted = isMuted(item)
+  const isExcluded = item.verificationStatus === 'excluded'
+
+  const baseCardClasses = 'rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer transition-colors border'
+  const cardClasses = isExcluded
+    ? `border-border-transparent-soft ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
+    : muted
+      ? `border-transparent bg-bg-transparent-inverse-high ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
+      : `border-transparent bg-white ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
+
+  const descriptionClasses = isExcluded
+    ? 'text-sm font-medium text-fg-neutral-secondary truncate line-through'
+    : muted
+      ? 'text-sm font-medium text-fg-neutral-secondary truncate'
+      : 'text-sm font-medium text-fg-neutral-primary truncate'
 
   return (
-    <div className="bg-white rounded-2xl px-4 py-3 flex items-start gap-2">
+    <div onClick={() => onDetailClick?.(item.id)} className={cardClasses}>
       {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col gap-2">
-        {/* Description — truncate long text */}
-        <p className="text-sm font-medium text-fg-neutral-primary truncate" title={item.description}>
+        <p className={descriptionClasses} title={item.description}>
           {item.description}
         </p>
         {/* Pill row */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Verification status pill (only if unconfirmed) */}
           {item.verificationStatus === 'unconfirmed' && (
-            <Pill type="attention" size="x-small" label="Unconfirmed" />
+            <Pill type="attention" size="small" label="Unconfirmed" />
           )}
-          {/* Recurrence pill */}
-          {item.clinicalStatus === 'recurrence' && (
-            <Pill type="transparent" size="x-small" label="Recurrence" />
+          {isConfirmedTransitional(item) && (
+            <Pill type="transparent" size="small" label="Confirmed" />
           )}
-          {/* Clinical status pill (for non-active confirmed items) */}
+          {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && !isConfirmedTransitional(item) && (
+            <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
+          )}
           {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-            <Pill type="transparent" size="x-small" label={capitalizeFirst(item.clinicalStatus)} />
+            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={capitalizeFirst(item.clinicalStatus)} />
           )}
-          {/* Excluded pill */}
           {item.verificationStatus === 'excluded' && (
-            <Pill type="transparent" size="x-small" label="Excluded" />
+            <Pill type="subtle-outlined" size="small" label="Excluded" />
           )}
-          {/* ICD code pill */}
           {item.icdCode && (
-            <Pill type="transparent" size="x-small" label={item.icdCode} />
+            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={item.icdCode} />
           )}
-          {/* Source + date pill */}
-          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-bg-transparent-low">
-            <span className="text-xs text-fg-neutral-secondary">{sourcePillLabel}</span>
-            <span className="text-xs font-medium text-fg-neutral-primary">{item.sourceDate}</span>
-          </div>
+          <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
         </div>
       </div>
 
@@ -98,12 +123,9 @@ export function ProblemCard({
             onClick={() => action.handler(item.id)}
           />
         ))}
-        <button
-          onClick={() => onDetailClick?.(item.id)}
-          className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary"
-        >
+        <div className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary">
           <ChevronRight size={16} />
-        </button>
+        </div>
       </div>
     </div>
   )
@@ -112,48 +134,42 @@ export function ProblemCard({
     const result: Array<{ label: string; handler: (id: string) => void }> = []
     const cat = _item.category
 
-    // --- Unconfirmed ---
     if (_item.verificationStatus === 'unconfirmed') {
       if (onExclude) result.push({ label: 'Exclude', handler: onExclude })
       if (onConfirm) result.push({ label: 'Confirm', handler: onConfirm })
       return result
     }
 
-    // --- Excluded ---
     if (_item.verificationStatus === 'excluded') {
       if (onUndoExclude) result.push({ label: 'Undo Exclude', handler: onUndoExclude })
       return result
     }
 
-    // --- Confirmed (transitional): confirmed + active, but was just confirmed ---
-    // Detect transitional: confirmed + active, and the most recent non-confirmed event
-    // isn't a marked-active (i.e. they haven't explicitly chosen active yet)
     const isTransitional = _item.verificationStatus === 'confirmed'
       && _item.clinicalStatus === 'active'
       && isConfirmedTransitional(_item)
 
     if (isTransitional) {
-      // Show both deactivate and activate
-      const deactivateLabel = DEACTIVATE_LABEL[cat]
-      const activateLabel = ACTIVATE_FROM_CONFIRMED_LABEL[cat]
       const deactivateHandler = getDeactivateHandler(cat)
-      if (deactivateHandler) result.push({ label: deactivateLabel, handler: deactivateHandler })
-      if (onMarkActive) result.push({ label: activateLabel, handler: onMarkActive })
+      if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
+      if (onMarkActive) result.push({ label: ACTIVATE_FROM_CONFIRMED_LABEL[cat], handler: onMarkActive })
       return result
     }
 
-    // --- Active (including Recurrence) ---
     if (_item.clinicalStatus === 'active' || _item.clinicalStatus === 'recurrence') {
       const deactivateHandler = getDeactivateHandler(cat)
       if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
       return result
     }
 
-    // --- Inactive / Resolved ---
     if (_item.clinicalStatus === 'inactive' || _item.clinicalStatus === 'resolved') {
       const activateLabel = ACTIVATE_FROM_INACTIVE_LABEL[cat]
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       if (activateHandler) result.push({ label: activateLabel, handler: activateHandler })
+      // Conditions + Encounter Dx also get Note Recurrence
+      if (supportsRecurrence(_item) && onNoteRecurrence) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+      }
       return result
     }
 
@@ -171,29 +187,4 @@ export function ProblemCard({
         return onMarkResolved
     }
   }
-}
-
-/**
- * Determine if a confirmed+active item is in the "transitional" state.
- * Transitional = the item was just confirmed but hasn't had an explicit
- * clinical status action (marked-active, marked-inactive, etc.) yet.
- */
-function isConfirmedTransitional(item: ProblemItem): boolean {
-  // Look through history for the most recent non-confirm event
-  // If there's a 'confirmed' event and no subsequent clinical status event,
-  // it's transitional
-  for (const evt of item.history) {
-    if (evt.type === 'confirmed') return true
-    if (
-      evt.type === 'marked-active' ||
-      evt.type === 'marked-inactive' ||
-      evt.type === 'marked-resolved' ||
-      evt.type === 'marked-addressed' ||
-      evt.type === 'reopened' ||
-      evt.type === 'recurrence'
-    ) {
-      return false
-    }
-  }
-  return false
 }

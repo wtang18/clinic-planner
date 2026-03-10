@@ -4,6 +4,7 @@ import { FilterBar } from './FilterBar'
 import { ProblemSection } from './ProblemSection'
 import { ScreeningBanner } from './ScreeningBanner'
 import { ProblemDetailDrawer } from './ProblemDetailDrawer'
+import { ProblemEditMode } from './ProblemEditMode'
 import { screeningInstruments } from './mock-data'
 
 interface ProblemsListViewProps {
@@ -22,12 +23,21 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     confirmItem,
     excludeItem,
     undoExclude,
+    undoConfirm,
     markActive,
     markInactive,
     markResolved,
     markAddressed,
+    noteRecurrence,
     reopenItem,
+    undoMarkActive,
+    undoMarkInactive,
+    undoMarkResolved,
+    undoMarkAddressed,
+    undoReopen,
+    undoRecurrence,
     removeItem,
+    editItem,
   } = useProblemsState()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -45,6 +55,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     onMarkInactive: markInactive,
     onMarkResolved: markResolved,
     onMarkAddressed: markAddressed,
+    onNoteRecurrence: noteRecurrence,
     onReopen: reopenItem,
     onDetailClick: selectItem,
   }
@@ -110,13 +121,30 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           onConfirm={confirmItem}
           onExclude={excludeItem}
           onUndoExclude={undoExclude}
+          onUndoConfirm={undoConfirm}
           onMarkActive={markActive}
           onMarkInactive={markInactive}
           onMarkResolved={markResolved}
           onMarkAddressed={markAddressed}
+          onNoteRecurrence={noteRecurrence}
           onReopen={reopenItem}
+          onUndoMarkActive={undoMarkActive}
+          onUndoMarkInactive={undoMarkInactive}
+          onUndoMarkResolved={undoMarkResolved}
+          onUndoMarkAddressed={undoMarkAddressed}
+          onUndoReopen={undoReopen}
+          onUndoRecurrence={undoRecurrence}
           onRemove={removeItem}
           onEditClick={() => setIsEditing(true)}
+        />
+      )}
+
+      {/* Edit mode */}
+      {selectedItem && isEditing && (
+        <ProblemEditMode
+          item={selectedItem}
+          onSave={editItem}
+          onCancel={() => setIsEditing(false)}
         />
       )}
     </>

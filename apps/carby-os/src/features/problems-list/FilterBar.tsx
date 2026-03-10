@@ -16,9 +16,9 @@ interface FilterBarProps {
 const filters: Array<{ key: FilterKey; label: string }> = [
   { key: 'all', label: 'All' },
   { key: 'unconfirmed', label: 'Unconfirmed' },
+  { key: 'confirmed', label: 'Confirmed' },
   { key: 'active', label: 'Active' },
   { key: 'inactive', label: 'Inactive' },
-  { key: 'confirmed', label: 'Confirmed' },
   { key: 'excluded', label: 'Excluded' },
 ]
 

@@ -1,8 +1,15 @@
-import { X, ClipboardCheck, Ban, MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
+import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
 import type { ProblemItem, ScreeningInstrument } from './types'
-import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription } from './display-labels'
+import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
 import { Pill } from '@/design-system'
+import { Button } from '@/design-system'
 import { screeningInstruments } from './mock-data'
+import {
+  DEACTIVATE_LABEL,
+  ACTIVATE_FROM_INACTIVE_LABEL,
+  ACTIVATE_FROM_CONFIRMED_LABEL,
+} from './display-labels'
 
 interface ProblemDetailDrawerProps {
   item: ProblemItem
@@ -10,11 +17,19 @@ interface ProblemDetailDrawerProps {
   onConfirm: (id: string) => void
   onExclude: (id: string) => void
   onUndoExclude: (id: string) => void
+  onUndoConfirm: (id: string) => void
   onMarkActive: (id: string) => void
   onMarkInactive: (id: string) => void
   onMarkResolved: (id: string) => void
   onMarkAddressed: (id: string) => void
+  onNoteRecurrence: (id: string) => void
   onReopen: (id: string) => void
+  onUndoMarkActive: (id: string) => void
+  onUndoMarkInactive: (id: string) => void
+  onUndoMarkResolved: (id: string) => void
+  onUndoMarkAddressed: (id: string) => void
+  onUndoReopen: (id: string) => void
+  onUndoRecurrence: (id: string) => void
   onRemove: (id: string) => void
   onEditClick: () => void
 }
@@ -23,15 +38,14 @@ function capitalizeFirst(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-function ActionButton({ label, onClick }: { label: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="px-3 py-1.5 rounded-full bg-bg-transparent-low text-xs font-semibold text-fg-neutral-primary whitespace-nowrap hover:bg-bg-transparent-medium transition-colors"
-    >
-      {label}
-    </button>
-  )
+/** Can this item be removed? Only if it has no clinical actions — just the originating event. */
+function isRemovable(item: ProblemItem): boolean {
+  return item.history.length <= 1
+}
+
+/** Can recurrence apply? Only conditions and encounter-dx */
+function supportsRecurrence(item: ProblemItem): boolean {
+  return item.category === 'condition' || item.category === 'encounter-dx'
 }
 
 export function ProblemDetailDrawer({
@@ -40,11 +54,19 @@ export function ProblemDetailDrawer({
   onConfirm,
   onExclude,
   onUndoExclude,
+  onUndoConfirm,
   onMarkActive,
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
+  onUndoMarkActive,
+  onUndoMarkInactive,
+  onUndoMarkResolved,
+  onUndoMarkAddressed,
+  onUndoReopen,
+  onUndoRecurrence,
   onRemove,
   onEditClick,
 }: ProblemDetailDrawerProps) {
@@ -63,7 +85,7 @@ export function ProblemDetailDrawer({
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-[420px] bg-bg-neutral-subtle z-50 shadow-xl flex flex-col animate-slide-in">
+      <div className="fixed right-0 top-0 h-full w-[600px] bg-bg-neutral-subtle z-50 shadow-xl flex flex-col animate-slide-in">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-neutral-low">
           <h2 className="text-base font-semibold text-fg-neutral-primary">{title}</h2>
@@ -84,11 +106,19 @@ export function ProblemDetailDrawer({
             onConfirm={onConfirm}
             onExclude={onExclude}
             onUndoExclude={onUndoExclude}
+            onUndoConfirm={onUndoConfirm}
             onMarkActive={onMarkActive}
             onMarkInactive={onMarkInactive}
             onMarkResolved={onMarkResolved}
             onMarkAddressed={onMarkAddressed}
+            onNoteRecurrence={onNoteRecurrence}
             onReopen={onReopen}
+            onUndoMarkActive={onUndoMarkActive}
+            onUndoMarkInactive={onUndoMarkInactive}
+            onUndoMarkResolved={onUndoMarkResolved}
+            onUndoMarkAddressed={onUndoMarkAddressed}
+            onUndoReopen={onUndoReopen}
+            onUndoRecurrence={onUndoRecurrence}
             onEditClick={onEditClick}
           />
 
@@ -99,26 +129,24 @@ export function ProblemDetailDrawer({
 
           {/* Activity log */}
           <ActivityLog item={item} />
-
-          {/* Kebab menu placeholder */}
-          <KebabMenu />
         </div>
 
-        {/* Footer — Remove */}
-        <div className="px-5 py-4 border-t border-border-neutral-low">
-          <button
-            onClick={() => {
-              if (confirm(`Remove "${item.description}" from problem list?`)) {
-                onRemove(item.id)
-                onClose()
-              }
-            }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 transition-colors text-sm font-semibold w-full justify-center"
-          >
-            <Ban size={14} />
-            Remove
-          </button>
-        </div>
+        {/* Footer — Remove (only for items with no clinical history) */}
+        {isRemovable(item) && (
+          <div className="px-5 py-4 border-t border-border-neutral-low flex">
+            <Button
+              type="high-impact"
+              size="medium"
+              label="Remove"
+              onClick={() => {
+                if (confirm(`Remove "${item.description}" from problem list?`)) {
+                  onRemove(item.id)
+                  onClose()
+                }
+              }}
+            />
+          </div>
+        )}
       </div>
     </>
   )
@@ -126,27 +154,26 @@ export function ProblemDetailDrawer({
 
 /* ─── Summary Card ─── */
 
-import {
-  DEACTIVATE_LABEL,
-  ACTIVATE_FROM_INACTIVE_LABEL,
-  ACTIVATE_FROM_CONFIRMED_LABEL,
-} from './display-labels'
-
-function isConfirmedTransitional(item: ProblemItem): boolean {
-  for (const evt of item.history) {
-    if (evt.type === 'confirmed') return true
-    if (
-      evt.type === 'marked-active' ||
-      evt.type === 'marked-inactive' ||
-      evt.type === 'marked-resolved' ||
-      evt.type === 'marked-addressed' ||
-      evt.type === 'reopened' ||
-      evt.type === 'recurrence'
-    ) {
-      return false
-    }
-  }
-  return false
+interface SummaryCardProps {
+  item: ProblemItem
+  sourcePillLabel: string
+  onConfirm: (id: string) => void
+  onExclude: (id: string) => void
+  onUndoExclude: (id: string) => void
+  onUndoConfirm: (id: string) => void
+  onMarkActive: (id: string) => void
+  onMarkInactive: (id: string) => void
+  onMarkResolved: (id: string) => void
+  onMarkAddressed: (id: string) => void
+  onNoteRecurrence: (id: string) => void
+  onReopen: (id: string) => void
+  onUndoMarkActive: (id: string) => void
+  onUndoMarkInactive: (id: string) => void
+  onUndoMarkResolved: (id: string) => void
+  onUndoMarkAddressed: (id: string) => void
+  onUndoReopen: (id: string) => void
+  onUndoRecurrence: (id: string) => void
+  onEditClick: () => void
 }
 
 function SummaryCard({
@@ -155,69 +182,102 @@ function SummaryCard({
   onConfirm,
   onExclude,
   onUndoExclude,
+  onUndoConfirm,
   onMarkActive,
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
+  onUndoMarkActive,
+  onUndoMarkInactive,
+  onUndoMarkResolved,
+  onUndoMarkAddressed,
+  onUndoReopen,
+  onUndoRecurrence,
   onEditClick,
-}: {
-  item: ProblemItem
-  sourcePillLabel: string
-  onConfirm: (id: string) => void
-  onExclude: (id: string) => void
-  onUndoExclude: (id: string) => void
-  onMarkActive: (id: string) => void
-  onMarkInactive: (id: string) => void
-  onMarkResolved: (id: string) => void
-  onMarkAddressed: (id: string) => void
-  onReopen: (id: string) => void
-  onEditClick: () => void
-}) {
+}: SummaryCardProps) {
+  const [kebabOpen, setKebabOpen] = useState(false)
   const actions = getCardActions(item)
+  const kebabActions = getKebabActions(item)
 
   return (
-    <div className="bg-white rounded-2xl px-4 py-4 flex flex-col gap-3">
-      {/* Row 1: description + edit */}
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-fg-neutral-primary">{item.description}</p>
-        <button
-          onClick={onEditClick}
-          className="text-xs font-semibold text-fg-neutral-secondary hover:text-fg-neutral-primary shrink-0"
-        >
-          Edit
-        </button>
-      </div>
-
-      {/* Pill row */}
-      <div className="flex items-center gap-1.5 flex-wrap">
-        {item.verificationStatus === 'unconfirmed' && (
-          <Pill type="attention" size="x-small" label="Unconfirmed" />
-        )}
-        {item.clinicalStatus === 'recurrence' && (
-          <Pill type="transparent" size="x-small" label="Recurrence" />
-        )}
-        {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-          <Pill type="transparent" size="x-small" label={capitalizeFirst(item.clinicalStatus)} />
-        )}
-        {item.verificationStatus === 'excluded' && (
-          <Pill type="transparent" size="x-small" label="Excluded" />
-        )}
-        {item.icdCode && (
-          <Pill type="transparent" size="x-small" label={item.icdCode} />
-        )}
-        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-lg bg-bg-transparent-low">
-          <span className="text-xs text-fg-neutral-secondary">{sourcePillLabel}</span>
-          <span className="text-xs font-medium text-fg-neutral-primary">{item.sourceDate}</span>
+    <div className="bg-white rounded-2xl px-4 py-4 flex flex-col">
+      {/* Row 1: description + icon buttons */}
+      <div className="flex justify-between gap-2">
+        <p className="text-sm font-medium text-fg-neutral-primary leading-7">{item.description}</p>
+        <div className="flex items-start gap-1 shrink-0">
+          <button
+            onClick={onEditClick}
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
+          >
+            <Pencil size={14} />
+          </button>
+          {kebabActions.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setKebabOpen(!kebabOpen)}
+                className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
+              >
+                <EllipsisVertical size={14} />
+              </button>
+              {kebabOpen && (
+                <>
+                  <div className="fixed inset-0 z-50" onClick={() => setKebabOpen(false)} />
+                  <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-md border border-border-transparent-soft py-1 min-w-[180px]">
+                    {kebabActions.map(action => (
+                      <button
+                        key={action.label}
+                        onClick={() => { action.handler(item.id); setKebabOpen(false) }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-bg-transparent-low transition-colors ${action.destructive ? 'text-fg-alert-primary' : 'text-fg-neutral-primary'}`}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* Pill row — 8px below header */}
+      <div className="flex items-center gap-1.5 flex-wrap mt-2">
+        {item.verificationStatus === 'unconfirmed' && (
+          <Pill type="attention" size="small" label="Unconfirmed" />
+        )}
+        {isConfirmedTransitional(item) && (
+          <Pill type="transparent" size="small" label="Confirmed" />
+        )}
+        {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && !isConfirmedTransitional(item) && (
+          <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
+        )}
+        {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
+          <Pill type="subtle-outlined" size="small" label={capitalizeFirst(item.clinicalStatus)} />
+        )}
+        {item.verificationStatus === 'excluded' && (
+          <Pill type="subtle-outlined" size="small" label="Excluded" />
+        )}
+        {item.icdCode && (
+          <Pill type="transparent" size="small" label={item.icdCode} />
+        )}
+        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
+      </div>
+
+      {/* Notes (if present) */}
+      {item.notes && (
+        <p className="text-sm text-fg-neutral-secondary mt-4">{item.notes}</p>
+      )}
+
+      {/* Action buttons — 24px gap from pill row */}
       {actions.length > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pt-6">
           {actions.map(action => (
-            <ActionButton
+            <Button
               key={action.label}
+              type="transparent"
+              size="medium"
               label={action.label}
               onClick={() => action.handler(item.id)}
             />
@@ -262,7 +322,52 @@ function SummaryCard({
     if (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved') {
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       result.push({ label: ACTIVATE_FROM_INACTIVE_LABEL[cat], handler: activateHandler })
+      // Conditions + Encounter Dx also get Note Recurrence
+      if (supportsRecurrence(it)) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+      }
       return result
+    }
+
+    return result
+  }
+
+  /** Kebab menu: contextual undo actions for corrections */
+  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
+    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
+
+    // Undo confirm (verification level) — always available for confirmed items
+    if (it.verificationStatus === 'confirmed') {
+      result.push({ label: 'Undo Confirm', handler: onUndoConfirm })
+    }
+
+    // Undo clinical status actions — contextual based on current state
+    if (it.verificationStatus === 'confirmed') {
+      if (it.clinicalStatus === 'active' && !isConfirmedTransitional(it)) {
+        result.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
+      }
+      if (it.clinicalStatus === 'inactive') {
+        const cat = it.category
+        if (cat === 'sdoh') {
+          result.push({ label: 'Undo Mark Addressed', handler: onUndoMarkAddressed })
+        } else if (cat === 'health-concern') {
+          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+        } else {
+          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+        }
+      }
+      if (it.clinicalStatus === 'resolved') {
+        result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+      }
+      if (it.clinicalStatus === 'recurrence') {
+        result.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
+      }
+    }
+
+    // Undo reopen — for items that were reopened (active, came from inactive)
+    // We check history to see if most recent clinical action was a reopen
+    if ((it.clinicalStatus === 'active') && it.history[0]?.type === 'reopened') {
+      result.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
 
     return result
@@ -321,6 +426,9 @@ function ActivityLog({ item }: { item: ProblemItem }) {
               <span className="text-sm text-fg-neutral-primary">
                 {formatEventDescription(event.type)}
               </span>
+              {event.note && (
+                <span className="text-xs text-fg-neutral-secondary">{event.note}</span>
+              )}
               <span className="text-xs text-fg-neutral-secondary truncate">
                 {event.performedBy}
               </span>
@@ -334,22 +442,6 @@ function ActivityLog({ item }: { item: ProblemItem }) {
       {item.history.length === 0 && (
         <p className="text-sm text-fg-neutral-secondary py-2">No activity recorded.</p>
       )}
-    </div>
-  )
-}
-
-/* ─── Kebab Menu ─── */
-
-function KebabMenu() {
-  return (
-    <div className="flex justify-start">
-      <button
-        onClick={() => { /* placeholder — toast "Coming in a future release" */ }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-transparent-low text-xs font-semibold text-fg-neutral-secondary hover:bg-bg-transparent-medium transition-colors"
-      >
-        <MoreHorizontal size={14} />
-        More Options
-      </button>
     </div>
   )
 }
