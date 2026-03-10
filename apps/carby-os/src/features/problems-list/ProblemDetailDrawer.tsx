@@ -149,33 +149,39 @@ export function ProblemDetailDrawer({
           <ActivityLog item={item} onEditEvent={setEditingEvent} />
         </div>
 
-        {/* Remove confirmation with reason picker (triggered from kebab menu) */}
-        {showRemoveConfirm && (
-          <div className="px-5 py-4 border-t border-border-neutral-low flex flex-col gap-3">
-            <p className="text-sm font-medium text-fg-neutral-primary">
-              Remove &ldquo;{item.description}&rdquo; from problem list?
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">Reason</p>
-              {([
-                { value: 'entered-in-error' as const, label: 'Entered in Error' },
-                { value: 'duplicate' as const, label: 'Duplicate' },
-                { value: 'replaced' as const, label: 'Replaced' },
-                { value: 'patient-disputed' as const, label: 'Patient Disputed' },
-              ]).map(({ value, label }) => (
-                <label key={value} className="flex items-center gap-2 py-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="remove-reason"
-                    checked={removeReason === value}
-                    onChange={() => setRemoveReason(value)}
-                    className="accent-[var(--color-fg-neutral-primary)]"
-                  />
-                  <span className="text-sm text-fg-neutral-primary">{label}</span>
-                </label>
-              ))}
+      </div>
+
+      {/* Remove confirmation alert dialog */}
+      {showRemoveConfirm && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setShowRemoveConfirm(false)} />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] bg-white rounded-2xl shadow-xl w-[400px] flex flex-col">
+            <div className="px-6 pt-6 pb-4 flex flex-col gap-3">
+              <h3 className="text-base font-semibold text-fg-neutral-primary">Remove from Problem List</h3>
+              <p className="text-sm text-fg-neutral-secondary">
+                Remove &ldquo;{item.description}&rdquo; from this patient&rsquo;s problem list. Select a reason for removal.
+              </p>
+              <div className="flex flex-col gap-1.5 mt-1">
+                {([
+                  { value: 'entered-in-error' as const, label: 'Entered in Error' },
+                  { value: 'duplicate' as const, label: 'Duplicate' },
+                  { value: 'replaced' as const, label: 'Replaced' },
+                  { value: 'patient-disputed' as const, label: 'Patient Disputed' },
+                ] as const).map(({ value, label }) => (
+                  <label key={value} className="flex items-center gap-2 py-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="remove-reason"
+                      checked={removeReason === value}
+                      onChange={() => setRemoveReason(value)}
+                      className="accent-[var(--color-fg-neutral-primary)]"
+                    />
+                    <span className="text-sm text-fg-neutral-primary">{label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 justify-end">
+            <div className="px-6 py-4 border-t border-border-neutral-low flex items-center justify-end gap-2">
               <Button type="transparent" size="medium" label="Cancel" onClick={() => setShowRemoveConfirm(false)} />
               <Button
                 type="high-impact"
@@ -188,8 +194,8 @@ export function ProblemDetailDrawer({
               />
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </>
   )
 }
@@ -343,7 +349,7 @@ function SummaryCard({
                           key={action.label}
                           disabled={action.disabled}
                           onClick={() => { if (!action.disabled) { action.handler(item.id); setKebabOpen(false) } }}
-                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${action.disabled ? 'text-fg-neutral-disabled cursor-not-allowed' : action.destructive ? 'text-fg-alert-primary hover:bg-bg-transparent-low' : 'text-fg-neutral-primary hover:bg-bg-transparent-low'}`}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${action.disabled ? 'text-fg-neutral-disabled cursor-not-allowed' : action.destructive ? 'text-fg-alert-secondary hover:bg-bg-transparent-low' : 'text-fg-neutral-primary hover:bg-bg-transparent-low'}`}
                         >
                           {action.label}
                         </button>
@@ -492,9 +498,9 @@ function SummaryCard({
       { label: 'Split record', handler: () => {}, disabled: true },
     ])
 
-    // Group 3: Destructive — always available with reason-picker confirmation
+    // Group 3: Destructive — always available, triggers reason-picker alert dialog
     groups.push([
-      { label: 'Remove from Problem List', handler: () => { onRemoveClick() }, destructive: true },
+      { label: 'Remove', handler: () => { onRemoveClick() }, destructive: true },
     ])
 
     return groups
