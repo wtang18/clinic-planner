@@ -1,6 +1,6 @@
 # Problems List Prototype — Phased Plan
 
-> **Status:** Complete (Rev 2)
+> **Status:** Complete (Rev 3)
 > **Last Updated:** 2026-03-10
 > **Design Spec:** `DESIGN-SPEC.md`
 
@@ -53,8 +53,9 @@
 - [x] Sections collapse/expand
 - [x] Card layout matches Figma (pills, actions, chevron)
 - [x] Screening banner renders at top of SDOH section
-- [x] Category-aware action labels (Mark Resolved, Mark Addressed, Reopen)
-- [x] Source pill labels change based on item state
+- [x] Category-aware action labels per §5.3 (2-button max: {Soft Close} + Mark Resolved for active cards)
+- [x] Resolved filter pill in FilterBar
+- [x] Source pill labels change based on item state (including `Resolved [DATE]` for resolved items)
 - [x] Undo Exclude button shown on excluded cards
 - [x] Recurrence state renders correctly for Conditions/Enc Dx
 
@@ -66,10 +67,11 @@
 
 **Scope:**
 - Enhance `useProblemsState` hook with activity history management
-- Wire all actions: Confirm, Exclude, Undo Exclude, Mark Active, Mark Inactive, Mark Resolved, Mark Addressed, Reopen
+- Wire all actions: Confirm, Exclude, Undo Exclude, Mark Active, Mark Inactive, Mark Addressed, Mark Resolved, Reopen
 - Each action appends a ProblemEvent to the item's history[]
-- Action buttons show/hide based on current item state per §5.3 matrix
-- Confirmed state shows both Activate + Deactivate options
+- Mark Inactive/Addressed/Resolved auto-set `abatementDate`; Mark Active/Reopen auto-clear it
+- Action buttons show/hide based on current item state per §5.3 matrix (2-button max)
+- Confirmed state shows both Mark Active + {Soft Close} options
 - Filter counts update after actions
 - Toast feedback on actions
 - Add button placeholder (toast or in-place SearchInput stub)
@@ -82,7 +84,8 @@
 - [x] Toast appears on action
 - [x] Undo Exclude action works
 - [x] Activity events generated on each action
-- [x] Category-specific action labels (Mark Resolved vs Mark Inactive)
+- [x] Category-specific action labels per §5.3 (Mark Inactive/Addressed + Mark Resolved, 2-button max)
+- [x] `abatementDate` auto-managed on deactivation/reactivation
 
 ---
 
@@ -99,7 +102,7 @@
   - Save generates `edited` event in history
   - Locked fields shown as display text, not inputs
 - Kebab menu (⋯) with disabled Split/Merge items → "Coming soon" toast
-- Remove button in footer with confirmation
+- Remove button in footer with reason picker (entered-in-error, duplicate, replaced, patient-disputed)
 - Visual polish: spacing, typography, color alignment with Figma
 - Dual display mode verification (tab vs drawer rendering)
 - Empty states when filters yield zero items
@@ -108,10 +111,10 @@
 - [x] Chevron opens detail drawer with correct category title
 - [x] Summary card shows same pills/actions as list card + Edit button
 - [x] Activity log renders events newest-first with actor + timestamp
-- [ ] SDOH items show Related Screening section when applicable
+- [ ] SDOH items show Related Screening section when applicable (deferred)
 - [x] Edit mode: can edit dates + notes (+ description for Health Concerns)
 - [x] Save creates activity event and returns to detail view
 - [x] Kebab menu shows disabled Split/Merge placeholders
-- [x] Remove button works with confirmation
+- [x] Remove button works with reason picker and confirmation
 - [x] ProblemsListView works in both tab and drawer mode
 - [x] Visual quality suitable for stakeholder review

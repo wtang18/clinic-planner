@@ -2,7 +2,8 @@ import { ChevronRight } from 'lucide-react'
 import { Pill } from '@/design-system'
 import type { ProblemItem } from './types'
 import {
-  DEACTIVATE_LABEL,
+  SOFT_CLOSE_LABEL,
+  RESOLVE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
   getSourcePillLabel,
@@ -67,6 +68,9 @@ export function ProblemCard({
 }: ProblemCardProps) {
   const actions = getActions(item)
   const sourcePillLabel = getSourcePillLabel(item)
+  const sourcePillDate = item.clinicalStatus === 'resolved' && item.abatementDate
+    ? item.abatementDate
+    : item.sourceDate
   const muted = isMuted(item)
   const isExcluded = item.verificationStatus === 'excluded'
 
@@ -110,7 +114,7 @@ export function ProblemCard({
           {item.icdCode && (
             <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={item.icdCode} />
           )}
-          <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
+          <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL={sourcePillLabel} label={sourcePillDate} />
         </div>
       </div>
 
@@ -150,15 +154,16 @@ export function ProblemCard({
       && isConfirmedTransitional(_item)
 
     if (isTransitional) {
-      const deactivateHandler = getDeactivateHandler(cat)
-      if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
+      const softCloseHandler = getSoftCloseHandler(cat)
+      if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
       if (onMarkActive) result.push({ label: ACTIVATE_FROM_CONFIRMED_LABEL[cat], handler: onMarkActive })
       return result
     }
 
     if (_item.clinicalStatus === 'active' || _item.clinicalStatus === 'recurrence') {
-      const deactivateHandler = getDeactivateHandler(cat)
-      if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
+      const softCloseHandler = getSoftCloseHandler(cat)
+      if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
+      if (onMarkResolved) result.push({ label: RESOLVE_LABEL, handler: onMarkResolved })
       return result
     }
 
@@ -166,25 +171,20 @@ export function ProblemCard({
       const activateLabel = ACTIVATE_FROM_INACTIVE_LABEL[cat]
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       if (activateHandler) result.push({ label: activateLabel, handler: activateHandler })
-      // Conditions + Encounter Dx also get Note Recurrence
-      if (supportsRecurrence(_item) && onNoteRecurrence) {
-        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
-      }
       return result
     }
 
     return result
   }
 
-  function getDeactivateHandler(cat: ProblemItem['category']): ((id: string) => void) | undefined {
+  function getSoftCloseHandler(cat: ProblemItem['category']): ((id: string) => void) | undefined {
     switch (cat) {
       case 'condition':
       case 'encounter-dx':
+      case 'health-concern':
         return onMarkInactive
       case 'sdoh':
         return onMarkAddressed
-      case 'health-concern':
-        return onMarkResolved
     }
   }
 }

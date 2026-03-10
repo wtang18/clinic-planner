@@ -5,10 +5,7 @@ import { ProblemSection } from './ProblemSection'
 import { ScreeningBanner } from './ScreeningBanner'
 import { ProblemDetailDrawer } from './ProblemDetailDrawer'
 import { ProblemEditMode } from './ProblemEditMode'
-import { AddProblemDrawer } from './AddProblemDrawer'
-import { AdministerScreeningDrawer } from './AdministerScreeningDrawer'
 import { screeningInstruments } from './mock-data'
-import type { ProblemCategory } from './types'
 
 interface ProblemsListViewProps {
   mode?: 'tab' | 'drawer'
@@ -39,15 +36,11 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     undoMarkAddressed,
     undoReopen,
     undoRecurrence,
-    addItem,
     removeItem,
     editItem,
-    editEventDate,
   } = useProblemsState()
 
   const [isEditing, setIsEditing] = useState(false)
-  const [addingCategory, setAddingCategory] = useState<ProblemCategory | null>(null)
-  const [showScreeningDrawer, setShowScreeningDrawer] = useState(false)
 
   const conditions = getFilteredItems('condition')
   const encounterDx = getFilteredItems('encounter-dx')
@@ -67,9 +60,13 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     onDetailClick: selectItem,
   }
 
+  const handleAddPlaceholder = () => {
+    // Placeholder — search powered by CMS ICD-10-CM in production
+  }
+
   return (
     <>
-      <div className="flex flex-col gap-4 px-5 h-full overflow-auto pb-12">
+      <div className="flex flex-col gap-4 px-5 py-3 h-full overflow-auto pb-12">
         <FilterBar
           activeFilters={activeFilters}
           counts={filterCounts}
@@ -81,7 +78,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           <ProblemSection
             title="Conditions"
             items={conditions}
-            actions={[{ label: 'Add', onClick: () => setAddingCategory('condition') }]}
+            actions={[{ label: 'Add', onClick: handleAddPlaceholder }]}
             {...sharedHandlers}
           />
 
@@ -97,17 +94,20 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           <ProblemSection
             title="Social Determinants"
             items={sdoh}
-            actions={[{ label: 'Add', onClick: () => setAddingCategory('sdoh') }]}
+            actions={[
+              { label: 'Administer Screening', onClick: handleAddPlaceholder },
+              { label: 'Add', onClick: handleAddPlaceholder },
+            ]}
             {...sharedHandlers}
           >
-            <ScreeningBanner screenings={screeningInstruments} onAdminister={() => setShowScreeningDrawer(true)} />
+            <ScreeningBanner screenings={screeningInstruments} />
           </ProblemSection>
 
           {/* Health Concerns */}
           <ProblemSection
             title="Health Concerns"
             items={healthConcerns}
-            actions={[{ label: 'Add', onClick: () => setAddingCategory('health-concern') }]}
+            actions={[{ label: 'Add', onClick: handleAddPlaceholder }]}
             {...sharedHandlers}
           />
         </div>
@@ -136,7 +136,6 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           onUndoRecurrence={undoRecurrence}
           onRemove={removeItem}
           onEditClick={() => setIsEditing(true)}
-          onEditEventDate={editEventDate}
         />
       )}
 
@@ -146,22 +145,6 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           item={selectedItem}
           onSave={editItem}
           onCancel={() => setIsEditing(false)}
-        />
-      )}
-
-      {/* Add problem drawer */}
-      {addingCategory && (
-        <AddProblemDrawer
-          category={addingCategory}
-          onClose={() => setAddingCategory(null)}
-          onAdd={addItem}
-        />
-      )}
-
-      {/* Administer screening drawer */}
-      {showScreeningDrawer && (
-        <AdministerScreeningDrawer
-          onClose={() => setShowScreeningDrawer(false)}
         />
       )}
     </>

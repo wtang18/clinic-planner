@@ -31,6 +31,9 @@ export type ProblemEventType =
   | 'edited'
   | 'event-edited'
   | 'note-added'
+  | 'removed'
+
+export type RemovalReason = 'entered-in-error' | 'duplicate' | 'replaced' | 'patient-disputed'
 
 export interface ProblemEvent {
   id: string
@@ -41,6 +44,7 @@ export interface ProblemEvent {
   note?: string
   changes?: { field: string; from: string; to: string }[]
   relatedEventId?: string
+  removalReason?: RemovalReason
 }
 
 export interface ProblemItem {
@@ -55,7 +59,7 @@ export interface ProblemItem {
   sourceDate: string
   severity?: Severity
   onsetDate?: string
-  resolvedDate?: string
+  abatementDate?: string
   history: ProblemEvent[]
   notes?: string
   relatedScreeningId?: string
@@ -70,4 +74,4 @@ export interface ScreeningInstrument {
   interpretation?: string
 }
 
-export type FilterKey = 'all' | 'unconfirmed' | 'active' | 'inactive' | 'confirmed' | 'excluded'
+export type FilterKey = 'all' | 'unconfirmed' | 'active' | 'inactive' | 'resolved' | 'confirmed' | 'excluded'

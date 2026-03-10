@@ -14,8 +14,11 @@ export function ProblemEditMode({ item, onSave, onCancel }: ProblemEditModeProps
   const title = EDIT_TITLE[item.category]
   const isHealthConcern = item.category === 'health-concern'
 
+  const showAbatementDate = item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved'
+
   const [description, setDescription] = useState(item.description)
   const [onsetDate, setOnsetDate] = useState(item.onsetDate ?? item.sourceDate)
+  const [abatementDate, setAbatementDate] = useState(item.abatementDate ?? '')
   const [notes, setNotes] = useState(item.notes ?? '')
 
   const handleSave = () => {
@@ -31,6 +34,14 @@ export function ProblemEditMode({ item, onSave, onCancel }: ProblemEditModeProps
     if (onsetDate !== originalDate) {
       updates.onsetDate = onsetDate
       changes.push({ field: 'Onset Date', from: originalDate, to: onsetDate })
+    }
+
+    if (showAbatementDate) {
+      const originalAbatement = item.abatementDate ?? ''
+      if (abatementDate !== originalAbatement) {
+        updates.abatementDate = abatementDate || undefined
+        changes.push({ field: 'Abatement Date', from: originalAbatement, to: abatementDate })
+      }
     }
 
     const originalNotes = item.notes ?? ''
@@ -95,6 +106,19 @@ export function ProblemEditMode({ item, onSave, onCancel }: ProblemEditModeProps
                 className="w-full px-3 py-2 rounded-lg border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-information-high)] focus:border-transparent"
               />
             </Field>
+
+            {/* Abatement Date — only for inactive/resolved items */}
+            {showAbatementDate && (
+              <Field label={item.clinicalStatus === 'resolved' ? 'Resolved Date' : 'Inactive Since'}>
+                <input
+                  type="text"
+                  value={abatementDate}
+                  onChange={e => setAbatementDate(e.target.value)}
+                  placeholder="MM/DD/YY"
+                  className="w-full px-3 py-2 rounded-lg border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-information-high)] focus:border-transparent"
+                />
+              </Field>
+            )}
 
             {/* Notes */}
             <Field label="Notes">
