@@ -1,15 +1,15 @@
 # Problems List Prototype — Progress
 
-> **Last Updated:** 2026-03-09
+> **Last Updated:** 2026-03-10
 
 ## Status
 
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 1 | Foundation — App Scaffold + Design System + Shell | **Complete** |
-| 2 | Problems List — Data + Filter Bar + Sections | **Partially Complete** — needs Rev 2 updates |
-| 3 | Problems List — Interactive Actions + State Management | **Partially Complete** — needs Rev 2 updates |
-| 4 | Detail Drawer + Edit Mode + Polish | Not Started |
+| 2 | Problems List — Data + Filter Bar + Sections | **Complete** |
+| 3 | Problems List — Interactive Actions + State Management | **Complete** |
+| 4 | Detail Drawer + Edit Mode + Polish | **Complete** (1 deferred item) |
 
 ## What's Done
 
@@ -29,31 +29,45 @@
 - ProblemCard with state-dependent pills and actions
 - ScreeningInstruments cards for SDOH section
 
-**Still needed (Rev 2):**
-- [ ] Replace ScreeningInstruments gallery with ScreeningBanner
-- [ ] Add ProblemEvent type + history[] to ProblemItem
-- [ ] Add display-labels.ts for category-aware action mapping
-- [ ] Source pill label logic (label changes by state)
-- [ ] Undo Exclude button on excluded cards
-- [ ] Recurrence state rendering
-- [ ] Category-specific action labels (Mark Resolved, Mark Addressed, Reopen)
-- [ ] Mock data: add 2-5 ProblemEvent entries per item
+**Rev 2 updates (complete):**
+- [x] Replace ScreeningInstruments gallery with ScreeningBanner
+- [x] Add ProblemEvent type + history[] to ProblemItem
+- [x] Add display-labels.ts for category-aware action mapping
+- [x] Source pill label logic (label changes by state)
+- [x] Undo Exclude button on excluded cards
+- [x] Recurrence state rendering (Asthma mock item set to recurrence)
+- [x] Category-specific action labels (Mark Resolved, Mark Addressed, Reopen)
+- [x] Mock data: add 2-5 ProblemEvent entries per item
 
-### Phase 3: Interactivity (Tasks 9-10) — Partially Done
+### Phase 3: Interactivity (Tasks 9-10) ✅
 - ProblemsListView wiring all sections with shared action handlers
-- Card actions: Confirm, Exclude, Mark Active, Mark Inactive, Mark Addressed, Reopen, Update (placeholder)
+- Card actions: Confirm, Exclude, Mark Active, Mark Inactive, Mark Addressed, Reopen, Note Recurrence
 - Filter counts update dynamically after actions
 - Visual polish pass against Figma (node 12953:13268)
 - Vite build verified passing
 
-**Still needed (Rev 2):**
-- [ ] Undo Exclude action
-- [ ] Activity event generation on each action (append to history[])
-- [ ] Confirmed transitional state (shows both Activate + Deactivate)
+**Rev 2 updates (complete):**
+- [x] Undo Exclude action
+- [x] Activity event generation on each action (append to history[])
+- [x] Confirmed transitional state (shows both Activate + Deactivate)
+
+### Phase 4: Detail Drawer + Edit Mode + Polish ✅
+- ProblemDetailDrawer: 600px right drawer with summary card, activity log, action buttons
+- Pencil icon → ProblemEditMode (inline edit for dates, notes, HC description)
+- Kebab menu: contextual undo actions, disabled Split/Merge placeholders
+- Remove button in footer (only for items with ≤1 history event)
+- Recurrence state: "Note Recurrence" as equal peer to "Mark Active" on inactive Conditions/Enc Dx
+- Contextual undo: Undo Mark Active, Undo Mark Inactive, Undo Mark Resolved, Undo Mark Addressed, Undo Reopen, Undo Recurrence — all in kebab menu
+- Section headers: tappable to collapse/expand, auto-animate transitions (200ms)
+- Collapsed sections show active item count
+- Pill `subtle-outlined` border fixed to `fg-transparent-soft`
+
+**Deferred:**
+- [ ] SDOH items: Related Screening section in detail drawer (low priority — screening data is in ScreeningBanner)
 
 ## Current Focus
 
-Rev 2 updates to Phases 2-3 + Phase 4 (Detail Drawer).
+All phases complete. Prototype is demo-ready for stakeholder review.
 
 ## Blockers
 
@@ -78,6 +92,10 @@ None — all Figma references available.
 | 2026-03-09 | SDOH screening banner replaces gallery | Simpler — separates screening admin from SDOH conditions. Detail-level results live in SDOH detail drawer. |
 | 2026-03-09 | Split/Merge as disabled placeholder | Kebab menu in detail drawer with "Coming soon" items — shows the concept without building it |
 | 2026-03-09 | performedAt vs effectiveDate in events | Supports backdated entries — recorded now but happened in the past |
+| 2026-03-10 | Note Recurrence as equal peer to Mark Active | Don't lean providers one way or another — logging correct state, not pushing a preferred path |
+| 2026-03-10 | Contextual undo in kebab menu | Primary buttons for intentional clinical decisions; kebab for corrections. Applied to all categories for consistency. |
+| 2026-03-10 | Recurrence renders as info-emphasis pill | Recurrence is effectively active — similar visual treatment helps providers scan overall status |
+| 2026-03-10 | Remove only for items with ≤1 history event | Items with rich history are too important to casually delete; editing is the safer path |
 
 ## Rev 2 Summary (2026-03-09)
 

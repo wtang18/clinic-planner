@@ -228,8 +228,9 @@ function SummaryCard({
                     {kebabActions.map(action => (
                       <button
                         key={action.label}
-                        onClick={() => { action.handler(item.id); setKebabOpen(false) }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-bg-transparent-low transition-colors ${action.destructive ? 'text-fg-alert-primary' : 'text-fg-neutral-primary'}`}
+                        disabled={action.disabled}
+                        onClick={() => { if (!action.disabled) { action.handler(item.id); setKebabOpen(false) } }}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${action.disabled ? 'text-fg-neutral-disabled cursor-not-allowed' : action.destructive ? 'text-fg-alert-primary hover:bg-bg-transparent-low' : 'text-fg-neutral-primary hover:bg-bg-transparent-low'}`}
                       >
                         {action.label}
                       </button>
@@ -333,8 +334,8 @@ function SummaryCard({
   }
 
   /** Kebab menu: contextual undo actions for corrections */
-  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
-    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
+  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean; disabled?: boolean }> {
+    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean; disabled?: boolean }> = []
 
     // Undo confirm (verification level) — always available for confirmed items
     if (it.verificationStatus === 'confirmed') {
@@ -369,6 +370,10 @@ function SummaryCard({
     if ((it.clinicalStatus === 'active') && it.history[0]?.type === 'reopened') {
       result.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
+
+    // Split/Merge placeholders (future feature)
+    result.push({ label: 'Merge with…', handler: () => {}, disabled: true })
+    result.push({ label: 'Split record', handler: () => {}, disabled: true })
 
     return result
   }
