@@ -76,7 +76,7 @@ export function ProblemCard({
 
   const baseCardClasses = 'rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer transition-colors border'
   const cardClasses = isExcluded
-    ? `border-border-transparent-soft bg-transparent ${baseCardClasses} hover:bg-bg-transparent-min`
+    ? `border-border-transparent-soft bg-transparent ${baseCardClasses} hover:bg-bg-transparent-low`
     : `border-transparent bg-white ${baseCardClasses} hover:bg-bg-transparent-inverse-high`
 
   const descriptionClasses = isExcluded
