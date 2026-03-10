@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import type { ProblemItem } from './types'
 import { EDIT_TITLE } from './display-labels'
-import { Button } from '@/design-system'
+import { Button, Input, Textarea } from '@/design-system'
 
 interface ProblemEditModeProps {
   item: ProblemItem
@@ -79,14 +79,11 @@ export function ProblemEditMode({ item, onSave, onCancel }: ProblemEditModeProps
           <div className="bg-white rounded-2xl px-4 py-4 flex flex-col gap-4">
             {/* Description — editable only for Health Concerns, display-only otherwise */}
             {isHealthConcern ? (
-              <Field label="Description">
-                <input
-                  type="text"
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-information-high)] focus:border-transparent"
-                />
-              </Field>
+              <Input
+                label="Description"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+              />
             ) : (
               <div className="flex flex-col gap-1">
                 <p className="text-sm font-medium text-fg-neutral-primary">{item.description}</p>
@@ -97,39 +94,32 @@ export function ProblemEditMode({ item, onSave, onCancel }: ProblemEditModeProps
             )}
 
             {/* Onset / Source Date */}
-            <Field label={isHealthConcern ? 'Reported Date' : 'Onset Date'}>
-              <input
-                type="text"
-                value={onsetDate}
-                onChange={e => setOnsetDate(e.target.value)}
-                placeholder="MM/DD/YY"
-                className="w-full px-3 py-2 rounded-lg border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-information-high)] focus:border-transparent"
-              />
-            </Field>
+            <Input
+              label={isHealthConcern ? 'Reported Date' : 'Onset Date'}
+              value={onsetDate}
+              onChange={e => setOnsetDate(e.target.value)}
+              placeholder="MM/DD/YY"
+            />
 
             {/* Abatement Date — only for inactive/resolved items */}
             {showAbatementDate && (
-              <Field label={item.clinicalStatus === 'resolved' ? 'Resolved Date' : 'Inactive Since'}>
-                <input
-                  type="text"
-                  value={abatementDate}
-                  onChange={e => setAbatementDate(e.target.value)}
-                  placeholder="MM/DD/YY"
-                  className="w-full px-3 py-2 rounded-lg border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-information-high)] focus:border-transparent"
-                />
-              </Field>
+              <Input
+                label={item.clinicalStatus === 'resolved' ? 'Resolved Date' : 'Inactive Since'}
+                value={abatementDate}
+                onChange={e => setAbatementDate(e.target.value)}
+                placeholder="MM/DD/YY"
+              />
             )}
 
             {/* Notes */}
-            <Field label="Notes">
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Optional annotation"
-                rows={3}
-                className="w-full px-3 py-2 rounded-lg border border-border-neutral-low bg-white text-sm text-fg-neutral-primary resize-none focus:outline-none focus:ring-2 focus:ring-[var(--color-bg-information-high)] focus:border-transparent"
-              />
-            </Field>
+            <Textarea
+              label="Notes"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Optional annotation"
+              rows={3}
+              resize="none"
+            />
           </div>
         </div>
 
@@ -140,14 +130,5 @@ export function ProblemEditMode({ item, onSave, onCancel }: ProblemEditModeProps
         </div>
       </div>
     </>
-  )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">{label}</label>
-      {children}
-    </div>
   )
 }

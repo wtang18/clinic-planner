@@ -216,6 +216,22 @@ export function useProblemsState() {
     }))
   }, [])
 
+  const editEventDate = useCallback((itemId: string, eventId: string, newDate: string) => {
+    setItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item
+      const targetEvent = item.history.find(e => e.id === eventId)
+      if (!targetEvent || !targetEvent.effectiveDate) return item
+      const oldDate = targetEvent.effectiveDate
+      const updatedHistory = item.history.map(e =>
+        e.id === eventId ? { ...e, effectiveDate: newDate } : e
+      )
+      const correctionEvent = createEvent('event-edited')
+      correctionEvent.relatedEventId = eventId
+      correctionEvent.changes = [{ field: 'Effective Date', from: oldDate, to: newDate }]
+      return { ...item, history: [correctionEvent, ...updatedHistory] }
+    }))
+  }, [])
+
   const selectItem = useCallback((id: string) => setSelectedItemId(id), [])
   const clearSelection = useCallback(() => setSelectedItemId(null), [])
 
@@ -246,5 +262,6 @@ export function useProblemsState() {
     undoRecurrence,
     removeItem,
     editItem,
+    editEventDate,
   }
 }
