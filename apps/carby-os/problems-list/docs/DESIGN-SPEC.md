@@ -1,7 +1,7 @@
 # Problems List Prototype — Design Specification
 
-> **Status:** Active Design (Rev 2)
-> **Last Updated:** 2026-03-09
+> **Status:** Active Design (Rev 3)
+> **Last Updated:** 2026-03-10
 > **Author:** Will Tang
 > **PRD Reference:** `apps/carby-os/problems-list/reference/Patient Problem List PRD.md`
 > **Figma:** Wm3cfzJvKzITMVvkxpX9mQ
@@ -140,7 +140,7 @@ type ProblemCategory = 'condition' | 'encounter-dx' | 'sdoh' | 'health-concern';
 
 type VerificationStatus = 'unconfirmed' | 'confirmed' | 'excluded';
 
-type ClinicalStatus = 'active' | 'inactive' | 'recurrence';
+type ClinicalStatus = 'active' | 'inactive' | 'resolved' | 'recurrence';
 
 type ProblemSource = 'reported' | 'diagnosed' | 'screened' | 'imported';
 
@@ -158,6 +158,7 @@ interface ProblemItem {
   sourceDate: string;               // Display format: "MM/DD/YY"
   severity?: Severity;
   onsetDate?: string;               // When condition actually started (may differ from sourceDate)
+  abatementDate?: string;           // When condition ended — set on inactive/resolved, cleared on reactivation. Maps to FHIR Condition.abatementDateTime
   notes?: string;                   // Free text annotations
   history: ProblemEvent[];          // Activity log, newest first
   relatedScreeningId?: string;      // SDOH only — links to screening instrument
@@ -178,15 +179,20 @@ type ProblemEventType =
   | 'excluded'
   | 'undo-excluded'
   | 'marked-active'
-  | 'marked-inactive'
-  | 'marked-resolved'     // Health Concerns (same as inactive, different label)
-  | 'marked-addressed'    // SDOH (same as inactive, different label)
+  | 'marked-inactive'     // Soft deactivation — Conditions / Encounter Dx (→ clinicalStatus: 'inactive')
+  | 'marked-addressed'    // Soft deactivation — SDOH (→ clinicalStatus: 'inactive')
+  | 'marked-resolved'     // Definitive resolution — all categories (→ clinicalStatus: 'resolved')
   | 'recurrence'          // Conditions/Encounter Dx only
   | 'reopened'            // Reactivated from resolved/addressed/inactive
 
   // Manual corrections / edits
   | 'edited'              // Date or notes correction
-  | 'note-added';         // Annotation added
+  | 'note-added'          // Annotation added
+
+  // Removal
+  | 'removed';            // Item removed from list (with reason)
+
+type RemovalReason = 'entered-in-error' | 'duplicate' | 'replaced' | 'patient-disputed';
 
 interface ProblemEvent {
   id: string;
@@ -195,6 +201,7 @@ interface ProblemEvent {
   performedAt: string;         // When this event was RECORDED (ISO or display format)
   effectiveDate?: string;      // When this event ACTUALLY happened (for backdated entries)
   note?: string;               // Optional annotation on this event
+  removalReason?: RemovalReason; // Only for type: 'removed'. Default: 'entered-in-error'
   changes?: {                  // For edits — what changed
     field: string;
     from: string;
@@ -221,14 +228,15 @@ interface ScreeningInstrument {
 
 ### 4.4 Status Model
 
-Six statuses across all categories. The same internal statuses are used everywhere; only action button labels vary by category (see §5.3).
+Seven statuses across all categories. The same internal statuses are used everywhere; only action button labels vary by category (see §5.3).
 
 | Status | Description | Applies To |
 |--------|-------------|-----------|
 | `unconfirmed` | Awaiting provider review | All 4 categories |
 | `confirmed` | Provider verified, not yet marked active/inactive | All 4 (transitional state) |
 | `active` | Currently active clinical issue | All 4 |
-| `inactive` | No longer active | All 4 |
+| `inactive` | No longer active but may recur (soft deactivation) | All 4 |
+| `resolved` | Definitively resolved, no longer relevant (hard close) | All 4 |
 | `excluded` | Determined not relevant/applicable | All 4 |
 | `recurrence` | Previously resolved, now active again | Conditions + Encounter Dx only |
 
@@ -242,6 +250,7 @@ Six statuses across all categories. The same internal statuses are used everywhe
 | Confirmed | `confirmed` | `active` (default) |
 | Active | `confirmed` | `active` |
 | Inactive | `confirmed` | `inactive` |
+| Resolved | `confirmed` | `resolved` |
 | Excluded | `excluded` | (unchanged) |
 | Recurrence | `confirmed` | `recurrence` |
 
@@ -339,6 +348,7 @@ Row of TogglePill components at top of content area. Sticky on scroll.
 | Unconfirmed | Items where verificationStatus = 'unconfirmed' | Dynamic |
 | Active | Items where clinicalStatus = 'active' OR 'recurrence' | Dynamic |
 | Inactive | Items where clinicalStatus = 'inactive' | Dynamic |
+| Resolved | Items where clinicalStatus = 'resolved' | Dynamic |
 | Confirmed | Items where verificationStatus = 'confirmed' | Dynamic |
 | Excluded | Items where verificationStatus = 'excluded' | Dynamic |
 
@@ -362,26 +372,31 @@ Items within each section are filtered by the active filter pills. If a section 
 
 ### 5.3 Card Actions
 
-Actions vary by item state AND category. Buttons are small pill-shaped (transparent variant, 12px semibold).
+Actions vary by item state AND category. Buttons are small pill-shaped (transparent variant, 12px semibold). **Max 2 action buttons per card** (plus the → chevron).
 
 **State → Action matrix:**
 
-| State | Actions (all categories) |
-|-------|------------------------|
-| Unconfirmed | Exclude · Confirm · → |
-| Confirmed (transitional) | {Deactivate} · {Activate} · → |
-| Active | {Deactivate} · → |
-| Active + Recurrence | {Deactivate} · → |
-| Inactive | {Activate} · → |
-| Excluded | Undo Exclude · → |
+| State | Actions (all categories) | Button count |
+|-------|------------------------|:---:|
+| Unconfirmed | Exclude · Confirm · → | 2 |
+| Confirmed (transitional) | {Soft Close} · Mark Active · → | 2 |
+| Active | {Soft Close} · Mark Resolved · → | 2 |
+| Active + Recurrence | {Soft Close} · Mark Resolved · → | 2 |
+| Inactive | {Reactivate} · → | 1 |
+| Resolved | {Reactivate} · → | 1 |
+| Excluded | Undo Exclude · → | 1 |
 
-**Category-aware action labels** (replace `{Deactivate}` and `{Activate}` above):
+**Category-aware action labels** (replace `{Soft Close}` and `{Reactivate}` above):
 
-| Action | Conditions / Enc Dx | SDOH | Health Concerns |
-|--------|--------------------|----- |----------------|
-| `{Deactivate}` | Mark Inactive | Mark Addressed | Mark Resolved |
-| `{Activate}` (from inactive) | Mark Active | Reopen | Reopen |
-| `{Activate}` (from confirmed) | Mark Active | Mark Active | Mark Active |
+| Placeholder | Conditions / Enc Dx | SDOH | Health Concerns |
+|-------------|--------------------|----- |----------------|
+| `{Soft Close}` | Mark Inactive | Mark Addressed | Mark Inactive |
+| `Mark Resolved` | Mark Resolved | Mark Resolved | Mark Resolved |
+| `{Reactivate}` (from inactive) | Mark Active | Reopen | Reopen |
+| `{Reactivate}` (from resolved) | Mark Active | Reopen | Reopen |
+| `{Reactivate}` (from confirmed) | Mark Active | Mark Active | Mark Active |
+
+> **Inactive vs Resolved:** "Inactive" = condition paused but may recur (e.g., seasonal asthma in remission). "Resolved" = definitively over, no longer clinically relevant (e.g., acute sinusitis cured). Both set `abatementDate`; only the `clinicalStatus` value differs. This maps to FHIR R4 Condition.clinicalStatus values `inactive` and `resolved`.
 
 **Action behaviors:**
 
@@ -390,11 +405,13 @@ Actions vary by item state AND category. Buttons are small pill-shaped (transpar
 | **Confirm** | `verificationStatus → 'confirmed'` | `confirmed` |
 | **Exclude** | `verificationStatus → 'excluded'` | `excluded` |
 | **Undo Exclude** | `verificationStatus → 'unconfirmed'` | `undo-excluded` |
-| **Mark Active** | `clinicalStatus → 'active'` | `marked-active` |
-| **Mark Inactive** | `clinicalStatus → 'inactive'` | `marked-inactive` |
-| **Mark Resolved** | `clinicalStatus → 'inactive'` | `marked-resolved` |
-| **Mark Addressed** | `clinicalStatus → 'inactive'` | `marked-addressed` |
-| **Reopen** | `clinicalStatus → 'active'` | `reopened` |
+| **Mark Active** | `clinicalStatus → 'active'`, clear `abatementDate` | `marked-active` |
+| **Mark Inactive** | `clinicalStatus → 'inactive'`, set `abatementDate` to today | `marked-inactive` |
+| **Mark Addressed** | `clinicalStatus → 'inactive'`, set `abatementDate` to today | `marked-addressed` |
+| **Mark Resolved** | `clinicalStatus → 'resolved'`, set `abatementDate` to today | `marked-resolved` |
+| **Reopen** | `clinicalStatus → 'active'`, clear `abatementDate` | `reopened` |
+
+> **`abatementDate` lifecycle:** Set automatically when deactivating (inactive or resolved). Cleared automatically when reactivating (Mark Active, Reopen). Editable via detail drawer edit mode for backdating.
 
 All actions:
 1. Update state in place
@@ -430,6 +447,7 @@ All actions:
 | Active | `Onset [DATE]` (when first made active, or effectiveDate) |
 | Active + Recurrence | `Recurrence [DATE]` (latest recurrence date) |
 | Inactive | Preserves last relevant label (e.g., `Onset [DATE]`) |
+| Resolved | `Resolved [DATE]` (abatementDate) |
 | Excluded | `Reported [DATE]` (reverts to original source) |
 
 For items with old dates (>1 year ago), display year only: `Onset 2022` instead of `Onset 03/15/22`.
@@ -508,8 +526,25 @@ Side drawer sliding in from right. Contains a summary card (matching the list ca
 
 **Footer:**
 - Red "Remove" button with prohibition icon
-- Click → confirmation toast: "Remove {description} from problem list?"
-- On confirm → removes item from state, closes drawer
+- Click → confirmation dialog with reason picker:
+
+```
+┌─ Remove Confirmation ─────────────────────────────┐
+│ Remove "{description}" from problem list?          │
+│                                                     │
+│ Reason:                                            │
+│ ○ Entered in Error  (default, pre-selected)        │
+│ ○ Duplicate                                        │
+│ ○ Replaced                                         │
+│ ○ Patient Disputed                                 │
+│                                                     │
+│                        [Cancel]  [Remove]          │
+└────────────────────────────────────────────────────┘
+```
+
+- On confirm → creates a `removed` event with the selected `removalReason`, hides item from list, closes drawer
+- Toast: "Removed: {description}"
+- **For v1:** Simple inline radio group in a confirmation overlay. "Entered in Error" pre-selected.
 
 ### 5.6 Edit Mode
 
@@ -721,7 +756,7 @@ For this prototype, tab view is the primary surface. Drawer mode is available bu
 - Static patient shell matching Carby OS patient view
 - All 4 problem sections with realistic mock data
 - Interactive filter pills with dynamic counts
-- 6 status states with category-aware action labels
+- 7 status states (unconfirmed, confirmed, active, inactive, resolved, excluded, recurrence) with category-aware action labels
 - Undo Exclude action on excluded cards
 - Recurrence state for Conditions/Encounter Dx
 - Activity history (ProblemEvent log) per item
@@ -731,7 +766,8 @@ For this prototype, tab view is the primary surface. Drawer mode is available bu
 - Related Screening card in SDOH detail drawer
 - Split/Merge placeholder (disabled kebab menu items)
 - Collapsible sections
-- Remove action in detail drawer with confirmation
+- Remove action in detail drawer with reason picker (entered-in-error, duplicate, replaced, patient-disputed)
+- `abatementDate` auto-set on deactivation, auto-cleared on reactivation
 
 **Out of scope / deferred:**
 - Screening History view (behind "View All" — future)

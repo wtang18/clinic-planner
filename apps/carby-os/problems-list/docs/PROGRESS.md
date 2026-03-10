@@ -1,6 +1,6 @@
 # Problems List Prototype — Progress
 
-> **Last Updated:** 2026-03-09
+> **Last Updated:** 2026-03-10
 
 ## Status
 
@@ -29,15 +29,17 @@
 - ProblemCard with state-dependent pills and actions
 - ScreeningInstruments cards for SDOH section
 
-**Still needed (Rev 2):**
+**Still needed (Rev 2 + Rev 3):**
 - [ ] Replace ScreeningInstruments gallery with ScreeningBanner
 - [ ] Add ProblemEvent type + history[] to ProblemItem
 - [ ] Add display-labels.ts for category-aware action mapping
-- [ ] Source pill label logic (label changes by state)
+- [ ] Source pill label logic (label changes by state, including `Resolved [DATE]`)
 - [ ] Undo Exclude button on excluded cards
 - [ ] Recurrence state rendering
-- [ ] Category-specific action labels (Mark Resolved, Mark Addressed, Reopen)
+- [ ] Category-specific action labels per 2-button max (Mark Inactive/Addressed + Mark Resolved)
 - [ ] Mock data: add 2-5 ProblemEvent entries per item
+- [ ] `resolved` clinicalStatus + Resolved filter pill (Rev 3)
+- [ ] `abatementDate` auto-set on deactivation, auto-clear on reactivation (Rev 3)
 
 ### Phase 3: Interactivity (Tasks 9-10) — Partially Done
 - ProblemsListView wiring all sections with shared action handlers
@@ -46,10 +48,12 @@
 - Visual polish pass against Figma (node 12953:13268)
 - Vite build verified passing
 
-**Still needed (Rev 2):**
+**Still needed (Rev 2 + Rev 3):**
 - [ ] Undo Exclude action
 - [ ] Activity event generation on each action (append to history[])
-- [ ] Confirmed transitional state (shows both Activate + Deactivate)
+- [ ] Confirmed transitional state (shows both Mark Active + {Soft Close})
+- [ ] `abatementDate` lifecycle management on all actions (Rev 3)
+- [ ] Remove action with reason picker in detail drawer (Rev 3)
 
 ## Current Focus
 
@@ -78,6 +82,22 @@ None — all Figma references available.
 | 2026-03-09 | SDOH screening banner replaces gallery | Simpler — separates screening admin from SDOH conditions. Detail-level results live in SDOH detail drawer. |
 | 2026-03-09 | Split/Merge as disabled placeholder | Kebab menu in detail drawer with "Coming soon" items — shows the concept without building it |
 | 2026-03-09 | performedAt vs effectiveDate in events | Supports backdated entries — recorded now but happened in the past |
+| 2026-03-10 | Both Inactive + Resolved as separate statuses | Inactive = may recur (soft), Resolved = definitively over (hard). Maps to FHIR R4 clinicalStatus. 2-button max on active cards. |
+| 2026-03-10 | `abatementDate` field on ProblemItem | Auto-set when deactivating (inactive/resolved), auto-cleared on reactivation. Maps to FHIR Condition.abatementDateTime. |
+| 2026-03-10 | Remove with reason picker | 4 reasons: entered-in-error (default), duplicate, replaced, patient-disputed. Tracked as `removalReason` on the removed event. |
+| 2026-03-10 | Health Concerns deactivation label → Mark Inactive | Was "Mark Resolved" in Rev 2. Changed because "Mark Resolved" now means definitively resolved (→ `clinicalStatus: 'resolved'`) across all categories. |
+
+## Rev 3 Summary (2026-03-10)
+
+PRD gap analysis and status model refinement. Key additions:
+
+1. **7 statuses** (was 6): added `resolved` as distinct from `inactive` — maps to FHIR R4 `Condition.clinicalStatus`
+2. **2-button max** on active cards: `{Soft Close}` + `Mark Resolved` — category-aware soft close labels (Mark Inactive / Mark Addressed)
+3. **`abatementDate`** field added to ProblemItem — auto-set on deactivation, auto-cleared on reactivation
+4. **Resolved filter pill** added to FilterBar
+5. **Remove with reason picker** — 4 reasons: entered-in-error, duplicate, replaced, patient-disputed
+6. **Health Concerns label change** — soft close action label changed from "Mark Resolved" → "Mark Inactive" (Mark Resolved now means definitive resolution across all categories)
+7. **Source pill for resolved items** — shows `Resolved [DATE]` using abatementDate
 
 ## Rev 2 Summary (2026-03-09)
 

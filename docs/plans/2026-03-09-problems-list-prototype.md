@@ -1928,3 +1928,69 @@ git commit -m "Final polish pass — visual alignment, progress tracker update, 
 | **Total** | | | **17 commits** |
 
 Tasks 1-11: Original scope (Phases 1-3). Tasks 12-17: Rev 2 addendum (Phase 2-3 updates + Phase 4).
+
+---
+
+## Rev 3 Amendments (2026-03-10)
+
+The following changes apply to Tasks 12-17 above. They do NOT add new tasks — they modify the scope of existing tasks.
+
+### Task 12 Amendments (Types + Mock Data)
+
+**Additional type changes in `types.ts`:**
+- Add `'resolved'` to `ClinicalStatus`: `'active' | 'inactive' | 'resolved' | 'recurrence'`
+- Add `abatementDate?: string` to `ProblemItem` interface
+- Add `'removed'` to `ProblemEventType` union
+- Add `RemovalReason` type: `'entered-in-error' | 'duplicate' | 'replaced' | 'patient-disputed'`
+- Add `removalReason?: RemovalReason` to `ProblemEvent` interface
+
+**Update `display-labels.ts`:**
+- Change `DEACTIVATE_LABEL` for health-concern from `'Mark Resolved'` to `'Mark Inactive'`
+- `Mark Resolved` is now a universal action across all categories (→ `clinicalStatus: 'resolved'`)
+- Rename `DEACTIVATE_LABEL` to `SOFT_CLOSE_LABEL` for clarity
+- Add `REACTIVATE_FROM_RESOLVED_LABEL` (same values as `ACTIVATE_FROM_INACTIVE_LABEL`)
+- Add `getSourcePillLabel` case for resolved: return `'Resolved'` when `clinicalStatus === 'resolved'`
+
+**Updated display-labels.ts shape:**
+
+```typescript
+export const SOFT_CLOSE_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Inactive',
+  'encounter-dx': 'Mark Inactive',
+  'sdoh': 'Mark Addressed',
+  'health-concern': 'Mark Inactive',
+};
+
+// Mark Resolved is universal — same label for all categories
+export const RESOLVE_LABEL = 'Mark Resolved';
+```
+
+### Task 13 Amendments (ProblemCard + State)
+
+**ProblemCard changes:**
+- Active cards now show 2 buttons: `{SOFT_CLOSE_LABEL[category]}` + `Mark Resolved`
+- Resolved cards show 1 button: `{REACTIVATE_LABEL}` (Mark Active or Reopen per category)
+- Source pill for resolved items: `Resolved [abatementDate]`
+
+**useProblemsState changes:**
+- `markInactive` / `markAddressed` actions now set `abatementDate` to today's date
+- New `markResolved` action: sets `clinicalStatus: 'resolved'`, sets `abatementDate` to today
+- `markActive` and `reopen` actions now clear `abatementDate`
+- `removeItem` action now accepts `removalReason: RemovalReason` parameter, appends `removed` event with reason
+- Add `Resolved` to FilterBar filter options
+
+### Task 15 Amendments (Detail Drawer)
+
+**Remove button changes:**
+- Click → inline confirmation dialog with reason radio group
+- 4 options: Entered in Error (default), Duplicate, Replaced, Patient Disputed
+- Cancel + Remove buttons
+- On confirm → creates `removed` event with selected `removalReason`, hides item, closes drawer
+- Toast: "Removed: {description}"
+
+### Task 16 Amendments (Edit Mode)
+
+**`abatementDate` editing:**
+- If item has `abatementDate`, show as editable field in edit mode
+- Label: "Resolved Date" or "Ended Date"
+- Only visible when `clinicalStatus` is `'inactive'` or `'resolved'`
