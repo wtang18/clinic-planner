@@ -45,7 +45,7 @@ export function useProblemsState() {
   // Compute filter counts across all items
   const filterCounts = useMemo<FilterCounts>(() => ({
     unconfirmed: items.filter(i => i.verificationStatus === 'unconfirmed').length,
-    active: items.filter(i => i.clinicalStatus === 'active').length,
+    active: items.filter(i => i.clinicalStatus === 'active' || i.clinicalStatus === 'recurrence').length,
     inactive: items.filter(i => i.clinicalStatus === 'inactive' || i.clinicalStatus === 'resolved').length,
     confirmed: items.filter(i => i.verificationStatus === 'confirmed').length,
     excluded: items.filter(i => i.verificationStatus === 'excluded').length,
@@ -75,7 +75,7 @@ export function useProblemsState() {
     for (const filter of activeFilters) {
       switch (filter) {
         case 'unconfirmed': if (item.verificationStatus === 'unconfirmed') return true; break
-        case 'active': if (item.clinicalStatus === 'active') return true; break
+        case 'active': if (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') return true; break
         case 'inactive': if (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') return true; break
         case 'confirmed': if (item.verificationStatus === 'confirmed') return true; break
         case 'excluded': if (item.verificationStatus === 'excluded') return true; break
@@ -147,8 +147,37 @@ export function useProblemsState() {
     updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'marked-addressed')
   }, [updateItemWithEvent])
 
+  const noteRecurrence = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'recurrence' }, 'recurrence')
+  }, [updateItemWithEvent])
+
   const reopenItem = useCallback((id: string) => {
     updateItemWithEvent(id, { clinicalStatus: 'active' }, 'reopened')
+  }, [updateItemWithEvent])
+
+  // Undo clinical status actions — revert to previous state
+  const undoMarkActive = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'undo-marked-active')
+  }, [updateItemWithEvent])
+
+  const undoMarkInactive = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'active' }, 'undo-marked-inactive')
+  }, [updateItemWithEvent])
+
+  const undoMarkResolved = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'active' }, 'undo-marked-resolved')
+  }, [updateItemWithEvent])
+
+  const undoMarkAddressed = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'active' }, 'undo-marked-addressed')
+  }, [updateItemWithEvent])
+
+  const undoReopen = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'undo-reopened')
+  }, [updateItemWithEvent])
+
+  const undoRecurrence = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'undo-recurrence')
   }, [updateItemWithEvent])
 
   const removeItem = useCallback((id: string) => {
@@ -184,7 +213,14 @@ export function useProblemsState() {
     markInactive,
     markResolved,
     markAddressed,
+    noteRecurrence,
     reopenItem,
+    undoMarkActive,
+    undoMarkInactive,
+    undoMarkResolved,
+    undoMarkAddressed,
+    undoReopen,
+    undoRecurrence,
     removeItem,
     editItem,
   }

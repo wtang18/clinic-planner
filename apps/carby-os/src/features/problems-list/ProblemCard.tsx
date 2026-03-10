@@ -18,6 +18,7 @@ interface ProblemCardProps {
   onMarkInactive?: (id: string) => void
   onMarkResolved?: (id: string) => void
   onMarkAddressed?: (id: string) => void
+  onNoteRecurrence?: (id: string) => void
   onReopen?: (id: string) => void
   onDetailClick?: (id: string) => void
 }
@@ -46,6 +47,11 @@ function isMuted(item: ProblemItem): boolean {
   )
 }
 
+/** Can recurrence apply? Only conditions and encounter-dx */
+function supportsRecurrence(item: ProblemItem): boolean {
+  return item.category === 'condition' || item.category === 'encounter-dx'
+}
+
 export function ProblemCard({
   item,
   onConfirm,
@@ -55,6 +61,7 @@ export function ProblemCard({
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
   onDetailClick,
 }: ProblemCardProps) {
@@ -63,10 +70,6 @@ export function ProblemCard({
   const muted = isMuted(item)
   const isExcluded = item.verificationStatus === 'excluded'
 
-  // Card styles per Figma:
-  // - Excluded: border + no bg fill (transparent), border-only pills, secondary text
-  // - Inactive/resolved: semi-transparent bg, no border, border-only pills, secondary text
-  // - Active/default: white bg, no border, filled pills, primary text
   const baseCardClasses = 'rounded-2xl px-4 py-3 flex items-start gap-2 cursor-pointer transition-colors border'
   const cardClasses = isExcluded
     ? `border-border-transparent-soft ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
@@ -74,7 +77,6 @@ export function ProblemCard({
       ? `border-transparent bg-bg-transparent-inverse-high ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
       : `border-transparent bg-white ${baseCardClasses} hover:bg-bg-transparent-inverse-medium`
 
-  // Description text: secondary for muted/excluded, primary for active
   const descriptionClasses = isExcluded
     ? 'text-sm font-medium text-fg-neutral-secondary truncate line-through'
     : muted
@@ -90,31 +92,24 @@ export function ProblemCard({
         </p>
         {/* Pill row */}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Unconfirmed pill */}
           {item.verificationStatus === 'unconfirmed' && (
             <Pill type="attention" size="small" label="Unconfirmed" />
           )}
-          {/* Confirmed (transitional) pill */}
           {isConfirmedTransitional(item) && (
             <Pill type="transparent" size="small" label="Confirmed" />
           )}
-          {/* Active pill — info-emphasis (dark blue fill, white text) */}
           {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && !isConfirmedTransitional(item) && (
             <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
           )}
-          {/* Clinical status pill (inactive/resolved) */}
           {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
             <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={capitalizeFirst(item.clinicalStatus)} />
           )}
-          {/* Excluded pill */}
           {item.verificationStatus === 'excluded' && (
             <Pill type="subtle-outlined" size="small" label="Excluded" />
           )}
-          {/* ICD code pill */}
           {item.icdCode && (
             <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={item.icdCode} />
           )}
-          {/* Source + date pill */}
           <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
         </div>
       </div>
@@ -171,6 +166,10 @@ export function ProblemCard({
       const activateLabel = ACTIVATE_FROM_INACTIVE_LABEL[cat]
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       if (activateHandler) result.push({ label: activateLabel, handler: activateHandler })
+      // Conditions + Encounter Dx also get Note Recurrence
+      if (supportsRecurrence(_item) && onNoteRecurrence) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+      }
       return result
     }
 
@@ -189,5 +188,3 @@ export function ProblemCard({
     }
   }
 }
-
-

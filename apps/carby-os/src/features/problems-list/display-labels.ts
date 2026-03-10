@@ -95,6 +95,12 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'marked-addressed': return 'Marked addressed'
     case 'recurrence': return 'Recurrence noted'
     case 'reopened': return 'Reopened'
+    case 'undo-marked-active': return 'Mark active undone'
+    case 'undo-marked-inactive': return 'Mark inactive undone'
+    case 'undo-marked-resolved': return 'Mark resolved undone'
+    case 'undo-marked-addressed': return 'Mark addressed undone'
+    case 'undo-reopened': return 'Reopen undone'
+    case 'undo-recurrence': return 'Recurrence undone'
     case 'edited': return 'Edited'
     case 'note-added': return 'Note added'
   }

@@ -16,6 +16,7 @@ interface ProblemSectionProps {
   onMarkInactive: (id: string) => void
   onMarkResolved: (id: string) => void
   onMarkAddressed: (id: string) => void
+  onNoteRecurrence: (id: string) => void
   onReopen: (id: string) => void
   onDetailClick: (id: string) => void
   children?: React.ReactNode
@@ -33,6 +34,7 @@ export function ProblemSection({
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
   onDetailClick,
   children,
@@ -60,7 +62,6 @@ export function ProblemSection({
           {rightLabel && (
             <span className="self-center text-sm text-fg-neutral-secondary">{rightLabel}</span>
           )}
-          <Chevron size={16} className="self-center text-fg-neutral-secondary shrink-0" />
         </button>
         {actions.map(({ label, onClick }) => (
           <button
@@ -71,6 +72,9 @@ export function ProblemSection({
             {label}
           </button>
         ))}
+        <button onClick={() => setCollapsed(!collapsed)} className="self-center w-5 h-5 flex items-center justify-center text-fg-neutral-secondary shrink-0 cursor-pointer">
+          <Chevron size={16} />
+        </button>
       </div>
 
       {/* Content */}
@@ -88,6 +92,7 @@ export function ProblemSection({
               onMarkInactive={onMarkInactive}
               onMarkResolved={onMarkResolved}
               onMarkAddressed={onMarkAddressed}
+              onNoteRecurrence={onNoteRecurrence}
               onReopen={onReopen}
               onDetailClick={onDetailClick}
             />

@@ -22,6 +22,12 @@ export type ProblemEventType =
   | 'marked-addressed'
   | 'recurrence'
   | 'reopened'
+  | 'undo-marked-active'
+  | 'undo-marked-inactive'
+  | 'undo-marked-resolved'
+  | 'undo-marked-addressed'
+  | 'undo-reopened'
+  | 'undo-recurrence'
   | 'edited'
   | 'note-added'
 

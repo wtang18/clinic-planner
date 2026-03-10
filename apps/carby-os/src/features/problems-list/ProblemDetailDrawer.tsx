@@ -22,7 +22,14 @@ interface ProblemDetailDrawerProps {
   onMarkInactive: (id: string) => void
   onMarkResolved: (id: string) => void
   onMarkAddressed: (id: string) => void
+  onNoteRecurrence: (id: string) => void
   onReopen: (id: string) => void
+  onUndoMarkActive: (id: string) => void
+  onUndoMarkInactive: (id: string) => void
+  onUndoMarkResolved: (id: string) => void
+  onUndoMarkAddressed: (id: string) => void
+  onUndoReopen: (id: string) => void
+  onUndoRecurrence: (id: string) => void
   onRemove: (id: string) => void
   onEditClick: () => void
 }
@@ -36,6 +43,11 @@ function isRemovable(item: ProblemItem): boolean {
   return item.history.length <= 1
 }
 
+/** Can recurrence apply? Only conditions and encounter-dx */
+function supportsRecurrence(item: ProblemItem): boolean {
+  return item.category === 'condition' || item.category === 'encounter-dx'
+}
+
 export function ProblemDetailDrawer({
   item,
   onClose,
@@ -47,7 +59,14 @@ export function ProblemDetailDrawer({
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
+  onUndoMarkActive,
+  onUndoMarkInactive,
+  onUndoMarkResolved,
+  onUndoMarkAddressed,
+  onUndoReopen,
+  onUndoRecurrence,
   onRemove,
   onEditClick,
 }: ProblemDetailDrawerProps) {
@@ -92,7 +111,14 @@ export function ProblemDetailDrawer({
             onMarkInactive={onMarkInactive}
             onMarkResolved={onMarkResolved}
             onMarkAddressed={onMarkAddressed}
+            onNoteRecurrence={onNoteRecurrence}
             onReopen={onReopen}
+            onUndoMarkActive={onUndoMarkActive}
+            onUndoMarkInactive={onUndoMarkInactive}
+            onUndoMarkResolved={onUndoMarkResolved}
+            onUndoMarkAddressed={onUndoMarkAddressed}
+            onUndoReopen={onUndoReopen}
+            onUndoRecurrence={onUndoRecurrence}
             onEditClick={onEditClick}
           />
 
@@ -128,6 +154,28 @@ export function ProblemDetailDrawer({
 
 /* ─── Summary Card ─── */
 
+interface SummaryCardProps {
+  item: ProblemItem
+  sourcePillLabel: string
+  onConfirm: (id: string) => void
+  onExclude: (id: string) => void
+  onUndoExclude: (id: string) => void
+  onUndoConfirm: (id: string) => void
+  onMarkActive: (id: string) => void
+  onMarkInactive: (id: string) => void
+  onMarkResolved: (id: string) => void
+  onMarkAddressed: (id: string) => void
+  onNoteRecurrence: (id: string) => void
+  onReopen: (id: string) => void
+  onUndoMarkActive: (id: string) => void
+  onUndoMarkInactive: (id: string) => void
+  onUndoMarkResolved: (id: string) => void
+  onUndoMarkAddressed: (id: string) => void
+  onUndoReopen: (id: string) => void
+  onUndoRecurrence: (id: string) => void
+  onEditClick: () => void
+}
+
 function SummaryCard({
   item,
   sourcePillLabel,
@@ -139,40 +187,32 @@ function SummaryCard({
   onMarkInactive,
   onMarkResolved,
   onMarkAddressed,
+  onNoteRecurrence,
   onReopen,
+  onUndoMarkActive,
+  onUndoMarkInactive,
+  onUndoMarkResolved,
+  onUndoMarkAddressed,
+  onUndoReopen,
+  onUndoRecurrence,
   onEditClick,
-}: {
-  item: ProblemItem
-  sourcePillLabel: string
-  onConfirm: (id: string) => void
-  onExclude: (id: string) => void
-  onUndoExclude: (id: string) => void
-  onUndoConfirm: (id: string) => void
-  onMarkActive: (id: string) => void
-  onMarkInactive: (id: string) => void
-  onMarkResolved: (id: string) => void
-  onMarkAddressed: (id: string) => void
-  onReopen: (id: string) => void
-  onEditClick: () => void
-}) {
+}: SummaryCardProps) {
   const [kebabOpen, setKebabOpen] = useState(false)
   const actions = getCardActions(item)
   const kebabActions = getKebabActions(item)
 
   return (
     <div className="bg-white rounded-2xl px-4 py-4 flex flex-col">
-      {/* Row 1: description + icon buttons — icons vertically centered to first line of text */}
+      {/* Row 1: description + icon buttons */}
       <div className="flex justify-between gap-2">
         <p className="text-sm font-medium text-fg-neutral-primary leading-7">{item.description}</p>
         <div className="flex items-start gap-1 shrink-0">
-          {/* Edit (pencil) icon button */}
           <button
             onClick={onEditClick}
             className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
           >
             <Pencil size={14} />
           </button>
-          {/* Kebab menu */}
           {kebabActions.length > 0 && (
             <div className="relative">
               <button
@@ -225,18 +265,25 @@ function SummaryCard({
         <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
       </div>
 
+      {/* Notes (if present) */}
+      {item.notes && (
+        <p className="text-sm text-fg-neutral-secondary mt-4">{item.notes}</p>
+      )}
+
       {/* Action buttons — 24px gap from pill row */}
-      <div className="flex items-center gap-2 pt-6">
-        {actions.map(action => (
-          <Button
-            key={action.label}
-            type="transparent"
-            size="medium"
-            label={action.label}
-            onClick={() => action.handler(item.id)}
-          />
-        ))}
-      </div>
+      {actions.length > 0 && (
+        <div className="flex items-center gap-2 pt-6">
+          {actions.map(action => (
+            <Button
+              key={action.label}
+              type="transparent"
+              size="medium"
+              label={action.label}
+              onClick={() => action.handler(item.id)}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 
@@ -275,19 +322,52 @@ function SummaryCard({
     if (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved') {
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       result.push({ label: ACTIVATE_FROM_INACTIVE_LABEL[cat], handler: activateHandler })
+      // Conditions + Encounter Dx also get Note Recurrence
+      if (supportsRecurrence(it)) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+      }
       return result
     }
 
     return result
   }
 
-  /** Kebab menu: secondary/overflow actions not shown as primary buttons */
+  /** Kebab menu: contextual undo actions for corrections */
   function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
     const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
 
-    // Confirmed items can be unconfirmed (undo confirm → back to unconfirmed)
+    // Undo confirm (verification level) — always available for confirmed items
     if (it.verificationStatus === 'confirmed') {
       result.push({ label: 'Undo Confirm', handler: onUndoConfirm })
+    }
+
+    // Undo clinical status actions — contextual based on current state
+    if (it.verificationStatus === 'confirmed') {
+      if (it.clinicalStatus === 'active' && !isConfirmedTransitional(it)) {
+        result.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
+      }
+      if (it.clinicalStatus === 'inactive') {
+        const cat = it.category
+        if (cat === 'sdoh') {
+          result.push({ label: 'Undo Mark Addressed', handler: onUndoMarkAddressed })
+        } else if (cat === 'health-concern') {
+          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+        } else {
+          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+        }
+      }
+      if (it.clinicalStatus === 'resolved') {
+        result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+      }
+      if (it.clinicalStatus === 'recurrence') {
+        result.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
+      }
+    }
+
+    // Undo reopen — for items that were reopened (active, came from inactive)
+    // We check history to see if most recent clinical action was a reopen
+    if ((it.clinicalStatus === 'active') && it.history[0]?.type === 'reopened') {
+      result.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
 
     return result
@@ -346,6 +426,9 @@ function ActivityLog({ item }: { item: ProblemItem }) {
               <span className="text-sm text-fg-neutral-primary">
                 {formatEventDescription(event.type)}
               </span>
+              {event.note && (
+                <span className="text-xs text-fg-neutral-secondary">{event.note}</span>
+              )}
               <span className="text-xs text-fg-neutral-secondary truncate">
                 {event.performedBy}
               </span>
