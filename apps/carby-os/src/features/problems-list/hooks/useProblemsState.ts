@@ -107,9 +107,22 @@ export function useProblemsState() {
     updates: Partial<Pick<ProblemItem, 'verificationStatus' | 'clinicalStatus'>>,
     eventType: ProblemEventType,
   ) => {
+    const event = createEvent(eventType)
+    // Status-changing actions capture an effectiveDate (defaults to now)
+    const statusActions: ProblemEventType[] = [
+      'marked-active', 'marked-inactive', 'marked-resolved', 'marked-addressed',
+      'recurrence', 'reopened', 'confirmed', 'excluded',
+    ]
+    if (statusActions.includes(eventType)) {
+      const now = new Date()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const yr = String(now.getFullYear()).slice(2)
+      event.effectiveDate = `${month}/${day}/${yr}`
+    }
     setItems(prev => prev.map(item =>
       item.id === id
-        ? { ...item, ...updates, history: [createEvent(eventType), ...item.history] }
+        ? { ...item, ...updates, history: [event, ...item.history] }
         : item
     ))
   }, [])
@@ -205,6 +218,24 @@ export function useProblemsState() {
     setItems(prev => prev.filter(item => item.id !== id))
   }, [])
 
+  const editEventDate = useCallback((itemId: string, eventId: string, newDate: string) => {
+    setItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item
+      const targetEvent = item.history.find(e => e.id === eventId)
+      if (!targetEvent) return item
+      const oldDate = targetEvent.effectiveDate ?? targetEvent.performedAt
+      // Update the target event's effectiveDate
+      const updatedHistory = item.history.map(e =>
+        e.id === eventId ? { ...e, effectiveDate: newDate } : e
+      )
+      // Create an audit trail event
+      const auditEvent = createEvent('event-edited')
+      auditEvent.relatedEventId = eventId
+      auditEvent.changes = [{ field: 'effectiveDate', from: oldDate, to: newDate }]
+      return { ...item, history: [auditEvent, ...updatedHistory] }
+    }))
+  }, [])
+
   const editItem = useCallback((id: string, fieldUpdates: Partial<ProblemItem>, changes: { field: string; from: string; to: string }[]) => {
     setItems(prev => prev.map(item => {
       if (item.id !== id) return item
@@ -245,5 +276,6 @@ export function useProblemsState() {
     addItem,
     removeItem,
     editItem,
+    editEventDate,
   }
 }

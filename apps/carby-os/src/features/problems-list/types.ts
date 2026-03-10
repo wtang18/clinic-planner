@@ -29,6 +29,7 @@ export type ProblemEventType =
   | 'undo-reopened'
   | 'undo-recurrence'
   | 'edited'
+  | 'event-edited'
   | 'note-added'
 
 export interface ProblemEvent {
@@ -39,6 +40,7 @@ export interface ProblemEvent {
   effectiveDate?: string
   note?: string
   changes?: { field: string; from: string; to: string }[]
+  relatedEventId?: string
 }
 
 export interface ProblemItem {

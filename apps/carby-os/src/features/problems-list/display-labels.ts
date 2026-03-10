@@ -102,6 +102,7 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'undo-reopened': return 'Reopen undone'
     case 'undo-recurrence': return 'Recurrence undone'
     case 'edited': return 'Edited'
+    case 'event-edited': return 'Activity entry edited'
     case 'note-added': return 'Note added'
   }
 }

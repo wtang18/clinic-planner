@@ -13,7 +13,7 @@ const SEARCH_PLACEHOLDER: Record<ProblemCategory, string> = {
   'condition': 'Search ICD-10-CM codes and conditions...',
   'encounter-dx': 'Search encounter diagnoses...',
   'sdoh': 'Search social determinant codes...',
-  'health-concern': 'Describe health concern...',
+  'health-concern': 'Search SNOMED CT health concern types...',
 }
 
 const CANNED_ITEM: Record<ProblemCategory, { description: string; icdCode: string | null }> = {
@@ -71,8 +71,9 @@ export function AddProblemDrawer({ category, onClose, onAdd }: AddProblemDrawerP
           {/* Placeholder message */}
           <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center py-8">
             <p className="text-sm text-fg-neutral-secondary">
-              In production, this search is powered by CMS ICD-10-CM codes
-              and clinical terminology services.
+              {category === 'health-concern'
+                ? 'In production, providers select from 10–12 standardized health concern types sourced from the SNOMED CT browser.'
+                : 'In production, this search is powered by CMS ICD-10-CM codes and clinical terminology services.'}
             </p>
             <p className="text-sm text-fg-neutral-secondary">
               For this prototype, tap below to add a sample item.
