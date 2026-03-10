@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import type { ProblemItem, FilterKey, ProblemCategory } from '../types'
+import type { ProblemItem, ProblemEvent, ProblemEventType, FilterKey, ProblemCategory } from '../types'
 import { mockProblems } from '../mock-data'
 
 interface FilterCounts {
@@ -8,6 +8,27 @@ interface FilterCounts {
   inactive: number
   confirmed: number
   excluded: number
+}
+
+const MOCK_PERFORMER = 'Albert Chong, PA-C'
+
+function createEvent(type: ProblemEventType, note?: string): ProblemEvent {
+  const now = new Date()
+  const h = now.getHours()
+  const m = now.getMinutes()
+  const ampm = h >= 12 ? 'p' : 'a'
+  const h12 = h % 12 || 12
+  const mm = String(m).padStart(2, '0')
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const yr = String(now.getFullYear()).slice(2)
+  return {
+    id: `evt-${Date.now()}`,
+    type,
+    performedBy: MOCK_PERFORMER,
+    performedAt: `${month}/${day}/${yr}, ${h12}:${mm}${ampm} PT`,
+    ...(note ? { note } : {}),
+  }
 }
 
 export function useProblemsState() {
@@ -61,36 +82,64 @@ export function useProblemsState() {
     return items.filter(i => i.category === category && matchesFilter(i))
   }, [items, matchesFilter])
 
-  // Actions
-  const updateItem = useCallback((id: string, updates: Partial<Pick<ProblemItem, 'verificationStatus' | 'clinicalStatus'>>) => {
+  // Core updater — applies field changes and appends an event
+  const updateItemWithEvent = useCallback((
+    id: string,
+    updates: Partial<Pick<ProblemItem, 'verificationStatus' | 'clinicalStatus'>>,
+    eventType: ProblemEventType,
+  ) => {
     setItems(prev => prev.map(item =>
-      item.id === id ? { ...item, ...updates } : item
+      item.id === id
+        ? { ...item, ...updates, history: [createEvent(eventType), ...item.history] }
+        : item
     ))
   }, [])
 
+  // Actions — each appends activity history
   const confirmItem = useCallback((id: string) => {
-    updateItem(id, { verificationStatus: 'confirmed', clinicalStatus: 'active' })
-  }, [updateItem])
+    updateItemWithEvent(id, { verificationStatus: 'confirmed' }, 'confirmed')
+  }, [updateItemWithEvent])
 
   const excludeItem = useCallback((id: string) => {
-    updateItem(id, { verificationStatus: 'excluded' })
-  }, [updateItem])
+    updateItemWithEvent(id, { verificationStatus: 'excluded' }, 'excluded')
+  }, [updateItemWithEvent])
+
+  const undoExclude = useCallback((id: string) => {
+    updateItemWithEvent(id, { verificationStatus: 'unconfirmed' }, 'undo-excluded')
+  }, [updateItemWithEvent])
 
   const markActive = useCallback((id: string) => {
-    updateItem(id, { clinicalStatus: 'active' })
-  }, [updateItem])
+    updateItemWithEvent(id, { clinicalStatus: 'active' }, 'marked-active')
+  }, [updateItemWithEvent])
 
   const markInactive = useCallback((id: string) => {
-    updateItem(id, { clinicalStatus: 'inactive' })
-  }, [updateItem])
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'marked-inactive')
+  }, [updateItemWithEvent])
 
   const markResolved = useCallback((id: string) => {
-    updateItem(id, { clinicalStatus: 'resolved' })
-  }, [updateItem])
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'marked-resolved')
+  }, [updateItemWithEvent])
+
+  const markAddressed = useCallback((id: string) => {
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'marked-addressed')
+  }, [updateItemWithEvent])
 
   const reopenItem = useCallback((id: string) => {
-    updateItem(id, { clinicalStatus: 'active' })
-  }, [updateItem])
+    updateItemWithEvent(id, { clinicalStatus: 'active' }, 'reopened')
+  }, [updateItemWithEvent])
+
+  const removeItem = useCallback((id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id))
+  }, [])
+
+  const editItem = useCallback((id: string, fieldUpdates: Partial<ProblemItem>, changes: { field: string; from: string; to: string }[]) => {
+    setItems(prev => prev.map(item => {
+      if (item.id !== id) return item
+      const event = createEvent('edited')
+      event.changes = changes
+      return { ...item, ...fieldUpdates, history: [event, ...item.history] }
+    }))
+  }, [])
 
   return {
     items,
@@ -100,9 +149,13 @@ export function useProblemsState() {
     getFilteredItems,
     confirmItem,
     excludeItem,
+    undoExclude,
     markActive,
     markInactive,
     markResolved,
+    markAddressed,
     reopenItem,
+    removeItem,
+    editItem,
   }
 }

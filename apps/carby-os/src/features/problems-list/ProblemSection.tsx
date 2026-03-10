@@ -10,9 +10,11 @@ interface ProblemSectionProps {
   actions?: Array<{ label: string; onClick: () => void }>
   onConfirm: (id: string) => void
   onExclude: (id: string) => void
+  onUndoExclude: (id: string) => void
   onMarkActive: (id: string) => void
   onMarkInactive: (id: string) => void
   onMarkResolved: (id: string) => void
+  onMarkAddressed: (id: string) => void
   onReopen: (id: string) => void
   onDetailClick: (id: string) => void
   children?: React.ReactNode
@@ -25,9 +27,11 @@ export function ProblemSection({
   actions = [],
   onConfirm,
   onExclude,
+  onUndoExclude,
   onMarkActive,
   onMarkInactive,
   onMarkResolved,
+  onMarkAddressed,
   onReopen,
   onDetailClick,
   children,
@@ -69,9 +73,11 @@ export function ProblemSection({
               item={item}
               onConfirm={onConfirm}
               onExclude={onExclude}
+              onUndoExclude={onUndoExclude}
               onMarkActive={onMarkActive}
               onMarkInactive={onMarkInactive}
               onMarkResolved={onMarkResolved}
+              onMarkAddressed={onMarkAddressed}
               onReopen={onReopen}
               onDetailClick={onDetailClick}
             />

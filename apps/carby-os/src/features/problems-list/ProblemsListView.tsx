@@ -16,9 +16,11 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     getFilteredItems,
     confirmItem,
     excludeItem,
+    undoExclude,
     markActive,
     markInactive,
     markResolved,
+    markAddressed,
     reopenItem,
   } = useProblemsState()
 
@@ -30,9 +32,11 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
   const sharedHandlers = {
     onConfirm: confirmItem,
     onExclude: excludeItem,
+    onUndoExclude: undoExclude,
     onMarkActive: markActive,
     onMarkInactive: markInactive,
     onMarkResolved: markResolved,
+    onMarkAddressed: markAddressed,
     onReopen: reopenItem,
     onDetailClick: (_id: string) => {
       // Phase 2: open detail drawer
