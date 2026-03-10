@@ -13,6 +13,12 @@ export const mockProblems: ProblemItem[] = [
     source: 'diagnosed',
     sourceDate: '03/15/22',
     severity: 'moderate',
+    onsetDate: '03/15/22',
+    history: [
+      { id: 'evt-1a', type: 'marked-active', performedBy: 'Paige Anderson, PA-C', performedAt: '03/15/22, 10:15a PT' },
+      { id: 'evt-1b', type: 'confirmed', performedBy: 'Paige Anderson, PA-C', performedAt: '03/15/22, 10:14a PT' },
+      { id: 'evt-1c', type: 'imported', performedBy: 'System — CCDA Import', performedAt: '03/15/22, 9:00a PT' },
+    ],
   },
   {
     id: 'cond-2',
@@ -24,6 +30,12 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'diagnosed',
     sourceDate: '01/08/20',
+    onsetDate: '01/08/20',
+    history: [
+      { id: 'evt-2a', type: 'marked-active', performedBy: 'Dr. Sarah Chen, MD', performedAt: '01/08/20, 2:30p PT' },
+      { id: 'evt-2b', type: 'confirmed', performedBy: 'Dr. Sarah Chen, MD', performedAt: '01/08/20, 2:29p PT' },
+      { id: 'evt-2c', type: 'reported', performedBy: 'Patient', performedAt: '01/08/20, 10:00a PT' },
+    ],
   },
   {
     id: 'cond-3',
@@ -35,6 +47,9 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'reported',
     sourceDate: '11/20/25',
+    history: [
+      { id: 'evt-3a', type: 'reported', performedBy: 'Patient', performedAt: '11/20/25, 9:45a PT' },
+    ],
   },
   {
     id: 'cond-4',
@@ -46,7 +61,14 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'inactive',
     source: 'diagnosed',
     sourceDate: '06/02/18',
+    onsetDate: '06/02/18',
     resolvedDate: '09/15/23',
+    history: [
+      { id: 'evt-4a', type: 'marked-inactive', performedBy: 'Dr. Sarah Chen, MD', performedAt: '09/15/23, 3:00p PT' },
+      { id: 'evt-4b', type: 'marked-active', performedBy: 'Dr. Sarah Chen, MD', performedAt: '06/02/18, 11:15a PT' },
+      { id: 'evt-4c', type: 'confirmed', performedBy: 'Dr. Sarah Chen, MD', performedAt: '06/02/18, 11:14a PT' },
+      { id: 'evt-4d', type: 'imported', performedBy: 'System — CCDA Import', performedAt: '06/02/18, 8:00a PT' },
+    ],
   },
   {
     id: 'cond-5',
@@ -58,6 +80,12 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'imported',
     sourceDate: '09/14/24',
+    onsetDate: '09/14/24',
+    history: [
+      { id: 'evt-5a', type: 'marked-active', performedBy: 'Albert Chong, PA-C', performedAt: '09/14/24, 10:30a PT' },
+      { id: 'evt-5b', type: 'confirmed', performedBy: 'Albert Chong, PA-C', performedAt: '09/14/24, 10:29a PT' },
+      { id: 'evt-5c', type: 'imported', performedBy: 'System — CCDA Import', performedAt: '09/14/24, 9:00a PT' },
+    ],
   },
   {
     id: 'cond-6',
@@ -69,6 +97,9 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'reported',
     sourceDate: '02/28/26',
+    history: [
+      { id: 'evt-6a', type: 'reported', performedBy: 'Patient', performedAt: '02/28/26, 10:05a PT' },
+    ],
   },
 
   // === Encounter Dx (3) ===
@@ -82,6 +113,11 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'diagnosed',
     sourceDate: '03/09/26',
+    onsetDate: '03/09/26',
+    history: [
+      { id: 'evt-7a', type: 'marked-active', performedBy: 'Albert Chong, PA-C', performedAt: '03/09/26, 10:45a PT' },
+      { id: 'evt-7b', type: 'confirmed', performedBy: 'Albert Chong, PA-C', performedAt: '03/09/26, 10:44a PT' },
+    ],
   },
   {
     id: 'enc-2',
@@ -93,6 +129,12 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'diagnosed',
     sourceDate: '01/15/26',
+    onsetDate: '01/15/26',
+    history: [
+      { id: 'evt-8a', type: 'marked-active', performedBy: 'Dr. Kim, MD', performedAt: '01/15/26, 2:15p PT' },
+      { id: 'evt-8b', type: 'confirmed', performedBy: 'Dr. Kim, MD', performedAt: '01/15/26, 2:14p PT' },
+      { id: 'evt-8c', type: 'reported', performedBy: 'Patient', performedAt: '01/15/26, 1:00p PT' },
+    ],
   },
   {
     id: 'enc-3',
@@ -104,6 +146,9 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'reported',
     sourceDate: '03/09/26',
+    history: [
+      { id: 'evt-9a', type: 'reported', performedBy: 'Albert Chong, PA-C', performedAt: '03/09/26, 10:35a PT' },
+    ],
   },
 
   // === SDOH (3) ===
@@ -117,6 +162,10 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'screened',
     sourceDate: '02/10/26',
+    relatedScreeningId: 'si-1',
+    history: [
+      { id: 'evt-10a', type: 'screening-detected', performedBy: 'System — AHC HRSN Screening', performedAt: '02/10/26, 10:30a PT' },
+    ],
   },
   {
     id: 'sdoh-2',
@@ -128,6 +177,12 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'screened',
     sourceDate: '02/10/26',
+    relatedScreeningId: 'si-1',
+    history: [
+      { id: 'evt-11a', type: 'marked-active', performedBy: 'Albert Chong, PA-C', performedAt: '02/10/26, 11:00a PT' },
+      { id: 'evt-11b', type: 'confirmed', performedBy: 'Albert Chong, PA-C', performedAt: '02/10/26, 10:59a PT' },
+      { id: 'evt-11c', type: 'screening-detected', performedBy: 'System — AHC HRSN Screening', performedAt: '02/10/26, 10:30a PT' },
+    ],
   },
   {
     id: 'sdoh-3',
@@ -139,6 +194,10 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'screened',
     sourceDate: '02/10/26',
+    relatedScreeningId: 'si-2',
+    history: [
+      { id: 'evt-12a', type: 'screening-detected', performedBy: 'System — PRAPARE Screening', performedAt: '02/10/26, 10:30a PT' },
+    ],
   },
 
   // === Health Concerns (3) ===
@@ -152,6 +211,11 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'reported',
     sourceDate: '01/05/26',
+    history: [
+      { id: 'evt-13a', type: 'marked-active', performedBy: 'Albert Chong, PA-C', performedAt: '01/05/26, 11:10a PT' },
+      { id: 'evt-13b', type: 'confirmed', performedBy: 'Albert Chong, PA-C', performedAt: '01/05/26, 11:09a PT' },
+      { id: 'evt-13c', type: 'reported', performedBy: 'Patient', performedAt: '01/05/26, 10:00a PT' },
+    ],
   },
   {
     id: 'hc-2',
@@ -163,6 +227,9 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'active',
     source: 'reported',
     sourceDate: '12/12/25',
+    history: [
+      { id: 'evt-14a', type: 'reported', performedBy: 'Patient', performedAt: '12/12/25, 9:30a PT' },
+    ],
   },
   {
     id: 'hc-3',
@@ -175,10 +242,30 @@ export const mockProblems: ProblemItem[] = [
     source: 'reported',
     sourceDate: '08/20/24',
     resolvedDate: '11/30/25',
+    history: [
+      { id: 'evt-15a', type: 'marked-resolved', performedBy: 'Dr. Sarah Chen, MD', performedAt: '11/30/25, 4:00p PT' },
+      { id: 'evt-15b', type: 'marked-active', performedBy: 'Dr. Sarah Chen, MD', performedAt: '08/20/24, 2:15p PT' },
+      { id: 'evt-15c', type: 'confirmed', performedBy: 'Dr. Sarah Chen, MD', performedAt: '08/20/24, 2:14p PT' },
+      { id: 'evt-15d', type: 'reported', performedBy: 'Patient', performedAt: '08/20/24, 1:00p PT' },
+    ],
   },
 ]
 
 export const screeningInstruments: ScreeningInstrument[] = [
-  { id: 'si-1', name: 'AHC HRSN Screening Tool', abbreviation: 'AHC-HRSN' },
-  { id: 'si-2', name: 'PRAPARE', abbreviation: 'PRAPARE' },
+  {
+    id: 'si-1',
+    name: 'AHC HRSN Screening Tool',
+    abbreviation: 'AHC HRSN',
+    administeredDate: '02/10/26',
+    score: '3 needs identified',
+    interpretation: 'Social needs detected',
+  },
+  {
+    id: 'si-2',
+    name: 'PRAPARE',
+    abbreviation: 'PRAPARE',
+    administeredDate: '02/10/26',
+    score: '4/10',
+    interpretation: 'Moderate risk',
+  },
 ]

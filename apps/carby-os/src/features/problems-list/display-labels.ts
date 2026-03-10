@@ -1,0 +1,77 @@
+import type { ProblemCategory, ProblemItem } from './types'
+
+/** Category-aware label for deactivating an item */
+export const DEACTIVATE_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Inactive',
+  'encounter-dx': 'Mark Inactive',
+  'sdoh': 'Mark Addressed',
+  'health-concern': 'Mark Resolved',
+}
+
+/** Category-aware label for activating from inactive/resolved state */
+export const ACTIVATE_FROM_INACTIVE_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Active',
+  'encounter-dx': 'Mark Active',
+  'sdoh': 'Reopen',
+  'health-concern': 'Reopen',
+}
+
+/** Category-aware label for activating from confirmed transitional state */
+export const ACTIVATE_FROM_CONFIRMED_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Mark Active',
+  'encounter-dx': 'Mark Active',
+  'sdoh': 'Mark Active',
+  'health-concern': 'Mark Active',
+}
+
+/** Drawer header title by category */
+export const DRAWER_TITLE: Record<ProblemCategory, string> = {
+  'condition': 'Condition Details',
+  'encounter-dx': 'Encounter Diagnosis Details',
+  'sdoh': 'Social Determinant Details',
+  'health-concern': 'Patient Concern Details',
+}
+
+/** Edit mode title by category */
+export const EDIT_TITLE: Record<ProblemCategory, string> = {
+  'condition': 'Edit Condition',
+  'encounter-dx': 'Edit Encounter Diagnosis',
+  'sdoh': 'Edit Social Determinant',
+  'health-concern': 'Edit Patient Concern',
+}
+
+/**
+ * Source pill label logic per DESIGN-SPEC §5.4
+ *
+ * The label changes based on the item's current state to reflect
+ * the most clinically relevant context for the provider.
+ */
+export function getSourcePillLabel(item: ProblemItem): string {
+  if (item.verificationStatus === 'excluded') {
+    return item.source === 'screened' ? 'Screened' : 'Reported'
+  }
+  if (item.clinicalStatus === 'recurrence') return 'Recurrence'
+  if (item.clinicalStatus === 'active' && item.verificationStatus === 'confirmed') return 'Onset'
+  if (item.verificationStatus === 'confirmed') return 'Diagnosed'
+  return item.source === 'screened' ? 'Screened' : 'Reported'
+}
+
+/** Format activity event description for the activity log */
+export function formatEventDescription(type: ProblemItem['history'][number]['type']): string {
+  switch (type) {
+    case 'reported': return 'Reported'
+    case 'imported': return 'Imported'
+    case 'screening-detected': return 'Detected via screening'
+    case 'confirmed': return 'Confirmed'
+    case 'excluded': return 'Excluded'
+    case 'undo-excluded': return 'Exclusion undone'
+    case 'marked-active': return 'Marked active'
+    case 'marked-inactive': return 'Marked inactive'
+    case 'marked-resolved': return 'Marked resolved'
+    case 'marked-addressed': return 'Marked addressed'
+    case 'recurrence': return 'Recurrence noted'
+    case 'reopened': return 'Reopened'
+    case 'edited': return 'Edited'
+    case 'note-added': return 'Note added'
+  }
+}
