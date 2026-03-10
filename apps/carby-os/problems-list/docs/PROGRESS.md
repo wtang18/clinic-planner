@@ -62,8 +62,13 @@
 - Collapsed sections show active item count
 - Pill `subtle-outlined` border fixed to `fg-transparent-soft`
 
+**Post-phase additions:**
+- [x] Add Problem drawers: placeholder search + canned item per category (Conditions, SDOH, Health Concerns)
+- [x] Administer Screening drawer: placeholder with future-iteration messaging
+
 **Deferred:**
 - [ ] SDOH items: Related Screening section in detail drawer (low priority — screening data is in ScreeningBanner)
+- [ ] Refine + build out screenings list, including screenings banner in SDOH section
 
 ## Current Focus
 

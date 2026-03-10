@@ -180,6 +180,27 @@ export function useProblemsState() {
     updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'undo-recurrence')
   }, [updateItemWithEvent])
 
+  const addItem = useCallback((category: ProblemCategory, description: string, icdCode: string | null) => {
+    const id = `added-${Date.now()}`
+    const now = new Date()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const yr = String(now.getFullYear()).slice(2)
+    const newItem: ProblemItem = {
+      id,
+      category,
+      description,
+      icdCode,
+      snomedCode: null,
+      verificationStatus: 'unconfirmed',
+      clinicalStatus: 'active',
+      source: 'reported',
+      sourceDate: `${month}/${day}/${yr}`,
+      history: [createEvent('reported')],
+    }
+    setItems(prev => [newItem, ...prev])
+  }, [])
+
   const removeItem = useCallback((id: string) => {
     setItems(prev => prev.filter(item => item.id !== id))
   }, [])
@@ -221,6 +242,7 @@ export function useProblemsState() {
     undoMarkAddressed,
     undoReopen,
     undoRecurrence,
+    addItem,
     removeItem,
     editItem,
   }
