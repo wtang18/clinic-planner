@@ -1,7 +1,7 @@
 import { useProblemsState } from './hooks/useProblemsState'
 import { FilterBar } from './FilterBar'
 import { ProblemSection } from './ProblemSection'
-import { ScreeningInstruments } from './ScreeningInstruments'
+import { ScreeningBanner } from './ScreeningBanner'
 import { screeningInstruments } from './mock-data'
 
 interface ProblemsListViewProps {
@@ -82,7 +82,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           ]}
           {...sharedHandlers}
         >
-          <ScreeningInstruments instruments={screeningInstruments} />
+          <ScreeningBanner screenings={screeningInstruments} />
         </ProblemSection>
 
         {/* Health Concerns */}
