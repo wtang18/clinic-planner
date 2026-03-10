@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
-import type { ProblemItem, ScreeningInstrument } from './types'
+import type { ProblemItem, ScreeningInstrument, RemovalReason } from './types'
 import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
 import { Pill } from '@/design-system'
 import { Button } from '@/design-system'
 import { screeningInstruments } from './mock-data'
 import {
-  DEACTIVATE_LABEL,
+  SOFT_CLOSE_LABEL,
+  RESOLVE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
 } from './display-labels'
@@ -30,7 +31,7 @@ interface ProblemDetailDrawerProps {
   onUndoMarkAddressed: (id: string) => void
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
-  onRemove: (id: string) => void
+  onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
 }
 
@@ -70,6 +71,9 @@ export function ProblemDetailDrawer({
   onRemove,
   onEditClick,
 }: ProblemDetailDrawerProps) {
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
+
   const title = DRAWER_TITLE[item.category]
   const sourcePillLabel = getSourcePillLabel(item)
   const relatedScreening = item.relatedScreeningId
@@ -131,20 +135,56 @@ export function ProblemDetailDrawer({
           <ActivityLog item={item} />
         </div>
 
-        {/* Footer — Remove (only for items with no clinical history) */}
-        {isRemovable(item) && (
+        {/* Footer — Remove with reason picker */}
+        {isRemovable(item) && !showRemoveConfirm && (
           <div className="px-5 py-4 border-t border-border-neutral-low flex">
             <Button
               type="high-impact"
               size="medium"
               label="Remove"
-              onClick={() => {
-                if (confirm(`Remove "${item.description}" from problem list?`)) {
-                  onRemove(item.id)
-                  onClose()
-                }
-              }}
+              onClick={() => setShowRemoveConfirm(true)}
             />
+          </div>
+        )}
+
+        {/* Remove confirmation with reason picker */}
+        {showRemoveConfirm && (
+          <div className="px-5 py-4 border-t border-border-neutral-low flex flex-col gap-3">
+            <p className="text-sm font-medium text-fg-neutral-primary">
+              Remove &ldquo;{item.description}&rdquo; from problem list?
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">Reason</p>
+              {([
+                { value: 'entered-in-error' as const, label: 'Entered in Error' },
+                { value: 'duplicate' as const, label: 'Duplicate' },
+                { value: 'replaced' as const, label: 'Replaced' },
+                { value: 'patient-disputed' as const, label: 'Patient Disputed' },
+              ]).map(({ value, label }) => (
+                <label key={value} className="flex items-center gap-2 py-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="remove-reason"
+                    checked={removeReason === value}
+                    onChange={() => setRemoveReason(value)}
+                    className="accent-[var(--color-fg-neutral-primary)]"
+                  />
+                  <span className="text-sm text-fg-neutral-primary">{label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 justify-end">
+              <Button type="transparent" size="medium" label="Cancel" onClick={() => setShowRemoveConfirm(false)} />
+              <Button
+                type="high-impact"
+                size="medium"
+                label="Remove"
+                onClick={() => {
+                  onRemove(item.id, removeReason)
+                  onClose()
+                }}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -262,7 +302,7 @@ function SummaryCard({
         {item.icdCode && (
           <Pill type="transparent" size="small" label={item.icdCode} />
         )}
-        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={item.sourceDate} />
+        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={item.clinicalStatus === 'resolved' && item.abatementDate ? item.abatementDate : item.sourceDate} />
       </div>
 
       {/* Notes (if present) */}
@@ -307,25 +347,22 @@ function SummaryCard({
       && isConfirmedTransitional(it)
 
     if (isTransitional) {
-      const deactivateHandler = getDeactivateHandler(cat)
-      if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
+      const softCloseHandler = getSoftCloseHandler(cat)
+      if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
       result.push({ label: ACTIVATE_FROM_CONFIRMED_LABEL[cat], handler: onMarkActive })
       return result
     }
 
     if (it.clinicalStatus === 'active' || it.clinicalStatus === 'recurrence') {
-      const deactivateHandler = getDeactivateHandler(cat)
-      if (deactivateHandler) result.push({ label: DEACTIVATE_LABEL[cat], handler: deactivateHandler })
+      const softCloseHandler = getSoftCloseHandler(cat)
+      if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
+      result.push({ label: RESOLVE_LABEL, handler: onMarkResolved })
       return result
     }
 
     if (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved') {
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       result.push({ label: ACTIVATE_FROM_INACTIVE_LABEL[cat], handler: activateHandler })
-      // Conditions + Encounter Dx also get Note Recurrence
-      if (supportsRecurrence(it)) {
-        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
-      }
       return result
     }
 
@@ -350,8 +387,6 @@ function SummaryCard({
         const cat = it.category
         if (cat === 'sdoh') {
           result.push({ label: 'Undo Mark Addressed', handler: onUndoMarkAddressed })
-        } else if (cat === 'health-concern') {
-          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
         } else {
           result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
         }
@@ -373,15 +408,14 @@ function SummaryCard({
     return result
   }
 
-  function getDeactivateHandler(cat: ProblemItem['category']): ((id: string) => void) | undefined {
+  function getSoftCloseHandler(cat: ProblemItem['category']): ((id: string) => void) | undefined {
     switch (cat) {
       case 'condition':
       case 'encounter-dx':
+      case 'health-concern':
         return onMarkInactive
       case 'sdoh':
         return onMarkAddressed
-      case 'health-concern':
-        return onMarkResolved
     }
   }
 }

@@ -1,14 +1,17 @@
 import type { ProblemCategory, ProblemItem } from './types'
 
-/** Category-aware label for deactivating an item */
-export const DEACTIVATE_LABEL: Record<ProblemCategory, string> = {
+/** Category-aware label for soft-closing an item (→ inactive) */
+export const SOFT_CLOSE_LABEL: Record<ProblemCategory, string> = {
   'condition': 'Mark Inactive',
   'encounter-dx': 'Mark Inactive',
   'sdoh': 'Mark Addressed',
-  'health-concern': 'Mark Resolved',
+  'health-concern': 'Mark Inactive',
 }
 
-/** Category-aware label for activating from inactive/resolved state */
+/** Universal label for definitive resolution (→ resolved) */
+export const RESOLVE_LABEL = 'Mark Resolved'
+
+/** Category-aware label for reactivating from inactive/resolved state */
 export const ACTIVATE_FROM_INACTIVE_LABEL: Record<ProblemCategory, string> = {
   'condition': 'Mark Active',
   'encounter-dx': 'Mark Active',
@@ -50,6 +53,7 @@ export function getSourcePillLabel(item: ProblemItem): string {
   if (item.verificationStatus === 'excluded') {
     return item.source === 'screened' ? 'Screened' : 'Reported'
   }
+  if (item.clinicalStatus === 'resolved') return 'Resolved'
   if (item.clinicalStatus === 'recurrence') return 'Recurrence'
   if (item.clinicalStatus === 'active' && item.verificationStatus === 'confirmed') return 'Onset'
   if (item.verificationStatus === 'confirmed') return 'Diagnosed'
@@ -102,6 +106,8 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'undo-reopened': return 'Reopen undone'
     case 'undo-recurrence': return 'Recurrence undone'
     case 'edited': return 'Edited'
+    case 'event-edited': return 'Event date corrected'
     case 'note-added': return 'Note added'
+    case 'removed': return 'Removed from problem list'
   }
 }

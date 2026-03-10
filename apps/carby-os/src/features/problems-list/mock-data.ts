@@ -241,7 +241,7 @@ export const mockProblems: ProblemItem[] = [
     clinicalStatus: 'resolved',
     source: 'reported',
     sourceDate: '08/20/24',
-    resolvedDate: '11/30/25',
+    abatementDate: '11/30/25',
     history: [
       { id: 'evt-15a', type: 'marked-resolved', performedBy: 'Dr. Priya Sharma, MD', performedAt: '11/30/25, 4:00p PT' },
       { id: 'evt-15b', type: 'marked-active', performedBy: 'Dr. Priya Sharma, MD', performedAt: '08/20/24, 2:15p PT' },
