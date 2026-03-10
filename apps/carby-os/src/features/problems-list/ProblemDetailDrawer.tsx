@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
-import type { ProblemItem, ProblemEvent, ScreeningInstrument } from './types'
+import { X, Pencil, EllipsisVertical } from 'lucide-react'
+import type { ProblemItem, ProblemEvent } from './types'
 import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
 import { Pill } from '@/design-system'
 import { Button } from '@/design-system'
 import { screeningInstruments } from './mock-data'
+import { ScreeningDetailCard } from './ScreeningBanner'
 import {
   DEACTIVATE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
@@ -127,7 +128,7 @@ export function ProblemDetailDrawer({
 
           {/* Related Screening (SDOH only) */}
           {relatedScreening && (
-            <RelatedScreeningCard screening={relatedScreening} />
+            <ScreeningDetailCard screening={relatedScreening} />
           )}
 
           {/* Activity log */}
@@ -407,32 +408,6 @@ function SummaryCard({
         return onMarkResolved
     }
   }
-}
-
-/* ─── Related Screening ─── */
-
-function RelatedScreeningCard({ screening }: { screening: ScreeningInstrument }) {
-  return (
-    <div className="bg-white rounded-2xl px-4 py-3 flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <ClipboardCheck size={16} className="text-fg-neutral-secondary shrink-0" />
-        <span className="text-sm font-medium text-fg-neutral-primary">{screening.name}</span>
-      </div>
-      {(screening.score || screening.interpretation) && (
-        <p className="text-xs text-fg-neutral-secondary">
-          {screening.score && <>Score: {screening.score}</>}
-          {screening.score && screening.interpretation && ' · '}
-          {screening.interpretation}
-        </p>
-      )}
-      <button
-        onClick={() => { /* placeholder */ }}
-        className="text-xs font-semibold text-fg-neutral-secondary hover:text-fg-neutral-primary self-end"
-      >
-        View Full Results
-      </button>
-    </div>
-  )
 }
 
 /* ─── Activity Log ─── */

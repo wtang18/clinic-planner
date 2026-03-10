@@ -97,13 +97,10 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           <ProblemSection
             title="Social Determinants"
             items={sdoh}
-            actions={[
-              { label: 'Administer Screening', onClick: () => setShowScreeningDrawer(true) },
-              { label: 'Add', onClick: () => setAddingCategory('sdoh') },
-            ]}
+            actions={[{ label: 'Add', onClick: () => setAddingCategory('sdoh') }]}
             {...sharedHandlers}
           >
-            <ScreeningBanner screenings={screeningInstruments} />
+            <ScreeningBanner screenings={screeningInstruments} onAdminister={() => setShowScreeningDrawer(true)} />
           </ProblemSection>
 
           {/* Health Concerns */}
