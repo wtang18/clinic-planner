@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
-import type { ProblemItem, ScreeningInstrument, RemovalReason } from './types'
+import { X, Pencil, EllipsisVertical } from 'lucide-react'
+import type { ProblemItem, ProblemEvent, RemovalReason } from './types'
 import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
 import { Pill } from '@/design-system'
 import { Button } from '@/design-system'
 import { screeningInstruments } from './mock-data'
+import { ScreeningDetailCard } from './ScreeningBanner'
 import {
   SOFT_CLOSE_LABEL,
   RESOLVE_LABEL,
@@ -33,6 +34,7 @@ interface ProblemDetailDrawerProps {
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
+  onEditEventDate: (itemId: string, eventId: string, newDate: string) => void
 }
 
 function capitalizeFirst(s: string): string {
@@ -70,9 +72,11 @@ export function ProblemDetailDrawer({
   onUndoRecurrence,
   onRemove,
   onEditClick,
+  onEditEventDate,
 }: ProblemDetailDrawerProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
+  const [editingEvent, setEditingEvent] = useState<ProblemEvent | null>(null)
 
   const title = DRAWER_TITLE[item.category]
   const sourcePillLabel = getSourcePillLabel(item)
@@ -128,11 +132,11 @@ export function ProblemDetailDrawer({
 
           {/* Related Screening (SDOH only) */}
           {relatedScreening && (
-            <RelatedScreeningCard screening={relatedScreening} />
+            <ScreeningDetailCard screening={relatedScreening} />
           )}
 
           {/* Activity log */}
-          <ActivityLog item={item} />
+          <ActivityLog item={item} onEditEvent={setEditingEvent} />
         </div>
 
         {/* Footer — Remove with reason picker */}
@@ -188,11 +192,23 @@ export function ProblemDetailDrawer({
           </div>
         )}
       </div>
+
+      {/* Event edit drawer */}
+      {editingEvent && (
+        <EventEditDrawer
+          event={editingEvent}
+          onClose={() => setEditingEvent(null)}
+          onSave={(newDate) => {
+            onEditEventDate(item.id, editingEvent.id, newDate)
+            setEditingEvent(null)
+          }}
+        />
+      )}
     </>
   )
 }
 
-/* ─── Summary Card ─── */
+/* --- Summary Card --- */
 
 interface SummaryCardProps {
   item: ProblemItem
@@ -268,8 +284,9 @@ function SummaryCard({
                     {kebabActions.map(action => (
                       <button
                         key={action.label}
-                        onClick={() => { action.handler(item.id); setKebabOpen(false) }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-bg-transparent-low transition-colors ${action.destructive ? 'text-fg-alert-primary' : 'text-fg-neutral-primary'}`}
+                        disabled={action.disabled}
+                        onClick={() => { if (!action.disabled) { action.handler(item.id); setKebabOpen(false) } }}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${action.disabled ? 'text-fg-neutral-disabled cursor-not-allowed' : action.destructive ? 'text-fg-alert-primary hover:bg-bg-transparent-low' : 'text-fg-neutral-primary hover:bg-bg-transparent-low'}`}
                       >
                         {action.label}
                       </button>
@@ -363,6 +380,10 @@ function SummaryCard({
     if (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved') {
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       result.push({ label: ACTIVATE_FROM_INACTIVE_LABEL[cat], handler: activateHandler })
+      // Conditions + Encounter Dx also get Note Recurrence
+      if (supportsRecurrence(it)) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+      }
       return result
     }
 
@@ -370,8 +391,8 @@ function SummaryCard({
   }
 
   /** Kebab menu: contextual undo actions for corrections */
-  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
-    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
+  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean; disabled?: boolean }> {
+    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean; disabled?: boolean }> = []
 
     // Undo confirm (verification level) — always available for confirmed items
     if (it.verificationStatus === 'confirmed') {
@@ -405,6 +426,13 @@ function SummaryCard({
       result.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
 
+    // Historical entry placeholder (future feature)
+    result.push({ label: 'Add Historical Entry', handler: () => {}, disabled: true })
+
+    // Split/Merge placeholders (future feature)
+    result.push({ label: 'Merge with\u2026', handler: () => {}, disabled: true })
+    result.push({ label: 'Split record', handler: () => {}, disabled: true })
+
     return result
   }
 
@@ -420,48 +448,48 @@ function SummaryCard({
   }
 }
 
-/* ─── Related Screening ─── */
+/* --- Activity Log --- */
 
-function RelatedScreeningCard({ screening }: { screening: ScreeningInstrument }) {
-  return (
-    <div className="bg-white rounded-2xl px-4 py-3 flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <ClipboardCheck size={16} className="text-fg-neutral-secondary shrink-0" />
-        <span className="text-sm font-medium text-fg-neutral-primary">{screening.name}</span>
-      </div>
-      {(screening.score || screening.interpretation) && (
-        <p className="text-xs text-fg-neutral-secondary">
-          {screening.score && <>Score: {screening.score}</>}
-          {screening.score && screening.interpretation && ' · '}
-          {screening.interpretation}
-        </p>
-      )}
-      <button
-        onClick={() => { /* placeholder */ }}
-        className="text-xs font-semibold text-fg-neutral-secondary hover:text-fg-neutral-primary self-end"
-      >
-        View Full Results
-      </button>
-    </div>
-  )
-}
+/** Events that have a clinically meaningful effectiveDate worth displaying */
+const DATABLE_EVENTS = new Set([
+  'marked-active', 'marked-inactive', 'marked-resolved', 'marked-addressed',
+  'recurrence', 'reopened', 'confirmed', 'excluded',
+])
 
-/* ─── Activity Log ─── */
-
-function ActivityLog({ item }: { item: ProblemItem }) {
+function ActivityLog({ item, onEditEvent }: { item: ProblemItem; onEditEvent: (event: ProblemEvent) => void }) {
   return (
     <div className="flex flex-col gap-0">
       <h3 className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide mb-2">Activity</h3>
       {item.history.map((event, i) => (
         <div key={event.id}>
           {i > 0 && <div className="h-px bg-border-neutral-low" />}
-          <div className="flex items-start justify-between gap-3 py-2.5">
+          <div className="flex items-start justify-between gap-3 py-2.5 group">
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm text-fg-neutral-primary">
-                {formatEventDescription(event.type)}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-fg-neutral-primary">
+                  {formatEventDescription(event.type)}
+                </span>
+                {event.effectiveDate && DATABLE_EVENTS.has(event.type) && (
+                  <span className="text-xs text-fg-neutral-secondary">
+                    · Effective {event.effectiveDate}
+                  </span>
+                )}
+                {DATABLE_EVENTS.has(event.type) && (
+                  <button
+                    onClick={() => onEditEvent(event)}
+                    className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary opacity-0 group-hover:opacity-100"
+                  >
+                    <Pencil size={11} />
+                  </button>
+                )}
+              </div>
               {event.note && (
                 <span className="text-xs text-fg-neutral-secondary">{event.note}</span>
+              )}
+              {event.type === 'event-edited' && event.changes?.[0] && (
+                <span className="text-xs text-fg-neutral-secondary">
+                  Date changed: {event.changes[0].from} &rarr; {event.changes[0].to}
+                </span>
               )}
               <span className="text-xs text-fg-neutral-secondary truncate">
                 {event.performedBy}
@@ -477,5 +505,69 @@ function ActivityLog({ item }: { item: ProblemItem }) {
         <p className="text-sm text-fg-neutral-secondary py-2">No activity recorded.</p>
       )}
     </div>
+  )
+}
+
+/* --- Event Edit Drawer --- */
+
+function EventEditDrawer({ event, onClose, onSave }: {
+  event: ProblemEvent
+  onClose: () => void
+  onSave: (newDate: string) => void
+}) {
+  const currentDate = event.effectiveDate ?? ''
+  const [date, setDate] = useState(currentDate)
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/20 z-[60]" onClick={onClose} />
+      <div className="fixed right-0 top-0 h-full w-[400px] bg-bg-neutral-subtle z-[70] shadow-xl flex flex-col animate-slide-in">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-neutral-low">
+          <h2 className="text-base font-semibold text-fg-neutral-primary">Edit Activity Entry</h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto px-5 py-4 flex flex-col gap-5">
+          {/* Event summary */}
+          <div className="bg-white rounded-2xl px-4 py-3 flex flex-col gap-1">
+            <p className="text-sm font-medium text-fg-neutral-primary">{formatEventDescription(event.type)}</p>
+            <p className="text-xs text-fg-neutral-secondary">{event.performedBy}</p>
+            <p className="text-xs text-fg-neutral-secondary">Recorded: {event.performedAt}</p>
+          </div>
+
+          {/* Effective date field */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">
+              Effective Date
+            </label>
+            <input
+              type="text"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              placeholder="MM/DD/YY"
+              className="px-3 py-2 rounded-xl border border-border-neutral-low bg-white text-sm text-fg-neutral-primary focus:outline-none focus:ring-2 focus:ring-border-accent-medium"
+            />
+            <p className="text-xs text-fg-neutral-secondary">
+              The date this status change clinically took effect, which may differ from when it was recorded.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-border-neutral-low flex justify-end gap-2">
+          <Button type="transparent" size="medium" label="Cancel" onClick={onClose} />
+          <Button
+            type="primary"
+            size="medium"
+            label="Save"
+            onClick={() => date && onSave(date)}
+          />
+        </div>
+      </div>
+    </>
   )
 }

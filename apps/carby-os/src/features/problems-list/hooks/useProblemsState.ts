@@ -200,6 +200,41 @@ export function useProblemsState() {
     updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'undo-recurrence')
   }, [updateItemWithEvent])
 
+  const addItem = useCallback((category: ProblemCategory, description: string, icdCode: string | null) => {
+    const id = `added-${Date.now()}`
+    const newItem: ProblemItem = {
+      id,
+      category,
+      description,
+      icdCode,
+      snomedCode: null,
+      verificationStatus: 'unconfirmed',
+      clinicalStatus: 'active',
+      source: 'reported',
+      sourceDate: todayString(),
+      history: [createEvent('reported')],
+    }
+    setItems(prev => [newItem, ...prev])
+  }, [])
+
+  const editEventDate = useCallback((itemId: string, eventId: string, newDate: string) => {
+    setItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item
+      const targetEvent = item.history.find(e => e.id === eventId)
+      if (!targetEvent) return item
+      const oldDate = targetEvent.effectiveDate ?? targetEvent.performedAt
+      // Update the target event's effectiveDate
+      const updatedHistory = item.history.map(e =>
+        e.id === eventId ? { ...e, effectiveDate: newDate } : e
+      )
+      // Create an audit trail event
+      const auditEvent = createEvent('event-edited')
+      auditEvent.relatedEventId = eventId
+      auditEvent.changes = [{ field: 'effectiveDate', from: oldDate, to: newDate }]
+      return { ...item, history: [auditEvent, ...updatedHistory] }
+    }))
+  }, [])
+
   const removeItem = useCallback((id: string, reason: RemovalReason = 'entered-in-error') => {
     const event = createEvent('removed')
     event.removalReason = reason
@@ -244,7 +279,9 @@ export function useProblemsState() {
     undoMarkAddressed,
     undoReopen,
     undoRecurrence,
+    addItem,
     removeItem,
     editItem,
+    editEventDate,
   }
 }
