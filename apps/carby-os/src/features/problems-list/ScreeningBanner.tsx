@@ -14,7 +14,7 @@ export function ScreeningBanner({ screenings, onAdminister }: ScreeningBannerPro
     <div className="flex items-center gap-3 bg-bg-information-low rounded-2xl px-4 py-3">
       {/* Icon */}
       <div className="shrink-0 text-fg-neutral-secondary">
-        <Icon name="clipboard-pen-small" size="small" />
+        <Icon name="clipboard-pen" size="small" />
       </div>
 
       {/* 2-line header */}
@@ -70,7 +70,7 @@ export function ScreeningDetailCard({ screening }: ScreeningDetailCardProps) {
     <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3">
       {/* Icon */}
       <div className="shrink-0 text-fg-neutral-secondary">
-        <Icon name="clipboard-pen-small" size="small" />
+        <Icon name="clipboard-pen" size="small" />
       </div>
 
       {/* 2-line header */}

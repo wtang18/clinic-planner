@@ -53,21 +53,12 @@ export function useProblemsState() {
     excluded: items.filter(i => i.verificationStatus === 'excluded').length,
   }), [items])
 
-  // Toggle a filter
+  // Select a single filter (toggle back to 'all' if re-clicking the active one)
   const toggleFilter = useCallback((filter: FilterKey) => {
     setActiveFilters(prev => {
-      const next = new Set(prev)
-      if (filter === 'all') {
-        return new Set<FilterKey>(['all'])
-      }
-      next.delete('all')
-      if (next.has(filter)) {
-        next.delete(filter)
-        if (next.size === 0) return new Set<FilterKey>(['all'])
-      } else {
-        next.add(filter)
-      }
-      return next
+      if (filter === 'all') return new Set<FilterKey>(['all'])
+      if (prev.has(filter)) return new Set<FilterKey>(['all'])
+      return new Set<FilterKey>([filter])
     })
   }, [])
 
