@@ -37,7 +37,7 @@ export function FilterBar({ activeFilters, counts, onToggle }: FilterBarProps) {
             selected={selected}
             rightSubtext={count !== undefined && count > 0 ? String(count) : undefined}
             onChange={() => onToggle(key)}
-            size="small"
+            size="medium"
           />
         )
       })}
