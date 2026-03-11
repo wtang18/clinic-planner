@@ -80,7 +80,6 @@ export interface UseReviewViewResult {
 
 export const REVIEW_SECTIONS: ReviewSectionConfig[] = [
   { id: 'cc-hpi', title: 'Chief Complaint / HPI', categories: ['chief-complaint', 'hpi'] },
-  { id: 'ros', title: 'Review of Systems', categories: ['ros'] },
   { id: 'pe', title: 'Physical Exam', categories: ['physical-exam'] },
   { id: 'vitals', title: 'Vitals', categories: ['vitals'] },
   { id: 'assessment', title: 'Assessment', categories: ['diagnosis'] },

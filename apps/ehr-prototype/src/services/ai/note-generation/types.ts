@@ -14,7 +14,6 @@
 export type NoteSection =
   | 'chief-complaint'
   | 'hpi'
-  | 'ros'
   | 'physical-exam'
   | 'assessment'
   | 'plan'
@@ -46,7 +45,6 @@ export const DEFAULT_NOTE_GENERATION_CONFIG: NoteGenerationConfig = {
   includeSections: [
     'chief-complaint',
     'hpi',
-    'ros',
     'physical-exam',
     'assessment',
     'plan',
@@ -121,11 +119,10 @@ export interface NoteTemplate {
  */
 export const SOAP_TEMPLATE: NoteTemplate = {
   format: 'soap',
-  sectionOrder: ['chief-complaint', 'hpi', 'ros', 'physical-exam', 'assessment', 'plan'],
+  sectionOrder: ['chief-complaint', 'hpi', 'physical-exam', 'assessment', 'plan'],
   sectionTemplates: {
     'chief-complaint': 'CC: {content}',
     hpi: 'HPI:\n{content}',
-    ros: 'ROS:\n{content}',
     'physical-exam': 'PE:\n{content}',
     assessment: 'Assessment:\n{content}',
     plan: 'Plan:\n{content}',

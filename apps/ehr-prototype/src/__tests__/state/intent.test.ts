@@ -15,7 +15,7 @@ import {
 // ============================================================================
 
 const ALL_CATEGORIES: ItemCategory[] = [
-  'chief-complaint', 'hpi', 'ros', 'physical-exam', 'vitals',
+  'chief-complaint', 'hpi', 'physical-exam', 'vitals',
   'medication', 'allergy', 'lab', 'imaging', 'procedure',
   'diagnosis', 'plan', 'instruction', 'note', 'referral',
   'assessment',
@@ -26,7 +26,7 @@ const ALL_CATEGORIES: ItemCategory[] = [
 // ============================================================================
 
 describe('DEFAULT_INTENT', () => {
-  it('covers all 16 ItemCategory values', () => {
+  it('covers all 15 ItemCategory values', () => {
     for (const cat of ALL_CATEGORIES) {
       expect(DEFAULT_INTENT[cat]).toBeDefined();
     }
@@ -55,7 +55,7 @@ describe('DEFAULT_INTENT', () => {
 
   it('narrative categories default to draft', () => {
     const narrativeCategories: ItemCategory[] = [
-      'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'instruction', 'note',
+      'chief-complaint', 'hpi', 'physical-exam', 'plan', 'instruction', 'note',
     ];
     for (const cat of narrativeCategories) {
       expect(DEFAULT_INTENT[cat]).toBe('draft');

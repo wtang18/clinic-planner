@@ -95,7 +95,6 @@ export interface EncounterContextValue {
   encounterVitals: VitalsItem[];
   ccItem: NarrativeItem | undefined;
   hpiItem: NarrativeItem | undefined;
-  rosItem: NarrativeItem | undefined;
   peItems: PhysicalExamItem[];
 
   // Rail
@@ -258,10 +257,6 @@ export const EncounterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     () => items.find((item): item is NarrativeItem => item.category === 'hpi'),
     [items],
   );
-  const rosItem = useMemo(
-    () => items.find((item): item is NarrativeItem => item.category === 'ros'),
-    [items],
-  );
   const peItems = useMemo(
     () => items.filter((item): item is PhysicalExamItem => item.category === 'physical-exam'),
     [items],
@@ -346,7 +341,6 @@ export const EncounterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     encounterVitals,
     ccItem,
     hpiItem,
-    rosItem,
     peItems,
     handleRailRowTap,
     gridRef,
@@ -363,7 +357,7 @@ export const EncounterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     coordState, coordDispatch, paneState, barState, barActions, actions, activeSession,
     mode, navigateToSection, canPopScope, scopeOriginLabel, popScope,
     activeSuggestions, openCareGaps, pendingReviewCount,
-    encounterVitals, ccItem, hpiItem, rosItem, peItems,
+    encounterVitals, ccItem, hpiItem, peItems,
     handleRailRowTap, gridRef, railTier,
     workspace, todoNav, handleTabClick,
   ]);

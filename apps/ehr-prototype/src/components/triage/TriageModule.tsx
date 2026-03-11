@@ -2,12 +2,12 @@
  * TriageModule Component
  *
  * Inline expandable card displaying triage data during charting.
- * Replaces VitalsRail — shows vitals, CC, HPI, ROS, PE in the main content area.
+ * Replaces VitalsRail — shows vitals, CC, HPI, PE in the main content area.
  *
  * Header chrome: 14px semibold title case "Triage Summary", right-aligned
  * chevron, hover highlight.
  *
- * Expanded: CC row, responsive VitalCell grid, HPI/ROS/PE narrative rows.
+ * Expanded: CC row, responsive VitalCell grid, HPI/PE narrative rows.
  * Collapsed: title + value-first vitals pills + chevron.
  *
  * Clicking a section calls onItemClick → opens corresponding ChartItem in DetailsPane.
@@ -29,7 +29,6 @@ export interface TriageModuleProps {
   chiefComplaint?: string;
   ccItem?: NarrativeItem;
   hpiItem?: NarrativeItem;
-  rosItem?: NarrativeItem;
   peItems?: PhysicalExamItem[];
   onItemClick?: (itemId: string) => void;
   defaultExpanded?: boolean;
@@ -333,7 +332,6 @@ export const TriageModule: React.FC<TriageModuleProps> = ({
   chiefComplaint,
   ccItem,
   hpiItem,
-  rosItem,
   peItems,
   onItemClick,
   defaultExpanded = true,
@@ -360,9 +358,8 @@ export const TriageModule: React.FC<TriageModuleProps> = ({
   // Check if anything to show
   const hasCC = !!ccText;
   const hasHPI = !!hpiItem?.displayText;
-  const hasROS = !!rosItem?.displayText;
   const hasPE = peCount > 0;
-  if (!hasCC && !hasVitals && !hasHPI && !hasROS && !hasPE) return null;
+  if (!hasCC && !hasVitals && !hasHPI && !hasPE) return null;
 
   // ── Collapsed ──
   if (!isExpanded) {
@@ -471,16 +468,6 @@ export const TriageModule: React.FC<TriageModuleProps> = ({
             clickable
             onClick={() => onItemClick?.(hpiItem!.id)}
             maxLines={3}
-          />
-        )}
-
-        {/* ROS section */}
-        {hasROS && (
-          <TriageRow
-            sectionLabel="Review of Systems"
-            text={rosItem!.displayText}
-            clickable
-            onClick={() => onItemClick?.(rosItem!.id)}
           />
         )}
 

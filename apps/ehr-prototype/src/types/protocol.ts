@@ -99,7 +99,7 @@ export interface OrderableItemDef {
 /** Documentable: clinical observation that maps to narrative content. */
 export interface DocumentableItemDef {
   type: 'documentable';
-  narrativeSection: 'hpi' | 'physical-exam' | 'ros' | 'plan';
+  narrativeSection: 'hpi' | 'physical-exam' | 'plan';
   /** Phrases/concepts AI should listen for in ambient transcription. */
   detectionHints: string[];
 }

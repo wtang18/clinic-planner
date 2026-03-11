@@ -168,7 +168,6 @@ export function selectOutstandingItemCount(state: EncounterState): number {
 const CHECKLIST_SECTIONS: { id: string; label: string; categories: ItemCategory[] }[] = [
   { id: 'cc', label: 'Chief Complaint', categories: ['chief-complaint'] },
   { id: 'hpi', label: 'HPI', categories: ['hpi'] },
-  { id: 'ros', label: 'Review of Systems', categories: ['ros'] },
   { id: 'pe', label: 'Physical Exam', categories: ['physical-exam'] },
   { id: 'assessment', label: 'Assessment', categories: ['diagnosis'] },
   { id: 'plan', label: 'Plan', categories: ['plan'] },
@@ -279,7 +278,6 @@ const RAIL_ROW_DEFS: RailRowDef[] = [
   // History
   { id: 'cc', label: 'Chief Complaint', group: 'history', checklistId: 'cc', batchType: null, categories: ['chief-complaint'], deepLink: { mode: 'review', sectionId: 'cc-hpi' } },
   { id: 'hpi', label: 'HPI', group: 'history', checklistId: 'hpi', batchType: null, categories: ['hpi'], deepLink: { mode: 'review', sectionId: 'cc-hpi' } },
-  { id: 'ros', label: 'ROS', group: 'history', checklistId: 'ros', batchType: null, categories: ['ros'], deepLink: { mode: 'review', sectionId: 'ros' } },
   { id: 'pe', label: 'Physical Exam', group: 'history', checklistId: 'pe', batchType: null, categories: ['physical-exam'], deepLink: { mode: 'review', sectionId: 'pe' } },
   // Reasoning
   { id: 'assessment', label: 'Assessment', group: 'reasoning', checklistId: 'assessment', batchType: null, categories: ['diagnosis'], deepLink: { mode: 'review', sectionId: 'assessment' } },
@@ -298,7 +296,7 @@ const RAIL_ROW_DEFS: RailRowDef[] = [
 ];
 
 /** Rows that always show a presence icon (expected documentation sections) */
-const ALWAYS_SHOW_PRESENCE = new Set(['cc', 'hpi', 'ros', 'pe', 'assessment', 'plan', 'sign-off']);
+const ALWAYS_SHOW_PRESENCE = new Set(['cc', 'hpi', 'pe', 'assessment', 'plan', 'sign-off']);
 
 /**
  * Select the unified rail rows — 14 rows combining completeness and processing
@@ -473,10 +471,6 @@ export function selectMockEMLevel(state: EncounterState): EMLevel {
       name: 'History (CC + HPI)',
       documented: allItems.some(i => i.category === 'chief-complaint' || i.category === 'hpi'),
       detail: getHistoryDetail(allItems),
-    },
-    {
-      name: 'Review of Systems',
-      documented: allItems.some(i => i.category === 'ros'),
     },
     {
       name: 'Physical Exam',

@@ -275,13 +275,11 @@ describe('Completeness checklist integration', () => {
     const cc = checklist.find(c => c.id === 'cc')!;
     const hpi = checklist.find(c => c.id === 'hpi')!;
     const assessment = checklist.find(c => c.id === 'assessment')!;
-    const ros = checklist.find(c => c.id === 'ros')!;
     const orders = checklist.find(c => c.id === 'orders')!;
 
     expect(cc.status).toBe('documented');
     expect(hpi.status).toBe('documented');
     expect(assessment.status).toBe('documented');
-    expect(ros.status).toBe('not-documented');
     expect(orders.status).toBe('documented'); // has meds and labs
     expect(orders.itemCount).toBe(5); // 2 meds + 3 labs
   });
@@ -297,7 +295,6 @@ describe('E&M level from state', () => {
     const em = selectMockEMLevel(state);
 
     // CC + HPI → History documented
-    // No ROS → not documented
     // No PE → not documented
     // Dx → Assessment documented
     // Meds + Labs → Plan documented
@@ -311,8 +308,7 @@ describe('E&M level from state', () => {
     const base = populatedState();
     const emBefore = selectMockEMLevel(base);
 
-    // Add ROS, PE, Instructions
-    const ros = makeNarrativeItem('ros');
+    // Add PE, Instructions
     const pe = makeNarrativeItem('physical-exam');
     const instr = makeNarrativeItem('instruction');
     const richer: EncounterState = {
@@ -321,14 +317,13 @@ describe('E&M level from state', () => {
         ...base.entities,
         items: {
           ...base.entities.items,
-          [ros.id]: ros,
           [pe.id]: pe,
           [instr.id]: instr,
         },
       },
       relationships: {
         ...base.relationships,
-        itemOrder: [...base.relationships.itemOrder, ros.id, pe.id, instr.id],
+        itemOrder: [...base.relationships.itemOrder, pe.id, instr.id],
       },
     };
     const emAfter = selectMockEMLevel(richer);

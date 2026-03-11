@@ -37,7 +37,6 @@ function makeEMLevel(overrides?: Partial<EMLevel>): EMLevel {
     description: 'Level 3 — Low Complexity',
     elements: [
       { name: 'History (CC + HPI)', documented: true, detail: 'CC + HPI documented' },
-      { name: 'Review of Systems', documented: true },
       { name: 'Physical Exam', documented: true, detail: '3 system(s) examined' },
       { name: 'Assessment (Diagnosis)', documented: false },
       { name: 'Plan / Orders', documented: false },
@@ -81,7 +80,7 @@ describe('CompletenessChecklist', () => {
     const sections: ChecklistItem[] = [
       makeChecklistItem({ id: 'cc', status: 'documented', itemCount: 1 }),
       makeChecklistItem({ id: 'hpi', status: 'documented', itemCount: 1 }),
-      makeChecklistItem({ id: 'ros', status: 'pending', itemCount: 1 }),
+      makeChecklistItem({ id: 'pe-pending', status: 'pending', itemCount: 1 }),
       makeChecklistItem({ id: 'pe', status: 'not-documented', itemCount: 0 }),
       makeChecklistItem({ id: 'assessment', status: 'documented', itemCount: 2 }),
       makeChecklistItem({ id: 'plan', status: 'not-documented', itemCount: 0 }),
@@ -119,7 +118,7 @@ describe('EMLevel', () => {
   it('calculates documented element count', () => {
     const em = makeEMLevel();
     const documentedCount = em.elements.filter(e => e.documented).length;
-    expect(documentedCount).toBe(3);
+    expect(documentedCount).toBe(2);
   });
 
   it('maps level to correct code', () => {

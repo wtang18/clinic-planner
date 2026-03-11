@@ -13,7 +13,6 @@ import type { FacilityReference, PharmacyReference, ProviderReference } from './
 export type ItemCategory =
   | 'chief-complaint'
   | 'hpi'            // History of Present Illness
-  | 'ros'            // Review of Systems
   | 'physical-exam'
   | 'vitals'
   | 'medication'
@@ -336,10 +335,10 @@ export interface ImagingItem extends ChartItemBase {
 }
 
 // ============================================================================
-// Narrative Items (Chief Complaint, HPI, ROS, Plan, Note)
+// Narrative Items (Chief Complaint, HPI, Plan, Note)
 // ============================================================================
 
-export type NarrativeCategory = 'chief-complaint' | 'hpi' | 'ros' | 'plan' | 'note';
+export type NarrativeCategory = 'chief-complaint' | 'hpi' | 'plan' | 'note';
 
 export interface NarrativeItem extends ChartItemBase {
   category: NarrativeCategory;
@@ -500,7 +499,6 @@ export type ChartItem =
 export type ChartItemDataMap = {
   'chief-complaint': NarrativeItem['data'];
   'hpi': NarrativeItem['data'];
-  'ros': NarrativeItem['data'];
   'physical-exam': PhysicalExamItem['data'];
   'vitals': VitalsItem['data'];
   'medication': MedicationItem['data'];
@@ -531,7 +529,6 @@ export const DEFAULT_INTENT: Record<ItemCategory, ItemIntent> = {
   referral: 'refer',
   'chief-complaint': 'draft',
   hpi: 'draft',
-  ros: 'draft',
   'physical-exam': 'draft',
   plan: 'draft',
   instruction: 'draft',

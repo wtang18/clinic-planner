@@ -40,7 +40,6 @@ describe('Category metadata', () => {
   it('maps narrative categories correctly', () => {
     expect(getCategoryVariant('chief-complaint')).toBe('narrative');
     expect(getCategoryVariant('hpi')).toBe('narrative');
-    expect(getCategoryVariant('ros')).toBe('narrative');
     expect(getCategoryVariant('physical-exam')).toBe('narrative');
     expect(getCategoryVariant('plan')).toBe('narrative');
     expect(getCategoryVariant('instruction')).toBe('narrative');
@@ -61,8 +60,8 @@ describe('Category metadata', () => {
     expect(names).toEqual(['medication', 'lab', 'diagnosis', 'imaging', 'procedure']);
   });
 
-  it('has 13 secondary categories', () => {
-    expect(SECONDARY_CATEGORIES).toHaveLength(13);
+  it('has 12 secondary categories', () => {
+    expect(SECONDARY_CATEGORIES).toHaveLength(12);
   });
 
   it('finds categories by keyboard shortcut', () => {

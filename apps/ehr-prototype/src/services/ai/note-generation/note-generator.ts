@@ -90,8 +90,6 @@ function generateSection(
       return generateChiefComplaint(itemsByCategory, context);
     case 'hpi':
       return generateHPI(itemsByCategory);
-    case 'ros':
-      return generateROS(itemsByCategory);
     case 'physical-exam':
       return generatePhysicalExam(itemsByCategory);
     case 'assessment':
@@ -161,30 +159,6 @@ export function generateHPI(
   }).join('\n\n');
 
   return { section: 'hpi', content, sourceItems };
-}
-
-/**
- * Generate ROS section
- */
-export function generateROS(
-  itemsByCategory: Record<ItemCategory, ChartItem[]>
-): NoteSectionContent {
-  const rosItems = itemsByCategory['ros'] || [];
-
-  if (rosItems.length === 0) {
-    return {
-      section: 'ros',
-      content: 'Constitutional: No fever, chills, or weight changes. All other systems reviewed and negative unless otherwise noted in HPI.',
-      sourceItems: [],
-    };
-  }
-
-  const narrativeItems = rosItems as NarrativeItem[];
-  return {
-    section: 'ros',
-    content: narrativeItems.map((i) => i.data.text).join('\n'),
-    sourceItems: rosItems.map((i) => i.id),
-  };
 }
 
 /**

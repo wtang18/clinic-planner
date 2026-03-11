@@ -65,11 +65,11 @@ function makeDraft(overrides?: Partial<AIDraft>): AIDraft {
 
 function makeGeneratingDraft(overrides?: Partial<AIDraft>): AIDraft {
   return makeDraft({
-    id: 'draft-ros-1',
-    category: 'ros',
+    id: 'draft-instr-gen-1',
+    category: 'instruction',
     content: '',
     status: 'generating',
-    label: 'ROS Draft',
+    label: 'Instructions Draft',
     ...overrides,
   });
 }
@@ -191,7 +191,7 @@ describe('Drafts Reducer', () => {
 
     it('adds multiple drafts', () => {
       const draft1 = makeDraft({ id: 'draft-1' });
-      const draft2 = makeDraft({ id: 'draft-2', category: 'ros' });
+      const draft2 = makeDraft({ id: 'draft-2', category: 'physical-exam' });
 
       let state = dispatch({}, { type: 'DRAFT_GENERATED', payload: { draft: draft1 } });
       state = dispatch(state, { type: 'DRAFT_GENERATED', payload: { draft: draft2 } });
@@ -275,7 +275,7 @@ describe('Drafts Reducer', () => {
     it('clears all drafts when save is false', () => {
       const state: Record<string, AIDraft> = {
         'draft-1': makeDraft({ id: 'draft-1' }),
-        'draft-2': makeDraft({ id: 'draft-2', category: 'ros' }),
+        'draft-2': makeDraft({ id: 'draft-2', category: 'physical-exam' }),
       };
 
       const result = dispatch(state, {
@@ -349,14 +349,14 @@ describe('Drafts Reducer — No-op Guards', () => {
 
 describe('Draft Selectors', () => {
   const pendingDraft = makeDraft({ id: 'draft-hpi', status: 'pending', category: 'hpi' });
-  const generatingDraft = makeGeneratingDraft({ id: 'draft-ros' });
+  const generatingDraft = makeGeneratingDraft({ id: 'draft-instr-gen' });
   const acceptedDraft = makeDraft({ id: 'draft-cc', status: 'accepted', category: 'chief-complaint', label: 'CC Draft' });
   const dismissedDraft = makeDraft({ id: 'draft-pe', status: 'dismissed', category: 'physical-exam', label: 'PE Draft' });
 
   const state = stateWith({
     drafts: {
       'draft-hpi': pendingDraft,
-      'draft-ros': generatingDraft,
+      'draft-instr-gen': generatingDraft,
       'draft-cc': acceptedDraft,
       'draft-pe': dismissedDraft,
     },
@@ -380,14 +380,14 @@ describe('Draft Selectors', () => {
   it('selectGeneratingDrafts returns only generating', () => {
     const generating = selectGeneratingDrafts(state);
     expect(generating).toHaveLength(1);
-    expect(generating[0].id).toBe('draft-ros');
+    expect(generating[0].id).toBe('draft-instr-gen');
   });
 
   it('selectActiveDrafts returns pending + generating', () => {
     const active = selectActiveDrafts(state);
     expect(active).toHaveLength(2);
     const ids = active.map(d => d.id).sort();
-    expect(ids).toEqual(['draft-hpi', 'draft-ros']);
+    expect(ids).toEqual(['draft-hpi', 'draft-instr-gen']);
   });
 
   it('selectActiveDrafts includes updating drafts', () => {
@@ -416,7 +416,7 @@ describe('Draft Selectors', () => {
 
   it('selectHasDraftForCategory returns true for active category', () => {
     expect(selectHasDraftForCategory(state, 'hpi')).toBe(true);
-    expect(selectHasDraftForCategory(state, 'ros')).toBe(true);
+    expect(selectHasDraftForCategory(state, 'instruction')).toBe(true);
   });
 
   it('selectHasDraftForCategory returns false for non-active category', () => {
@@ -625,7 +625,7 @@ describe('Status Breakdown', () => {
     const state = stateWith({
       drafts: {
         'd1': makeGeneratingDraft({ id: 'd1' }),
-        'd2': makeDraft({ id: 'd2', status: 'pending', category: 'ros', label: 'ROS Draft' }),
+        'd2': makeDraft({ id: 'd2', status: 'pending', category: 'physical-exam', label: 'PE Draft' }),
         'd3': makeDraft({ id: 'd3', status: 'updating', category: 'plan', label: 'Plan Draft' }),
       },
     });
@@ -724,7 +724,7 @@ describe('Integration: Draft Accept → Chart Item', () => {
 
   it('accepted drafts no longer appear in active drafts', () => {
     const draft1 = makeDraft({ id: 'd1', status: 'pending' });
-    const draft2 = makeDraft({ id: 'd2', status: 'pending', category: 'ros', label: 'ROS Draft' });
+    const draft2 = makeDraft({ id: 'd2', status: 'pending', category: 'physical-exam', label: 'PE Draft' });
     let state = stateWith({ drafts: { 'd1': draft1, 'd2': draft2 } });
 
     // Accept draft 1
@@ -868,16 +868,16 @@ describe('Drafts Reducer — DRAFT_CONTENT_READY', () => {
   });
 
   it('preserves other draft fields', () => {
-    const draft = makeGeneratingDraft({ id: 'gen-1', label: 'ROS Draft', category: 'ros' });
+    const draft = makeGeneratingDraft({ id: 'gen-1', label: 'PE Draft', category: 'physical-exam' });
     const state: Record<string, AIDraft> = { 'gen-1': draft };
 
     const result = dispatch(state, {
       type: 'DRAFT_CONTENT_READY',
-      payload: { id: 'gen-1', content: 'ROS content', confidence: 0.82 },
+      payload: { id: 'gen-1', content: 'PE content', confidence: 0.82 },
     });
 
-    expect(result['gen-1'].label).toBe('ROS Draft');
-    expect(result['gen-1'].category).toBe('ros');
+    expect(result['gen-1'].label).toBe('PE Draft');
+    expect(result['gen-1'].category).toBe('physical-exam');
     expect(result['gen-1'].source).toBe('ambient-recording');
   });
 

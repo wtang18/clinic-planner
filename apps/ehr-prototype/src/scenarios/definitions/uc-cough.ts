@@ -197,45 +197,6 @@ export const UC_COUGH_SCENARIO: Scenario = {
       description: 'Patient responds about breathing',
     },
 
-    // === AI Suggestion: ROS ===
-    {
-      delayMs: 2500,
-      action: {
-        type: 'SUGGESTION_RECEIVED',
-        payload: {
-          suggestion: {
-            id: generateId('sug'),
-            type: 'chart-item',
-            status: 'active',
-            content: {
-              type: 'new-item',
-              category: 'ros',
-              itemTemplate: {
-                displayText: 'ROS: Denies fever, body aches, headache. Mild rhinorrhea initially. Denies SOB, wheezing.',
-                data: {
-                  findings: [
-                    { system: 'constitutional', finding: 'Denies fever', isNegative: true },
-                    { system: 'constitutional', finding: 'Denies body aches', isNegative: true },
-                    { system: 'head', finding: 'Denies headache', isNegative: true },
-                    { system: 'respiratory', finding: 'Mild rhinorrhea initially' },
-                    { system: 'respiratory', finding: 'Denies SOB', isNegative: true },
-                    { system: 'respiratory', finding: 'Denies wheezing', isNegative: true },
-                  ],
-                },
-              },
-            },
-            source: 'transcription',
-            confidence: 0.85,
-            createdAt: new Date(),
-            displayText: 'ROS: Denies fever, body aches, headache. Mild rhinorrhea initially.',
-            reasoning: 'Compiled from patient responses about symptoms.',
-          },
-          source: 'transcription',
-        },
-      } as unknown as EncounterAction,
-      description: 'AI suggests ROS',
-    },
-
     // === Physical Exam ===
     {
       delayMs: 3000,

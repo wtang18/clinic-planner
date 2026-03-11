@@ -34,8 +34,7 @@ export interface DraftEngineConfig {
 export const DEFAULT_DRAFT_STAGES: DraftStage[] = [
   { category: 'chief-complaint', label: 'CC Draft', delayMs: 3000, generationDurationMs: 2000 },
   { category: 'hpi', label: 'HPI Draft', delayMs: 15000, generationDurationMs: 4000 },
-  { category: 'ros', label: 'ROS Draft', delayMs: 30000, generationDurationMs: 3000 },
-  { category: 'physical-exam', label: 'PE Draft', delayMs: 45000, generationDurationMs: 3500 },
+  { category: 'physical-exam', label: 'PE Draft', delayMs: 30000, generationDurationMs: 3500 },
   { category: 'plan', label: 'Plan Draft', delayMs: 60000, generationDurationMs: 4000 },
   { category: 'instruction', label: 'Instructions Draft', delayMs: 75000, generationDurationMs: 2500 },
 ];

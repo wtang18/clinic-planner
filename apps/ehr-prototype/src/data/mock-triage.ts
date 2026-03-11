@@ -2,12 +2,12 @@
  * Mock Triage Data
  *
  * Per-scenario triage narrative and PE items as first-class ChartItems.
- * CC, HPI, ROS, and Physical Exam items are seeded based on how far
+ * CC, HPI, and Physical Exam items are seeded based on how far
  * each scenario has progressed through the triage workflow phase.
  *
  * Scenarios:
  * - enc-uc-cough-001: check-in done → CC seeded (triage in progress)
- * - enc-pc-dm-001: check-in + triage done → CC, HPI, ROS, PE seeded
+ * - enc-pc-dm-001: check-in + triage done → CC, HPI, PE seeded
  * - enc-awv-001: nothing done → no triage items
  */
 
@@ -21,7 +21,7 @@ import { materializeChartItem } from '../utils/chart-item-factory';
 const MA_SOURCE = { type: 'maHandoff' as const };
 
 function buildNarrative(
-  category: 'chief-complaint' | 'hpi' | 'ros',
+  category: 'chief-complaint' | 'hpi',
   displayText: string,
   text: string,
 ): NarrativeItem {
@@ -72,7 +72,7 @@ function buildUcCoughTriageItems(): ChartItem[] {
   ];
 }
 
-/** PC Diabetes: triage complete — CC, HPI, ROS, PE all captured */
+/** PC Diabetes: triage complete — CC, HPI, PE all captured */
 function buildPcDiabetesTriageItems(): ChartItem[] {
   return [
     buildNarrative(
@@ -84,11 +84,6 @@ function buildPcDiabetesTriageItems(): ChartItem[] {
       'hpi',
       'Morning fasting glucose 140-160, occasional headaches',
       'Here for quarterly DM/HTN follow-up. Reports morning fasting glucose running 140-160. Occasional headaches, attributes to stress. Adherent to medications, sometimes forgets evening metformin.',
-    ),
-    buildNarrative(
-      'ros',
-      'Positive: headaches, polyuria. Negative: chest pain, SOB, vision changes',
-      'Constitutional: No fever, weight stable. HEENT: Occasional headaches. Cardiovascular: No chest pain, palpitations. Respiratory: No SOB or cough. GI: No nausea, normal appetite. GU: Increased urinary frequency/polyuria. Neuro: No numbness/tingling in extremities. Skin: No wounds or rashes.',
     ),
     buildPE('general', 'Well-appearing, NAD, obese habitus', false),
     buildPE('cardiovascular', 'RRR, no murmurs, peripheral pulses intact, no edema', true),

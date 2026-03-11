@@ -213,10 +213,6 @@ describe('Section Completeness', () => {
     const state = applyActions(createInitialState(), loadEncounterActions());
     const checklist = selectCompletenessChecklist(state);
 
-    // ROS not documented
-    const rosSection = checklist.find(c => c.id === 'ros');
-    expect(rosSection?.status).toBe('not-documented');
-
     // PE not documented
     const peSection = checklist.find(c => c.id === 'pe');
     // Physical exam isn't in MA handoff

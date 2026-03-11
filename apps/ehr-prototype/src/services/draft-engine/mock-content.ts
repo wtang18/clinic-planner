@@ -18,14 +18,6 @@ export const MOCK_DRAFT_CONTENT: Partial<Record<ItemCategory, string>> = {
     'Tried OTC dextromethorphan without significant relief. No sick contacts. No recent travel. ' +
     'PMH significant for seasonal allergies and childhood asthma (no inhalers for 10+ years).',
 
-  ros:
-    'Constitutional: No fever, chills, fatigue, or weight changes.\n' +
-    'HEENT: Mild sore throat, nasal congestion. No ear pain, vision changes.\n' +
-    'Respiratory: Cough as noted in HPI. No shortness of breath, wheezing, or hemoptysis.\n' +
-    'Cardiovascular: No chest pain, palpitations, or edema.\n' +
-    'GI: No nausea, vomiting, diarrhea, or abdominal pain.\n' +
-    'All other systems reviewed and negative.',
-
   'physical-exam':
     'General: Alert, well-appearing, no acute distress.\n' +
     'HEENT: Normocephalic, atraumatic. TMs clear bilaterally. Oropharynx mildly erythematous, no exudates. ' +
@@ -63,7 +55,6 @@ export function getMockConfidence(category: ItemCategory): number {
   const scores: Partial<Record<ItemCategory, number>> = {
     'chief-complaint': 0.95,
     hpi: 0.88,
-    ros: 0.82,
     'physical-exam': 0.85,
     plan: 0.78,
     instruction: 0.90,

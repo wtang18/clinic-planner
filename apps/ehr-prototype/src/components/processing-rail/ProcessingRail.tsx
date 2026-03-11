@@ -4,7 +4,7 @@
  * 200px sidebar showing unified encounter status during capture mode.
  * Single module card with 14 rows grouped by clinical workflow phase:
  *
- * - History: CC, HPI, ROS, Physical Exam
+ * - History: CC, HPI, Physical Exam
  * - Reasoning: Assessment, Plan
  * - Orders: Rx, Labs, Imaging, Referrals
  * - Documentation: Instructions, Visit Note

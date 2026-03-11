@@ -232,7 +232,6 @@ function getCategoryLabel(category: ChartItem['category']): string {
   const labels: Record<string, string> = {
     'chief-complaint': 'CC',
     'hpi': 'HPI',
-    'ros': 'ROS',
     'physical-exam': 'PE',
     'vitals': 'Vitals',
     'medication': 'Rx',

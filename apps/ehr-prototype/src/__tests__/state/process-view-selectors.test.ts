@@ -142,7 +142,7 @@ function makeReferral(overrides?: Partial<ReferralItem>): ReferralItem {
 }
 
 function makeNarrative(
-  category: 'chief-complaint' | 'hpi' | 'ros' | 'physical-exam' | 'plan' | 'instruction' | 'note' | 'diagnosis',
+  category: 'chief-complaint' | 'hpi' | 'physical-exam' | 'plan' | 'instruction' | 'note' | 'diagnosis',
   overrides?: Partial<ChartItem>
 ): ChartItem {
   return {
@@ -541,12 +541,12 @@ describe('Processing steps and next action', () => {
 // ============================================================================
 
 describe('selectCompletenessChecklist', () => {
-  it('returns 9 sections (including sign-off)', () => {
+  it('returns 8 sections (including sign-off)', () => {
     const state = stateWith({});
     const checklist = selectCompletenessChecklist(state);
-    expect(checklist).toHaveLength(9);
+    expect(checklist).toHaveLength(8);
     expect(checklist.map(c => c.id)).toEqual([
-      'cc', 'hpi', 'ros', 'pe', 'assessment', 'plan', 'orders', 'instructions', 'sign-off',
+      'cc', 'hpi', 'pe', 'assessment', 'plan', 'orders', 'instructions', 'sign-off',
     ]);
   });
 
@@ -599,7 +599,7 @@ describe('selectMockEMLevel', () => {
 
   it('returns higher level with more documentation', () => {
     const items: Record<string, ChartItem> = {};
-    for (const cat of ['chief-complaint', 'hpi', 'ros', 'physical-exam', 'diagnosis'] as const) {
+    for (const cat of ['chief-complaint', 'hpi', 'physical-exam', 'diagnosis'] as const) {
       const item = makeNarrative(cat);
       items[item.id] = item;
     }
@@ -713,12 +713,12 @@ describe('selectProcessViewDrafts', () => {
 // ============================================================================
 
 describe('selectUnifiedRailRows', () => {
-  it('returns 14 rows in 5 groups', () => {
+  it('returns 13 rows in 5 groups', () => {
     const state = stateWith({});
     const rows = selectUnifiedRailRows(state);
-    expect(rows).toHaveLength(14);
+    expect(rows).toHaveLength(13);
     expect(rows.map(r => r.id)).toEqual([
-      'cc', 'hpi', 'ros', 'pe',
+      'cc', 'hpi', 'pe',
       'assessment', 'plan',
       'prescriptions', 'labs', 'imaging', 'referrals',
       'instructions', 'visit-note',
@@ -729,7 +729,7 @@ describe('selectUnifiedRailRows', () => {
   it('groups rows correctly', () => {
     const state = stateWith({});
     const rows = selectUnifiedRailRows(state);
-    expect(rows.filter(r => r.group === 'history').map(r => r.id)).toEqual(['cc', 'hpi', 'ros', 'pe']);
+    expect(rows.filter(r => r.group === 'history').map(r => r.id)).toEqual(['cc', 'hpi', 'pe']);
     expect(rows.filter(r => r.group === 'reasoning').map(r => r.id)).toEqual(['assessment', 'plan']);
     expect(rows.filter(r => r.group === 'orders').map(r => r.id)).toEqual(['prescriptions', 'labs', 'imaging', 'referrals']);
     expect(rows.filter(r => r.group === 'documentation').map(r => r.id)).toEqual(['instructions', 'visit-note']);
@@ -744,7 +744,7 @@ describe('selectUnifiedRailRows', () => {
     it('history rows show not-present', () => {
       const state = stateWith({});
       const rows = selectUnifiedRailRows(state);
-      for (const id of ['cc', 'hpi', 'ros', 'pe']) {
+      for (const id of ['cc', 'hpi', 'pe']) {
         const row = rows.find(r => r.id === id)!;
         expect(row.presence).toBe('not-present');
         expect(row.itemCount).toBe(0);
@@ -970,8 +970,8 @@ describe('selectUnifiedRailRows', () => {
         },
       });
       const rows = selectUnifiedRailRows(state);
-      const ros = rows.find(r => r.id === 'ros')!;
-      expect(ros.processing).toBeNull();
+      const pe = rows.find(r => r.id === 'pe')!;
+      expect(pe.processing).toBeNull();
     });
   });
 
@@ -1101,7 +1101,6 @@ describe('selectUnifiedRailRows', () => {
       const rows = selectUnifiedRailRows(state);
       expect(rows.find(r => r.id === 'cc')!.deepLink).toEqual({ mode: 'review', sectionId: 'cc-hpi' });
       expect(rows.find(r => r.id === 'hpi')!.deepLink).toEqual({ mode: 'review', sectionId: 'cc-hpi' });
-      expect(rows.find(r => r.id === 'ros')!.deepLink).toEqual({ mode: 'review', sectionId: 'ros' });
       expect(rows.find(r => r.id === 'pe')!.deepLink).toEqual({ mode: 'review', sectionId: 'pe' });
     });
 

@@ -28,7 +28,6 @@ export function getSuggestionCategoryLabel(suggestion: Suggestion): string {
       vitals: 'Add Vitals',
       'chief-complaint': 'Add CC',
       hpi: 'Add HPI',
-      ros: 'Add ROS',
       'physical-exam': 'Add PE',
       allergy: 'Add Allergy',
       plan: 'Add Plan',

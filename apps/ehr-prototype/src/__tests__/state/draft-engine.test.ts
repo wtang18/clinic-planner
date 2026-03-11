@@ -120,18 +120,18 @@ describe('Draft Engine — Timer-Based Generation', () => {
     engine.start();
     vi.advanceTimersByTime(10000); // More than enough for all fast stages
 
-    // 6 DRAFT_GENERATED (shells) + 6 DRAFT_CONTENT_READY = 12 dispatches
+    // 5 DRAFT_GENERATED (shells) + 5 DRAFT_CONTENT_READY = 10 dispatches
     const shells = dispatched.filter(
       (a): a is Extract<EncounterAction, { type: 'DRAFT_GENERATED' }> => a.type === 'DRAFT_GENERATED'
     );
-    expect(shells).toHaveLength(6);
+    expect(shells).toHaveLength(5);
     const categories = shells.map(a => a.payload.draft.category);
     expect(categories).toEqual([
-      'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'instruction',
+      'chief-complaint', 'hpi', 'physical-exam', 'plan', 'instruction',
     ]);
 
     const contentReady = dispatched.filter(a => a.type === 'DRAFT_CONTENT_READY');
-    expect(contentReady).toHaveLength(6);
+    expect(contentReady).toHaveLength(5);
 
     engine.stop();
   });
@@ -333,7 +333,7 @@ describe('Draft Engine — Lifecycle', () => {
 describe('Mock Draft Content', () => {
   it('has content for all standard draft categories', () => {
     const categories: Array<keyof typeof MOCK_DRAFT_CONTENT> = [
-      'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'instruction',
+      'chief-complaint', 'hpi', 'physical-exam', 'plan', 'instruction',
     ];
 
     for (const category of categories) {

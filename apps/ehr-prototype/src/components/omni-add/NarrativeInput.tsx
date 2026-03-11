@@ -1,7 +1,7 @@
 /**
  * NarrativeInput Component
  *
- * Text entry for narrative chart item categories (CC, HPI, ROS, PE, Plan, Instruction, Note).
+ * Text entry for narrative chart item categories (CC, HPI, PE, Plan, Instruction, Note).
  * AI-primary categories show a hint that AI will generate content from ambient recording.
  * Manual-only categories (Note) show a simple text area.
  */
@@ -23,13 +23,12 @@ export interface NarrativeInputProps {
 
 /** Categories where AI is the primary input (OmniAdd is secondary/manual) */
 const AI_PRIMARY_CATEGORIES: ItemCategory[] = [
-  'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'instruction',
+  'chief-complaint', 'hpi', 'physical-exam', 'plan', 'instruction',
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
   'chief-complaint': 'Chief Complaint',
   'hpi': 'History of Present Illness',
-  'ros': 'Review of Systems',
   'physical-exam': 'Physical Exam',
   'plan': 'Plan',
   'instruction': 'Patient Instructions',
@@ -39,7 +38,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_PLACEHOLDERS: Record<string, string> = {
   'chief-complaint': 'e.g., Cough x 5 days, worse at night',
   'hpi': 'Describe the history of present illness...',
-  'ros': 'Review of systems findings...',
   'physical-exam': 'Physical exam findings...',
   'plan': 'Treatment plan...',
   'instruction': 'Patient instructions...',

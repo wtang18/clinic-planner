@@ -19,7 +19,6 @@ export { DEFAULT_NOTE_GENERATION_CONFIG, SOAP_TEMPLATE } from './types';
 export {
   generateVisitNote,
   generateHPI,
-  generateROS,
   generatePhysicalExam,
   generateAssessment,
   generatePlan,

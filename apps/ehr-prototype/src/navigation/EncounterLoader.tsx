@@ -232,7 +232,7 @@ export const EncounterLoader: React.FC<EncounterLoaderProps> = ({
           },
         });
 
-        // Seed triage narrative items (CC, HPI, ROS, PE — scenario-dependent).
+        // Seed triage narrative items (CC, HPI, PE — scenario-dependent).
         // Patient allergies/meds are visible in the overview sidebar via
         // PatientContext.clinicalSummary; they don't need chart items.
         const triageItems = getTriageItemsForScenario(mockData.encounter.id);

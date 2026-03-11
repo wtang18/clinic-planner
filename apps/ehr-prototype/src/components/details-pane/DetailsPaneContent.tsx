@@ -33,7 +33,7 @@ export interface DetailsPaneContentProps {
 // ============================================================================
 
 const NARRATIVE_CATEGORIES = new Set([
-  'chief-complaint', 'hpi', 'ros', 'physical-exam', 'plan', 'note',
+  'chief-complaint', 'hpi', 'physical-exam', 'plan', 'note',
 ]);
 
 // ============================================================================
@@ -147,7 +147,7 @@ export const DetailsPaneContent: React.FC<DetailsPaneContentProps> = ({ item, on
 DetailsPaneContent.displayName = 'DetailsPaneContent';
 
 // ============================================================================
-// Narrative Editor (textarea for CC, HPI, ROS, etc.)
+// Narrative Editor (textarea for CC, HPI, etc.)
 // ============================================================================
 
 const NarrativeEditor: React.FC<{

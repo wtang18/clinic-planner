@@ -141,7 +141,7 @@ export const EncounterWorkspace: React.FC<EncounterWorkspaceProps> = ({
   const ctx = useEncounterContext();
   const {
     state, items, captureView, workflowState,
-    encounterVitals, ccItem, hpiItem, rosItem, peItems,
+    encounterVitals, ccItem, hpiItem, peItems,
     handleRailRowTap, gridRef, railTier,
     canPopScope, scopeOriginLabel, popScope, todoNav,
     workspace,
@@ -441,7 +441,6 @@ export const EncounterWorkspace: React.FC<EncounterWorkspaceProps> = ({
                       chiefComplaint={visit?.chiefComplaint}
                       ccItem={ccItem}
                       hpiItem={hpiItem}
-                      rosItem={rosItem}
                       peItems={peItems}
                       onItemClick={(itemId) => captureView.handleItemSelect(itemId)}
                     />
@@ -571,7 +570,6 @@ export const EncounterWorkspace: React.FC<EncounterWorkspaceProps> = ({
                     chiefComplaint={visit?.chiefComplaint}
                     ccItem={ccItem}
                     hpiItem={hpiItem}
-                    rosItem={rosItem}
                     peItems={peItems}
                     onItemClick={(itemId) => captureView.handleItemSelect(itemId)}
                   />
