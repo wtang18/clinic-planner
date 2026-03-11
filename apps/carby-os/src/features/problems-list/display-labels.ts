@@ -1,15 +1,15 @@
 import type { ProblemCategory, ProblemItem } from './types'
 
-/** Category-aware label for soft-closing an item (→ inactive) */
+/** Category-aware label for soft-closing an item
+ * - Conditions/Encounter-Dx → "Mark Inactive" (sets clinicalStatus: 'inactive')
+ * - SDOH/Health-Concerns → "Mark Resolved" (sets clinicalStatus: 'resolved')
+ */
 export const SOFT_CLOSE_LABEL: Record<ProblemCategory, string> = {
   'condition': 'Mark Inactive',
   'encounter-dx': 'Mark Inactive',
-  'sdoh': 'Mark Addressed',
-  'health-concern': 'Mark Inactive',
+  'sdoh': 'Mark Resolved',
+  'health-concern': 'Mark Resolved',
 }
-
-/** Universal label for definitive resolution (→ resolved) */
-export const RESOLVE_LABEL = 'Mark Resolved'
 
 /** Category-aware label for reactivating from inactive/resolved state */
 export const ACTIVATE_FROM_INACTIVE_LABEL: Record<ProblemCategory, string> = {
@@ -53,11 +53,34 @@ export function getSourcePillLabel(item: ProblemItem): string {
   if (item.verificationStatus === 'excluded') {
     return item.source === 'screened' ? 'Screened' : 'Reported'
   }
-  if (item.clinicalStatus === 'resolved') return 'Resolved'
+  // Use display status for the source pill label
+  if (item.clinicalStatus === 'resolved' || item.clinicalStatus === 'inactive') {
+    return getDisplayStatus(item)
+  }
   if (item.clinicalStatus === 'recurrence') return 'Recurrence'
   if (item.clinicalStatus === 'active' && item.verificationStatus === 'confirmed') return 'Onset'
   if (item.verificationStatus === 'confirmed') return 'Diagnosed'
   return item.source === 'screened' ? 'Screened' : 'Reported'
+}
+
+/**
+ * Category-aware display status.
+ * - Conditions/Encounter-Dx: "resolved" displays as "Inactive"
+ * - SDOH/Health-Concerns: "inactive" displays as "Resolved"
+ */
+export function getDisplayStatus(item: ProblemItem): string {
+  const cat = item.category
+  if ((cat === 'condition' || cat === 'encounter-dx') && item.clinicalStatus === 'resolved') {
+    return 'Inactive'
+  }
+  if ((cat === 'sdoh' || cat === 'health-concern') && item.clinicalStatus === 'inactive') {
+    return 'Resolved'
+  }
+  return capitalizeFirst(item.clinicalStatus)
+}
+
+function capitalizeFirst(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 /**

@@ -74,4 +74,4 @@ export interface ScreeningInstrument {
   interpretation?: string
 }
 
-export type FilterKey = 'all' | 'unconfirmed' | 'active' | 'inactive' | 'resolved' | 'confirmed' | 'excluded'
+export type FilterKey = 'all' | 'unconfirmed' | 'active' | 'inactive-resolved' | 'confirmed' | 'excluded'

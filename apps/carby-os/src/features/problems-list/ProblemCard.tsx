@@ -3,10 +3,10 @@ import { Pill } from '@/design-system'
 import type { ProblemItem } from './types'
 import {
   SOFT_CLOSE_LABEL,
-  RESOLVE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
   getSourcePillLabel,
+  getDisplayStatus,
   isConfirmedTransitional,
 } from './display-labels'
 
@@ -33,10 +33,6 @@ function ActionButton({ label, onClick }: { label: string; onClick: () => void }
       {label}
     </button>
   )
-}
-
-function capitalizeFirst(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 /** Is this item in a muted/deemphasized state? (inactive, resolved, or excluded) */
@@ -68,7 +64,7 @@ export function ProblemCard({
 }: ProblemCardProps) {
   const actions = getActions(item)
   const sourcePillLabel = getSourcePillLabel(item)
-  const sourcePillDate = item.clinicalStatus === 'resolved' && item.abatementDate
+  const sourcePillDate = (item.clinicalStatus === 'resolved' || item.clinicalStatus === 'inactive') && item.abatementDate
     ? item.abatementDate
     : item.sourceDate
   const muted = isMuted(item)
@@ -106,7 +102,7 @@ export function ProblemCard({
             <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
           )}
           {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={capitalizeFirst(item.clinicalStatus)} />
+            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={getDisplayStatus(item)} />
           )}
           {item.verificationStatus === 'excluded' && (
             <Pill type="subtle-outlined" size="small" label="Excluded" />
@@ -163,7 +159,6 @@ export function ProblemCard({
     if (_item.clinicalStatus === 'active' || _item.clinicalStatus === 'recurrence') {
       const softCloseHandler = getSoftCloseHandler(cat)
       if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
-      if (onMarkResolved) result.push({ label: RESOLVE_LABEL, handler: onMarkResolved })
       return result
     }
 
@@ -181,10 +176,10 @@ export function ProblemCard({
     switch (cat) {
       case 'condition':
       case 'encounter-dx':
-      case 'health-concern':
         return onMarkInactive
       case 'sdoh':
-        return onMarkAddressed
+      case 'health-concern':
+        return onMarkResolved
     }
   }
 }

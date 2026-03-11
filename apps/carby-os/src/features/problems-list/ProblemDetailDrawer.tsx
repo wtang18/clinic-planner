@@ -1,15 +1,18 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
-import type { ProblemItem, ProblemEvent, ScreeningInstrument, RemovalReason } from './types'
-import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
-import { Pill, Button, Input } from '@/design-system'
-import { screeningInstruments } from './mock-data'
+import type { ProblemItem, ScreeningInstrument, RemovalReason } from './types'
 import {
+  DRAWER_TITLE,
   SOFT_CLOSE_LABEL,
-  RESOLVE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
+  getSourcePillLabel,
+  getDisplayStatus,
+  formatEventDescription,
+  isConfirmedTransitional,
 } from './display-labels'
+import { Pill, Button } from '@/design-system'
+import { screeningInstruments } from './mock-data'
 
 interface ProblemDetailDrawerProps {
   item: ProblemItem
@@ -32,11 +35,6 @@ interface ProblemDetailDrawerProps {
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
-  onEditEventDate: (itemId: string, eventId: string, newDate: string) => void
-}
-
-function capitalizeFirst(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 /** Can this item be removed? Only if it has no clinical actions — just the originating event. */
@@ -70,31 +68,15 @@ export function ProblemDetailDrawer({
   onUndoRecurrence,
   onRemove,
   onEditClick,
-  onEditEventDate,
 }: ProblemDetailDrawerProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
-  const [editingEvent, setEditingEvent] = useState<ProblemEvent | null>(null)
 
   const title = DRAWER_TITLE[item.category]
   const sourcePillLabel = getSourcePillLabel(item)
   const relatedScreening = item.relatedScreeningId
     ? screeningInstruments.find(s => s.id === item.relatedScreeningId)
     : undefined
-
-  // Single-drawer: when editing an event, show ONLY the EventEditDrawer
-  if (editingEvent) {
-    return (
-      <EventEditDrawer
-        event={editingEvent}
-        onClose={() => setEditingEvent(null)}
-        onSave={(newDate) => {
-          onEditEventDate(item.id, editingEvent.id, newDate)
-          setEditingEvent(null)
-        }}
-      />
-    )
-  }
 
   return (
     <>
@@ -148,7 +130,7 @@ export function ProblemDetailDrawer({
           )}
 
           {/* Activity log */}
-          <ActivityLog item={item} onEditEvent={setEditingEvent} />
+          <ActivityLog item={item} />
         </div>
 
         {/* Footer — Remove with reason picker */}
@@ -203,69 +185,6 @@ export function ProblemDetailDrawer({
             </div>
           </div>
         )}
-      </div>
-    </>
-  )
-}
-
-/* ─── Event Edit Drawer ─── */
-
-interface EventEditDrawerProps {
-  event: ProblemEvent
-  onClose: () => void
-  onSave: (newDate: string) => void
-}
-
-function EventEditDrawer({ event, onClose, onSave }: EventEditDrawerProps) {
-  const [date, setDate] = useState(event.effectiveDate ?? '')
-
-  const handleSave = () => {
-    if (date && date !== event.effectiveDate) {
-      onSave(date)
-    } else {
-      onClose()
-    }
-  }
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
-
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-[600px] bg-bg-neutral-subtle z-50 shadow-xl flex flex-col animate-slide-in">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border-neutral-low">
-          <h2 className="text-base font-semibold text-fg-neutral-primary">Edit Event Date</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-auto px-5 py-4 flex flex-col gap-5">
-          <div className="bg-white rounded-2xl px-4 py-4 flex flex-col gap-4">
-            <p className="text-sm text-fg-neutral-secondary">
-              {formatEventDescription(event.type)} &middot; {event.performedBy}
-            </p>
-            <Input
-              label="Effective Date"
-              helperText="The date this clinical action took effect"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              placeholder="MM/DD/YY"
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-border-neutral-low flex items-center justify-end gap-2">
-          <Button type="transparent" size="medium" label="Cancel" onClick={onClose} />
-          <Button type="primary" size="medium" label="Save" onClick={handleSave} />
-        </div>
       </div>
     </>
   )
@@ -373,7 +292,7 @@ function SummaryCard({
           <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
         )}
         {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-          <Pill type="subtle-outlined" size="small" label={capitalizeFirst(item.clinicalStatus)} />
+          <Pill type="subtle-outlined" size="small" label={getDisplayStatus(item)} />
         )}
         {item.verificationStatus === 'excluded' && (
           <Pill type="subtle-outlined" size="small" label="Excluded" />
@@ -381,7 +300,7 @@ function SummaryCard({
         {item.icdCode && (
           <Pill type="transparent" size="small" label={item.icdCode} />
         )}
-        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={item.clinicalStatus === 'resolved' && item.abatementDate ? item.abatementDate : item.sourceDate} />
+        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={(item.clinicalStatus === 'resolved' || item.clinicalStatus === 'inactive') && item.abatementDate ? item.abatementDate : item.sourceDate} />
       </div>
 
       {/* Notes (if present) */}
@@ -435,7 +354,6 @@ function SummaryCard({
     if (it.clinicalStatus === 'active' || it.clinicalStatus === 'recurrence') {
       const softCloseHandler = getSoftCloseHandler(cat)
       if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
-      result.push({ label: RESOLVE_LABEL, handler: onMarkResolved })
       return result
     }
 
@@ -448,9 +366,12 @@ function SummaryCard({
     return result
   }
 
-  /** Kebab menu: contextual undo actions for corrections */
+  /** Kebab menu: contextual undo actions + note recurrence */
   function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
     const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
+    const cat = it.category
+    const isCondLike = cat === 'condition' || cat === 'encounter-dx'
+    const isSdohLike = cat === 'sdoh' || cat === 'health-concern'
 
     // Undo confirm (verification level) — always available for confirmed items
     if (it.verificationStatus === 'confirmed') {
@@ -463,23 +384,32 @@ function SummaryCard({
         result.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
       }
       if (it.clinicalStatus === 'inactive') {
-        const cat = it.category
-        if (cat === 'sdoh') {
-          result.push({ label: 'Undo Mark Addressed', handler: onUndoMarkAddressed })
-        } else {
+        // Conditions/Enc-Dx: "Undo Mark Inactive"; SDOH/HC: "Undo Mark Resolved" (inactive displays as resolved)
+        if (isCondLike) {
           result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+        } else {
+          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
         }
       }
       if (it.clinicalStatus === 'resolved') {
-        result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+        // Conditions/Enc-Dx: "Undo Mark Inactive" (resolved displays as inactive); SDOH/HC: "Undo Mark Resolved"
+        if (isCondLike) {
+          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+        } else {
+          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+        }
       }
       if (it.clinicalStatus === 'recurrence') {
         result.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
       }
+
+      // Note Recurrence — only in kebab, only for conditions/encounter-dx in inactive/resolved state
+      if (supportsRecurrence(it) && (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved')) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+      }
     }
 
     // Undo reopen — for items that were reopened (active, came from inactive)
-    // We check history to see if most recent clinical action was a reopen
     if ((it.clinicalStatus === 'active') && it.history[0]?.type === 'reopened') {
       result.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
@@ -491,10 +421,10 @@ function SummaryCard({
     switch (cat) {
       case 'condition':
       case 'encounter-dx':
-      case 'health-concern':
         return onMarkInactive
       case 'sdoh':
-        return onMarkAddressed
+      case 'health-concern':
+        return onMarkResolved
     }
   }
 }
@@ -527,11 +457,27 @@ function RelatedScreeningCard({ screening }: { screening: ScreeningInstrument })
 
 /* ─── Activity Log ─── */
 
-function ActivityLog({ item, onEditEvent }: { item: ProblemItem; onEditEvent: (event: ProblemEvent) => void }) {
+/** Parse MM/DD/YY (with optional time suffix) to a sortable timestamp */
+function parseDateForSort(dateStr: string): number {
+  const [datePart] = dateStr.split(',')
+  const [month, day, year] = datePart.trim().split('/')
+  return new Date(parseInt(year) + 2000, parseInt(month) - 1, parseInt(day)).getTime()
+}
+
+function ActivityLog({ item }: { item: ProblemItem }) {
+  // Sort by effective date (condition date), falling back to recorded date
+  const sortedHistory = useMemo(() => {
+    return [...item.history].sort((a, b) => {
+      const dateA = a.effectiveDate ?? a.performedAt
+      const dateB = b.effectiveDate ?? b.performedAt
+      return parseDateForSort(dateB) - parseDateForSort(dateA)
+    })
+  }, [item.history])
+
   return (
     <div className="flex flex-col gap-0">
       <h3 className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide mb-2">Activity</h3>
-      {item.history.map((event, i) => (
+      {sortedHistory.map((event, i) => (
         <div key={event.id}>
           {i > 0 && <div className="h-px bg-border-neutral-low" />}
           <div className="flex items-start justify-between gap-3 py-2.5">
@@ -546,19 +492,9 @@ function ActivityLog({ item, onEditEvent }: { item: ProblemItem; onEditEvent: (e
                 {event.performedBy}
               </span>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="text-xs text-fg-neutral-secondary whitespace-nowrap">
-                {event.performedAt}
-              </span>
-              {event.effectiveDate && (
-                <button
-                  onClick={() => onEditEvent(event)}
-                  className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
-                >
-                  <Pencil size={12} />
-                </button>
-              )}
-            </div>
+            <span className="text-xs text-fg-neutral-secondary whitespace-nowrap shrink-0">
+              {event.performedAt}
+            </span>
           </div>
         </div>
       ))}
