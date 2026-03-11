@@ -103,7 +103,18 @@
       "Bash(echo Checking for Metro cache locations...:*)",
       "Bash(head:*)",
       "Bash(sed:*)",
-      "Bash(# The bundle might be too large for sed. Let's use awk to get specific lines\ncurl -s \"http://localhost:8081/index.ts.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable\" 2>/dev/null | awk 'NR>=371910 && NR<=371925' 2>/dev/null)"
+      "Bash(# The bundle might be too large for sed. Let's use awk to get specific lines\ncurl -s \"http://localhost:8081/index.ts.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable\" 2>/dev/null | awk 'NR>=371910 && NR<=371925' 2>/dev/null)",
+      "mcp__figma-dev-mode-mcp-server__get_metadata",
+      "Bash(timeout 5 npx vite:*)",
+      "Bash(do sed:*)",
+      "mcp__claude_ai_Figma__get_screenshot",
+      "Bash(npx vite:*)",
+      "Bash(git pull:*)",
+      "Bash(git rebase:*)",
+      "Bash(git:*)",
+      "mcp__claude_ai_Figma__get_design_context",
+      "Bash(do cp:*)",
+      "Skill(commit-commands:commit-push-pr)"
     ],
     "deny": [],
     "ask": []
