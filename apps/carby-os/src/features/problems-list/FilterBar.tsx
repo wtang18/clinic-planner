@@ -26,7 +26,7 @@ const filters: Array<{ key: FilterKey; label: string }> = [
 
 export function FilterBar({ activeFilters, counts, onToggle }: FilterBarProps) {
   return (
-    <div className="flex items-center gap-1.5 flex-wrap sticky top-0 z-10 bg-bg-neutral-subtle pt-3 pb-1">
+    <div className="flex items-center gap-1.5 flex-wrap sticky top-0 z-10 bg-bg-neutral-subtle pt-3 pb-2">
       {filters.map(({ key, label }) => {
         const count = key !== 'all' ? counts[key] : undefined
         const selected = activeFilters.has(key)
