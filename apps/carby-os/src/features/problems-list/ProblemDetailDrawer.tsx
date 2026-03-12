@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import { Icon } from '@carbon-health/design-icons'
-import type { ProblemItem, RemovalReason } from './types'
+import type { ProblemItem, RemovalReason, DeletionReason, ProblemEvent } from './types'
 import {
   DRAWER_TITLE,
   SOFT_CLOSE_LABEL,
@@ -37,6 +37,7 @@ interface ProblemDetailDrawerProps {
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
+  onDeleteEvent: (itemId: string, eventId: string, reason: DeletionReason) => void
 }
 
 /** Can recurrence apply? Only conditions and encounter-dx */
@@ -65,6 +66,7 @@ export function ProblemDetailDrawer({
   onUndoRecurrence,
   onRemove,
   onEditClick,
+  onDeleteEvent,
 }: ProblemDetailDrawerProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
@@ -127,8 +129,8 @@ export function ProblemDetailDrawer({
             <ScreeningDetailCard screening={relatedScreening} />
           )}
 
-          {/* Activity log */}
-          <ActivityLog item={item} />
+          {/* History log */}
+          <HistoryLog item={item} onDeleteEvent={onDeleteEvent} />
         </div>
 
       </div>
@@ -403,9 +405,9 @@ function SummaryCard({
         undoGroup.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
       }
 
-      // Note Recurrence — only for conditions/encounter-dx in inactive/resolved state
+      // Mark Recurrence — only for conditions/encounter-dx in inactive/resolved state
       if (supportsRecurrence(it) && (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved')) {
-        undoGroup.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+        undoGroup.push({ label: 'Mark Recurrence', handler: onNoteRecurrence })
       }
     }
 
@@ -442,13 +444,16 @@ function SummaryCard({
   }
 }
 
-/* ─── Activity Log ─── */
+/* ─── History Log ─── */
 
-/** Events that have a clinically meaningful effectiveDate worth displaying */
-const DATABLE_EVENTS = new Set([
-  'marked-active', 'marked-inactive', 'marked-resolved', 'marked-addressed',
-  'recurrence', 'reopened', 'confirmed', 'excluded',
-])
+type DeletionReasonOption = { value: DeletionReason; label: string }
+
+const DELETION_REASONS: DeletionReasonOption[] = [
+  { value: 'entered-in-error', label: 'Entered in error' },
+  { value: 'incorrect-import', label: 'Incorrect import' },
+  { value: 'duplicate', label: 'Duplicate' },
+  { value: 'other', label: 'Other' },
+]
 
 /** Parse MM/DD/YY (with optional time suffix) to a sortable timestamp */
 function parseDateForSort(dateStr: string): number {
@@ -457,8 +462,17 @@ function parseDateForSort(dateStr: string): number {
   return new Date(parseInt(year) + 2000, parseInt(month) - 1, parseInt(day)).getTime()
 }
 
-function ActivityLog({ item }: { item: ProblemItem }) {
-  // Sort by effective date (condition date), falling back to recorded date
+interface HistoryLogProps {
+  item: ProblemItem
+  onDeleteEvent: (itemId: string, eventId: string, reason: DeletionReason) => void
+}
+
+function HistoryLog({ item, onDeleteEvent }: HistoryLogProps) {
+  const [showDeleted, setShowDeleted] = useState(false)
+  const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
+  const [selectedReason, setSelectedReason] = useState<DeletionReason>('entered-in-error')
+
+  // Sort by effective date descending, fallback to performedAt
   const sortedHistory = useMemo(() => {
     return [...item.history].sort((a, b) => {
       const dateA = a.effectiveDate ?? a.performedAt
@@ -467,43 +481,183 @@ function ActivityLog({ item }: { item: ProblemItem }) {
     })
   }, [item.history])
 
+  const deletedCount = useMemo(() =>
+    item.history.filter(e => e.deletedAt).length
+  , [item.history])
+
+  const visibleHistory = useMemo(() =>
+    showDeleted ? sortedHistory : sortedHistory.filter(e => !e.deletedAt || e.id === deletingEventId)
+  , [sortedHistory, showDeleted, deletingEventId])
+
+  const handleDeleteConfirm = (eventId: string) => {
+    onDeleteEvent(item.id, eventId, selectedReason)
+    setDeletingEventId(null)
+    setSelectedReason('entered-in-error')
+  }
+
+  const handleDeleteCancel = () => {
+    setDeletingEventId(null)
+    setSelectedReason('entered-in-error')
+  }
+
   return (
     <div className="flex flex-col gap-0">
-      <h3 className="text-label-sm-medium text-fg-neutral-secondary mb-2">Activity</h3>
-      {sortedHistory.map((event, i) => (
-        <div key={event.id}>
-          {i > 0 && <div className="border-t border-fg-transparent-soft" />}
-          <div className="flex items-start justify-between gap-3 py-2.5">
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm text-fg-neutral-primary">
-                {formatEventDescription(event.type)}
-              </span>
-              {event.effectiveDate && DATABLE_EVENTS.has(event.type) && (
-                <span className="text-xs text-fg-neutral-secondary">
-                  Effective {event.effectiveDate}
+      {/* Header */}
+      <div className="flex items-baseline justify-between mb-2">
+        <h3 className="text-label-sm-medium text-fg-neutral-secondary">History</h3>
+        {deletedCount > 0 && (
+          <button
+            onClick={() => setShowDeleted(!showDeleted)}
+            className="text-label-xs-medium text-fg-accent-primary hover:opacity-70 transition-opacity"
+          >
+            {showDeleted ? 'Hide deleted' : `Show ${deletedCount} deleted`}
+          </button>
+        )}
+      </div>
+
+      {/* Entries */}
+      {visibleHistory.map((event, i) => {
+        const isDeleted = !!event.deletedAt
+        const isBeingDeleted = deletingEventId === event.id
+
+        return (
+          <div key={event.id}>
+            {i > 0 && <div className="border-t border-fg-transparent-soft" />}
+            <div
+              className={`group py-2.5 flex flex-col gap-0.5 ${isDeleted || isBeingDeleted ? 'opacity-45' : ''}`}
+            >
+              {/* Line 1: Event label + effective date */}
+              <div className="flex items-baseline justify-between gap-3">
+                <span className={`text-body-sm-medium text-fg-neutral-primary ${isDeleted || isBeingDeleted ? 'line-through' : ''}`}>
+                  {formatEventLabel(event)}
                 </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-body-xs-regular text-fg-neutral-secondary whitespace-nowrap ${isDeleted || isBeingDeleted ? 'line-through' : ''}`}>
+                    {formatEffectiveDate(event)}
+                  </span>
+                  {/* Delete icon — hover only, not on deleted entries */}
+                  {!isDeleted && !isBeingDeleted && (
+                    <button
+                      onClick={() => setDeletingEventId(event.id)}
+                      className="w-5 h-5 rounded-md flex items-center justify-center text-fg-neutral-secondary opacity-0 group-hover:opacity-100 hover:bg-bg-transparent-low transition-all"
+                    >
+                      <Icon name="trash" size="small" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Line 2: Source + timestamp */}
+              <span className={`text-body-xs-regular text-fg-neutral-secondary ${isDeleted || isBeingDeleted ? 'line-through' : ''}`}>
+                {formatSourceLine(event)}
+              </span>
+
+              {/* Notes */}
+              {event.note && !isDeleted && !isBeingDeleted && (
+                <span className="text-body-xs-regular text-fg-neutral-secondary">{event.note}</span>
               )}
-              {event.note && (
-                <span className="text-xs text-fg-neutral-secondary">{event.note}</span>
-              )}
-              {event.type === 'event-edited' && event.changes?.[0] && (
-                <span className="text-xs text-fg-neutral-secondary">
+
+              {/* Event-edited changes */}
+              {event.type === 'event-edited' && event.changes?.[0] && !isDeleted && !isBeingDeleted && (
+                <span className="text-body-xs-regular text-fg-neutral-secondary">
                   Date changed: {event.changes[0].from} &rarr; {event.changes[0].to}
                 </span>
               )}
-              <span className="text-xs text-fg-neutral-secondary truncate">
-                {event.performedBy}
-              </span>
+
+              {/* Deletion metadata (for already-deleted entries) */}
+              {isDeleted && !isBeingDeleted && (
+                <span className="text-label-2xs-medium text-fg-alert-secondary mt-0.5" style={{ opacity: 1 }}>
+                  Deleted: {formatDeletionReason(event.deletionReason)} — {event.deletedBy} — {event.deletedAt}
+                </span>
+              )}
+
+              {/* Deletion reason picker card (for entry being deleted) */}
+              {isBeingDeleted && (
+                <div className="bg-white rounded-xl p-3.5 shadow-sm flex flex-col gap-2.5 mt-2.5">
+                  <span className="text-label-sm-medium text-fg-neutral-primary">Delete this entry?</span>
+                  <div className="flex flex-col gap-1">
+                    {DELETION_REASONS.map(({ value, label }) => (
+                      <label key={value} className="flex items-center gap-2 py-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="deletion-reason"
+                          checked={selectedReason === value}
+                          onChange={() => setSelectedReason(value)}
+                          className="accent-[var(--color-fg-neutral-primary)]"
+                        />
+                        <span className="text-body-sm-regular text-fg-neutral-primary">{label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 justify-end mt-0.5">
+                    <Button type="transparent" size="small" label="Cancel" onClick={handleDeleteCancel} />
+                    <Button type="high-impact" size="small" label="Delete" onClick={() => handleDeleteConfirm(event.id)} />
+                  </div>
+                </div>
+              )}
             </div>
-            <span className="text-xs text-fg-neutral-secondary whitespace-nowrap shrink-0">
-              {event.performedAt}
-            </span>
           </div>
-        </div>
-      ))}
+        )
+      })}
+
       {item.history.length === 0 && (
-        <p className="text-sm text-fg-neutral-secondary py-2">No activity recorded.</p>
+        <p className="text-body-sm-regular text-fg-neutral-secondary py-2">No history recorded.</p>
       )}
     </div>
   )
+}
+
+/* ─── History Formatters ─── */
+
+/** Line 1 label: includes "from [Visit Name]" for encounter-dx origin events */
+function formatEventLabel(event: ProblemEvent): React.ReactNode {
+  const baseLabel = formatEventDescription(event.type)
+  if (event.encounterVisitName && (event.type === 'reported' || event.type === 'confirmed' || event.type === 'marked-active')) {
+    return (
+      <>
+        {baseLabel} from{' '}
+        <span className="text-fg-accent-primary underline decoration-fg-accent-primary/30 underline-offset-2 cursor-pointer">
+          {event.encounterVisitName}
+        </span>
+      </>
+    )
+  }
+  return baseLabel
+}
+
+/** Right-aligned effective date — falls back to performedAt date portion */
+function formatEffectiveDate(event: ProblemEvent): string {
+  if (event.effectiveDate) {
+    return expandDate(event.effectiveDate)
+  }
+  const [datePart] = event.performedAt.split(',')
+  return expandDate(datePart.trim())
+}
+
+/** Expand MM/DD/YY to MM/DD/YYYY */
+function expandDate(short: string): string {
+  const parts = short.split('/')
+  if (parts.length === 3 && parts[2].length === 2) {
+    return `${parts[0]}/${parts[1]}/20${parts[2]}`
+  }
+  return short
+}
+
+/** Line 2: Source + timestamp. Encounter-dx entries show "[Provider], Encounter — [timestamp]" */
+function formatSourceLine(event: ProblemEvent): string {
+  if (event.encounterVisitName) {
+    return `${event.performedBy}, Encounter — ${event.performedAt}`
+  }
+  return `${event.performedBy} — ${event.performedAt}`
+}
+
+/** Human-readable deletion reason */
+function formatDeletionReason(reason?: DeletionReason): string {
+  switch (reason) {
+    case 'entered-in-error': return 'entered in error'
+    case 'incorrect-import': return 'incorrect import'
+    case 'duplicate': return 'duplicate'
+    case 'other': return 'other'
+    default: return 'unknown'
+  }
 }
