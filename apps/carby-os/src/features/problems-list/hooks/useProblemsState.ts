@@ -12,6 +12,7 @@ interface FilterCounts {
 }
 
 const MOCK_PERFORMER = 'Marco Rivera, PA-C'
+const MOCK_MA = 'Alex Chen, MA'
 
 function createEvent(type: ProblemEventType, note?: string): ProblemEvent {
   const now = new Date()
@@ -188,21 +189,46 @@ export function useProblemsState() {
     updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'undo-recurrence')
   }, [updateItemWithEvent])
 
-  const addItem = useCallback((category: ProblemCategory, description: string, icdCode: string | null) => {
+  const addItem = useCallback((category: ProblemCategory, description: string, icdCode: string | null, isProvider?: boolean) => {
     const id = `added-${Date.now()}`
-    const newItem: ProblemItem = {
-      id,
-      category,
-      description,
-      icdCode,
-      snomedCode: null,
-      verificationStatus: 'unconfirmed',
-      clinicalStatus: 'active',
-      source: 'reported',
-      sourceDate: todayString(),
-      history: [createEvent('reported')],
+    const today = todayString()
+
+    if (isProvider) {
+      // Provider-added: auto confirmed + active, single history entry
+      const addedEvt = createEvent('provider-added')
+      addedEvt.effectiveDate = today
+      const newItem: ProblemItem = {
+        id,
+        category,
+        description,
+        icdCode,
+        snomedCode: null,
+        verificationStatus: 'confirmed',
+        clinicalStatus: 'active',
+        source: 'diagnosed',
+        sourceDate: today,
+        onsetDate: today,
+        history: [addedEvt],
+      }
+      setItems(prev => [newItem, ...prev])
+    } else {
+      // MA-added: unconfirmed
+      const reportedEvt = createEvent('reported')
+      reportedEvt.performedBy = MOCK_MA
+      const newItem: ProblemItem = {
+        id,
+        category,
+        description,
+        icdCode,
+        snomedCode: null,
+        verificationStatus: 'unconfirmed',
+        clinicalStatus: 'active',
+        source: 'reported',
+        sourceDate: today,
+        history: [reportedEvt],
+      }
+      setItems(prev => [newItem, ...prev])
     }
-    setItems(prev => [newItem, ...prev])
   }, [])
 
   const removeItem = useCallback((id: string, reason: RemovalReason = 'entered-in-error') => {

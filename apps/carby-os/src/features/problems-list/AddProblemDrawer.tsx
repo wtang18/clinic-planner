@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { X, Search } from 'lucide-react'
-import { Button } from '@/design-system'
+import { Button, SegmentedControl } from '@/design-system'
 import type { ProblemCategory } from './types'
 
 const DRAWER_TITLE: Record<ProblemCategory, string> = {
@@ -26,16 +27,17 @@ const CANNED_ITEM: Record<ProblemCategory, { description: string; icdCode: strin
 interface AddProblemDrawerProps {
   category: ProblemCategory
   onClose: () => void
-  onAdd: (category: ProblemCategory, description: string, icdCode: string | null) => void
+  onAdd: (category: ProblemCategory, description: string, icdCode: string | null, isProvider?: boolean) => void
 }
 
 export function AddProblemDrawer({ category, onClose, onAdd }: AddProblemDrawerProps) {
+  const [addAsProvider, setAddAsProvider] = useState(false)
   const title = DRAWER_TITLE[category]
   const placeholder = SEARCH_PLACEHOLDER[category]
   const canned = CANNED_ITEM[category]
 
   const handleAdd = () => {
-    onAdd(category, canned.description, canned.icdCode)
+    onAdd(category, canned.description, canned.icdCode, addAsProvider)
     onClose()
   }
 
@@ -87,6 +89,25 @@ export function AddProblemDrawer({ category, onClose, onAdd }: AddProblemDrawerP
               <p className="text-xs text-fg-neutral-secondary">{canned.icdCode}</p>
             )}
           </div>
+
+          {/* MA / Provider toggle (conditions only) */}
+          {category === 'condition' && (
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-body-xs-regular text-fg-neutral-secondary">Add as:</span>
+              <SegmentedControl
+                options={[
+                  { value: 'ma', label: 'MA' },
+                  { value: 'provider', label: 'Provider' },
+                ]}
+                value={addAsProvider ? 'provider' : 'ma'}
+                onChange={(v) => setAddAsProvider(v === 'provider')}
+                aria-label="Added by role"
+              />
+              <span className="text-body-xs-regular text-fg-neutral-disabled">
+                {addAsProvider ? 'Auto-confirmed, active' : 'Unconfirmed'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Footer */}

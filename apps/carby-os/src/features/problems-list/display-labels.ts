@@ -132,5 +132,6 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'event-edited': return 'Event date corrected'
     case 'note-added': return 'Note added'
     case 'removed': return 'Removed from problem list'
+    case 'provider-added': return 'Added'
   }
 }

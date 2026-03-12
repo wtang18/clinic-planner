@@ -34,7 +34,7 @@ export const mockProblems: ProblemItem[] = [
     history: [
       { id: 'evt-2a', type: 'marked-active', performedBy: 'Dr. Priya Sharma, MD', performedAt: '01/08/20, 2:30p PT' },
       { id: 'evt-2b', type: 'confirmed', performedBy: 'Dr. Priya Sharma, MD', performedAt: '01/08/20, 2:29p PT' },
-      { id: 'evt-2c', type: 'reported', performedBy: 'Patient', performedAt: '01/08/20, 10:00a PT' },
+      { id: 'evt-2c', type: 'reported', performedBy: 'Alex Chen, MA', performedAt: '01/08/20, 10:00a PT' },
     ],
   },
   {
@@ -48,7 +48,7 @@ export const mockProblems: ProblemItem[] = [
     source: 'reported',
     sourceDate: '11/20/25',
     history: [
-      { id: 'evt-3a', type: 'reported', performedBy: 'Patient', performedAt: '11/20/25, 9:45a PT' },
+      { id: 'evt-3a', type: 'reported', performedBy: 'Alex Chen, MA', performedAt: '11/20/25, 9:45a PT' },
     ],
   },
   {
@@ -99,7 +99,7 @@ export const mockProblems: ProblemItem[] = [
     source: 'reported',
     sourceDate: '02/28/26',
     history: [
-      { id: 'evt-6a', type: 'reported', performedBy: 'Patient', performedAt: '02/28/26, 10:05a PT' },
+      { id: 'evt-6a', type: 'reported', performedBy: 'Alex Chen, MA', performedAt: '02/28/26, 10:05a PT' },
     ],
   },
 

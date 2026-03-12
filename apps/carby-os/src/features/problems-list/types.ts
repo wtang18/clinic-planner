@@ -32,6 +32,7 @@ export type ProblemEventType =
   | 'event-edited'
   | 'note-added'
   | 'removed'
+  | 'provider-added'
 
 export type RemovalReason = 'entered-in-error' | 'duplicate' | 'replaced' | 'patient-disputed'
 
