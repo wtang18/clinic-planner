@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
-import type { ProblemItem, ProblemEvent, ProblemEventType, FilterKey, ProblemCategory, RemovalReason } from '../types'
+import type { ProblemItem, ProblemEvent, ProblemEventType, FilterKey, ProblemCategory, RemovalReason, DeletionReason } from '../types'
 import { mockProblems } from '../mock-data'
 import { isConfirmedTransitional } from '../display-labels'
 
@@ -221,6 +221,31 @@ export function useProblemsState() {
     }))
   }, [])
 
+  const deleteEvent = useCallback((itemId: string, eventId: string, reason: DeletionReason) => {
+    const now = new Date()
+    const h = now.getHours()
+    const m = now.getMinutes()
+    const ampm = h >= 12 ? 'p' : 'a'
+    const h12 = h % 12 || 12
+    const mm = String(m).padStart(2, '0')
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const yr = String(now.getFullYear()).slice(2)
+    const timestamp = `${month}/${day}/${yr}, ${h12}:${mm}${ampm} PT`
+
+    setItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item
+      return {
+        ...item,
+        history: item.history.map(evt =>
+          evt.id === eventId
+            ? { ...evt, deletedAt: timestamp, deletedBy: MOCK_PERFORMER, deletionReason: reason }
+            : evt
+        ),
+      }
+    }))
+  }, [])
+
   const selectItem = useCallback((id: string) => setSelectedItemId(id), [])
   const clearSelection = useCallback(() => setSelectedItemId(null), [])
 
@@ -252,5 +277,6 @@ export function useProblemsState() {
     addItem,
     removeItem,
     editItem,
+    deleteEvent,
   }
 }
