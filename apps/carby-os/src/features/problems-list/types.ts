@@ -35,6 +35,8 @@ export type ProblemEventType =
 
 export type RemovalReason = 'entered-in-error' | 'duplicate' | 'replaced' | 'patient-disputed'
 
+export type DeletionReason = 'entered-in-error' | 'incorrect-import' | 'duplicate' | 'other'
+
 export interface ProblemEvent {
   id: string
   type: ProblemEventType
@@ -45,6 +47,11 @@ export interface ProblemEvent {
   changes?: { field: string; from: string; to: string }[]
   relatedEventId?: string
   removalReason?: RemovalReason
+  deletedAt?: string
+  deletedBy?: string
+  deletionReason?: DeletionReason
+  encounterVisitName?: string
+  encounterDate?: string
 }
 
 export interface ProblemItem {
