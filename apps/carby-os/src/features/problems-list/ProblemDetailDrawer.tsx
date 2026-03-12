@@ -523,20 +523,33 @@ interface HistoryLogProps {
   onUndoDeleteEvent: (itemId: string, eventId: string) => void
 }
 
+type HistorySortMode = 'timeline' | 'activity'
+
+/** Events without clinical dates sort to the end in timeline mode */
+const ADMIN_EVENT_TYPES: ProblemEvent['type'][] = ['edited', 'event-edited', 'note-added']
+
 function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps) {
   const [showDeleted, setShowDeleted] = useState(false)
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
   const [selectedReason, setSelectedReason] = useState<DeletionReason>('entered-in-error')
   const [kebabOpenId, setKebabOpenId] = useState<string | null>(null)
+  const [sortMode, setSortMode] = useState<HistorySortMode>('timeline')
 
-  // Sort by effective date descending, fallback to performedAt
   const sortedHistory = useMemo(() => {
     return [...item.history].sort((a, b) => {
+      if (sortMode === 'activity') {
+        // Pure audit trail — most recent action first
+        return parseDateForSort(b.performedAt) - parseDateForSort(a.performedAt)
+      }
+      // Timeline mode: clinical events by effective date, admin events sort to end
+      const aIsAdmin = ADMIN_EVENT_TYPES.includes(a.type)
+      const bIsAdmin = ADMIN_EVENT_TYPES.includes(b.type)
+      if (aIsAdmin !== bIsAdmin) return aIsAdmin ? 1 : -1
       const dateA = a.effectiveDate ?? a.performedAt
       const dateB = b.effectiveDate ?? b.performedAt
       return parseDateForSort(dateB) - parseDateForSort(dateA)
     })
-  }, [item.history])
+  }, [item.history, sortMode])
 
   const deletedCount = useMemo(() =>
     item.history.filter(e => e.deletedAt).length
@@ -570,7 +583,24 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
     <div className="flex flex-col gap-0">
       {/* Header */}
       <div className="flex items-baseline justify-between mb-2">
-        <h3 className="text-label-sm-medium text-fg-neutral-secondary">History</h3>
+        <div className="flex items-baseline gap-3">
+          <h3 className="text-label-sm-medium text-fg-neutral-secondary">History</h3>
+          <div className="flex items-baseline gap-1">
+            <button
+              onClick={() => setSortMode('timeline')}
+              className={`text-label-xs-medium transition-opacity ${sortMode === 'timeline' ? 'text-fg-neutral-primary' : 'text-fg-neutral-disabled hover:opacity-70'}`}
+            >
+              Timeline
+            </button>
+            <span className="text-fg-neutral-disabled text-label-xs-medium">/</span>
+            <button
+              onClick={() => setSortMode('activity')}
+              className={`text-label-xs-medium transition-opacity ${sortMode === 'activity' ? 'text-fg-neutral-primary' : 'text-fg-neutral-disabled hover:opacity-70'}`}
+            >
+              Activity
+            </button>
+          </div>
+        </div>
         {deletedCount > 0 && (
           <button
             onClick={() => setShowDeleted(!showDeleted)}
@@ -597,9 +627,11 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
                   {formatEventLabel(event, dimmed)}
                 </span>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className={`text-body-sm-regular whitespace-nowrap ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
-                    {formatEffectiveDate(event)}
-                  </span>
+                  {formatEffectiveDate(event) && (
+                    <span className={`text-body-sm-regular whitespace-nowrap ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
+                      {formatEffectiveDate(event)}
+                    </span>
+                  )}
                   {/* Kebab menu — always visible */}
                   {!isBeingDeleted && (
                     <div className="relative">
@@ -709,8 +741,12 @@ function formatEventLabel(event: ProblemEvent, dimmed?: boolean): React.ReactNod
   return baseLabel
 }
 
-/** Right-aligned effective date — falls back to performedAt date portion */
-function formatEffectiveDate(event: ProblemEvent): string {
+/** Right-aligned effective date — only for clinically meaningful events */
+function formatEffectiveDate(event: ProblemEvent): string | null {
+  // Administrative events (edits, notes) don't have clinical dates
+  if (event.type === 'edited' || event.type === 'event-edited' || event.type === 'note-added') {
+    return null
+  }
   if (event.effectiveDate) {
     return expandDate(event.effectiveDate)
   }
