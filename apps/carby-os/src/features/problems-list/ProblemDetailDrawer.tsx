@@ -7,14 +7,14 @@ import {
   SOFT_CLOSE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
-  getSourcePillLabel,
   getDisplayStatus,
   formatEventDescription,
   isConfirmedTransitional,
 } from './display-labels'
-import { Pill, Button } from '@/design-system'
+import { Pill, Button, Input } from '@/design-system'
 import { screeningInstruments } from './mock-data'
 import { ScreeningDetailCard } from './ScreeningBanner'
+import { DatePickerPopover } from './DatePickerPopover'
 
 interface ProblemDetailDrawerProps {
   item: ProblemItem
@@ -36,7 +36,7 @@ interface ProblemDetailDrawerProps {
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
-  onEditClick: () => void
+  onEditDate: (id: string, field: 'onsetDate' | 'abatementDate', value: string) => void
   onDeleteEvent: (itemId: string, eventId: string, reason: DeletionReason) => void
   onUndoDeleteEvent: (itemId: string, eventId: string) => void
 }
@@ -66,7 +66,7 @@ export function ProblemDetailDrawer({
   onUndoReopen,
   onUndoRecurrence,
   onRemove,
-  onEditClick,
+  onEditDate,
   onDeleteEvent,
   onUndoDeleteEvent,
 }: ProblemDetailDrawerProps) {
@@ -74,7 +74,6 @@ export function ProblemDetailDrawer({
   const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
 
   const title = DRAWER_TITLE[item.category]
-  const sourcePillLabel = getSourcePillLabel(item)
   const relatedScreening = item.relatedScreeningId
     ? screeningInstruments.find(s => s.id === item.relatedScreeningId)
     : undefined
@@ -105,7 +104,6 @@ export function ProblemDetailDrawer({
           {/* Summary card */}
           <SummaryCard
             item={item}
-            sourcePillLabel={sourcePillLabel}
             onConfirm={onConfirm}
             onExclude={onExclude}
             onUndoExclude={onUndoExclude}
@@ -122,7 +120,7 @@ export function ProblemDetailDrawer({
             onUndoMarkAddressed={onUndoMarkAddressed}
             onUndoReopen={onUndoReopen}
             onUndoRecurrence={onUndoRecurrence}
-            onEditClick={onEditClick}
+            onEditDate={onEditDate}
             onRemoveClick={() => setShowRemoveConfirm(true)}
           />
 
@@ -190,7 +188,6 @@ export function ProblemDetailDrawer({
 
 interface SummaryCardProps {
   item: ProblemItem
-  sourcePillLabel: string
   onConfirm: (id: string) => void
   onExclude: (id: string) => void
   onUndoExclude: (id: string) => void
@@ -207,7 +204,7 @@ interface SummaryCardProps {
   onUndoMarkAddressed: (id: string) => void
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
-  onEditClick: () => void
+  onEditDate: (id: string, field: 'onsetDate' | 'abatementDate', value: string) => void
   onRemoveClick: () => void
 }
 
@@ -215,7 +212,6 @@ type KebabAction = { label: string; handler: (id: string) => void; destructive?:
 
 function SummaryCard({
   item,
-  sourcePillLabel,
   onConfirm,
   onExclude,
   onUndoExclude,
@@ -232,7 +228,7 @@ function SummaryCard({
   onUndoMarkAddressed,
   onUndoReopen,
   onUndoRecurrence,
-  onEditClick,
+  onEditDate,
   onRemoveClick,
 }: SummaryCardProps) {
   const [kebabOpen, setKebabOpen] = useState(false)
@@ -244,13 +240,7 @@ function SummaryCard({
       {/* Row 1: description + icon buttons */}
       <div className="flex justify-between gap-2">
         <p className="text-heading-md-bold text-fg-neutral-primary leading-7">{item.description}</p>
-        <div className="flex items-start gap-4 shrink-0">
-          <button
-            onClick={onEditClick}
-            className="w-6 h-6 flex items-center justify-center text-fg-neutral-primary hover:opacity-70 transition-opacity"
-          >
-            <Icon name="pencil" size="medium" />
-          </button>
+        <div className="flex items-start shrink-0">
           <div className="relative">
             <button
               onClick={() => setKebabOpen(!kebabOpen)}
@@ -304,15 +294,17 @@ function SummaryCard({
         {item.icdCode && (
           <Pill type="transparent" size="small" label={item.icdCode} />
         )}
-        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={(item.clinicalStatus === 'resolved' || item.clinicalStatus === 'inactive') && item.abatementDate ? item.abatementDate : item.sourceDate} />
       </div>
+
+      {/* Inline date fields */}
+      <DateFields item={item} onEditDate={onEditDate} />
 
       {/* Notes (if present) */}
       {item.notes && (
         <p className="text-sm text-fg-neutral-secondary mt-4">{item.notes}</p>
       )}
 
-      {/* Action buttons — 24px gap from pill row */}
+      {/* Action buttons */}
       {actions.length > 0 && (
         <div className="flex items-center gap-2 pt-6">
           {actions.map(action => (
@@ -444,6 +436,65 @@ function SummaryCard({
         return onMarkResolved
     }
   }
+}
+
+/* ─── Inline Date Fields ─── */
+
+function DateFields({ item, onEditDate }: {
+  item: ProblemItem
+  onEditDate: (id: string, field: 'onsetDate' | 'abatementDate', value: string) => void
+}) {
+  const [openPicker, setOpenPicker] = useState<'onset' | 'abatement' | null>(null)
+
+  const onsetValue = item.onsetDate ?? item.sourceDate
+  const showAbatement = item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved'
+  const abatementLabel = (item.category === 'sdoh' || item.category === 'health-concern')
+    ? 'Resolved'
+    : 'Inactive since'
+
+  return (
+    <div className="flex gap-3 mt-4">
+      <div className="relative flex-1 max-w-[200px]">
+        <Input
+          label="Onset"
+          size="small"
+          value={onsetValue}
+          readOnly
+          rightIcon="calendar-small"
+          onClick={() => setOpenPicker(openPicker === 'onset' ? null : 'onset')}
+          containerClassName="cursor-pointer"
+        />
+        {openPicker === 'onset' && (
+          <DatePickerPopover
+            value={onsetValue}
+            onChange={(v) => onEditDate(item.id, 'onsetDate', v)}
+            onClose={() => setOpenPicker(null)}
+          />
+        )}
+      </div>
+
+      {showAbatement && (
+        <div className="relative flex-1 max-w-[200px]">
+          <Input
+            label={abatementLabel}
+            size="small"
+            value={item.abatementDate ?? ''}
+            readOnly
+            rightIcon="calendar-small"
+            onClick={() => setOpenPicker(openPicker === 'abatement' ? null : 'abatement')}
+            containerClassName="cursor-pointer"
+          />
+          {openPicker === 'abatement' && (
+            <DatePickerPopover
+              value={item.abatementDate ?? ''}
+              onChange={(v) => onEditDate(item.id, 'abatementDate', v)}
+              onClose={() => setOpenPicker(null)}
+            />
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ─── History Log ─── */

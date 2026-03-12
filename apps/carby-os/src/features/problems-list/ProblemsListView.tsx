@@ -1,10 +1,9 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useProblemsState } from './hooks/useProblemsState'
 import { FilterBar } from './FilterBar'
 import { ProblemSection } from './ProblemSection'
 import { ScreeningBanner } from './ScreeningBanner'
 import { ProblemDetailDrawer } from './ProblemDetailDrawer'
-import { ProblemEditMode } from './ProblemEditMode'
 import { AddProblemDrawer } from './AddProblemDrawer'
 import { AdministerScreeningDrawer } from './AdministerScreeningDrawer'
 import { screeningInstruments } from './mock-data'
@@ -16,6 +15,7 @@ interface ProblemsListViewProps {
 
 export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps) {
   const {
+    items,
     activeFilters,
     filterCounts,
     selectedItem,
@@ -46,7 +46,14 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     undoDeleteEvent,
   } = useProblemsState()
 
-  const [isEditing, setIsEditing] = useState(false)
+  const editDate = useCallback((id: string, field: 'onsetDate' | 'abatementDate', value: string) => {
+    const item = items.find(i => i.id === id)
+    if (!item) return
+    const fieldLabel = field === 'onsetDate' ? 'Onset Date' : 'Abatement Date'
+    const oldValue = field === 'onsetDate' ? (item.onsetDate ?? item.sourceDate) : (item.abatementDate ?? '')
+    if (value === oldValue) return
+    editItem(id, { [field]: value }, [{ field: fieldLabel, from: oldValue, to: value }])
+  }, [items, editItem])
   const [addingCategory, setAddingCategory] = useState<ProblemCategory | null>(null)
   const [showScreeningDrawer, setShowScreeningDrawer] = useState(false)
 
@@ -115,7 +122,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
       </div>
 
       {/* Detail drawer */}
-      {selectedItem && !isEditing && (
+      {selectedItem && (
         <ProblemDetailDrawer
           item={selectedItem}
           onClose={clearSelection}
@@ -136,18 +143,9 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           onUndoReopen={undoReopen}
           onUndoRecurrence={undoRecurrence}
           onRemove={removeItem}
+          onEditDate={editDate}
           onDeleteEvent={deleteEvent}
           onUndoDeleteEvent={undoDeleteEvent}
-          onEditClick={() => setIsEditing(true)}
-        />
-      )}
-
-      {/* Edit mode */}
-      {selectedItem && isEditing && (
-        <ProblemEditMode
-          item={selectedItem}
-          onSave={editItem}
-          onCancel={() => setIsEditing(false)}
         />
       )}
 

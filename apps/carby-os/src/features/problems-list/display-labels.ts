@@ -35,14 +35,6 @@ export const DRAWER_TITLE: Record<ProblemCategory, string> = {
   'health-concern': 'Patient Concern Details',
 }
 
-/** Edit mode title by category */
-export const EDIT_TITLE: Record<ProblemCategory, string> = {
-  'condition': 'Edit Condition',
-  'encounter-dx': 'Edit Encounter Diagnosis',
-  'sdoh': 'Edit Social Determinant',
-  'health-concern': 'Edit Patient Concern',
-}
-
 /**
  * Source pill label logic per DESIGN-SPEC §5.4
  *
