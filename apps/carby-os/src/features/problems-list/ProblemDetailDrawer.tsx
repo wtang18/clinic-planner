@@ -460,7 +460,7 @@ function DateFields({ item, onEditDate }: {
           size="small"
           value={onsetValue}
           readOnly
-          rightIcon="calendar-small"
+          rightIcon="calendar"
           onClick={() => setOpenPicker(openPicker === 'onset' ? null : 'onset')}
           containerClassName="cursor-pointer"
         />
@@ -480,7 +480,7 @@ function DateFields({ item, onEditDate }: {
             size="small"
             value={item.abatementDate ?? ''}
             readOnly
-            rightIcon="calendar-small"
+            rightIcon="calendar"
             onClick={() => setOpenPicker(openPicker === 'abatement' ? null : 'abatement')}
             containerClassName="cursor-pointer"
           />
