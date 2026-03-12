@@ -462,7 +462,8 @@ function DateFields({ item, onEditDate }: {
           readOnly
           rightIcon="calendar"
           onClick={() => setOpenPicker(openPicker === 'onset' ? null : 'onset')}
-          containerClassName="cursor-pointer"
+          className="!text-fg-neutral-primary"
+          containerClassName="cursor-pointer [&_svg]:text-fg-neutral-secondary"
         />
         {openPicker === 'onset' && (
           <DatePickerPopover
@@ -482,7 +483,8 @@ function DateFields({ item, onEditDate }: {
             readOnly
             rightIcon="calendar"
             onClick={() => setOpenPicker(openPicker === 'abatement' ? null : 'abatement')}
-            containerClassName="cursor-pointer"
+            className="!text-fg-neutral-primary"
+            containerClassName="cursor-pointer [&_svg]:text-fg-neutral-secondary"
           />
           {openPicker === 'abatement' && (
             <DatePickerPopover
@@ -635,11 +637,15 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
                 <span className="text-body-xs-regular text-fg-neutral-secondary">{event.note}</span>
               )}
 
-              {/* Event-edited changes */}
-              {event.type === 'event-edited' && event.changes?.[0] && !dimmed && (
-                <span className="text-body-xs-regular text-fg-neutral-secondary">
-                  Date changed: {event.changes[0].from} &rarr; {event.changes[0].to}
-                </span>
+              {/* Field changes (edited / event-edited) */}
+              {(event.type === 'edited' || event.type === 'event-edited') && event.changes && !dimmed && (
+                <div className="flex flex-col gap-0.5">
+                  {event.changes.map((c, ci) => (
+                    <span key={ci} className="text-body-xs-regular text-fg-neutral-secondary">
+                      {c.field}: {c.from || '—'} &rarr; {c.to || '—'}
+                    </span>
+                  ))}
+                </div>
               )}
 
               {/* Deletion metadata (for already-deleted entries) */}
