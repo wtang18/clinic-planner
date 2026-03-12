@@ -6,8 +6,7 @@ interface FilterBarProps {
   counts: {
     unconfirmed: number
     active: number
-    inactive: number
-    resolved: number
+    'inactive-resolved': number
     confirmed: number
     excluded: number
   }
@@ -19,8 +18,7 @@ const filters: Array<{ key: FilterKey; label: string }> = [
   { key: 'unconfirmed', label: 'Unconfirmed' },
   { key: 'confirmed', label: 'Confirmed' },
   { key: 'active', label: 'Active' },
-  { key: 'inactive', label: 'Inactive' },
-  { key: 'resolved', label: 'Resolved' },
+  { key: 'inactive-resolved', label: 'Inactive/Resolved' },
   { key: 'excluded', label: 'Excluded' },
 ]
 

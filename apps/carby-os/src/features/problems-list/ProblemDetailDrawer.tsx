@@ -1,17 +1,18 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
-import { Icon } from '@carbon-health/design-icons'
-import type { ProblemItem, ProblemEvent, RemovalReason } from './types'
-import { DRAWER_TITLE, getSourcePillLabel, formatEventDescription, isConfirmedTransitional } from './display-labels'
-import { Pill, Button, Input } from '@/design-system'
-import { screeningInstruments } from './mock-data'
-import { ScreeningDetailCard } from './ScreeningBanner'
+import { useState, useMemo } from 'react'
+import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
+import type { ProblemItem, ScreeningInstrument, RemovalReason } from './types'
 import {
+  DRAWER_TITLE,
   SOFT_CLOSE_LABEL,
-  RESOLVE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
   ACTIVATE_FROM_CONFIRMED_LABEL,
+  getSourcePillLabel,
+  getDisplayStatus,
+  formatEventDescription,
+  isConfirmedTransitional,
 } from './display-labels'
+import { Pill, Button } from '@/design-system'
+import { screeningInstruments } from './mock-data'
 
 interface ProblemDetailDrawerProps {
   item: ProblemItem
@@ -34,11 +35,11 @@ interface ProblemDetailDrawerProps {
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
-  onEditEventDate: (itemId: string, eventId: string, newDate: string) => void
 }
 
-function capitalizeFirst(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1)
+/** Can this item be removed? Only if it has no clinical actions — just the originating event. */
+function isRemovable(item: ProblemItem): boolean {
+  return item.history.length <= 1
 }
 
 /** Can recurrence apply? Only conditions and encounter-dx */
@@ -67,31 +68,15 @@ export function ProblemDetailDrawer({
   onUndoRecurrence,
   onRemove,
   onEditClick,
-  onEditEventDate,
 }: ProblemDetailDrawerProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
-  const [editingEvent, setEditingEvent] = useState<ProblemEvent | null>(null)
 
   const title = DRAWER_TITLE[item.category]
   const sourcePillLabel = getSourcePillLabel(item)
   const relatedScreening = item.relatedScreeningId
     ? screeningInstruments.find(s => s.id === item.relatedScreeningId)
     : undefined
-
-  // Single-drawer: when editing an event, show ONLY the EventEditDrawer
-  if (editingEvent) {
-    return (
-      <EventEditDrawer
-        event={editingEvent}
-        onClose={() => setEditingEvent(null)}
-        onSave={(newDate) => {
-          onEditEventDate(item.id, editingEvent.id, newDate)
-          setEditingEvent(null)
-        }}
-      />
-    )
-  }
 
   return (
     <>
@@ -137,51 +122,56 @@ export function ProblemDetailDrawer({
             onUndoReopen={onUndoReopen}
             onUndoRecurrence={onUndoRecurrence}
             onEditClick={onEditClick}
-            onRemoveClick={() => setShowRemoveConfirm(true)}
           />
 
           {/* Related Screening (SDOH only) */}
           {relatedScreening && (
-            <ScreeningDetailCard screening={relatedScreening} />
+            <RelatedScreeningCard screening={relatedScreening} />
           )}
 
           {/* Activity log */}
-          <ActivityLog item={item} onEditEvent={setEditingEvent} />
+          <ActivityLog item={item} />
         </div>
 
-      </div>
+        {/* Footer — Remove with reason picker */}
+        {isRemovable(item) && !showRemoveConfirm && (
+          <div className="px-5 py-4 border-t border-border-neutral-low flex">
+            <Button
+              type="high-impact"
+              size="medium"
+              label="Remove"
+              onClick={() => setShowRemoveConfirm(true)}
+            />
+          </div>
+        )}
 
-      {/* Remove confirmation alert dialog */}
-      {showRemoveConfirm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setShowRemoveConfirm(false)} />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] bg-white rounded-2xl shadow-xl w-[400px] flex flex-col">
-            <div className="px-6 pt-6 pb-4 flex flex-col gap-3">
-              <h3 className="text-base font-semibold text-fg-neutral-primary">Remove from Problem List</h3>
-              <p className="text-sm text-fg-neutral-secondary">
-                Remove &ldquo;{item.description}&rdquo; from this patient&rsquo;s problem list. Select a reason for removal.
-              </p>
-              <div className="flex flex-col gap-1.5 mt-1">
-                {([
-                  { value: 'entered-in-error' as const, label: 'Entered in Error' },
-                  { value: 'duplicate' as const, label: 'Duplicate' },
-                  { value: 'replaced' as const, label: 'Replaced' },
-                  { value: 'patient-disputed' as const, label: 'Patient Disputed' },
-                ] as const).map(({ value, label }) => (
-                  <label key={value} className="flex items-center gap-2 py-1.5 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="remove-reason"
-                      checked={removeReason === value}
-                      onChange={() => setRemoveReason(value)}
-                      className="accent-[var(--color-fg-neutral-primary)]"
-                    />
-                    <span className="text-sm text-fg-neutral-primary">{label}</span>
-                  </label>
-                ))}
-              </div>
+        {/* Remove confirmation with reason picker */}
+        {showRemoveConfirm && (
+          <div className="px-5 py-4 border-t border-border-neutral-low flex flex-col gap-3">
+            <p className="text-sm font-medium text-fg-neutral-primary">
+              Remove &ldquo;{item.description}&rdquo; from problem list?
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">Reason</p>
+              {([
+                { value: 'entered-in-error' as const, label: 'Entered in Error' },
+                { value: 'duplicate' as const, label: 'Duplicate' },
+                { value: 'replaced' as const, label: 'Replaced' },
+                { value: 'patient-disputed' as const, label: 'Patient Disputed' },
+              ]).map(({ value, label }) => (
+                <label key={value} className="flex items-center gap-2 py-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="remove-reason"
+                    checked={removeReason === value}
+                    onChange={() => setRemoveReason(value)}
+                    className="accent-[var(--color-fg-neutral-primary)]"
+                  />
+                  <span className="text-sm text-fg-neutral-primary">{label}</span>
+                </label>
+              ))}
             </div>
-            <div className="px-6 py-4 border-t border-border-neutral-low flex items-center justify-end gap-2">
+            <div className="flex items-center gap-2 justify-end">
               <Button type="transparent" size="medium" label="Cancel" onClick={() => setShowRemoveConfirm(false)} />
               <Button
                 type="high-impact"
@@ -194,78 +184,13 @@ export function ProblemDetailDrawer({
               />
             </div>
           </div>
-        </>
-      )}
-    </>
-  )
-}
-
-/* --- Event Edit Drawer --- */
-
-interface EventEditDrawerProps {
-  event: ProblemEvent
-  onClose: () => void
-  onSave: (newDate: string) => void
-}
-
-function EventEditDrawer({ event, onClose, onSave }: EventEditDrawerProps) {
-  const [date, setDate] = useState(event.effectiveDate ?? '')
-
-  const handleSave = () => {
-    if (date && date !== event.effectiveDate) {
-      onSave(date)
-    } else {
-      onClose()
-    }
-  }
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
-
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-[600px] bg-bg-neutral-subtle z-50 shadow-xl flex flex-col animate-slide-in">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border-neutral-low">
-          <h2 className="text-base font-semibold text-fg-neutral-primary">Edit Event Date</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-auto px-5 py-4 flex flex-col gap-5">
-          <div className="bg-white rounded-2xl px-4 py-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-fg-neutral-primary">{formatEventDescription(event.type)}</p>
-              <p className="text-xs text-fg-neutral-secondary">{event.performedBy}</p>
-              <p className="text-xs text-fg-neutral-secondary">Recorded: {event.performedAt}</p>
-            </div>
-            <Input
-              label="Effective Date"
-              helperText="The date this status change clinically took effect, which may differ from when it was recorded."
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              placeholder="MM/DD/YY"
-            />
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-border-neutral-low flex items-center justify-end gap-2">
-          <Button type="transparent" size="medium" label="Cancel" onClick={onClose} />
-          <Button type="primary" size="medium" label="Save" onClick={handleSave} />
-        </div>
+        )}
       </div>
     </>
   )
 }
 
-/* --- Summary Card --- */
+/* ─── Summary Card ─── */
 
 interface SummaryCardProps {
   item: ProblemItem
@@ -287,10 +212,7 @@ interface SummaryCardProps {
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
   onEditClick: () => void
-  onRemoveClick: () => void
 }
-
-type KebabAction = { label: string; handler: (id: string) => void; destructive?: boolean; disabled?: boolean }
 
 function SummaryCard({
   item,
@@ -312,54 +234,49 @@ function SummaryCard({
   onUndoReopen,
   onUndoRecurrence,
   onEditClick,
-  onRemoveClick,
 }: SummaryCardProps) {
   const [kebabOpen, setKebabOpen] = useState(false)
   const actions = getCardActions(item)
-  const kebabGroups = getKebabGroups(item)
+  const kebabActions = getKebabActions(item)
 
   return (
     <div className="bg-white rounded-2xl px-4 py-4 flex flex-col">
       {/* Row 1: description + icon buttons */}
       <div className="flex justify-between gap-2">
-        <p className="text-heading-md-bold text-fg-neutral-primary leading-7">{item.description}</p>
-        <div className="flex items-start gap-4 shrink-0">
+        <p className="text-sm font-medium text-fg-neutral-primary leading-7">{item.description}</p>
+        <div className="flex items-start gap-1 shrink-0">
           <button
             onClick={onEditClick}
-            className="w-6 h-6 flex items-center justify-center text-fg-neutral-primary hover:opacity-70 transition-opacity"
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
           >
-            <Icon name="pencil" size="medium" />
+            <Pencil size={14} />
           </button>
-          <div className="relative">
-            <button
-              onClick={() => setKebabOpen(!kebabOpen)}
-              className="w-6 h-6 flex items-center justify-center text-fg-neutral-primary hover:opacity-70 transition-opacity"
-            >
-              <Icon name="more-vertical" size="medium" />
-            </button>
-            {kebabOpen && (
-              <>
-                <div className="fixed inset-0 z-50" onClick={() => setKebabOpen(false)} />
-                <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-md border border-border-transparent-soft py-1 min-w-[180px]">
-                  {kebabGroups.map((group, gi) => (
-                    <div key={gi}>
-                      {gi > 0 && <div className="my-1 border-t border-fg-transparent-soft" />}
-                      {group.map(action => (
-                        <button
-                          key={action.label}
-                          disabled={action.disabled}
-                          onClick={() => { if (!action.disabled) { action.handler(item.id); setKebabOpen(false) } }}
-                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${action.disabled ? 'text-fg-neutral-disabled cursor-not-allowed' : action.destructive ? 'text-fg-alert-secondary hover:bg-bg-transparent-low' : 'text-fg-neutral-primary hover:bg-bg-transparent-low'}`}
-                        >
-                          {action.label}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          {kebabActions.length > 0 && (
+            <div className="relative">
+              <button
+                onClick={() => setKebabOpen(!kebabOpen)}
+                className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
+              >
+                <EllipsisVertical size={14} />
+              </button>
+              {kebabOpen && (
+                <>
+                  <div className="fixed inset-0 z-50" onClick={() => setKebabOpen(false)} />
+                  <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-md border border-border-transparent-soft py-1 min-w-[180px]">
+                    {kebabActions.map(action => (
+                      <button
+                        key={action.label}
+                        onClick={() => { action.handler(item.id); setKebabOpen(false) }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-bg-transparent-low transition-colors ${action.destructive ? 'text-fg-alert-primary' : 'text-fg-neutral-primary'}`}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -375,7 +292,7 @@ function SummaryCard({
           <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
         )}
         {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-          <Pill type="subtle-outlined" size="small" label={capitalizeFirst(item.clinicalStatus)} />
+          <Pill type="subtle-outlined" size="small" label={getDisplayStatus(item)} />
         )}
         {item.verificationStatus === 'excluded' && (
           <Pill type="subtle-outlined" size="small" label="Excluded" />
@@ -383,7 +300,7 @@ function SummaryCard({
         {item.icdCode && (
           <Pill type="transparent" size="small" label={item.icdCode} />
         )}
-        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={item.clinicalStatus === 'resolved' && item.abatementDate ? item.abatementDate : item.sourceDate} />
+        <Pill type="transparent" size="small" subtextL={sourcePillLabel} label={(item.clinicalStatus === 'resolved' || item.clinicalStatus === 'inactive') && item.abatementDate ? item.abatementDate : item.sourceDate} />
       </div>
 
       {/* Notes (if present) */}
@@ -437,129 +354,139 @@ function SummaryCard({
     if (it.clinicalStatus === 'active' || it.clinicalStatus === 'recurrence') {
       const softCloseHandler = getSoftCloseHandler(cat)
       if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
-      result.push({ label: RESOLVE_LABEL, handler: onMarkResolved })
       return result
     }
 
     if (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved') {
       const activateHandler = (cat === 'sdoh' || cat === 'health-concern') ? onReopen : onMarkActive
       result.push({ label: ACTIVATE_FROM_INACTIVE_LABEL[cat], handler: activateHandler })
-      // Conditions + Encounter Dx also get Note Recurrence
-      if (supportsRecurrence(it)) {
-        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
-      }
       return result
     }
 
     return result
   }
 
-  /** Kebab menu: grouped actions — undo, record management, destructive */
-  function getKebabGroups(it: ProblemItem): KebabAction[][] {
-    const groups: KebabAction[][] = []
+  /** Kebab menu: contextual undo actions + note recurrence */
+  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
+    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
+    const cat = it.category
+    const isCondLike = cat === 'condition' || cat === 'encounter-dx'
+    const isSdohLike = cat === 'sdoh' || cat === 'health-concern'
 
-    // Group 1: Undo actions
-    const undoGroup: KebabAction[] = []
-
+    // Undo confirm (verification level) — always available for confirmed items
     if (it.verificationStatus === 'confirmed') {
-      undoGroup.push({ label: 'Undo Confirm', handler: onUndoConfirm })
+      result.push({ label: 'Undo Confirm', handler: onUndoConfirm })
     }
 
+    // Undo clinical status actions — contextual based on current state
     if (it.verificationStatus === 'confirmed') {
       if (it.clinicalStatus === 'active' && !isConfirmedTransitional(it)) {
-        undoGroup.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
+        result.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
       }
       if (it.clinicalStatus === 'inactive') {
-        const cat = it.category
-        if (cat === 'sdoh') {
-          undoGroup.push({ label: 'Undo Mark Addressed', handler: onUndoMarkAddressed })
+        // Conditions/Enc-Dx: "Undo Mark Inactive"; SDOH/HC: "Undo Mark Resolved" (inactive displays as resolved)
+        if (isCondLike) {
+          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
         } else {
-          undoGroup.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
         }
       }
       if (it.clinicalStatus === 'resolved') {
-        undoGroup.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+        // Conditions/Enc-Dx: "Undo Mark Inactive" (resolved displays as inactive); SDOH/HC: "Undo Mark Resolved"
+        if (isCondLike) {
+          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+        } else {
+          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+        }
       }
       if (it.clinicalStatus === 'recurrence') {
-        undoGroup.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
+        result.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
+      }
+
+      // Note Recurrence — only in kebab, only for conditions/encounter-dx in inactive/resolved state
+      if (supportsRecurrence(it) && (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved')) {
+        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
       }
     }
 
+    // Undo reopen — for items that were reopened (active, came from inactive)
     if ((it.clinicalStatus === 'active') && it.history[0]?.type === 'reopened') {
-      undoGroup.push({ label: 'Undo Reopen', handler: onUndoReopen })
+      result.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
 
-    if (undoGroup.length > 0) groups.push(undoGroup)
-
-    // Group 2: Record management (future features)
-    groups.push([
-      { label: 'Add Historical Entry', handler: () => {}, disabled: true },
-      { label: 'Merge with\u2026', handler: () => {}, disabled: true },
-      { label: 'Split record', handler: () => {}, disabled: true },
-    ])
-
-    // Group 3: Destructive — always available, triggers reason-picker alert dialog
-    groups.push([
-      { label: 'Remove', handler: () => { onRemoveClick() }, destructive: true },
-    ])
-
-    return groups
+    return result
   }
 
   function getSoftCloseHandler(cat: ProblemItem['category']): ((id: string) => void) | undefined {
     switch (cat) {
       case 'condition':
       case 'encounter-dx':
-      case 'health-concern':
         return onMarkInactive
       case 'sdoh':
-        return onMarkAddressed
+      case 'health-concern':
+        return onMarkResolved
     }
   }
 }
 
-/* --- Activity Log --- */
+/* ─── Related Screening ─── */
 
-/** Events that have a clinically meaningful effectiveDate worth displaying */
-const DATABLE_EVENTS = new Set([
-  'marked-active', 'marked-inactive', 'marked-resolved', 'marked-addressed',
-  'recurrence', 'reopened', 'confirmed', 'excluded',
-])
+function RelatedScreeningCard({ screening }: { screening: ScreeningInstrument }) {
+  return (
+    <div className="bg-white rounded-2xl px-4 py-3 flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <ClipboardCheck size={16} className="text-fg-neutral-secondary shrink-0" />
+        <span className="text-sm font-medium text-fg-neutral-primary">{screening.name}</span>
+      </div>
+      {(screening.score || screening.interpretation) && (
+        <p className="text-xs text-fg-neutral-secondary">
+          {screening.score && <>Score: {screening.score}</>}
+          {screening.score && screening.interpretation && ' · '}
+          {screening.interpretation}
+        </p>
+      )}
+      <button
+        onClick={() => { /* placeholder */ }}
+        className="text-xs font-semibold text-fg-neutral-secondary hover:text-fg-neutral-primary self-end"
+      >
+        View Full Results
+      </button>
+    </div>
+  )
+}
 
-function ActivityLog({ item, onEditEvent }: { item: ProblemItem; onEditEvent: (event: ProblemEvent) => void }) {
+/* ─── Activity Log ─── */
+
+/** Parse MM/DD/YY (with optional time suffix) to a sortable timestamp */
+function parseDateForSort(dateStr: string): number {
+  const [datePart] = dateStr.split(',')
+  const [month, day, year] = datePart.trim().split('/')
+  return new Date(parseInt(year) + 2000, parseInt(month) - 1, parseInt(day)).getTime()
+}
+
+function ActivityLog({ item }: { item: ProblemItem }) {
+  // Sort by effective date (condition date), falling back to recorded date
+  const sortedHistory = useMemo(() => {
+    return [...item.history].sort((a, b) => {
+      const dateA = a.effectiveDate ?? a.performedAt
+      const dateB = b.effectiveDate ?? b.performedAt
+      return parseDateForSort(dateB) - parseDateForSort(dateA)
+    })
+  }, [item.history])
+
   return (
     <div className="flex flex-col gap-0">
-      <h3 className="text-label-sm-medium text-fg-neutral-secondary mb-2">Activity</h3>
-      {item.history.map((event, i) => (
+      <h3 className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide mb-2">Activity</h3>
+      {sortedHistory.map((event, i) => (
         <div key={event.id}>
-          {i > 0 && <div className="border-t border-fg-transparent-soft" />}
-          <div className="flex items-start justify-between gap-3 py-2.5 group">
+          {i > 0 && <div className="h-px bg-border-neutral-low" />}
+          <div className="flex items-start justify-between gap-3 py-2.5">
             <div className="flex flex-col gap-0.5 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm text-fg-neutral-primary">
-                  {formatEventDescription(event.type)}
-                </span>
-                {DATABLE_EVENTS.has(event.type) && (
-                  <button
-                    onClick={() => onEditEvent(event)}
-                    className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary opacity-0 group-hover:opacity-100 hover:opacity-70 transition-opacity"
-                  >
-                    <Icon name="pencil" size="small" />
-                  </button>
-                )}
-              </div>
-              {event.effectiveDate && DATABLE_EVENTS.has(event.type) && (
-                <span className="text-xs text-fg-neutral-secondary">
-                  Effective {event.effectiveDate}
-                </span>
-              )}
+              <span className="text-sm text-fg-neutral-primary">
+                {formatEventDescription(event.type)}
+              </span>
               {event.note && (
                 <span className="text-xs text-fg-neutral-secondary">{event.note}</span>
-              )}
-              {event.type === 'event-edited' && event.changes?.[0] && (
-                <span className="text-xs text-fg-neutral-secondary">
-                  Date changed: {event.changes[0].from} &rarr; {event.changes[0].to}
-                </span>
               )}
               <span className="text-xs text-fg-neutral-secondary truncate">
                 {event.performedBy}

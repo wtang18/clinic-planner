@@ -6,8 +6,7 @@ import { isConfirmedTransitional } from '../display-labels'
 interface FilterCounts {
   unconfirmed: number
   active: number
-  inactive: number
-  resolved: number
+  'inactive-resolved': number
   confirmed: number
   excluded: number
 }
@@ -47,8 +46,7 @@ export function useProblemsState() {
   const filterCounts = useMemo<FilterCounts>(() => ({
     unconfirmed: items.filter(i => i.verificationStatus === 'unconfirmed').length,
     active: items.filter(i => i.verificationStatus === 'confirmed' && (i.clinicalStatus === 'active' || i.clinicalStatus === 'recurrence')).length,
-    inactive: items.filter(i => i.verificationStatus === 'confirmed' && i.clinicalStatus === 'inactive').length,
-    resolved: items.filter(i => i.verificationStatus === 'confirmed' && i.clinicalStatus === 'resolved').length,
+    'inactive-resolved': items.filter(i => i.verificationStatus === 'confirmed' && (i.clinicalStatus === 'inactive' || i.clinicalStatus === 'resolved')).length,
     confirmed: items.filter(i => i.verificationStatus === 'confirmed').length,
     excluded: items.filter(i => i.verificationStatus === 'excluded').length,
   }), [items])
@@ -69,8 +67,7 @@ export function useProblemsState() {
       switch (filter) {
         case 'unconfirmed': if (item.verificationStatus === 'unconfirmed') return true; break
         case 'active': if (item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence')) return true; break
-        case 'inactive': if (item.verificationStatus === 'confirmed' && item.clinicalStatus === 'inactive') return true; break
-        case 'resolved': if (item.verificationStatus === 'confirmed' && item.clinicalStatus === 'resolved') return true; break
+        case 'inactive-resolved': if (item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved')) return true; break
         case 'confirmed': if (item.verificationStatus === 'confirmed') return true; break
         case 'excluded': if (item.verificationStatus === 'excluded') return true; break
       }
@@ -273,6 +270,5 @@ export function useProblemsState() {
     addItem,
     removeItem,
     editItem,
-    editEventDate,
   }
 }
