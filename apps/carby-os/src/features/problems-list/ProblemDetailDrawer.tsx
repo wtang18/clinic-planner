@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
-import { X, ClipboardCheck, Pencil, EllipsisVertical } from 'lucide-react'
-import type { ProblemItem, ScreeningInstrument, RemovalReason } from './types'
+import { X } from 'lucide-react'
+import { Icon } from '@carbon-health/design-icons'
+import type { ProblemItem, RemovalReason } from './types'
 import {
   DRAWER_TITLE,
   SOFT_CLOSE_LABEL,
@@ -13,6 +14,7 @@ import {
 } from './display-labels'
 import { Pill, Button } from '@/design-system'
 import { screeningInstruments } from './mock-data'
+import { ScreeningDetailCard } from './ScreeningBanner'
 
 interface ProblemDetailDrawerProps {
   item: ProblemItem
@@ -35,11 +37,6 @@ interface ProblemDetailDrawerProps {
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
-}
-
-/** Can this item be removed? Only if it has no clinical actions — just the originating event. */
-function isRemovable(item: ProblemItem): boolean {
-  return item.history.length <= 1
 }
 
 /** Can recurrence apply? Only conditions and encounter-dx */
@@ -122,56 +119,51 @@ export function ProblemDetailDrawer({
             onUndoReopen={onUndoReopen}
             onUndoRecurrence={onUndoRecurrence}
             onEditClick={onEditClick}
+            onRemoveClick={() => setShowRemoveConfirm(true)}
           />
 
           {/* Related Screening (SDOH only) */}
           {relatedScreening && (
-            <RelatedScreeningCard screening={relatedScreening} />
+            <ScreeningDetailCard screening={relatedScreening} />
           )}
 
           {/* Activity log */}
           <ActivityLog item={item} />
         </div>
 
-        {/* Footer — Remove with reason picker */}
-        {isRemovable(item) && !showRemoveConfirm && (
-          <div className="px-5 py-4 border-t border-border-neutral-low flex">
-            <Button
-              type="high-impact"
-              size="medium"
-              label="Remove"
-              onClick={() => setShowRemoveConfirm(true)}
-            />
-          </div>
-        )}
+      </div>
 
-        {/* Remove confirmation with reason picker */}
-        {showRemoveConfirm && (
-          <div className="px-5 py-4 border-t border-border-neutral-low flex flex-col gap-3">
-            <p className="text-sm font-medium text-fg-neutral-primary">
-              Remove &ldquo;{item.description}&rdquo; from problem list?
-            </p>
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide">Reason</p>
-              {([
-                { value: 'entered-in-error' as const, label: 'Entered in Error' },
-                { value: 'duplicate' as const, label: 'Duplicate' },
-                { value: 'replaced' as const, label: 'Replaced' },
-                { value: 'patient-disputed' as const, label: 'Patient Disputed' },
-              ]).map(({ value, label }) => (
-                <label key={value} className="flex items-center gap-2 py-1 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="remove-reason"
-                    checked={removeReason === value}
-                    onChange={() => setRemoveReason(value)}
-                    className="accent-[var(--color-fg-neutral-primary)]"
-                  />
-                  <span className="text-sm text-fg-neutral-primary">{label}</span>
-                </label>
-              ))}
+      {/* Remove confirmation alert dialog */}
+      {showRemoveConfirm && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-[60]" onClick={() => setShowRemoveConfirm(false)} />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[70] bg-white rounded-2xl shadow-xl w-[400px] flex flex-col">
+            <div className="px-6 pt-6 pb-4 flex flex-col gap-3">
+              <h3 className="text-base font-semibold text-fg-neutral-primary">Remove from Problem List</h3>
+              <p className="text-sm text-fg-neutral-secondary">
+                Remove &ldquo;{item.description}&rdquo; from this patient&rsquo;s problem list. Select a reason for removal.
+              </p>
+              <div className="flex flex-col gap-1.5 mt-1">
+                {([
+                  { value: 'entered-in-error' as const, label: 'Entered in Error' },
+                  { value: 'duplicate' as const, label: 'Duplicate' },
+                  { value: 'replaced' as const, label: 'Replaced' },
+                  { value: 'patient-disputed' as const, label: 'Patient Disputed' },
+                ] as const).map(({ value, label }) => (
+                  <label key={value} className="flex items-center gap-2 py-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="remove-reason"
+                      checked={removeReason === value}
+                      onChange={() => setRemoveReason(value)}
+                      className="accent-[var(--color-fg-neutral-primary)]"
+                    />
+                    <span className="text-sm text-fg-neutral-primary">{label}</span>
+                  </label>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 justify-end">
+            <div className="px-6 py-4 border-t border-border-neutral-low flex items-center justify-end gap-2">
               <Button type="transparent" size="medium" label="Cancel" onClick={() => setShowRemoveConfirm(false)} />
               <Button
                 type="high-impact"
@@ -184,8 +176,8 @@ export function ProblemDetailDrawer({
               />
             </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </>
   )
 }
@@ -212,7 +204,10 @@ interface SummaryCardProps {
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
   onEditClick: () => void
+  onRemoveClick: () => void
 }
+
+type KebabAction = { label: string; handler: (id: string) => void; destructive?: boolean; disabled?: boolean }
 
 function SummaryCard({
   item,
@@ -234,49 +229,54 @@ function SummaryCard({
   onUndoReopen,
   onUndoRecurrence,
   onEditClick,
+  onRemoveClick,
 }: SummaryCardProps) {
   const [kebabOpen, setKebabOpen] = useState(false)
   const actions = getCardActions(item)
-  const kebabActions = getKebabActions(item)
+  const kebabGroups = getKebabGroups(item)
 
   return (
     <div className="bg-white rounded-2xl px-4 py-4 flex flex-col">
       {/* Row 1: description + icon buttons */}
       <div className="flex justify-between gap-2">
-        <p className="text-sm font-medium text-fg-neutral-primary leading-7">{item.description}</p>
-        <div className="flex items-start gap-1 shrink-0">
+        <p className="text-heading-md-bold text-fg-neutral-primary leading-7">{item.description}</p>
+        <div className="flex items-start gap-4 shrink-0">
           <button
             onClick={onEditClick}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
+            className="w-6 h-6 flex items-center justify-center text-fg-neutral-primary hover:opacity-70 transition-opacity"
           >
-            <Pencil size={14} />
+            <Icon name="pencil" size="medium" />
           </button>
-          {kebabActions.length > 0 && (
-            <div className="relative">
-              <button
-                onClick={() => setKebabOpen(!kebabOpen)}
-                className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-bg-transparent-low transition-colors text-fg-neutral-secondary"
-              >
-                <EllipsisVertical size={14} />
-              </button>
-              {kebabOpen && (
-                <>
-                  <div className="fixed inset-0 z-50" onClick={() => setKebabOpen(false)} />
-                  <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-md border border-border-transparent-soft py-1 min-w-[180px]">
-                    {kebabActions.map(action => (
-                      <button
-                        key={action.label}
-                        onClick={() => { action.handler(item.id); setKebabOpen(false) }}
-                        className={`w-full text-left px-4 py-2 text-sm hover:bg-bg-transparent-low transition-colors ${action.destructive ? 'text-fg-alert-primary' : 'text-fg-neutral-primary'}`}
-                      >
-                        {action.label}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          <div className="relative">
+            <button
+              onClick={() => setKebabOpen(!kebabOpen)}
+              className="w-6 h-6 flex items-center justify-center text-fg-neutral-primary hover:opacity-70 transition-opacity"
+            >
+              <Icon name="more-vertical" size="medium" />
+            </button>
+            {kebabOpen && (
+              <>
+                <div className="fixed inset-0 z-50" onClick={() => setKebabOpen(false)} />
+                <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-md border border-border-transparent-soft py-1 min-w-[180px]">
+                  {kebabGroups.map((group, gi) => (
+                    <div key={gi}>
+                      {gi > 0 && <div className="my-1 border-t border-fg-transparent-soft" />}
+                      {group.map(action => (
+                        <button
+                          key={action.label}
+                          disabled={action.disabled}
+                          onClick={() => { if (!action.disabled) { action.handler(item.id); setKebabOpen(false) } }}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${action.disabled ? 'text-fg-neutral-disabled cursor-not-allowed' : action.destructive ? 'text-fg-alert-secondary hover:bg-bg-transparent-low' : 'text-fg-neutral-primary hover:bg-bg-transparent-low'}`}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -366,55 +366,68 @@ function SummaryCard({
     return result
   }
 
-  /** Kebab menu: contextual undo actions + note recurrence */
-  function getKebabActions(it: ProblemItem): Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> {
-    const result: Array<{ label: string; handler: (id: string) => void; destructive?: boolean }> = []
+  /** Kebab menu: grouped actions — undo, record management, destructive */
+  function getKebabGroups(it: ProblemItem): KebabAction[][] {
+    const groups: KebabAction[][] = []
     const cat = it.category
     const isCondLike = cat === 'condition' || cat === 'encounter-dx'
-    const isSdohLike = cat === 'sdoh' || cat === 'health-concern'
 
-    // Undo confirm (verification level) — always available for confirmed items
+    // Group 1: Undo actions + Note Recurrence
+    const undoGroup: KebabAction[] = []
+
     if (it.verificationStatus === 'confirmed') {
-      result.push({ label: 'Undo Confirm', handler: onUndoConfirm })
+      undoGroup.push({ label: 'Undo Confirm', handler: onUndoConfirm })
     }
 
-    // Undo clinical status actions — contextual based on current state
     if (it.verificationStatus === 'confirmed') {
       if (it.clinicalStatus === 'active' && !isConfirmedTransitional(it)) {
-        result.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
+        undoGroup.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
       }
       if (it.clinicalStatus === 'inactive') {
         // Conditions/Enc-Dx: "Undo Mark Inactive"; SDOH/HC: "Undo Mark Resolved" (inactive displays as resolved)
         if (isCondLike) {
-          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+          undoGroup.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
         } else {
-          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+          undoGroup.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
         }
       }
       if (it.clinicalStatus === 'resolved') {
         // Conditions/Enc-Dx: "Undo Mark Inactive" (resolved displays as inactive); SDOH/HC: "Undo Mark Resolved"
         if (isCondLike) {
-          result.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
+          undoGroup.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
         } else {
-          result.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
+          undoGroup.push({ label: 'Undo Mark Resolved', handler: onUndoMarkResolved })
         }
       }
       if (it.clinicalStatus === 'recurrence') {
-        result.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
+        undoGroup.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
       }
 
-      // Note Recurrence — only in kebab, only for conditions/encounter-dx in inactive/resolved state
+      // Note Recurrence — only for conditions/encounter-dx in inactive/resolved state
       if (supportsRecurrence(it) && (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved')) {
-        result.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
+        undoGroup.push({ label: 'Note Recurrence', handler: onNoteRecurrence })
       }
     }
 
-    // Undo reopen — for items that were reopened (active, came from inactive)
     if ((it.clinicalStatus === 'active') && it.history[0]?.type === 'reopened') {
-      result.push({ label: 'Undo Reopen', handler: onUndoReopen })
+      undoGroup.push({ label: 'Undo Reopen', handler: onUndoReopen })
     }
 
-    return result
+    if (undoGroup.length > 0) groups.push(undoGroup)
+
+    // Group 2: Record management (future features)
+    groups.push([
+      { label: 'Add Historical Entry', handler: () => {}, disabled: true },
+      { label: 'Merge with\u2026', handler: () => {}, disabled: true },
+      { label: 'Split record', handler: () => {}, disabled: true },
+    ])
+
+    // Group 3: Destructive — always available, triggers reason-picker alert dialog
+    groups.push([
+      { label: 'Remove', handler: () => { onRemoveClick() }, destructive: true },
+    ])
+
+    return groups
   }
 
   function getSoftCloseHandler(cat: ProblemItem['category']): ((id: string) => void) | undefined {
@@ -429,33 +442,13 @@ function SummaryCard({
   }
 }
 
-/* ─── Related Screening ─── */
-
-function RelatedScreeningCard({ screening }: { screening: ScreeningInstrument }) {
-  return (
-    <div className="bg-white rounded-2xl px-4 py-3 flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <ClipboardCheck size={16} className="text-fg-neutral-secondary shrink-0" />
-        <span className="text-sm font-medium text-fg-neutral-primary">{screening.name}</span>
-      </div>
-      {(screening.score || screening.interpretation) && (
-        <p className="text-xs text-fg-neutral-secondary">
-          {screening.score && <>Score: {screening.score}</>}
-          {screening.score && screening.interpretation && ' · '}
-          {screening.interpretation}
-        </p>
-      )}
-      <button
-        onClick={() => { /* placeholder */ }}
-        className="text-xs font-semibold text-fg-neutral-secondary hover:text-fg-neutral-primary self-end"
-      >
-        View Full Results
-      </button>
-    </div>
-  )
-}
-
 /* ─── Activity Log ─── */
+
+/** Events that have a clinically meaningful effectiveDate worth displaying */
+const DATABLE_EVENTS = new Set([
+  'marked-active', 'marked-inactive', 'marked-resolved', 'marked-addressed',
+  'recurrence', 'reopened', 'confirmed', 'excluded',
+])
 
 /** Parse MM/DD/YY (with optional time suffix) to a sortable timestamp */
 function parseDateForSort(dateStr: string): number {
@@ -476,17 +469,27 @@ function ActivityLog({ item }: { item: ProblemItem }) {
 
   return (
     <div className="flex flex-col gap-0">
-      <h3 className="text-xs font-semibold text-fg-neutral-secondary uppercase tracking-wide mb-2">Activity</h3>
+      <h3 className="text-label-sm-medium text-fg-neutral-secondary mb-2">Activity</h3>
       {sortedHistory.map((event, i) => (
         <div key={event.id}>
-          {i > 0 && <div className="h-px bg-border-neutral-low" />}
+          {i > 0 && <div className="border-t border-fg-transparent-soft" />}
           <div className="flex items-start justify-between gap-3 py-2.5">
             <div className="flex flex-col gap-0.5 min-w-0">
               <span className="text-sm text-fg-neutral-primary">
                 {formatEventDescription(event.type)}
               </span>
+              {event.effectiveDate && DATABLE_EVENTS.has(event.type) && (
+                <span className="text-xs text-fg-neutral-secondary">
+                  Effective {event.effectiveDate}
+                </span>
+              )}
               {event.note && (
                 <span className="text-xs text-fg-neutral-secondary">{event.note}</span>
+              )}
+              {event.type === 'event-edited' && event.changes?.[0] && (
+                <span className="text-xs text-fg-neutral-secondary">
+                  Date changed: {event.changes[0].from} &rarr; {event.changes[0].to}
+                </span>
               )}
               <span className="text-xs text-fg-neutral-secondary truncate">
                 {event.performedBy}
