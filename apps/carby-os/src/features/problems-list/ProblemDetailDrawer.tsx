@@ -11,7 +11,7 @@ import {
   formatEventDescription,
   isConfirmedTransitional,
 } from './display-labels'
-import { Pill, Button, Input } from '@/design-system'
+import { Pill, Button, Input, SegmentedControl } from '@/design-system'
 import { screeningInstruments } from './mock-data'
 import { ScreeningDetailCard } from './ScreeningBanner'
 import { DatePickerPopover } from './DatePickerPopover'
@@ -510,6 +510,14 @@ const DELETION_REASONS: DeletionReasonOption[] = [
   { value: 'other', label: 'Other' },
 ]
 
+/** Get the relevant date for timeline sorting — edits use their new value */
+function getTimelineSortDate(event: ProblemEvent): string {
+  if ((event.type === 'edited' || event.type === 'event-edited') && event.changes?.[0]?.to) {
+    return event.changes[0].to
+  }
+  return event.effectiveDate ?? event.performedAt
+}
+
 /** Parse MM/DD/YY (with optional time suffix) to a sortable timestamp */
 function parseDateForSort(dateStr: string): number {
   const [datePart] = dateStr.split(',')
@@ -525,9 +533,6 @@ interface HistoryLogProps {
 
 type HistorySortMode = 'timeline' | 'activity'
 
-/** Events without clinical dates sort to the end in timeline mode */
-const ADMIN_EVENT_TYPES: ProblemEvent['type'][] = ['edited', 'event-edited', 'note-added']
-
 function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps) {
   const [showDeleted, setShowDeleted] = useState(false)
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
@@ -541,12 +546,10 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
         // Pure audit trail — most recent action first
         return parseDateForSort(b.performedAt) - parseDateForSort(a.performedAt)
       }
-      // Timeline mode: clinical events by effective date, admin events sort to end
-      const aIsAdmin = ADMIN_EVENT_TYPES.includes(a.type)
-      const bIsAdmin = ADMIN_EVENT_TYPES.includes(b.type)
-      if (aIsAdmin !== bIsAdmin) return aIsAdmin ? 1 : -1
-      const dateA = a.effectiveDate ?? a.performedAt
-      const dateB = b.effectiveDate ?? b.performedAt
+      // Timeline mode: all events sort by their effective clinical date
+      // Edits use their new value (changes[0].to) as the sort date
+      const dateA = getTimelineSortDate(a)
+      const dateB = getTimelineSortDate(b)
       return parseDateForSort(dateB) - parseDateForSort(dateA)
     })
   }, [item.history, sortMode])
@@ -582,25 +585,16 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
   return (
     <div className="flex flex-col gap-0">
       {/* Header */}
-      <div className="flex items-baseline justify-between mb-2">
-        <div className="flex items-baseline gap-3">
-          <h3 className="text-label-sm-medium text-fg-neutral-secondary">History</h3>
-          <div className="flex items-baseline gap-1">
-            <button
-              onClick={() => setSortMode('timeline')}
-              className={`text-label-xs-medium transition-opacity ${sortMode === 'timeline' ? 'text-fg-neutral-primary' : 'text-fg-neutral-disabled hover:opacity-70'}`}
-            >
-              Timeline
-            </button>
-            <span className="text-fg-neutral-disabled text-label-xs-medium">/</span>
-            <button
-              onClick={() => setSortMode('activity')}
-              className={`text-label-xs-medium transition-opacity ${sortMode === 'activity' ? 'text-fg-neutral-primary' : 'text-fg-neutral-disabled hover:opacity-70'}`}
-            >
-              Activity
-            </button>
-          </div>
-        </div>
+      <div className="flex items-center justify-between mb-2">
+        <SegmentedControl
+          options={[
+            { value: 'timeline', label: 'Timeline' },
+            { value: 'activity', label: 'Activity' },
+          ]}
+          value={sortMode}
+          onChange={(v) => setSortMode(v as HistorySortMode)}
+          aria-label="History sort mode"
+        />
         {deletedCount > 0 && (
           <button
             onClick={() => setShowDeleted(!showDeleted)}
@@ -659,25 +653,28 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
                 </div>
               </div>
 
-              {/* Line 2: Source + timestamp */}
-              <span className={`text-body-xs-regular ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
-                {formatSourceLine(event)}
-              </span>
+              {/* For edits: line 2 = change detail, line 3 = editor/timestamp */}
+              {/* For other events: line 2 = source/timestamp */}
+              {(event.type === 'edited' || event.type === 'event-edited') && event.changes && !dimmed ? (
+                <>
+                  {event.changes.map((c, ci) => (
+                    <span key={ci} className="text-body-xs-regular text-fg-neutral-secondary">
+                      {c.from || '—'} &rarr; {c.to || '—'}
+                    </span>
+                  ))}
+                  <span className={`text-body-xs-regular ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
+                    {formatSourceLine(event)}
+                  </span>
+                </>
+              ) : (
+                <span className={`text-body-xs-regular ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
+                  {formatSourceLine(event)}
+                </span>
+              )}
 
               {/* Notes */}
               {event.note && !dimmed && (
                 <span className="text-body-xs-regular text-fg-neutral-secondary">{event.note}</span>
-              )}
-
-              {/* Field changes (edited / event-edited) */}
-              {(event.type === 'edited' || event.type === 'event-edited') && event.changes && !dimmed && (
-                <div className="flex flex-col gap-0.5">
-                  {event.changes.map((c, ci) => (
-                    <span key={ci} className="text-body-xs-regular text-fg-neutral-secondary">
-                      {c.field}: {c.from || '—'} &rarr; {c.to || '—'}
-                    </span>
-                  ))}
-                </div>
               )}
 
               {/* Deletion metadata (for already-deleted entries) */}
@@ -725,8 +722,13 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
 
 /* ─── History Formatters ─── */
 
-/** Line 1 label: includes "from [Visit Name]" for encounter-dx origin events */
+/** Line 1 label: includes clinical context for edits, encounter link for reported */
 function formatEventLabel(event: ProblemEvent, dimmed?: boolean): React.ReactNode {
+  // Edits get clinical field name as prefix: "Onset — Edited"
+  if (event.type === 'edited' && event.changes?.length) {
+    const fieldLabel = event.changes[0].field.replace(' Date', '')
+    return `${fieldLabel} — Edited`
+  }
   const baseLabel = formatEventDescription(event.type)
   if (event.encounterVisitName && event.type === 'reported') {
     return (
@@ -741,11 +743,14 @@ function formatEventLabel(event: ProblemEvent, dimmed?: boolean): React.ReactNod
   return baseLabel
 }
 
-/** Right-aligned effective date — only for clinically meaningful events */
+/** Right-aligned effective date — shows clinical date or new value for edits */
 function formatEffectiveDate(event: ProblemEvent): string | null {
-  // Administrative events (edits, notes) don't have clinical dates
-  if (event.type === 'edited' || event.type === 'event-edited' || event.type === 'note-added') {
-    return null
+  // Notes have no clinical date
+  if (event.type === 'note-added') return null
+  // Edits show the new date value
+  if ((event.type === 'edited' || event.type === 'event-edited') && event.changes?.length) {
+    const newValue = event.changes[0].to
+    return newValue ? expandDate(newValue) : null
   }
   if (event.effectiveDate) {
     return expandDate(event.effectiveDate)
