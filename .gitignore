@@ -63,3 +63,4 @@ packages/design-tokens/sd-input/
 # Package manager locks (keep package-lock.json for npm workspaces)
 yarn.lock
 pnpm-lock.yaml
+.superpowers/
