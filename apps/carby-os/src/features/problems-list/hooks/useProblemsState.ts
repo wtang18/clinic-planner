@@ -221,6 +221,20 @@ export function useProblemsState() {
     }))
   }, [])
 
+  const undoDeleteEvent = useCallback((itemId: string, eventId: string) => {
+    setItems(prev => prev.map(item => {
+      if (item.id !== itemId) return item
+      return {
+        ...item,
+        history: item.history.map(evt =>
+          evt.id === eventId
+            ? { ...evt, deletedAt: undefined, deletedBy: undefined, deletionReason: undefined }
+            : evt
+        ),
+      }
+    }))
+  }, [])
+
   const deleteEvent = useCallback((itemId: string, eventId: string, reason: DeletionReason) => {
     const now = new Date()
     const h = now.getHours()
@@ -278,5 +292,6 @@ export function useProblemsState() {
     removeItem,
     editItem,
     deleteEvent,
+    undoDeleteEvent,
   }
 }

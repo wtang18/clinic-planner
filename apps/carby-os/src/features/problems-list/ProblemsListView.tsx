@@ -43,6 +43,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     removeItem,
     editItem,
     deleteEvent,
+    undoDeleteEvent,
   } = useProblemsState()
 
   const [isEditing, setIsEditing] = useState(false)
@@ -136,6 +137,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           onUndoRecurrence={undoRecurrence}
           onRemove={removeItem}
           onDeleteEvent={deleteEvent}
+          onUndoDeleteEvent={undoDeleteEvent}
           onEditClick={() => setIsEditing(true)}
         />
       )}

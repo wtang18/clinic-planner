@@ -38,6 +38,7 @@ interface ProblemDetailDrawerProps {
   onRemove: (id: string, reason: RemovalReason) => void
   onEditClick: () => void
   onDeleteEvent: (itemId: string, eventId: string, reason: DeletionReason) => void
+  onUndoDeleteEvent: (itemId: string, eventId: string) => void
 }
 
 /** Can recurrence apply? Only conditions and encounter-dx */
@@ -67,6 +68,7 @@ export function ProblemDetailDrawer({
   onRemove,
   onEditClick,
   onDeleteEvent,
+  onUndoDeleteEvent,
 }: ProblemDetailDrawerProps) {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [removeReason, setRemoveReason] = useState<RemovalReason>('entered-in-error')
@@ -130,7 +132,7 @@ export function ProblemDetailDrawer({
           )}
 
           {/* History log */}
-          <HistoryLog item={item} onDeleteEvent={onDeleteEvent} />
+          <HistoryLog item={item} onDeleteEvent={onDeleteEvent} onUndoDeleteEvent={onUndoDeleteEvent} />
         </div>
 
       </div>
@@ -465,12 +467,14 @@ function parseDateForSort(dateStr: string): number {
 interface HistoryLogProps {
   item: ProblemItem
   onDeleteEvent: (itemId: string, eventId: string, reason: DeletionReason) => void
+  onUndoDeleteEvent: (itemId: string, eventId: string) => void
 }
 
-function HistoryLog({ item, onDeleteEvent }: HistoryLogProps) {
+function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps) {
   const [showDeleted, setShowDeleted] = useState(false)
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
   const [selectedReason, setSelectedReason] = useState<DeletionReason>('entered-in-error')
+  const [kebabOpenId, setKebabOpenId] = useState<string | null>(null)
 
   // Sort by effective date descending, fallback to performedAt
   const sortedHistory = useMemo(() => {
@@ -500,6 +504,15 @@ function HistoryLog({ item, onDeleteEvent }: HistoryLogProps) {
     setSelectedReason('entered-in-error')
   }
 
+  const handleKebabAction = (event: ProblemEvent) => {
+    setKebabOpenId(null)
+    if (event.deletedAt) {
+      onUndoDeleteEvent(item.id, event.id)
+    } else {
+      setDeletingEventId(event.id)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-0">
       {/* Header */}
@@ -519,46 +532,60 @@ function HistoryLog({ item, onDeleteEvent }: HistoryLogProps) {
       {visibleHistory.map((event, i) => {
         const isDeleted = !!event.deletedAt
         const isBeingDeleted = deletingEventId === event.id
+        const dimmed = isDeleted || isBeingDeleted
 
         return (
           <div key={event.id}>
             {i > 0 && <div className="border-t border-fg-transparent-soft" />}
-            <div
-              className={`group py-2.5 flex flex-col gap-0.5 ${isDeleted || isBeingDeleted ? 'opacity-45' : ''}`}
-            >
-              {/* Line 1: Event label + effective date */}
+            <div className="py-2.5 flex flex-col gap-0.5">
+              {/* Line 1: Event label + effective date + kebab */}
               <div className="flex items-baseline justify-between gap-3">
-                <span className={`text-body-sm-medium text-fg-neutral-primary ${isDeleted || isBeingDeleted ? 'line-through' : ''}`}>
-                  {formatEventLabel(event)}
+                <span className={`text-label-sm-medium ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-primary'}`}>
+                  {formatEventLabel(event, dimmed)}
                 </span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-body-xs-regular text-fg-neutral-secondary whitespace-nowrap ${isDeleted || isBeingDeleted ? 'line-through' : ''}`}>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`text-body-sm-regular whitespace-nowrap ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
                     {formatEffectiveDate(event)}
                   </span>
-                  {/* Delete icon — hover only, not on deleted entries */}
-                  {!isDeleted && !isBeingDeleted && (
-                    <button
-                      onClick={() => setDeletingEventId(event.id)}
-                      className="w-5 h-5 rounded-md flex items-center justify-center text-fg-neutral-secondary opacity-0 group-hover:opacity-100 hover:bg-bg-transparent-low transition-all"
-                    >
-                      <Icon name="trash" size="small" />
-                    </button>
+                  {/* Kebab menu — always visible */}
+                  {!isBeingDeleted && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setKebabOpenId(kebabOpenId === event.id ? null : event.id)}
+                        className="w-5 h-5 flex items-center justify-center text-fg-neutral-secondary hover:opacity-70 transition-opacity"
+                      >
+                        <Icon name="more-vertical" size="small" />
+                      </button>
+                      {kebabOpenId === event.id && (
+                        <>
+                          <div className="fixed inset-0 z-50" onClick={() => setKebabOpenId(null)} />
+                          <div className="absolute right-0 top-6 z-50 bg-white rounded-xl shadow-md border border-border-transparent-soft py-1 min-w-[140px]">
+                            <button
+                              onClick={() => handleKebabAction(event)}
+                              className={`w-full text-left px-4 py-2 text-body-sm-regular transition-colors hover:bg-bg-transparent-low ${isDeleted ? 'text-fg-neutral-primary' : 'text-fg-alert-secondary'}`}
+                            >
+                              {isDeleted ? 'Undo Delete' : 'Delete'}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
 
               {/* Line 2: Source + timestamp */}
-              <span className={`text-body-xs-regular text-fg-neutral-secondary ${isDeleted || isBeingDeleted ? 'line-through' : ''}`}>
+              <span className={`text-body-xs-regular ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
                 {formatSourceLine(event)}
               </span>
 
               {/* Notes */}
-              {event.note && !isDeleted && !isBeingDeleted && (
+              {event.note && !dimmed && (
                 <span className="text-body-xs-regular text-fg-neutral-secondary">{event.note}</span>
               )}
 
               {/* Event-edited changes */}
-              {event.type === 'event-edited' && event.changes?.[0] && !isDeleted && !isBeingDeleted && (
+              {event.type === 'event-edited' && event.changes?.[0] && !dimmed && (
                 <span className="text-body-xs-regular text-fg-neutral-secondary">
                   Date changed: {event.changes[0].from} &rarr; {event.changes[0].to}
                 </span>
@@ -566,7 +593,7 @@ function HistoryLog({ item, onDeleteEvent }: HistoryLogProps) {
 
               {/* Deletion metadata (for already-deleted entries) */}
               {isDeleted && !isBeingDeleted && (
-                <span className="text-label-2xs-medium text-fg-alert-secondary mt-0.5" style={{ opacity: 1 }}>
+                <span className="text-body-xs-regular text-fg-alert-secondary mt-0.5">
                   Deleted: {formatDeletionReason(event.deletionReason)} — {event.deletedBy} — {event.deletedAt}
                 </span>
               )}
@@ -610,13 +637,13 @@ function HistoryLog({ item, onDeleteEvent }: HistoryLogProps) {
 /* ─── History Formatters ─── */
 
 /** Line 1 label: includes "from [Visit Name]" for encounter-dx origin events */
-function formatEventLabel(event: ProblemEvent): React.ReactNode {
+function formatEventLabel(event: ProblemEvent, dimmed?: boolean): React.ReactNode {
   const baseLabel = formatEventDescription(event.type)
-  if (event.encounterVisitName && (event.type === 'reported' || event.type === 'confirmed' || event.type === 'marked-active')) {
+  if (event.encounterVisitName && event.type === 'reported') {
     return (
       <>
         {baseLabel} from{' '}
-        <span className="text-fg-accent-primary underline decoration-fg-accent-primary/30 underline-offset-2 cursor-pointer">
+        <span className={dimmed ? 'text-fg-neutral-disabled' : 'text-fg-accent-primary underline decoration-fg-accent-primary/30 underline-offset-2 cursor-pointer'}>
           {event.encounterVisitName}
         </span>
       </>
@@ -645,7 +672,7 @@ function expandDate(short: string): string {
 
 /** Line 2: Source + timestamp. Encounter-dx entries show "[Provider], Encounter — [timestamp]" */
 function formatSourceLine(event: ProblemEvent): string {
-  if (event.encounterVisitName) {
+  if (event.encounterVisitName && event.type === 'reported') {
     return `${event.performedBy}, Encounter — ${event.performedAt}`
   }
   return `${event.performedBy} — ${event.performedAt}`

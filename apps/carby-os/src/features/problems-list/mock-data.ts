@@ -116,8 +116,9 @@ export const mockProblems: ProblemItem[] = [
     sourceDate: '03/09/26',
     onsetDate: '03/09/26',
     history: [
-      { id: 'evt-7a', type: 'marked-active', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:45a PT', encounterVisitName: 'Sore Throat' },
-      { id: 'evt-7b', type: 'confirmed', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:44a PT', encounterVisitName: 'Sore Throat' },
+      { id: 'evt-7a', type: 'marked-active', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:45a PT' },
+      { id: 'evt-7b', type: 'confirmed', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:44a PT' },
+      { id: 'evt-7c', type: 'reported', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:40a PT', encounterVisitName: 'Sore Throat' },
     ],
   },
   {
@@ -132,9 +133,9 @@ export const mockProblems: ProblemItem[] = [
     sourceDate: '01/15/26',
     onsetDate: '01/15/26',
     history: [
-      { id: 'evt-8a', type: 'marked-active', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:15p PT', encounterVisitName: 'Urinary Tract Infection' },
-      { id: 'evt-8b', type: 'confirmed', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:14p PT', encounterVisitName: 'Urinary Tract Infection' },
-      { id: 'evt-8c', type: 'reported', performedBy: 'Patient', performedAt: '01/15/26, 1:00p PT', encounterVisitName: 'Urinary Tract Infection' },
+      { id: 'evt-8a', type: 'marked-active', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:15p PT' },
+      { id: 'evt-8b', type: 'confirmed', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:14p PT' },
+      { id: 'evt-8c', type: 'reported', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 1:00p PT', encounterVisitName: 'Urinary Tract Infection' },
     ],
   },
   {
