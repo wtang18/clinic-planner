@@ -65,6 +65,7 @@ export const mockProblems: ProblemItem[] = [
     history: [
       { id: 'evt-4a', type: 'recurrence', performedBy: 'Dr. Tanaka, MD', performedAt: '02/01/26, 2:30p PT' },
       { id: 'evt-4b', type: 'marked-inactive', performedBy: 'Dr. Priya Sharma, MD', performedAt: '09/15/23, 3:00p PT' },
+      { id: 'evt-4f', type: 'marked-resolved' as const, performedBy: 'Dr. Priya Sharma, MD', performedAt: '09/15/23, 2:55p PT', effectiveDate: '09/15/23', deletedAt: '09/16/23, 9:00a PT', deletedBy: 'Dr. Priya Sharma, MD', deletionReason: 'entered-in-error' as const },
       { id: 'evt-4c', type: 'marked-active', performedBy: 'Dr. Priya Sharma, MD', performedAt: '06/02/18, 11:15a PT' },
       { id: 'evt-4d', type: 'confirmed', performedBy: 'Dr. Priya Sharma, MD', performedAt: '06/02/18, 11:14a PT' },
       { id: 'evt-4e', type: 'imported', performedBy: 'System — CCDA Import', performedAt: '06/02/18, 8:00a PT' },
@@ -115,8 +116,8 @@ export const mockProblems: ProblemItem[] = [
     sourceDate: '03/09/26',
     onsetDate: '03/09/26',
     history: [
-      { id: 'evt-7a', type: 'marked-active', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:45a PT' },
-      { id: 'evt-7b', type: 'confirmed', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:44a PT' },
+      { id: 'evt-7a', type: 'marked-active', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:45a PT', encounterVisitName: 'Sore Throat' },
+      { id: 'evt-7b', type: 'confirmed', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:44a PT', encounterVisitName: 'Sore Throat' },
     ],
   },
   {
@@ -131,9 +132,9 @@ export const mockProblems: ProblemItem[] = [
     sourceDate: '01/15/26',
     onsetDate: '01/15/26',
     history: [
-      { id: 'evt-8a', type: 'marked-active', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:15p PT' },
-      { id: 'evt-8b', type: 'confirmed', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:14p PT' },
-      { id: 'evt-8c', type: 'reported', performedBy: 'Patient', performedAt: '01/15/26, 1:00p PT' },
+      { id: 'evt-8a', type: 'marked-active', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:15p PT', encounterVisitName: 'Urinary Tract Infection' },
+      { id: 'evt-8b', type: 'confirmed', performedBy: 'Dr. Tanaka, MD', performedAt: '01/15/26, 2:14p PT', encounterVisitName: 'Urinary Tract Infection' },
+      { id: 'evt-8c', type: 'reported', performedBy: 'Patient', performedAt: '01/15/26, 1:00p PT', encounterVisitName: 'Urinary Tract Infection' },
     ],
   },
   {
@@ -147,7 +148,7 @@ export const mockProblems: ProblemItem[] = [
     source: 'reported',
     sourceDate: '03/09/26',
     history: [
-      { id: 'evt-9a', type: 'reported', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:35a PT' },
+      { id: 'evt-9a', type: 'reported', performedBy: 'Marco Rivera, PA-C', performedAt: '03/09/26, 10:35a PT', encounterVisitName: 'Annual Wellness Visit' },
     ],
   },
 
