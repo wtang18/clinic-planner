@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import type { ProblemItem, ProblemEvent, ProblemEventType, FilterKey, ProblemCategory, RemovalReason, DeletionReason } from '../types'
 import { mockProblems } from '../mock-data'
-import { isConfirmedTransitional } from '../display-labels'
 
 interface FilterCounts {
   unconfirmed: number
@@ -76,22 +75,21 @@ export function useProblemsState() {
     return false
   }, [activeFilters])
 
-  // Sort priority: unconfirmed → confirmed (transitional) → active → inactive/resolved → excluded
-  const getSortKey = useCallback((item: ProblemItem): number => {
+  // Sort priority: unconfirmed → active → inactive/resolved → excluded
+  function getSortKey(item: ProblemItem): number {
     if (item.verificationStatus === 'unconfirmed') return 0
-    if (item.verificationStatus === 'excluded') return 4
-    if (isConfirmedTransitional(item)) return 1
-    if (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') return 2
-    if (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') return 3
-    return 2
-  }, [])
+    if (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') return 1
+    if (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') return 2
+    if (item.verificationStatus === 'excluded') return 3
+    return 4
+  }
 
   // Get items for a specific category, filtered and sorted
   const getFilteredItems = useCallback((category: ProblemCategory): ProblemItem[] => {
     return items
       .filter(i => i.category === category && matchesFilter(i))
       .sort((a, b) => getSortKey(a) - getSortKey(b))
-  }, [items, matchesFilter, getSortKey])
+  }, [items, matchesFilter])
 
   function todayString(): string {
     const now = new Date()
@@ -112,6 +110,7 @@ export function useProblemsState() {
     const statusActions: ProblemEventType[] = [
       'marked-active', 'marked-inactive', 'marked-resolved', 'marked-addressed',
       'recurrence', 'reopened', 'confirmed', 'excluded',
+      'confirmed-active', 'confirmed-inactive', 'confirmed-resolved',
     ]
     if (statusActions.includes(eventType)) {
       event.effectiveDate = todayString()
@@ -124,9 +123,44 @@ export function useProblemsState() {
   }, [])
 
   // Actions — each appends activity history
-  const confirmItem = useCallback((id: string) => {
-    updateItemWithEvent(id, { verificationStatus: 'confirmed' }, 'confirmed')
+  const confirmActive = useCallback((id: string) => {
+    updateItemWithEvent(id, { verificationStatus: 'confirmed', clinicalStatus: 'active' }, 'confirmed-active')
   }, [updateItemWithEvent])
+
+  const confirmInactive = useCallback((id: string) => {
+    updateItemWithEvent(id, { verificationStatus: 'confirmed', clinicalStatus: 'inactive' }, 'confirmed-inactive')
+  }, [updateItemWithEvent])
+
+  const confirmResolved = useCallback((id: string) => {
+    updateItemWithEvent(id, { verificationStatus: 'confirmed', clinicalStatus: 'resolved' }, 'confirmed-resolved')
+  }, [updateItemWithEvent])
+
+  const updateDates = useCallback((id: string, dates: { onsetDate?: string; abatementDate?: string }) => {
+    setItems(prev => prev.map(item => {
+      if (item.id !== id) return item
+      const changes: { field: string; from: string; to: string }[] = []
+      const updates: Partial<ProblemItem> = {}
+
+      if (dates.onsetDate !== undefined && dates.onsetDate !== (item.onsetDate ?? '')) {
+        changes.push({ field: 'Onset', from: item.onsetDate ?? '', to: dates.onsetDate })
+        updates.onsetDate = dates.onsetDate
+      }
+
+      const abatementLabel = (item.category === 'sdoh' || item.category === 'health-concern')
+        ? 'Resolved'
+        : 'Inactive since'
+      if (dates.abatementDate !== undefined && dates.abatementDate !== (item.abatementDate ?? '')) {
+        changes.push({ field: abatementLabel, from: item.abatementDate ?? '', to: dates.abatementDate })
+        updates.abatementDate = dates.abatementDate
+      }
+
+      if (changes.length === 0) return item
+
+      const event = createEvent('dates-updated')
+      event.changes = changes
+      return { ...item, ...updates, history: [event, ...item.history] }
+    }))
+  }, [])
 
   const excludeItem = useCallback((id: string) => {
     updateItemWithEvent(id, { verificationStatus: 'excluded' }, 'excluded')
@@ -145,15 +179,15 @@ export function useProblemsState() {
   }, [updateItemWithEvent])
 
   const markInactive = useCallback((id: string) => {
-    updateItemWithEvent(id, { clinicalStatus: 'inactive', abatementDate: todayString() }, 'marked-inactive')
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'marked-inactive')
   }, [updateItemWithEvent])
 
   const markResolved = useCallback((id: string) => {
-    updateItemWithEvent(id, { clinicalStatus: 'resolved', abatementDate: todayString() }, 'marked-resolved')
+    updateItemWithEvent(id, { clinicalStatus: 'resolved' }, 'marked-resolved')
   }, [updateItemWithEvent])
 
   const markAddressed = useCallback((id: string) => {
-    updateItemWithEvent(id, { clinicalStatus: 'inactive', abatementDate: todayString() }, 'marked-addressed')
+    updateItemWithEvent(id, { clinicalStatus: 'inactive' }, 'marked-addressed')
   }, [updateItemWithEvent])
 
   const noteRecurrence = useCallback((id: string) => {
@@ -207,7 +241,6 @@ export function useProblemsState() {
         clinicalStatus: 'active',
         source: 'diagnosed',
         sourceDate: today,
-        onsetDate: today,
         history: [addedEvt],
       }
       setItems(prev => [newItem, ...prev])
@@ -236,15 +269,6 @@ export function useProblemsState() {
     event.removalReason = reason
     // Keep item in state but mark it — for now, just filter it out
     setItems(prev => prev.filter(item => item.id !== id))
-  }, [])
-
-  const editItem = useCallback((id: string, fieldUpdates: Partial<ProblemItem>, changes: { field: string; from: string; to: string }[]) => {
-    setItems(prev => prev.map(item => {
-      if (item.id !== id) return item
-      const event = createEvent('edited')
-      event.changes = changes
-      return { ...item, ...fieldUpdates, history: [event, ...item.history] }
-    }))
   }, [])
 
   const undoDeleteEvent = useCallback((itemId: string, eventId: string) => {
@@ -298,7 +322,10 @@ export function useProblemsState() {
     clearSelection,
     toggleFilter,
     getFilteredItems,
-    confirmItem,
+    confirmActive,
+    confirmInactive,
+    confirmResolved,
+    updateDates,
     excludeItem,
     undoExclude,
     undoConfirm,
@@ -316,7 +343,6 @@ export function useProblemsState() {
     undoRecurrence,
     addItem,
     removeItem,
-    editItem,
     deleteEvent,
     undoDeleteEvent,
   }
