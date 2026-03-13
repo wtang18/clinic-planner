@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 import { useProblemsState } from './hooks/useProblemsState'
 import { FilterBar } from './FilterBar'
 import { ProblemSection } from './ProblemSection'
@@ -15,7 +15,6 @@ interface ProblemsListViewProps {
 
 export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps) {
   const {
-    items,
     activeFilters,
     filterCounts,
     selectedItem,
@@ -23,7 +22,9 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     clearSelection,
     toggleFilter,
     getFilteredItems,
-    confirmItem,
+    confirmActive,
+    confirmInactive,
+    confirmResolved,
     excludeItem,
     undoExclude,
     undoConfirm,
@@ -41,19 +42,11 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
     undoRecurrence,
     addItem,
     removeItem,
-    editItem,
+    updateDates,
     deleteEvent,
     undoDeleteEvent,
   } = useProblemsState()
 
-  const editDate = useCallback((id: string, field: 'onsetDate' | 'abatementDate', value: string) => {
-    const item = items.find(i => i.id === id)
-    if (!item) return
-    const fieldLabel = field === 'onsetDate' ? 'Onset Date' : 'Abatement Date'
-    const oldValue = field === 'onsetDate' ? (item.onsetDate ?? item.sourceDate) : (item.abatementDate ?? '')
-    if (value === oldValue) return
-    editItem(id, { [field]: value }, [{ field: fieldLabel, from: oldValue, to: value }])
-  }, [items, editItem])
   const [addingCategory, setAddingCategory] = useState<ProblemCategory | null>(null)
   const [showScreeningDrawer, setShowScreeningDrawer] = useState(false)
 
@@ -63,7 +56,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
   const healthConcerns = getFilteredItems('health-concern')
 
   const sharedHandlers = {
-    onConfirm: confirmItem,
+    onConfirmActive: confirmActive,
     onExclude: excludeItem,
     onUndoExclude: undoExclude,
     onMarkActive: markActive,
@@ -105,7 +98,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           <ProblemSection
             title="Social Determinants"
             items={sdoh}
-            actions={[{ label: 'Add', onClick: () => setAddingCategory('sdoh') }]}
+            actions={[]}
             {...sharedHandlers}
           >
             <ScreeningBanner screenings={screeningInstruments} onAdminister={() => setShowScreeningDrawer(true)} />
@@ -126,7 +119,9 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
         <ProblemDetailDrawer
           item={selectedItem}
           onClose={clearSelection}
-          onConfirm={confirmItem}
+          onConfirmActive={confirmActive}
+          onConfirmInactive={confirmInactive}
+          onConfirmResolved={confirmResolved}
           onExclude={excludeItem}
           onUndoExclude={undoExclude}
           onUndoConfirm={undoConfirm}
@@ -143,7 +138,7 @@ export function ProblemsListView({ mode: _mode = 'tab' }: ProblemsListViewProps)
           onUndoReopen={undoReopen}
           onUndoRecurrence={undoRecurrence}
           onRemove={removeItem}
-          onEditDate={editDate}
+          onUpdateDates={updateDates}
           onDeleteEvent={deleteEvent}
           onUndoDeleteEvent={undoDeleteEvent}
         />

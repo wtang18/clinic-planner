@@ -6,12 +6,11 @@ import {
   DRAWER_TITLE,
   SOFT_CLOSE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
-  ACTIVATE_FROM_CONFIRMED_LABEL,
+  CONFIRM_INACTIVE_LABEL,
   getDisplayStatus,
   formatEventDescription,
-  isConfirmedTransitional,
 } from './display-labels'
-import { Pill, Button, Input, SegmentedControl } from '@/design-system'
+import { Pill, Button, Input } from '@/design-system'
 import { screeningInstruments } from './mock-data'
 import { ScreeningDetailCard } from './ScreeningBanner'
 import { DatePickerPopover } from './DatePickerPopover'
@@ -19,7 +18,9 @@ import { DatePickerPopover } from './DatePickerPopover'
 interface ProblemDetailDrawerProps {
   item: ProblemItem
   onClose: () => void
-  onConfirm: (id: string) => void
+  onConfirmActive: (id: string) => void
+  onConfirmInactive: (id: string) => void
+  onConfirmResolved: (id: string) => void
   onExclude: (id: string) => void
   onUndoExclude: (id: string) => void
   onUndoConfirm: (id: string) => void
@@ -36,7 +37,7 @@ interface ProblemDetailDrawerProps {
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
   onRemove: (id: string, reason: RemovalReason) => void
-  onEditDate: (id: string, field: 'onsetDate' | 'abatementDate', value: string) => void
+  onUpdateDates: (id: string, dates: { onsetDate?: string; abatementDate?: string }) => void
   onDeleteEvent: (itemId: string, eventId: string, reason: DeletionReason) => void
   onUndoDeleteEvent: (itemId: string, eventId: string) => void
 }
@@ -49,7 +50,9 @@ function supportsRecurrence(item: ProblemItem): boolean {
 export function ProblemDetailDrawer({
   item,
   onClose,
-  onConfirm,
+  onConfirmActive,
+  onConfirmInactive,
+  onConfirmResolved,
   onExclude,
   onUndoExclude,
   onUndoConfirm,
@@ -66,7 +69,7 @@ export function ProblemDetailDrawer({
   onUndoReopen,
   onUndoRecurrence,
   onRemove,
-  onEditDate,
+  onUpdateDates,
   onDeleteEvent,
   onUndoDeleteEvent,
 }: ProblemDetailDrawerProps) {
@@ -102,32 +105,36 @@ export function ProblemDetailDrawer({
         {/* Scrollable body */}
         <div className="flex-1 overflow-auto px-5 py-4 flex flex-col gap-5">
           {/* Summary card */}
-          <SummaryCard
-            item={item}
-            onConfirm={onConfirm}
-            onExclude={onExclude}
-            onUndoExclude={onUndoExclude}
-            onUndoConfirm={onUndoConfirm}
-            onMarkActive={onMarkActive}
-            onMarkInactive={onMarkInactive}
-            onMarkResolved={onMarkResolved}
-            onMarkAddressed={onMarkAddressed}
-            onNoteRecurrence={onNoteRecurrence}
-            onReopen={onReopen}
-            onUndoMarkActive={onUndoMarkActive}
-            onUndoMarkInactive={onUndoMarkInactive}
-            onUndoMarkResolved={onUndoMarkResolved}
-            onUndoMarkAddressed={onUndoMarkAddressed}
-            onUndoReopen={onUndoReopen}
-            onUndoRecurrence={onUndoRecurrence}
-            onEditDate={onEditDate}
-            onRemoveClick={() => setShowRemoveConfirm(true)}
-          />
+          <div className="flex flex-col gap-2">
+            <SummaryCard
+              item={item}
+              onConfirmActive={onConfirmActive}
+              onConfirmInactive={onConfirmInactive}
+              onConfirmResolved={onConfirmResolved}
+              onExclude={onExclude}
+              onUndoExclude={onUndoExclude}
+              onUndoConfirm={onUndoConfirm}
+              onMarkActive={onMarkActive}
+              onMarkInactive={onMarkInactive}
+              onMarkResolved={onMarkResolved}
+              onMarkAddressed={onMarkAddressed}
+              onNoteRecurrence={onNoteRecurrence}
+              onReopen={onReopen}
+              onUndoMarkActive={onUndoMarkActive}
+              onUndoMarkInactive={onUndoMarkInactive}
+              onUndoMarkResolved={onUndoMarkResolved}
+              onUndoMarkAddressed={onUndoMarkAddressed}
+              onUndoReopen={onUndoReopen}
+              onUndoRecurrence={onUndoRecurrence}
+              onUpdateDates={onUpdateDates}
+              onRemoveClick={() => setShowRemoveConfirm(true)}
+            />
 
-          {/* Related Screening (SDOH only) */}
-          {relatedScreening && (
-            <ScreeningDetailCard screening={relatedScreening} />
-          )}
+            {/* Related Screening (SDOH only) */}
+            {relatedScreening && (
+              <ScreeningDetailCard screening={relatedScreening} />
+            )}
+          </div>
 
           {/* History log */}
           <HistoryLog item={item} onDeleteEvent={onDeleteEvent} onUndoDeleteEvent={onUndoDeleteEvent} />
@@ -188,7 +195,9 @@ export function ProblemDetailDrawer({
 
 interface SummaryCardProps {
   item: ProblemItem
-  onConfirm: (id: string) => void
+  onConfirmActive: (id: string) => void
+  onConfirmInactive: (id: string) => void
+  onConfirmResolved: (id: string) => void
   onExclude: (id: string) => void
   onUndoExclude: (id: string) => void
   onUndoConfirm: (id: string) => void
@@ -204,7 +213,7 @@ interface SummaryCardProps {
   onUndoMarkAddressed: (id: string) => void
   onUndoReopen: (id: string) => void
   onUndoRecurrence: (id: string) => void
-  onEditDate: (id: string, field: 'onsetDate' | 'abatementDate', value: string) => void
+  onUpdateDates: (id: string, dates: { onsetDate?: string; abatementDate?: string }) => void
   onRemoveClick: () => void
 }
 
@@ -212,7 +221,9 @@ type KebabAction = { label: string; handler: (id: string) => void; destructive?:
 
 function SummaryCard({
   item,
-  onConfirm,
+  onConfirmActive,
+  onConfirmInactive,
+  onConfirmResolved,
   onExclude,
   onUndoExclude,
   onUndoConfirm,
@@ -228,7 +239,7 @@ function SummaryCard({
   onUndoMarkAddressed,
   onUndoReopen,
   onUndoRecurrence,
-  onEditDate,
+  onUpdateDates,
   onRemoveClick,
 }: SummaryCardProps) {
   const [kebabOpen, setKebabOpen] = useState(false)
@@ -279,13 +290,10 @@ function SummaryCard({
         {item.verificationStatus === 'unconfirmed' && (
           <Pill type="attention" size="small" label="Unconfirmed" />
         )}
-        {isConfirmedTransitional(item) && (
-          <Pill type="transparent" size="small" label="Confirmed" />
-        )}
-        {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && !isConfirmedTransitional(item) && (
+        {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && (
           <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
         )}
-        {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
+        {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') && (
           <Pill type="subtle-outlined" size="small" label={getDisplayStatus(item)} />
         )}
         {item.verificationStatus === 'excluded' && (
@@ -296,8 +304,10 @@ function SummaryCard({
         )}
       </div>
 
-      {/* Inline date fields */}
-      <DateFields item={item} onEditDate={onEditDate} />
+      {/* Inline date fields — only for confirmed items */}
+      {item.verificationStatus === 'confirmed' && (
+        <DateFields item={item} onUpdateDates={onUpdateDates} />
+      )}
 
       {/* Notes (if present) */}
       {item.notes && (
@@ -327,23 +337,13 @@ function SummaryCard({
 
     if (it.verificationStatus === 'unconfirmed') {
       result.push({ label: 'Exclude', handler: onExclude })
-      result.push({ label: 'Confirm', handler: onConfirm })
+      result.push({ label: CONFIRM_INACTIVE_LABEL[cat], handler: cat === 'sdoh' || cat === 'health-concern' ? onConfirmResolved : onConfirmInactive })
+      result.push({ label: 'Confirm Active', handler: onConfirmActive })
       return result
     }
 
     if (it.verificationStatus === 'excluded') {
       result.push({ label: 'Undo Exclude', handler: onUndoExclude })
-      return result
-    }
-
-    const isTransitional = it.verificationStatus === 'confirmed'
-      && it.clinicalStatus === 'active'
-      && isConfirmedTransitional(it)
-
-    if (isTransitional) {
-      const softCloseHandler = getSoftCloseHandler(cat)
-      if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
-      result.push({ label: ACTIVATE_FROM_CONFIRMED_LABEL[cat], handler: onMarkActive })
       return result
     }
 
@@ -368,7 +368,6 @@ function SummaryCard({
     const cat = it.category
     const isCondLike = cat === 'condition' || cat === 'encounter-dx'
 
-    // Group 1: Undo actions + Note Recurrence
     const undoGroup: KebabAction[] = []
 
     if (it.verificationStatus === 'confirmed') {
@@ -376,11 +375,10 @@ function SummaryCard({
     }
 
     if (it.verificationStatus === 'confirmed') {
-      if (it.clinicalStatus === 'active' && !isConfirmedTransitional(it)) {
+      if (it.clinicalStatus === 'active') {
         undoGroup.push({ label: 'Undo Mark Active', handler: onUndoMarkActive })
       }
       if (it.clinicalStatus === 'inactive') {
-        // Conditions/Enc-Dx: "Undo Mark Inactive"; SDOH/HC: "Undo Mark Resolved" (inactive displays as resolved)
         if (isCondLike) {
           undoGroup.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
         } else {
@@ -388,7 +386,6 @@ function SummaryCard({
         }
       }
       if (it.clinicalStatus === 'resolved') {
-        // Conditions/Enc-Dx: "Undo Mark Inactive" (resolved displays as inactive); SDOH/HC: "Undo Mark Resolved"
         if (isCondLike) {
           undoGroup.push({ label: 'Undo Mark Inactive', handler: onUndoMarkInactive })
         } else {
@@ -399,7 +396,6 @@ function SummaryCard({
         undoGroup.push({ label: 'Undo Recurrence', handler: onUndoRecurrence })
       }
 
-      // Mark Recurrence — only for conditions/encounter-dx in inactive/resolved state
       if (supportsRecurrence(it) && (it.clinicalStatus === 'inactive' || it.clinicalStatus === 'resolved')) {
         undoGroup.push({ label: 'Mark Recurrence', handler: onNoteRecurrence })
       }
@@ -411,14 +407,12 @@ function SummaryCard({
 
     if (undoGroup.length > 0) groups.push(undoGroup)
 
-    // Group 2: Record management (future features)
     groups.push([
       { label: 'Add Historical Entry', handler: () => {}, disabled: true },
       { label: 'Merge with\u2026', handler: () => {}, disabled: true },
       { label: 'Split record', handler: () => {}, disabled: true },
     ])
 
-    // Group 3: Destructive — always available, triggers reason-picker alert dialog
     groups.push([
       { label: 'Remove', handler: () => { onRemoveClick() }, destructive: true },
     ])
@@ -440,61 +434,93 @@ function SummaryCard({
 
 /* ─── Inline Date Fields ─── */
 
-function DateFields({ item, onEditDate }: {
+function DateFields({ item, onUpdateDates }: {
   item: ProblemItem
-  onEditDate: (id: string, field: 'onsetDate' | 'abatementDate', value: string) => void
+  onUpdateDates: (id: string, dates: { onsetDate?: string; abatementDate?: string }) => void
 }) {
   const [openPicker, setOpenPicker] = useState<'onset' | 'abatement' | null>(null)
+  const [pendingOnset, setPendingOnset] = useState(item.onsetDate ?? '')
+  const [pendingAbatement, setPendingAbatement] = useState(item.abatementDate ?? '')
 
-  const onsetValue = item.onsetDate ?? item.sourceDate
+  // Resync pending state when item changes (e.g., after save)
+  React.useEffect(() => {
+    setPendingOnset(item.onsetDate ?? '')
+    setPendingAbatement(item.abatementDate ?? '')
+  }, [item.onsetDate, item.abatementDate])
+
   const showAbatement = item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved'
   const abatementLabel = (item.category === 'sdoh' || item.category === 'health-concern')
     ? 'Resolved'
     : 'Inactive since'
 
-  return (
-    <div className="flex gap-3 mt-4">
-      <div className="relative flex-1 max-w-[200px]">
-        <Input
-          label="Onset"
-          size="small"
-          value={onsetValue}
-          readOnly
-          rightIcon="calendar"
-          onClick={() => setOpenPicker(openPicker === 'onset' ? null : 'onset')}
-          className="!text-fg-neutral-primary"
-          containerClassName="cursor-pointer [&_svg]:text-fg-neutral-secondary"
-        />
-        {openPicker === 'onset' && (
-          <DatePickerPopover
-            value={onsetValue}
-            onChange={(v) => onEditDate(item.id, 'onsetDate', v)}
-            onClose={() => setOpenPicker(null)}
-          />
-        )}
-      </div>
+  const hasPendingChanges =
+    pendingOnset !== (item.onsetDate ?? '') ||
+    (showAbatement && pendingAbatement !== (item.abatementDate ?? ''))
 
-      {showAbatement && (
+  const handleSubmit = () => {
+    const dates: { onsetDate?: string; abatementDate?: string } = {}
+    if (pendingOnset !== (item.onsetDate ?? '')) dates.onsetDate = pendingOnset
+    if (showAbatement && pendingAbatement !== (item.abatementDate ?? '')) dates.abatementDate = pendingAbatement
+    onUpdateDates(item.id, dates)
+  }
+
+  return (
+    <div className="flex flex-col gap-3 mt-4">
+      <div className="flex gap-3">
         <div className="relative flex-1 max-w-[200px]">
           <Input
-            label={abatementLabel}
+            label="Onset"
             size="small"
-            value={item.abatementDate ?? ''}
+            value={pendingOnset}
+            placeholder="Not set"
             readOnly
             rightIcon="calendar"
-            onClick={() => setOpenPicker(openPicker === 'abatement' ? null : 'abatement')}
+            onClick={() => setOpenPicker(openPicker === 'onset' ? null : 'onset')}
             className="!text-fg-neutral-primary"
             containerClassName="cursor-pointer [&_svg]:text-fg-neutral-secondary"
           />
-          {openPicker === 'abatement' && (
+          {openPicker === 'onset' && (
             <DatePickerPopover
-              value={item.abatementDate ?? ''}
-              onChange={(v) => onEditDate(item.id, 'abatementDate', v)}
+              value={pendingOnset}
+              onChange={(v) => { setPendingOnset(v); setOpenPicker(null) }}
               onClose={() => setOpenPicker(null)}
             />
           )}
         </div>
-      )}
+
+        {showAbatement && (
+          <div className="relative flex-1 max-w-[200px]">
+            <Input
+              label={abatementLabel}
+              size="small"
+              value={pendingAbatement}
+              placeholder="Not set"
+              readOnly
+              rightIcon="calendar"
+              onClick={() => setOpenPicker(openPicker === 'abatement' ? null : 'abatement')}
+              className="!text-fg-neutral-primary"
+              containerClassName="cursor-pointer [&_svg]:text-fg-neutral-secondary"
+            />
+            {openPicker === 'abatement' && (
+              <DatePickerPopover
+                value={pendingAbatement}
+                onChange={(v) => { setPendingAbatement(v); setOpenPicker(null) }}
+                onClose={() => setOpenPicker(null)}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Button
+          type="transparent"
+          size="medium"
+          label="Update Date"
+          disabled={!hasPendingChanges}
+          onClick={handleSubmit}
+        />
+      </div>
     </div>
   )
 }
@@ -510,14 +536,6 @@ const DELETION_REASONS: DeletionReasonOption[] = [
   { value: 'other', label: 'Other' },
 ]
 
-/** Get the relevant date for timeline sorting — edits use their new value */
-function getTimelineSortDate(event: ProblemEvent): string {
-  if ((event.type === 'edited' || event.type === 'event-edited') && event.changes?.[0]?.to) {
-    return event.changes[0].to
-  }
-  return event.effectiveDate ?? event.performedAt
-}
-
 /** Parse MM/DD/YY (with optional time suffix) to a sortable timestamp */
 function parseDateForSort(dateStr: string): number {
   const [datePart] = dateStr.split(',')
@@ -531,28 +549,17 @@ interface HistoryLogProps {
   onUndoDeleteEvent: (itemId: string, eventId: string) => void
 }
 
-type HistorySortMode = 'timeline' | 'activity'
-
 function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps) {
   const [showDeleted, setShowDeleted] = useState(false)
   const [deletingEventId, setDeletingEventId] = useState<string | null>(null)
   const [selectedReason, setSelectedReason] = useState<DeletionReason>('entered-in-error')
   const [kebabOpenId, setKebabOpenId] = useState<string | null>(null)
-  const [sortMode, setSortMode] = useState<HistorySortMode>('timeline')
 
   const sortedHistory = useMemo(() => {
-    return [...item.history].sort((a, b) => {
-      if (sortMode === 'activity') {
-        // Pure audit trail — most recent action first
-        return parseDateForSort(b.performedAt) - parseDateForSort(a.performedAt)
-      }
-      // Timeline mode: all events sort by their effective clinical date
-      // Edits use their new value (changes[0].to) as the sort date
-      const dateA = getTimelineSortDate(a)
-      const dateB = getTimelineSortDate(b)
-      return parseDateForSort(dateB) - parseDateForSort(dateA)
-    })
-  }, [item.history, sortMode])
+    return [...item.history].sort((a, b) =>
+      parseDateForSort(b.performedAt) - parseDateForSort(a.performedAt)
+    )
+  }, [item.history])
 
   const deletedCount = useMemo(() =>
     item.history.filter(e => e.deletedAt).length
@@ -586,15 +593,7 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
     <div className="flex flex-col gap-0">
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <SegmentedControl
-          options={[
-            { value: 'timeline', label: 'Timeline' },
-            { value: 'activity', label: 'Activity' },
-          ]}
-          value={sortMode}
-          onChange={(v) => setSortMode(v as HistorySortMode)}
-          aria-label="History sort mode"
-        />
+        <span className="text-label-sm-medium text-fg-neutral-primary">History</span>
         {deletedCount > 0 && (
           <button
             onClick={() => setShowDeleted(!showDeleted)}
@@ -653,13 +652,13 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
                 </div>
               </div>
 
-              {/* For edits: line 2 = change detail, line 3 = editor/timestamp */}
+              {/* For edits/dates-updated: line 2 = change detail, line 3 = editor/timestamp */}
               {/* For other events: line 2 = source/timestamp */}
-              {(event.type === 'edited' || event.type === 'event-edited') && event.changes && !dimmed ? (
+              {(event.type === 'edited' || event.type === 'event-edited' || event.type === 'dates-updated') && event.changes && !dimmed ? (
                 <>
                   {event.changes.map((c, ci) => (
                     <span key={ci} className="text-body-xs-regular text-fg-neutral-secondary">
-                      {c.from || '—'} &rarr; {c.to || '—'}
+                      {c.field}: {c.from || '—'} &rarr; {c.to || '—'}
                     </span>
                   ))}
                   <span className={`text-body-xs-regular ${dimmed ? 'text-fg-neutral-disabled line-through' : 'text-fg-neutral-secondary'}`}>
@@ -724,11 +723,18 @@ function HistoryLog({ item, onDeleteEvent, onUndoDeleteEvent }: HistoryLogProps)
 
 /** Line 1 label: includes clinical context for edits, encounter link for reported */
 function formatEventLabel(event: ProblemEvent, dimmed?: boolean): React.ReactNode {
-  // Edits get clinical field name as prefix: "Onset — Edited"
   if (event.type === 'edited' && event.changes?.length) {
     const fieldLabel = event.changes[0].field.replace(' Date', '')
     return `${fieldLabel} — Edited`
   }
+
+  if (event.type === 'dates-updated' && event.changes?.length) {
+    if (event.changes.length > 1) return 'Dates Updated'
+    const change = event.changes[0]
+    const action = change.from ? 'Edited' : 'Set'
+    return `${change.field} — ${action}`
+  }
+
   const baseLabel = formatEventDescription(event.type)
   if (event.encounterVisitName && event.type === 'reported') {
     return (
@@ -745,10 +751,8 @@ function formatEventLabel(event: ProblemEvent, dimmed?: boolean): React.ReactNod
 
 /** Right-aligned effective date — shows clinical date or new value for edits */
 function formatEffectiveDate(event: ProblemEvent): string | null {
-  // Notes have no clinical date
   if (event.type === 'note-added') return null
-  // Edits show the new date value
-  if ((event.type === 'edited' || event.type === 'event-edited') && event.changes?.length) {
+  if ((event.type === 'edited' || event.type === 'event-edited' || event.type === 'dates-updated') && event.changes?.length) {
     const newValue = event.changes[0].to
     return newValue ? expandDate(newValue) : null
   }
@@ -756,7 +760,7 @@ function formatEffectiveDate(event: ProblemEvent): string | null {
     return expandDate(event.effectiveDate)
   }
   const [datePart] = event.performedAt.split(',')
-  return expandDate(datePart.trim())
+  return expandDate(datePart!.trim())
 }
 
 /** Expand MM/DD/YY to MM/DD/YYYY */
