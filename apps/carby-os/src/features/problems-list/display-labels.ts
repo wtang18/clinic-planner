@@ -19,20 +19,20 @@ export const ACTIVATE_FROM_INACTIVE_LABEL: Record<ProblemCategory, string> = {
   'health-concern': 'Reopen',
 }
 
-/** Category-aware label for activating from confirmed transitional state */
-export const ACTIVATE_FROM_CONFIRMED_LABEL: Record<ProblemCategory, string> = {
-  'condition': 'Mark Active',
-  'encounter-dx': 'Mark Active',
-  'sdoh': 'Mark Active',
-  'health-concern': 'Mark Active',
-}
-
 /** Drawer header title by category */
 export const DRAWER_TITLE: Record<ProblemCategory, string> = {
   'condition': 'Condition Details',
   'encounter-dx': 'Encounter Diagnosis Details',
   'sdoh': 'Social Determinant Details',
   'health-concern': 'Patient Concern Details',
+}
+
+/** Category-aware label for confirming as inactive/resolved */
+export const CONFIRM_INACTIVE_LABEL: Record<ProblemCategory, string> = {
+  'condition': 'Confirm Inactive',
+  'encounter-dx': 'Confirm Inactive',
+  'sdoh': 'Confirm Resolved',
+  'health-concern': 'Confirm Resolved',
 }
 
 /**
@@ -75,29 +75,6 @@ function capitalizeFirst(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-/**
- * Determine if a confirmed+active item is in the "transitional" state.
- * Transitional = the item was just confirmed but hasn't had an explicit
- * clinical status action (marked-active, marked-inactive, etc.) yet.
- */
-export function isConfirmedTransitional(item: ProblemItem): boolean {
-  if (item.verificationStatus !== 'confirmed' || item.clinicalStatus !== 'active') return false
-  for (const evt of item.history) {
-    if (evt.type === 'confirmed') return true
-    if (
-      evt.type === 'marked-active' ||
-      evt.type === 'marked-inactive' ||
-      evt.type === 'marked-resolved' ||
-      evt.type === 'marked-addressed' ||
-      evt.type === 'reopened' ||
-      evt.type === 'recurrence'
-    ) {
-      return false
-    }
-  }
-  return false
-}
-
 /** Format activity event description for the activity log */
 export function formatEventDescription(type: ProblemItem['history'][number]['type']): string {
   switch (type) {
@@ -105,6 +82,9 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'imported': return 'Imported'
     case 'screening-detected': return 'Detected via screening'
     case 'confirmed': return 'Confirmed'
+    case 'confirmed-active': return 'Confirmed active'
+    case 'confirmed-inactive': return 'Confirmed inactive'
+    case 'confirmed-resolved': return 'Confirmed resolved'
     case 'excluded': return 'Excluded'
     case 'undo-excluded': return 'Exclusion undone'
     case 'undo-confirmed': return 'Confirmation undone'
@@ -121,6 +101,7 @@ export function formatEventDescription(type: ProblemItem['history'][number]['typ
     case 'undo-reopened': return 'Reopen undone'
     case 'undo-recurrence': return 'Recurrence undone'
     case 'edited': return 'Edited'
+    case 'dates-updated': return 'Dates updated'
     case 'event-edited': return 'Event date corrected'
     case 'note-added': return 'Note added'
     case 'removed': return 'Removed from problem list'
