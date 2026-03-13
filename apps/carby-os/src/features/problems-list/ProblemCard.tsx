@@ -4,15 +4,12 @@ import type { ProblemItem } from './types'
 import {
   SOFT_CLOSE_LABEL,
   ACTIVATE_FROM_INACTIVE_LABEL,
-  ACTIVATE_FROM_CONFIRMED_LABEL,
-  getSourcePillLabel,
   getDisplayStatus,
-  isConfirmedTransitional,
 } from './display-labels'
 
 interface ProblemCardProps {
   item: ProblemItem
-  onConfirm?: (id: string) => void
+  onConfirmActive?: (id: string) => void
   onExclude?: (id: string) => void
   onUndoExclude?: (id: string) => void
   onMarkActive?: (id: string) => void
@@ -44,29 +41,18 @@ function isMuted(item: ProblemItem): boolean {
   )
 }
 
-/** Can recurrence apply? Only conditions and encounter-dx */
-function supportsRecurrence(item: ProblemItem): boolean {
-  return item.category === 'condition' || item.category === 'encounter-dx'
-}
-
 export function ProblemCard({
   item,
-  onConfirm,
+  onConfirmActive,
   onExclude,
   onUndoExclude,
   onMarkActive,
   onMarkInactive,
   onMarkResolved,
-  onMarkAddressed,
-  onNoteRecurrence,
   onReopen,
   onDetailClick,
 }: ProblemCardProps) {
   const actions = getActions(item)
-  const sourcePillLabel = getSourcePillLabel(item)
-  const sourcePillDate = (item.clinicalStatus === 'resolved' || item.clinicalStatus === 'inactive') && item.abatementDate
-    ? item.abatementDate
-    : item.sourceDate
   const muted = isMuted(item)
   const isExcluded = item.verificationStatus === 'excluded'
 
@@ -93,14 +79,11 @@ export function ProblemCard({
           {item.verificationStatus === 'unconfirmed' && (
             <Pill type="attention" size="small" label="Unconfirmed" />
           )}
-          {isConfirmedTransitional(item) && (
-            <Pill type="transparent" size="small" label="Confirmed" />
-          )}
-          {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && !isConfirmedTransitional(item) && (
+          {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'active' || item.clinicalStatus === 'recurrence') && (
             <Pill type="info-emphasis" size="small" label={item.clinicalStatus === 'recurrence' ? 'Recurrence' : 'Active'} />
           )}
-          {item.verificationStatus === 'confirmed' && item.clinicalStatus !== 'active' && item.clinicalStatus !== 'recurrence' && (
-            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={getDisplayStatus(item)} />
+          {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') && (
+            <Pill type="subtle-outlined" size="small" label={getDisplayStatus(item)} />
           )}
           {item.verificationStatus === 'excluded' && (
             <Pill type="subtle-outlined" size="small" label="Excluded" />
@@ -108,7 +91,12 @@ export function ProblemCard({
           {item.icdCode && (
             <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" label={item.icdCode} />
           )}
-          <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL={sourcePillLabel} label={sourcePillDate} />
+          {item.verificationStatus === 'confirmed' && item.onsetDate && (
+            <Pill type={muted ? 'subtle-outlined' : 'transparent'} size="small" subtextL="Onset" label={item.onsetDate} />
+          )}
+          {item.verificationStatus === 'confirmed' && (item.clinicalStatus === 'inactive' || item.clinicalStatus === 'resolved') && item.abatementDate && (
+            <Pill type="subtle-outlined" size="small" subtextL={getDisplayStatus(item)} label={item.abatementDate} />
+          )}
         </div>
       </div>
 
@@ -134,23 +122,12 @@ export function ProblemCard({
 
     if (_item.verificationStatus === 'unconfirmed') {
       if (onExclude) result.push({ label: 'Exclude', handler: onExclude })
-      if (onConfirm) result.push({ label: 'Confirm', handler: onConfirm })
+      if (onConfirmActive) result.push({ label: 'Confirm Active', handler: onConfirmActive })
       return result
     }
 
     if (_item.verificationStatus === 'excluded') {
       if (onUndoExclude) result.push({ label: 'Undo Exclude', handler: onUndoExclude })
-      return result
-    }
-
-    const isTransitional = _item.verificationStatus === 'confirmed'
-      && _item.clinicalStatus === 'active'
-      && isConfirmedTransitional(_item)
-
-    if (isTransitional) {
-      const softCloseHandler = getSoftCloseHandler(cat)
-      if (softCloseHandler) result.push({ label: SOFT_CLOSE_LABEL[cat], handler: softCloseHandler })
-      if (onMarkActive) result.push({ label: ACTIVATE_FROM_CONFIRMED_LABEL[cat], handler: onMarkActive })
       return result
     }
 

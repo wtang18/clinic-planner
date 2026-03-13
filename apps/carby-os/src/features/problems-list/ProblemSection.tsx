@@ -9,7 +9,7 @@ interface ProblemSectionProps {
   items: ProblemItem[]
   rightLabel?: string
   actions?: Array<{ label: string; onClick: () => void }>
-  onConfirm: (id: string) => void
+  onConfirmActive: (id: string) => void
   onExclude: (id: string) => void
   onUndoExclude: (id: string) => void
   onMarkActive: (id: string) => void
@@ -27,7 +27,7 @@ export function ProblemSection({
   items,
   rightLabel,
   actions = [],
-  onConfirm,
+  onConfirmActive,
   onExclude,
   onUndoExclude,
   onMarkActive,
@@ -85,7 +85,7 @@ export function ProblemSection({
             <ProblemCard
               key={item.id}
               item={item}
-              onConfirm={onConfirm}
+              onConfirmActive={onConfirmActive}
               onExclude={onExclude}
               onUndoExclude={onUndoExclude}
               onMarkActive={onMarkActive}
