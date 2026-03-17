@@ -1,0 +1,32 @@
+{
+  "name": "@carbon-health/design-system",
+  "version": "1.0.0",
+  "description": "Carbon Health Design System - Shared UI components",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./components/*": "./components/*.tsx",
+    "./lib/utils": "./lib/utils.ts"
+  },
+  "scripts": {},
+  "keywords": [
+    "design-system",
+    "carbon-health",
+    "react",
+    "components"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "private": true,
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "@carbon-health/design-icons": "*",
+    "@carbon-health/design-tokens": "*",
+    "class-variance-authority": ">=0.7.0",
+    "clsx": ">=2.0.0",
+    "tailwind-merge": ">=3.0.0",
+    "lucide-react": ">=0.300.0"
+  }
+}
